@@ -15,7 +15,7 @@ from catboost import CatBoostClassifier
 # Load dataset
 # ----------------------------
 
-df = pd.read_csv("processed_data/E0_model.csv")
+df = pd.read_csv("02_processed_data/E0_model.csv")
 df["Date"] = pd.to_datetime(df["Date"], dayfirst=True)
 
 

@@ -1,6 +1,6 @@
 import pandas as pd
 # Loads the engineered dataset
-df = pd.read_csv("processed_data/E0_features.csv")
+df = pd.read_csv("02_processed_data/E0_features.csv")
 
 # Removes information that would not be known before kickoff
 df = df.drop(columns=[
@@ -29,7 +29,5 @@ X = df.drop(columns=["FTR"])
 # Target (what the model should learn to predict)
 y = df["FTR"]
 
-print(X.shape)
-print(y.shape)
 df = df.drop(columns=["HomePoints", "AwayPoints"])
-df.to_csv("processed_data/E0_model.csv", index=False)
+df.to_csv("02_processed_data/E0_model.csv", index=False)

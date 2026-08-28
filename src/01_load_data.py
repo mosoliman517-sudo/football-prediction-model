@@ -11,7 +11,14 @@ from features.elo import add_elo_features
 # Load every CSV
 # ---------------------------------------
 
-files = glob.glob("data/*.csv")
+files = glob.glob("01_data/*.csv")
+
+if not files:
+    raise FileNotFoundError(
+        "No CSV files found in '01_data/'. Check that the folder "
+        "exists and contains your season CSVs, and that you're "
+        "running this script from the project root."
+    )
 
 df = pd.concat(
     [pd.read_csv(file) for file in files],
@@ -121,7 +128,7 @@ df = add_elo_features(df)
 # ---------------------------------------
 
 df.to_csv(
-    "processed_data/E0_features.csv",
+    "02_processed_data/E0_features.csv",
     index=False
 )
 

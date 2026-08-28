@@ -9,9 +9,6 @@ def add_goals_features(df):
     df["AwayAvgGoalsScoredLast5"] = 0.0
     df["AwayAvgGoalsConcededLast5"] = 0.0
 
-    df["HomeAvgGoalDifferenceLast5"] = 0.0
-    df["AwayAvgGoalDifferenceLast5"] = 0.0
-
     for i in range(len(df)):
 
         previous_games = df.iloc[:i]
@@ -41,11 +38,6 @@ def add_goals_features(df):
             home_away["FTHG"]
         ])
 
-        home_goal_difference = pd.concat([
-            home_home["FTHG"] - home_home["FTAG"],
-            home_away["FTAG"] - home_away["FTHG"]
-        ])
-
         # -----------------------------
         # AWAY TEAM HISTORY
         # -----------------------------
@@ -68,11 +60,6 @@ def add_goals_features(df):
             away_away["FTHG"]
         ])
 
-        away_goal_difference = pd.concat([
-            away_home["FTHG"] - away_home["FTAG"],
-            away_away["FTAG"] - away_away["FTHG"]
-        ])
-
         # -----------------------------
         # SAVE FEATURES
         # -----------------------------
@@ -91,14 +78,6 @@ def add_goals_features(df):
 
         df.loc[df.index[i], "AwayAvgGoalsConcededLast5"] = (
             away_conceded.tail(5).mean()
-        )
-
-        df.loc[df.index[i], "HomeAvgGoalDifferenceLast5"] = (
-            home_goal_difference.tail(5).mean()
-        )
-
-        df.loc[df.index[i], "AwayAvgGoalDifferenceLast5"] = (
-            away_goal_difference.tail(5).mean()
         )
 
     return df

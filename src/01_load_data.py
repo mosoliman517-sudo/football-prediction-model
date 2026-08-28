@@ -6,6 +6,7 @@ from features.goals import add_goals_features
 from features.shots import add_shot_features
 from features.rest_days import add_rest_days_features
 from features.elo import add_elo_features
+from config import TRAIN_TEST_SPLIT_DATE
 
 # ---------------------------------------
 # Load every CSV
@@ -24,6 +25,18 @@ df = pd.concat(
     [pd.read_csv(file) for file in files],
     ignore_index=True
 )
+
+# At least one season file (2014-15) has a genuinely blank trailing
+# row -- all commas, no data -- which read_csv turns into a row of
+# NaNs. It's been silently harmless so far (its NaT date fails every
+# train/test comparison downstream) but that's an accident, not a
+# guarantee, so it gets dropped here explicitly instead.
+before = len(df)
+df = df.dropna(subset=["HomeTeam", "AwayTeam", "Date"]).reset_index(drop=True)
+dropped = before - len(df)
+
+if dropped:
+    print(f"Dropped {dropped} blank row(s) found in the raw season files")
 
 # ---------------------------------------
 # Dates
@@ -50,37 +63,69 @@ columns_to_drop = [
     "Referee",
     "Time",
 
-    "B365>2.5","B365<2.5",
-    "P>2.5","P<2.5",
-    "Max>2.5","Max<2.5",
-    "Avg>2.5","Avg<2.5",
+    # ---------------------------------------------------------------
+    # Betting market columns. These are bookmakers' own predictions
+    # (odds, over/under lines, Asian handicap lines) — pre-match, so
+    # not technically leakage, but the whole point of this project is
+    # to see if OUR features can predict a result, not to let the
+    # model read Pinnacle's or Bet365's answer off the odds. Every
+    # market found across all 10 seasons' files gets dropped here,
+    # opening line and closing line alike.
+    # ---------------------------------------------------------------
 
-    "B365C>2.5","B365C<2.5",
-    "PC>2.5","PC<2.5",
-    "MaxC>2.5","MaxC<2.5",
-    "AvgC>2.5","AvgC<2.5",
-
-    "AHh",
-
-    "B365AHH","B365AHA",
-    "PAHH","PAHA",
-    "MaxAHH","MaxAHA",
-    "AvgAHH","AvgAHA",
-
-    "AHCh",
-
-    "B365CAHH","B365CAHA",
-    "PCAHH","PCAHA",
-    "MaxCAHH","MaxCAHA",
-    "AvgCAHH","AvgCAHA",
-
+    # Match result (1X2) odds — opening
     "B365H","B365D","B365A",
     "BWH","BWD","BWA",
     "IWH","IWD","IWA",
     "PSH","PSD","PSA",
     "WHH","WHD","WHA",
     "VCH","VCD","VCA",
-    "MaxH","MaxD","MaxA"
+    "LBH","LBD","LBA",
+    "SJH","SJD","SJA",
+    "MaxH","MaxD","MaxA",
+    "AvgH","AvgD","AvgA",
+
+    # Match result (1X2) odds — closing
+    "B365CH","B365CD","B365CA",
+    "BWCH","BWCD","BWCA",
+    "IWCH","IWCD","IWCA",
+    "PSCH","PSCD","PSCA",
+    "WHCH","WHCD","WHCA",
+    "VCCH","VCCD","VCCA",
+    "MaxCH","MaxCD","MaxCA",
+    "AvgCH","AvgCD","AvgCA",
+
+    # Over/under 2.5 goals odds — opening and closing
+    "B365>2.5","B365<2.5",
+    "P>2.5","P<2.5",
+    "Max>2.5","Max<2.5",
+    "Avg>2.5","Avg<2.5",
+    "B365C>2.5","B365C<2.5",
+    "PC>2.5","PC<2.5",
+    "MaxC>2.5","MaxC<2.5",
+    "AvgC>2.5","AvgC<2.5",
+
+    # Asian handicap line + odds — opening and closing
+    "AHh",
+    "B365AHH","B365AHA",
+    "PAHH","PAHA",
+    "MaxAHH","MaxAHA",
+    "AvgAHH","AvgAHA",
+    "AHCh",
+    "B365CAHH","B365CAHA",
+    "PCAHH","PCAHA",
+    "MaxCAHH","MaxCAHA",
+    "AvgCAHH","AvgCAHA",
+
+    # Betbrain aggregated market columns (older seasons only —
+    # a pooled max/average across many bookmakers at once)
+    "Bb1X2","BbOU","BbAH","BbAHh",
+    "BbMxH","BbMxD","BbMxA",
+    "BbAvH","BbAvD","BbAvA",
+    "BbMx>2.5","BbMx<2.5",
+    "BbAv>2.5","BbAv<2.5",
+    "BbMxAHH","BbMxAHA",
+    "BbAvAHH","BbAvAHA",
 ]
 
 df = df.drop(
@@ -121,7 +166,9 @@ print("Creating rest day features...")
 df = add_rest_days_features(df)
 
 print("Creating Elo ratings...")
-df = add_elo_features(df)
+# Elo calibrates its own form-blend weight using only matches before
+# this date, so it never peeks at the test seasons — see config.py
+df = add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE)
 
 # ---------------------------------------
 # Save

@@ -90,8 +90,9 @@ Focused on rigor over raw numbers: found and fixed real bugs, tested several ide
 - Diagnosed a real Home Win over-prediction bug (62.5% predicted vs. 47.2% actual) and fixed it with class-balanced sample weighting — confirmed with a new permanent calibration check, not just eyeballed.
 - Tried hyperparameter tuning and two different draw-prediction mechanisms; tested each honestly and dropped them when the data showed they weren't real improvements.
 - Added `05_predict_scoreline.py` — a Poisson goal model predicting expected home/away goals, deriving Win/Draw/Loss probabilities and a full scoreline grid from one underlying prediction.
+- Added head-to-head history and last-10 win-rate features aimed at Away Win recognition. Confirmed via feature importance they're genuinely used (head-to-head ranks mid-pack, ahead of several existing features) — but the accuracy effect was mixed across models, not the clean fix hoped for. Kept anyway since it's real signal.
 
-**Current best:** CatBoost, 51.84% on 2 full seasons (760 matches) — lower than Update 3's 57.1%, but that number included data leakage on a single season; this one is odds-free and measured on twice the matches. On decisive (non-draw) matches specifically, the same model calls the right winner **71.9%** of the time.
+**Current best:** Random Forest, 52.37% on 2 full seasons (760 matches) — lower than Update 3's 57.1%, but that number included data leakage on a single season; this one is odds-free and measured on twice the matches. On decisive (non-draw) matches specifically, the best model calls the right winner **71.9%** of the time.
 
 *Taking a break here for academic reasons — picking this back up when I have time.*
 
@@ -139,7 +140,7 @@ football-prediction-model/
 
 # Next Steps
 
-- Add head-to-head history and an away-specific win-rate feature — the model still can't reliably recognize a genuine away win, and neither exists yet.
+- Find a real fix for Away Win recognition — head-to-head history and win-rate features are in now, but didn't move the needle; still an open problem.
 - Refine scoreline prediction with a Dixon-Coles correlation correction for low-scoring results (0-0, 1-0, 0-1, 1-1).
 - Pull in 2024-25 (and 2025-26 once complete) season data to bring the dataset current.
 - Start predicting individual matches of the current in-progress season, using every prior season as the training feed.

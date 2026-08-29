@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from scipy.stats import poisson
 from sklearn.linear_model import PoissonRegressor
@@ -216,3 +217,59 @@ print(comparison_df.to_string(index=False))
 
 mean_abs_error = comparison_df["Position Diff"].abs().mean()
 print(f"\nMean absolute position error: {mean_abs_error:.1f} places")
+
+# --------------------------------------------------------------------
+# Visual table, matching the confusion-matrix pop-up 03_train_model.py
+# already gives -- top 4 (Champions League places) tinted green,
+# bottom 3 (relegation) tinted red, same as a real league table.
+# --------------------------------------------------------------------
+
+def render_table(ax, table_df, title):
+
+    ax.axis("off")
+    ax.set_title(title, fontsize=13, fontweight="bold", pad=12)
+
+    display_df = table_df.reset_index().rename(columns={"index": "Pos"})
+    col_labels = display_df.columns.tolist()
+    cell_text = display_df.values.tolist()
+
+    table = ax.table(
+        cellText=cell_text,
+        colLabels=col_labels,
+        loc="center",
+        cellLoc="center"
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(8.5)
+    table.scale(1, 1.35)
+
+    n_rows = len(display_df)
+
+    for row in range(n_rows + 1):   # +1 for the header row
+
+        for col in range(len(col_labels)):
+
+            cell = table[row, col]
+
+            if row == 0:
+                cell.set_text_props(fontweight="bold")
+                cell.set_facecolor("#dddddd")
+                continue
+
+            position = row   # row 1 == 1st place, etc.
+
+            if position <= 4:
+                cell.set_facecolor("#d4edda")   # Champions League places
+            elif position >= n_rows - 2:
+                cell.set_facecolor("#f8d7da")   # relegation places
+            elif row % 2 == 0:
+                cell.set_facecolor("#f5f5f5")   # light row striping
+
+
+fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+
+render_table(axes[0], predicted_table, "Predicted Table")
+render_table(axes[1], actual_table, "Actual Table")
+
+plt.tight_layout()
+plt.show()

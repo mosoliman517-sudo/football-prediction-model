@@ -93,9 +93,10 @@ Focused on rigor over raw numbers: found and fixed real bugs, tested several ide
 - Added head-to-head history and last-10 win-rate features aimed at Away Win recognition. Confirmed via feature importance they're genuinely used (head-to-head ranks mid-pack, ahead of several existing features) — but the accuracy effect was mixed across models, not the clean fix hoped for. Kept anyway since it's real signal.
 - Added a `USE_CLASS_BALANCING` toggle instead of picking one philosophy permanently — calibrated (predicted proportions match real-world rates) vs. confident (higher Home recall, but only by over-predicting it). Confirmed with real confusion matrices that a margin-based middle ground doesn't escape the trade-off, it just moves which class pays for it.
 - Removed the two weakest features (`HomeMatchesLast14Days`/`AwayMatchesLast14Days`, near-zero importance) and added second-half goal patterns (`half_time.py`) — built only from teams' *past* matches' half-time splits, never the current match's own half-time score, which would be leakage.
-- Shifted the test set back to 1 season (2023-24) and added `06_predict_season_table.py` — simulates the whole held-out season and builds a real league table (Played/W/D/L/GF/GA/GD/Points) from the predicted results next to the actual one. Result: top 3 and bottom 4 finishing positions exact, **mean position error 1.4 places** across all 20 teams.
+- Shifted the test set back to 1 season and added `06_predict_season_table.py` — simulates the whole held-out season and builds a real league table (Played/W/D/L/GF/GA/GD/Points) from the predicted results next to the actual one, now rendered as an actual styled table image, not just terminal text.
+- Added 2024-25 and 2025-26 data (12 seasons total) and moved the test season to 2025-26, the most recently completed one. Caught several new bookmaker odds columns the newer files introduced before they could reintroduce leakage.
 
-**Current best:** Random Forest, 53.16% on the 2023-24 season (380 matches, calibrated mode). Table-level, the model is stronger than the raw accuracy number suggests — see above.
+**Current best:** CatBoost, 47.11% on 2025-26 (380 matches, calibrated mode). Genuinely a harder season to call than 2023-24 was — more draws (27.4% vs. 21.6% of matches) and fewer clear favorites winning, reflected honestly in both the accuracy (47.1% vs. 53.2%) and the season table's position error (2.8 vs. 1.4 places average) — not a step backward in the model itself.
 
 ---
 
@@ -148,5 +149,4 @@ football-prediction-model/
 
 - Find a real fix for Away Win recognition — still an open problem, several attempts so far haven't cracked it.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
-- Pull in 2024-25 (and 2025-26 once complete) season data to bring the dataset current.
-- Once current, point `06_predict_season_table.py` at the live in-progress season instead of a historical one.
+- Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week.

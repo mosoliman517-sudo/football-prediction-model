@@ -4,14 +4,9 @@
 # different Random Forest settings) — one shared constant instead of
 # four copy-pasted ones is how that stops happening again.
 
-TRAIN_TEST_SPLIT_DATE = "2023-08-01"   # test = 2023-24 only, one full
-                                         # season (~380 matches), so a
-                                         # predicted-vs-actual league
-                                         # table (06_predict_season_table.py)
-                                         # is comparing against one real,
-                                         # coherent season rather than two
-                                         # spliced together. Was "2022-08-01"
-                                         # (2 test seasons) earlier in this
-                                         # project for a more robust
-                                         # accuracy read -- that's a real
-                                         # trade-off, not a free change.
+TRAIN_TEST_SPLIT_DATE = "2025-08-01"   # test = 2025-26, the most recently
+                                         # completed season (~380 matches).
+                                         # Train = every season 2014-15
+                                         # through 2024-25 (11 seasons).
+                                         # Was "2023-08-01" (test = 2023-24)
+                                         # before 24-25/25-26 data existed.

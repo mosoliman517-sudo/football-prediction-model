@@ -128,6 +128,30 @@ columns_to_drop = [
     "BbAv>2.5","BbAv<2.5",
     "BbMxAHH","BbMxAHA",
     "BbAvAHH","BbAvAHA",
+
+    # Newer bookmakers that only appear in 2024-25 / 2025-26 -- found
+    # by diffing the new files' columns against every earlier season's,
+    # exactly the same leakage risk as the original odds columns if
+    # left in.
+    "1XBH","1XBD","1XBA",
+    "1XBCH","1XBCD","1XBCA",
+    "BFH","BFD","BFA",
+    "BFCH","BFCD","BFCA",
+    "BFDH","BFDD","BFDA",
+    "BFDCH","BFDCD","BFDCA",
+    "BFEH","BFED","BFEA",
+    "BFECH","BFECD","BFECA",
+    "BFE>2.5","BFE<2.5",
+    "BFEC>2.5","BFEC<2.5",
+    "BFEAHH","BFEAHA",
+    "BFECAHH","BFECAHA",
+    "BMGMH","BMGMD","BMGMA",
+    "BMGMCH","BMGMCD","BMGMCA",
+    "BVH","BVD","BVA",
+    "BVCH","BVCD","BVCA",
+    "CLH","CLD","CLA",
+    "CLCH","CLCD","CLCA",
+    "LBCH","LBCD","LBCA",
 ]
 
 df = df.drop(

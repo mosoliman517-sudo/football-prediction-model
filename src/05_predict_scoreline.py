@@ -34,19 +34,26 @@ MAX_GOALS = 8   # covers >99.9% of realistic Premier League scorelines;
 FEATURE_COLUMNS = [
     "HomeLast5Points", "AwayLast5Points",
     "HomeLast5HomePoints", "AwayLast5AwayPoints",
+    "HomeWinRateLastHome", "AwayWinRateLastAway",
     "HomeAvgGoalsScoredLast5", "HomeAvgGoalsConcededLast5",
     "AwayAvgGoalsScoredLast5", "AwayAvgGoalsConcededLast5",
     "HomeAvgShotsLast5", "AwayAvgShotsLast5",
     "HomeAvgShotsOnTargetLast5", "AwayAvgShotsOnTargetLast5",
     "HomeAvgShotsConcededLast5", "AwayAvgShotsConcededLast5",
     "HomeDaysRest", "AwayDaysRest",
-    "HomeMatchesLast14Days", "AwayMatchesLast14Days",
+    "H2HHomeTeamWinRate", "H2HAwayTeamWinRate",
+    "H2HDrawRate", "H2HMatchesPlayed",
+    "HomeAvgSecondHalfGoalsScoredLast5", "HomeAvgSecondHalfGoalsConcededLast5",
+    "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
 ]
-# The exact same 24 pre-match features the classifiers use. This is
+# The exact same pre-match features the classifiers use. This is
 # deliberate -- the point of this model is to test what a different
 # way of using the same information can do, not to feed it new data.
+# HomeMatchesLast14Days/AwayMatchesLast14Days were dropped from the
+# classifiers (weakest features by importance, barely used); win-rate,
+# head-to-head, and second-half-pattern features were added.
 
 
 # --------------------------------------------------------------------
@@ -302,11 +309,39 @@ def predict_fixture(home_team, away_team, df):
     home_row = df[df["HomeTeam"] == home_team].sort_values("Date").iloc[-1]
     away_row = df[df["AwayTeam"] == away_team].sort_values("Date").iloc[-1]
 
+    # Head-to-head is specific to THIS matchup, not just each team's
+    # most recent row (which could've been against anyone) -- scan
+    # every past meeting between these two teams directly, same logic
+    # as head_to_head.py's walk-forward version.
+    past_meetings = df[
+        ((df["HomeTeam"] == home_team) & (df["AwayTeam"] == away_team)) |
+        ((df["HomeTeam"] == away_team) & (df["AwayTeam"] == home_team))
+    ]
+
+    matches_played = len(past_meetings)
+
+    if matches_played > 0:
+        home_team_wins = (
+            ((past_meetings["FTR"] == "H") & (past_meetings["HomeTeam"] == home_team))
+            | ((past_meetings["FTR"] == "A") & (past_meetings["AwayTeam"] == home_team))
+        ).sum()
+        away_team_wins = (
+            ((past_meetings["FTR"] == "H") & (past_meetings["HomeTeam"] == away_team))
+            | ((past_meetings["FTR"] == "A") & (past_meetings["AwayTeam"] == away_team))
+        ).sum()
+        h2h_home_rate = home_team_wins / matches_played
+        h2h_away_rate = away_team_wins / matches_played
+        h2h_draw_rate = (past_meetings["FTR"] == "D").sum() / matches_played
+    else:
+        h2h_home_rate, h2h_away_rate, h2h_draw_rate = 0.5, 0.5, 0.0
+
     features = pd.DataFrame([{
         "HomeLast5Points": home_row["HomeLast5Points"],
         "AwayLast5Points": away_row["AwayLast5Points"],
         "HomeLast5HomePoints": home_row["HomeLast5HomePoints"],
         "AwayLast5AwayPoints": away_row["AwayLast5AwayPoints"],
+        "HomeWinRateLastHome": home_row["HomeWinRateLastHome"],
+        "AwayWinRateLastAway": away_row["AwayWinRateLastAway"],
         "HomeAvgGoalsScoredLast5": home_row["HomeAvgGoalsScoredLast5"],
         "HomeAvgGoalsConcededLast5": home_row["HomeAvgGoalsConcededLast5"],
         "AwayAvgGoalsScoredLast5": away_row["AwayAvgGoalsScoredLast5"],
@@ -319,8 +354,14 @@ def predict_fixture(home_team, away_team, df):
         "AwayAvgShotsConcededLast5": away_row["AwayAvgShotsConcededLast5"],
         "HomeDaysRest": home_row["HomeDaysRest"],
         "AwayDaysRest": away_row["AwayDaysRest"],
-        "HomeMatchesLast14Days": home_row["HomeMatchesLast14Days"],
-        "AwayMatchesLast14Days": away_row["AwayMatchesLast14Days"],
+        "H2HHomeTeamWinRate": h2h_home_rate,
+        "H2HAwayTeamWinRate": h2h_away_rate,
+        "H2HDrawRate": h2h_draw_rate,
+        "H2HMatchesPlayed": matches_played,
+        "HomeAvgSecondHalfGoalsScoredLast5": home_row["HomeAvgSecondHalfGoalsScoredLast5"],
+        "HomeAvgSecondHalfGoalsConcededLast5": home_row["HomeAvgSecondHalfGoalsConcededLast5"],
+        "AwayAvgSecondHalfGoalsScoredLast5": away_row["AwayAvgSecondHalfGoalsScoredLast5"],
+        "AwayAvgSecondHalfGoalsConcededLast5": away_row["AwayAvgSecondHalfGoalsConcededLast5"],
         "HomeElo": home_row["HomeElo"],
         "AwayElo": away_row["AwayElo"],
         "EloDifference": home_row["HomeElo"] - away_row["AwayElo"],

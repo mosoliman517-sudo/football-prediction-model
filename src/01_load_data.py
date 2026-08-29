@@ -6,6 +6,7 @@ from features.goals import add_goals_features
 from features.shots import add_shot_features
 from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
+from features.half_time import add_half_time_pattern_features
 from features.elo import add_elo_features
 from config import TRAIN_TEST_SPLIT_DATE
 
@@ -171,6 +172,9 @@ df = add_rest_days_features(df)
 
 print("Creating head-to-head features...")
 df = add_head_to_head_features(df)
+
+print("Creating half-time pattern features...")
+df = add_half_time_pattern_features(df)
 
 print("Creating Elo ratings...")
 # Elo calibrates its own form-blend weight using only matches before

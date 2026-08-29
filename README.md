@@ -91,10 +91,11 @@ Focused on rigor over raw numbers: found and fixed real bugs, tested several ide
 - Tried hyperparameter tuning and two different draw-prediction mechanisms; tested each honestly and dropped them when the data showed they weren't real improvements.
 - Added `05_predict_scoreline.py` — a Poisson goal model predicting expected home/away goals, deriving Win/Draw/Loss probabilities and a full scoreline grid from one underlying prediction.
 - Added head-to-head history and last-10 win-rate features aimed at Away Win recognition. Confirmed via feature importance they're genuinely used (head-to-head ranks mid-pack, ahead of several existing features) — but the accuracy effect was mixed across models, not the clean fix hoped for. Kept anyway since it's real signal.
+- Added a `USE_CLASS_BALANCING` toggle instead of picking one philosophy permanently — calibrated (predicted proportions match real-world rates) vs. confident (higher Home recall, but only by over-predicting it). Confirmed with real confusion matrices that a margin-based middle ground doesn't escape the trade-off, it just moves which class pays for it.
+- Removed the two weakest features (`HomeMatchesLast14Days`/`AwayMatchesLast14Days`, near-zero importance) and added second-half goal patterns (`half_time.py`) — built only from teams' *past* matches' half-time splits, never the current match's own half-time score, which would be leakage.
+- Shifted the test set back to 1 season (2023-24) and added `06_predict_season_table.py` — simulates the whole held-out season and builds a real league table (Played/W/D/L/GF/GA/GD/Points) from the predicted results next to the actual one. Result: top 3 and bottom 4 finishing positions exact, **mean position error 1.4 places** across all 20 teams.
 
-**Current best:** Random Forest, 52.37% on 2 full seasons (760 matches) — lower than Update 3's 57.1%, but that number included data leakage on a single season; this one is odds-free and measured on twice the matches. On decisive (non-draw) matches specifically, the best model calls the right winner **71.9%** of the time.
-
-*Taking a break here for academic reasons — picking this back up when I have time.*
+**Current best:** Random Forest, 53.16% on the 2023-24 season (380 matches, calibrated mode). Table-level, the model is stronger than the raw accuracy number suggests — see above.
 
 ---
 
@@ -103,20 +104,25 @@ Focused on rigor over raw numbers: found and fixed real bugs, tested several ide
 ```
 football-prediction-model/
 │
-├── 01_data/
-├── 02_processed_data/
-├── 03_models/
-├── 04_source/
+├── 01_data/                        # raw season CSVs
+├── 02_processed_data/              # engineered datasets (E0_features.csv, E0_model.csv)
+├── src/
+│   ├── config.py                   # shared constants (train/test split date)
+│   ├── draw_boost.py               # margin-based draw mechanism (unused by default)
 │   ├── 01_load_data.py
 │   ├── 02_load_features.py
-│   ├── 03_comparing_models.py
-│   ├── 04_train_model.py
+│   ├── 03_train_model.py           # trains + compares all 5 models + ensemble
+│   ├── 04_comparing_models.py      # lighter-weight version of the same comparison
+│   ├── 05_predict_scoreline.py     # Poisson goal model — Win/Draw/Loss + scorelines
+│   ├── 06_predict_season_table.py  # simulates a full season, predicted vs. actual table
 │   └── features/
-│       ├── form.py
+│       ├── form.py                 # points-based form + win-rate
 │       ├── goals.py
 │       ├── shots.py
 │       ├── rest_days.py
-│       └── elo.py
+│       ├── head_to_head.py
+│       ├── half_time.py            # second-half goal patterns
+│       └── elo.py                  # dual-track Elo + calibrated expectation model
 │
 ├── README.md
 ├── requirements.txt
@@ -140,7 +146,7 @@ football-prediction-model/
 
 # Next Steps
 
-- Find a real fix for Away Win recognition — head-to-head history and win-rate features are in now, but didn't move the needle; still an open problem.
-- Refine scoreline prediction with a Dixon-Coles correlation correction for low-scoring results (0-0, 1-0, 0-1, 1-1).
+- Find a real fix for Away Win recognition — still an open problem, several attempts so far haven't cracked it.
+- Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
 - Pull in 2024-25 (and 2025-26 once complete) season data to bring the dataset current.
-- Start predicting individual matches of the current in-progress season, using every prior season as the training feed.
+- Once current, point `06_predict_season_table.py` at the live in-progress season instead of a historical one.

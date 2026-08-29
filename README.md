@@ -139,9 +139,7 @@ football-prediction-model/
 
 # Next Steps
 
-- Finish integrating the Elo rating system into the training pipeline.
-- Add Last 10 form and rolling performance features.
-- Hyperparameter tune each model.
-- Experiment with ensemble models.
-- Increase prediction accuracy beyond 60%.
-- Predict exact match scorelines instead of only match outcomes.
+- Add head-to-head history and an away-specific win-rate feature — the model still can't reliably recognize a genuine away win, and neither exists yet.
+- Refine scoreline prediction with a Dixon-Coles correlation correction for low-scoring results (0-0, 1-0, 0-1, 1-1).
+- Pull in 2024-25 (and 2025-26 once complete) season data to bring the dataset current.
+- Start predicting individual matches of the current in-progress season, using every prior season as the training feed.

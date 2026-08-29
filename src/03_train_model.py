@@ -77,17 +77,25 @@ y_test = encoder.transform(y_test_labels)
 
 display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
 
-# Home Win is just the most common outcome in the data (47% vs 30% for
-# Away, 22% for Draw) -- with nothing counteracting that, a model can
-# rack up accuracy by leaning on "guess the most common thing", which
-# is exactly why every model except Random Forest showed a big gap
-# between Home recall and Away recall. Random Forest was the one
-# model with class_weight="balanced" already fighting that, and it
-# was also the one model where Home/Away recall came out nearly even
-# -- so instead of guessing, this applies the same correction to
-# every model uniformly via sample_weight, which every one of them
-# accepts at fit time.
-sample_weight = compute_sample_weight("balanced", y_train)
+# Two honest, different philosophies -- pick one, not a bug either way:
+#
+# True (calibrated): predicted proportions match real-world rates as
+# closely as possible (Home ~47%, Away ~30%, Draw ~22%). Home and Away
+# recall come out close to each other (~60-65% each), because that's
+# what "not over-guessing the favorite" actually looks like.
+#
+# False (confident): no correction for Home Win being the most common
+# outcome. Home recall climbs back to ~75-81% -- but only because the
+# model calls Home Win far more than its real ~47% rate (as high as
+# 62.5% of predictions), which is the exact miscalibration this
+# project spent real effort finding and fixing. Higher Home recall
+# here isn't better judgment, it's a more aggressive guess.
+USE_CLASS_BALANCING = True
+
+sample_weight = (
+    compute_sample_weight("balanced", y_train) if USE_CLASS_BALANCING
+    else None
+)
 
 print(f"Training matches: {X_train.shape}")
 print(f"Testing matches: {X_test.shape}")

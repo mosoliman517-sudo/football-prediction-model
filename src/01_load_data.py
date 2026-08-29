@@ -1,10 +1,11 @@
 import glob
 import pandas as pd
 
-from features.form import add_form_features
+from features.form import add_form_features, add_win_rate_features
 from features.goals import add_goals_features
 from features.shots import add_shot_features
 from features.rest_days import add_rest_days_features
+from features.head_to_head import add_head_to_head_features
 from features.elo import add_elo_features
 from config import TRAIN_TEST_SPLIT_DATE
 
@@ -156,6 +157,9 @@ df["AwayPoints"] = df["FTR"].map({
 print("Creating form features...")
 df = add_form_features(df)
 
+print("Creating win-rate features...")
+df = add_win_rate_features(df)
+
 print("Creating goal features...")
 df = add_goals_features(df)
 
@@ -164,6 +168,9 @@ df = add_shot_features(df)
 
 print("Creating rest day features...")
 df = add_rest_days_features(df)
+
+print("Creating head-to-head features...")
+df = add_head_to_head_features(df)
 
 print("Creating Elo ratings...")
 # Elo calibrates its own form-blend weight using only matches before

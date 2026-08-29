@@ -75,3 +75,48 @@ def add_form_features(df):
         )
 
     return df
+
+
+def add_win_rate_features(df, window=10):
+    """
+    Last-N win rate, isolated from draws -- HomeLast5Points blends a
+    win (3pts) and three draws (1pt each) into similar totals, even
+    though those are very different signals for how likely a team is
+    to actually win, not just avoid losing. This tracks the plain
+    fraction of a team's last N home (or away) matches that were wins,
+    nothing else blended in.
+
+    Teams with no matches yet in that context get a neutral 0.5 --
+    not "50% win rate" as a real estimate, just "no history to judge
+    from yet".
+    """
+
+    df["HomeWinRateLastHome"] = 0.5
+    df["AwayWinRateLastAway"] = 0.5
+
+    for i in range(len(df)):
+
+        previous_games = df.iloc[:i]
+
+        home = df.iloc[i]["HomeTeam"]
+        away = df.iloc[i]["AwayTeam"]
+
+        home_home_results = previous_games[
+            previous_games["HomeTeam"] == home
+        ]["FTR"].tail(window)
+
+        if len(home_home_results) > 0:
+            df.loc[df.index[i], "HomeWinRateLastHome"] = (
+                (home_home_results == "H").mean()
+            )
+
+        away_away_results = previous_games[
+            previous_games["AwayTeam"] == away
+        ]["FTR"].tail(window)
+
+        if len(away_away_results) > 0:
+            df.loc[df.index[i], "AwayWinRateLastAway"] = (
+                (away_away_results == "A").mean()
+            )
+
+    return df

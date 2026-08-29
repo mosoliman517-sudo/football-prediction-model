@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import poisson
 from sklearn.linear_model import PoissonRegressor
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.metrics import accuracy_score
+
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
 
 from config import TRAIN_TEST_SPLIT_DATE
 
@@ -41,6 +49,53 @@ FEATURE_COLUMNS = [
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
 ]
+
+# --------------------------------------------------------------------
+# Report the most accurate classifier first, for reference -- but the
+# table itself still has to come from the Poisson model below, since a
+# league table needs Goal Difference and the classifiers never predict
+# a scoreline, only Home/Draw/Away. This isn't the table's source of
+# truth, it's context: "here's how good the best W/D/L model is doing,
+# for comparison against what the table below implies."
+# --------------------------------------------------------------------
+
+classifier_df = pd.read_csv("02_processed_data/E0_model.csv")
+classifier_df["Date"] = pd.to_datetime(classifier_df["Date"], format="mixed")
+
+classifier_train = classifier_df[classifier_df["Date"] < TRAIN_TEST_SPLIT_DATE]
+classifier_test = classifier_df[classifier_df["Date"] >= TRAIN_TEST_SPLIT_DATE]
+
+X_clf_train = classifier_train.drop(columns=["FTR", "Div", "Date", "HomeTeam", "AwayTeam"]).fillna(0)
+X_clf_test = classifier_test.drop(columns=["FTR", "Div", "Date", "HomeTeam", "AwayTeam"]).fillna(0)
+
+clf_encoder = LabelEncoder()
+y_clf_train = clf_encoder.fit_transform(classifier_train["FTR"])
+y_clf_test = clf_encoder.transform(classifier_test["FTR"])
+
+clf_sample_weight = compute_sample_weight("balanced", y_clf_train)
+
+classifiers = {
+    "Random Forest": RandomForestClassifier(n_estimators=500, max_depth=15, min_samples_split=5, min_samples_leaf=2, random_state=42, n_jobs=-1),
+    "Gradient Boosting": GradientBoostingClassifier(random_state=42),
+    "XGBoost": XGBClassifier(random_state=42, eval_metric="mlogloss"),
+    "LightGBM": LGBMClassifier(random_state=42, verbose=-1),
+    "CatBoost": CatBoostClassifier(verbose=False, random_state=42),
+}
+
+best_classifier_name, best_classifier_accuracy = None, 0.0
+
+for name, clf in classifiers.items():
+    clf.fit(X_clf_train, y_clf_train, sample_weight=clf_sample_weight)
+    clf_accuracy = accuracy_score(y_clf_test, np.ravel(clf.predict(X_clf_test)))
+
+    if clf_accuracy > best_classifier_accuracy:
+        best_classifier_name, best_classifier_accuracy = name, clf_accuracy
+
+print(
+    f"Most accurate classifier this season: {best_classifier_name} "
+    f"({best_classifier_accuracy:.2%} Win/Draw/Loss accuracy, calibrated mode) "
+    f"-- reference only, table below uses the Poisson goal model\n"
+)
 
 # --------------------------------------------------------------------
 # Load + train -- same approach as 05_predict_scoreline.py

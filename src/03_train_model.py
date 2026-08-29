@@ -90,7 +90,7 @@ display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
 # 62.5% of predictions), which is the exact miscalibration this
 # project spent real effort finding and fixing. Higher Home recall
 # here isn't better judgment, it's a more aggressive guess.
-USE_CLASS_BALANCING = False
+USE_CLASS_BALANCING = True
 
 sample_weight = (
     compute_sample_weight("balanced", y_train) if USE_CLASS_BALANCING

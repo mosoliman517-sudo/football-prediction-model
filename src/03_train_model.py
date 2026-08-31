@@ -11,6 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.metrics import (
     accuracy_score,
+    f1_score,
     confusion_matrix,
     ConfusionMatrixDisplay,
     classification_report
@@ -98,21 +99,29 @@ def choose_weighting(model):
     """
     True if this model does better balanced, False if it does better
     unweighted -- measured only on the internal validation slice.
+
+    Scored on f1_macro, not accuracy. Accuracy is exactly the metric
+    that rewards ignoring Draw entirely -- it's dominated by the two
+    big classes, so picking whichever mode scores higher on raw
+    accuracy will happily choose "never predicts Draw" if that mode
+    happens to guess Home/Away right slightly more often. This is the
+    same mistake caught earlier tuning Gradient Boosting's
+    hyperparameters, showing up again in a new place.
     """
 
     balanced_model = model.__class__(**model.get_params())
     balanced_model.fit(X_inner_train, y_inner_train, sample_weight=inner_sample_weight)
-    balanced_accuracy = accuracy_score(
-        y_inner_val, np.ravel(balanced_model.predict(X_inner_val))
+    balanced_f1 = f1_score(
+        y_inner_val, np.ravel(balanced_model.predict(X_inner_val)), average="macro"
     )
 
     unweighted_model = model.__class__(**model.get_params())
     unweighted_model.fit(X_inner_train, y_inner_train)
-    unweighted_accuracy = accuracy_score(
-        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val))
+    unweighted_f1 = f1_score(
+        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val)), average="macro"
     )
 
-    return balanced_accuracy >= unweighted_accuracy
+    return balanced_f1 >= unweighted_f1
 
 
 print(f"Training matches: {X_train.shape}")

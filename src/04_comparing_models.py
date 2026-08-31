@@ -89,19 +89,20 @@ inner_sample_weight = compute_sample_weight("balanced", y_inner_train)
 
 
 def choose_weighting(model):
+    # Scored on f1_macro, not accuracy -- see 03_train_model.py for why
     balanced_model = model.__class__(**model.get_params())
     balanced_model.fit(X_inner_train, y_inner_train, sample_weight=inner_sample_weight)
-    balanced_accuracy = accuracy_score(
-        y_inner_val, np.ravel(balanced_model.predict(X_inner_val))
+    balanced_f1 = f1_score(
+        y_inner_val, np.ravel(balanced_model.predict(X_inner_val)), average="macro"
     )
 
     unweighted_model = model.__class__(**model.get_params())
     unweighted_model.fit(X_inner_train, y_inner_train)
-    unweighted_accuracy = accuracy_score(
-        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val))
+    unweighted_f1 = f1_score(
+        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val)), average="macro"
     )
 
-    return balanced_accuracy >= unweighted_accuracy
+    return balanced_f1 >= unweighted_f1
 
 
 draw_index = list(encoder.classes_).index("D")

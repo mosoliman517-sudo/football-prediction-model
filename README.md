@@ -103,9 +103,15 @@ Found and fixed a real data bug, then added a genuinely new data source the righ
 - **Added Understat xG data** (`00_fetch_xg_data.py`, all 12 seasons, 99.4% match rate against the existing fixtures) and built walk-forward rolling xG features (`features/xg.py`) — last-5-match average shot quality created and conceded per team, the same no-leakage pattern as goals and shots.
 - **Tested three ways of using it, kept the one that worked**: feeding raw rolling xG straight into the classifiers as extra columns made things worse (43.95%) — same lesson as before, more raw features isn't automatically better for these models. Feeding it into Elo's calibrated expectation model *and* keeping the raw columns was also worse (43.16%). Feeding it into Elo's expectation model *only* — letting the data-driven logistic regression decide how much say xG gets alongside Elo, form, goals, shots and rest — and leaving the raw columns out of the classifiers entirely won clearly: **48.95%**, a real improvement over even the old, bug-inflated number.
 
-**Current best:** CatBoost, 48.95% on 2025-26 (380 matches), on the corrected dataset.
+**Current best (single-season test, 2025-26 only):** CatBoost, 48.95%. **Current best (two-season test, see below):** Random Forest, 47.89% on 2024-25 + 2025-26 combined (760 matches) — a more reliable number since it's not resting on one season's sample.
 
 **Not yet done:** market value data (Kaggle's Transfermarkt dataset) — the idea is sound (a team's squad value before a season is real, always-available pre-match information Elo currently has no way to see) but pulling it needs a Kaggle account and API token, which has to happen on the user's end first.
+
+### Two-season test set
+
+Moved from testing on one season (2025-26, 380 matches) to two (2024-25 AND 2025-26, 760 matches) — a single season is a small enough sample that one hot or cold run can swing the headline number more than the model actually changed.
+
+`06_predict_season_table.py` and `07_predict_blind_season.py` both now report a predicted-vs-actual table pair per season (4 tables total, not 2). `07` re-anchors each season's blind forecast on real history up through its own start — the 2025-26 blind run trains on real data through 2024-25 (which had genuinely already happened by August 2025), it doesn't chain off 2024-25's own predictions. That's how anyone would actually use this: every real August, last season's real table is already known.
 
 ---
 

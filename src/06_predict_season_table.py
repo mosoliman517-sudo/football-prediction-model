@@ -14,13 +14,19 @@ from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
 from config import TRAIN_TEST_SPLIT_DATE
+from features.elo import get_season
 
 # --------------------------------------------------------------------
-# Simulates the entire held-out season, match by match, using the same
+# Simulates every held-out season, match by match, using the same
 # Poisson goal model as 05_predict_scoreline.py -- needed here
 # specifically because a league table needs Goal Difference, and only
 # a model that predicts actual scorelines can produce that. The
 # classifiers (03/04) only ever pick Home/Draw/Away, never a score.
+#
+# The test window now spans two full seasons (see config.py), so
+# results are built and reported PER SEASON, not pooled together --
+# pooling would silently produce a nonsense "table" mixing two
+# different competitions' matches into one standings.
 #
 # Every predicted match gets aggregated into a real league table
 # (Played, W, D, L, GF, GA, GD, Points, sorted the same way a real
@@ -125,7 +131,16 @@ away_goal_model.fit(X_train, train["FTAG"])
 predicted_home_goals = home_goal_model.predict(X_test)
 predicted_away_goals = away_goal_model.predict(X_test)
 
-print(f"Season simulated: {len(test)} matches "
+# Season label per match, e.g. get_season() returns 2024 for a match
+# played anytime in the 2024-25 season -- used below to split the
+# pooled two-season test window back into one table per season.
+test = test.copy()
+test["SeasonLabel"] = test["Date"].apply(
+    lambda d: f"{get_season(d)}-{str(get_season(d) + 1)[-2:]}"
+)
+
+print(f"Seasons simulated: {len(test)} matches across "
+      f"{test['SeasonLabel'].nunique()} season(s) "
       f"({test['Date'].min().date()} to {test['Date'].max().date()})\n")
 
 
@@ -210,68 +225,84 @@ def build_table(matches):
 # Predicted results: the single most likely scoreline for every match
 # --------------------------------------------------------------------
 
-predicted_matches = []
+predicted_home_goals_by_row = dict(enumerate(predicted_home_goals))
+predicted_away_goals_by_row = dict(enumerate(predicted_away_goals))
 
-for idx, (home_lambda, away_lambda) in enumerate(
-    zip(predicted_home_goals, predicted_away_goals)
-):
-    pred_home_goals, pred_away_goals = most_likely_scoreline(
-        scoreline_grid(home_lambda, away_lambda)
-    )
-    predicted_matches.append((
-        test.loc[idx, "HomeTeam"],
-        test.loc[idx, "AwayTeam"],
-        pred_home_goals,
-        pred_away_goals
+season_tables = {}   # season label -> (predicted_table, actual_table)
+
+for season_label in sorted(test["SeasonLabel"].unique()):
+
+    season_test = test[test["SeasonLabel"] == season_label]
+
+    predicted_matches = []
+
+    for idx in season_test.index:
+        pred_home_goals, pred_away_goals = most_likely_scoreline(
+            scoreline_grid(
+                predicted_home_goals_by_row[idx],
+                predicted_away_goals_by_row[idx]
+            )
+        )
+        predicted_matches.append((
+            season_test.loc[idx, "HomeTeam"],
+            season_test.loc[idx, "AwayTeam"],
+            pred_home_goals,
+            pred_away_goals
+        ))
+
+    actual_matches = list(zip(
+        season_test["HomeTeam"], season_test["AwayTeam"],
+        season_test["FTHG"], season_test["FTAG"]
     ))
 
-actual_matches = list(zip(
-    test["HomeTeam"], test["AwayTeam"], test["FTHG"], test["FTAG"]
-))
+    predicted_table = build_table(predicted_matches)
+    actual_table = build_table(actual_matches)
+    season_tables[season_label] = (predicted_table, actual_table)
 
-predicted_table = build_table(predicted_matches)
-actual_table = build_table(actual_matches)
+    print("#" * 78)
+    print(f" SEASON {season_label} ".center(78, "#"))
+    print("#" * 78)
 
-print("=" * 78)
-print("PREDICTED TABLE".center(78))
-print("=" * 78)
-print(predicted_table.to_string())
+    print("=" * 78)
+    print(f"PREDICTED TABLE -- {season_label}".center(78))
+    print("=" * 78)
+    print(predicted_table.to_string())
 
-print()
-print("=" * 78)
-print("ACTUAL TABLE".center(78))
-print("=" * 78)
-print(actual_table.to_string())
+    print()
+    print("=" * 78)
+    print(f"ACTUAL TABLE -- {season_label}".center(78))
+    print("=" * 78)
+    print(actual_table.to_string())
 
-# --------------------------------------------------------------------
-# Position comparison -- how far off was each team's predicted
-# finishing position from where they actually finished?
-# --------------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Position comparison -- how far off was each team's predicted
+    # finishing position from where they actually finished?
+    # ----------------------------------------------------------------
 
-actual_position = {team: pos for pos, team in enumerate(actual_table["Team"], start=1)}
-predicted_position = {team: pos for pos, team in enumerate(predicted_table["Team"], start=1)}
+    actual_position = {team: pos for pos, team in enumerate(actual_table["Team"], start=1)}
+    predicted_position = {team: pos for pos, team in enumerate(predicted_table["Team"], start=1)}
 
-comparison_rows = []
+    comparison_rows = []
 
-for team, real_pos in actual_position.items():
-    pred_pos = predicted_position.get(team)
-    comparison_rows.append({
-        "Team": team,
-        "Actual Position": real_pos,
-        "Predicted Position": pred_pos,
-        "Position Diff": (pred_pos - real_pos) if pred_pos is not None else None
-    })
+    for team, real_pos in actual_position.items():
+        pred_pos = predicted_position.get(team)
+        comparison_rows.append({
+            "Team": team,
+            "Actual Position": real_pos,
+            "Predicted Position": pred_pos,
+            "Position Diff": (pred_pos - real_pos) if pred_pos is not None else None
+        })
 
-comparison_df = pd.DataFrame(comparison_rows).sort_values("Actual Position")
+    comparison_df = pd.DataFrame(comparison_rows).sort_values("Actual Position")
 
-print()
-print("=" * 78)
-print("POSITION COMPARISON (sorted by real final standing)".center(78))
-print("=" * 78)
-print(comparison_df.to_string(index=False))
+    print()
+    print("=" * 78)
+    print(f"POSITION COMPARISON -- {season_label} (sorted by real final standing)".center(78))
+    print("=" * 78)
+    print(comparison_df.to_string(index=False))
 
-mean_abs_error = comparison_df["Position Diff"].abs().mean()
-print(f"\nMean absolute position error: {mean_abs_error:.1f} places")
+    mean_abs_error = comparison_df["Position Diff"].abs().mean()
+    print(f"\nMean absolute position error ({season_label}): {mean_abs_error:.1f} places\n")
 
 # --------------------------------------------------------------------
 # Visual table, matching the confusion-matrix pop-up 03_train_model.py
@@ -321,10 +352,16 @@ def render_table(ax, table_df, title):
                 cell.set_facecolor("#f5f5f5")   # light row striping
 
 
-fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+n_seasons = len(season_tables)
 
-render_table(axes[0], predicted_table, "Predicted Table")
-render_table(axes[1], actual_table, "Actual Table")
+fig, axes = plt.subplots(n_seasons, 2, figsize=(18, 9 * n_seasons))
+
+if n_seasons == 1:
+    axes = axes.reshape(1, 2)
+
+for row, (season_label, (predicted_table, actual_table)) in enumerate(season_tables.items()):
+    render_table(axes[row, 0], predicted_table, f"Predicted Table -- {season_label}")
+    render_table(axes[row, 1], actual_table, f"Actual Table -- {season_label}")
 
 plt.tight_layout()
 plt.show()

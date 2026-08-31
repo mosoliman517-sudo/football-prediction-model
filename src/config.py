@@ -4,9 +4,15 @@
 # different Random Forest settings) — one shared constant instead of
 # four copy-pasted ones is how that stops happening again.
 
-TRAIN_TEST_SPLIT_DATE = "2025-08-01"   # test = 2025-26, the most recently
-                                         # completed season (~380 matches).
+TRAIN_TEST_SPLIT_DATE = "2024-08-01"   # test = 2024-25 AND 2025-26, two
+                                         # full seasons (~760 matches) instead
+                                         # of one -- a single season is a
+                                         # small enough sample that one hot
+                                         # or cold run can swing the headline
+                                         # number more than the underlying
+                                         # model actually changed; two seasons
+                                         # cuts that variance down.
                                          # Train = every season 2014-15
-                                         # through 2024-25 (11 seasons).
-                                         # Was "2023-08-01" (test = 2023-24)
-                                         # before 24-25/25-26 data existed.
+                                         # through 2023-24 (10 seasons).
+                                         # Was "2025-08-01" (test = 2025-26
+                                         # only) before this.

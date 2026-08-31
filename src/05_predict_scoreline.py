@@ -47,6 +47,7 @@ FEATURE_COLUMNS = [
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
+    "HomeSquadValueEur", "AwaySquadValueEur",
 ]
 # The exact same pre-match features the classifiers use. This is
 # deliberate -- the point of this model is to test what a different
@@ -370,6 +371,8 @@ def predict_fixture(home_team, away_team, df):
         "OverallEloDifference": (
             home_row["HomeTeamOverallElo"] - away_row["AwayTeamOverallElo"]
         ),
+        "HomeSquadValueEur": home_row["HomeSquadValueEur"],
+        "AwaySquadValueEur": away_row["AwaySquadValueEur"],
     }])[FEATURE_COLUMNS].fillna(0)
 
     features_scaled = (features - feature_means) / feature_stds

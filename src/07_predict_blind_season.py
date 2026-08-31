@@ -78,6 +78,7 @@ FEATURE_COLUMNS = [
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
+    "HomeSquadValueEur", "AwaySquadValueEur",
 ]
 
 DEFAULT_REST_DAYS = 7
@@ -177,6 +178,16 @@ def simulate_season(season_year):
 
     train = df[df["Date"] < season_start].reset_index(drop=True)
     fixtures = df[df["SeasonYear"] == season_year].sort_values("Date").reset_index(drop=True)
+
+    # Squad value is genuinely known before a ball is kicked -- unlike
+    # Elo/form, it isn't a result of anything happening DURING the
+    # season being blindly forecast, so looking it up directly from
+    # the real season data isn't cheating the same way reading real
+    # results would be.
+    team_squad_value = {}
+    for _, row in fixtures.iterrows():
+        team_squad_value[row["HomeTeam"]] = row["HomeSquadValueEur"]
+        team_squad_value[row["AwayTeam"]] = row["AwaySquadValueEur"]
 
     X_train_raw = train[FEATURE_COLUMNS].fillna(0)
     feature_means = X_train_raw.mean()
@@ -362,6 +373,8 @@ def simulate_season(season_year):
                 "HomeTeamOverallElo": home_overall_elo,
                 "AwayTeamOverallElo": away_overall_elo,
                 "OverallEloDifference": home_overall_elo - away_overall_elo,
+                "HomeSquadValueEur": team_squad_value.get(home, 0.0),
+                "AwaySquadValueEur": team_squad_value.get(away, 0.0),
             })[FEATURE_COLUMNS]
 
         season_state = {"current": get_season(train["Date"].iloc[-1])}

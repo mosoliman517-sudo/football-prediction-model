@@ -54,6 +54,7 @@ FEATURE_COLUMNS = [
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
+    "HomeSquadValueEur", "AwaySquadValueEur",
 ]
 
 # --------------------------------------------------------------------

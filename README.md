@@ -80,38 +80,27 @@ Additional improvements:
 
 ---
 
-## Update 4 — August 28-31, 2026
+## Update 4 — August 28 – September 4, 2026
 
-A long session focused on rigor over raw numbers: real bugs found and fixed, a lot of ideas tested honestly against real held-out data, most of which didn't survive contact with it.
+A week focused on rigor: real bugs found and fixed, two genuinely new data sources added the honest way, and a real fix for the model's biggest known flaw — every change tested against real held-out results, kept only if it actually earned its place.
 
-- Removed **betting-market data leakage** (bookmaker odds were the top-ranked features) and rebuilt Elo as a dual-track home/away system with a calibrated, data-weighted expectation model instead of assumed constants.
-- Diagnosed and fixed a real Home Win over-prediction bug (62.5% predicted vs. 47.2% actual) with class-balanced weighting — then found balancing isn't universal, it helps some models and actively hurts others. Each model now picks its own weighting via internal validation, scored so the choice can't just reward ignoring Draw.
-- Added `05_predict_scoreline.py` (a Poisson goal model — Win/Draw/Loss and full scoreline probabilities from one prediction) and `06_predict_season_table.py` (simulates a season and builds a real predicted-vs-actual league table, rendered as a styled image).
-- Added `07_predict_blind_season.py` — a genuinely blind season forecast that never reads a single result from the season it's predicting; every match updates Elo/form/goals purely from the model's own prior guesses, averaged over 20 Monte Carlo runs. Elo is seeded from each team's last 3 seasons, not just one — a single bad season (or a fluke great one) no longer defines a team's entire starting point.
-- Pulled in 2024-25 and 2025-26 data (12 seasons total) and moved testing to 2025-26.
-- Tested and honestly rejected a long list of further ideas — hyperparameter tuning, two different draw-forcing mechanisms, recency weighting, isotonic calibration, expected-goals-as-a-classifier-feature, referee tendencies, corners/cards/fouls, per-model feature selection, an explicit "match closeness" feature, and applying the 3-season Elo blend to the whole pipeline (helped the blind forecast, measurably hurt everything else). Each had a real rationale, each got tested against real data, and each got reverted the moment it didn't hold up. Kept only what actually earned its place.
+- Removed **betting-market data leakage**, rebuilt Elo as a dual-track home/away system with a calibrated expectation model, and fixed an early Home Win over-prediction bug with per-model class-balanced weighting.
+- Found and fixed a real **data bug**: the 2015-16 season file turned out to be a mislabeled, byte-for-byte duplicate of 2017-18 — the real 2015-16 season had never been in the training data, and 2017-18 was silently double-counted in every result this project has ever reported. Replaced with the real season data.
+- Added `05_predict_scoreline.py` (Poisson goal model), `06_predict_season_table.py` (real predicted-vs-actual league table), and `07_predict_blind_season.py` (a genuinely blind Monte Carlo season forecast that never reads the season it's predicting).
+- Added two new data sources — **Understat xG** and **Kaggle Transfermarkt market value** — each tested multiple ways before deciding how to use it: xG only helps when fed into Elo's calibration (raw xG columns actively hurt); market value helps broadly as a direct feature across every model, and Elo's own model rates it nearly as significant as Elo itself.
+- Diagnosed the real cause of the Home Win bias: Elo's home/away rating pools carry a structural home-field tilt by design, so the model needed far less evidence to call Home than Away. Built and validated a real fix — a probability threshold correction chosen via multi-fold internal validation, not a hand-picked rule — trading some raw accuracy for genuinely better Away/Draw recognition, a deliberate call.
+- Moved to a **two-season test set** (2024-25 + 2025-26, 760 matches) for a more reliable number, and split `06`/`07` into a proper predicted-vs-actual table per season (4 tables, not 2) — `07` now re-anchors each blind forecast on real history through its own season start, the way anyone would actually use it.
+- Tested and honestly rejected a long list of further ideas — hyperparameter tuning, draw-forcing mechanisms, isotonic probability calibration, referee tendencies, corners/cards/fouls, per-model feature selection, a de-trended Elo signal, and more. Each had a real rationale, each got a real test, each got reverted the moment it didn't hold up.
 
-**Current best:** CatBoost, 47.11% on 2025-26 (380 matches) — and 71.9% specifically on matches that had a winner, the fairer number once draws (which get counted as an automatic miss either way) are set aside.
+**This week's trajectory** (two-season test, 760 matches):
 
----
+| Stage | Best Model | Accuracy | Away Win Recall |
+|---|---|---|---|
+| Baseline (data bug fixed, xG added) | Random Forest | 47.89% | 52% |
+| + Home Win bias correction | Random Forest | 47.50% | 53% |
+| + Market value (current) | **Random Forest** | **48.03%** | **57%** |
 
-## Update 5 — August 31, 2026
-
-Found and fixed a real data bug, then added a genuinely new data source the right way — tested against real held-out results, kept only what earned its place.
-
-- **Fixed a duplicate-season bug**: `E0_1516.csv` (meant to be the 2015-16 season) turned out to be a byte-for-byte copy of the 2017-18 season file, mislabeled. That means the real 2015-16 season was never in the training data, and 2017-18 was silently counted twice in every model run this project has ever reported. Replaced it with the real 2015-16 data from football-data.co.uk and re-verified column compatibility before merging it in. This alone moved the honest baseline to 44.74% (XGBoost) — lower than the old 47.11% headline number, because that number was partly inflated by the duplicate.
-- **Added Understat xG data** (`00_fetch_xg_data.py`, all 12 seasons, 99.4% match rate against the existing fixtures) and built walk-forward rolling xG features (`features/xg.py`) — last-5-match average shot quality created and conceded per team, the same no-leakage pattern as goals and shots.
-- **Tested three ways of using it, kept the one that worked**: feeding raw rolling xG straight into the classifiers as extra columns made things worse (43.95%) — same lesson as before, more raw features isn't automatically better for these models. Feeding it into Elo's calibrated expectation model *and* keeping the raw columns was also worse (43.16%). Feeding it into Elo's expectation model *only* — letting the data-driven logistic regression decide how much say xG gets alongside Elo, form, goals, shots and rest — and leaving the raw columns out of the classifiers entirely won clearly: **48.95%**, a real improvement over even the old, bug-inflated number.
-
-**Current best (single-season test, 2025-26 only):** CatBoost, 48.95%. **Current best (two-season test, see below):** Random Forest, 47.89% on 2024-25 + 2025-26 combined (760 matches) — a more reliable number since it's not resting on one season's sample.
-
-**Not yet done:** market value data (Kaggle's Transfermarkt dataset) — the idea is sound (a team's squad value before a season is real, always-available pre-match information Elo currently has no way to see) but pulling it needs a Kaggle account and API token, which has to happen on the user's end first.
-
-### Two-season test set
-
-Moved from testing on one season (2025-26, 380 matches) to two (2024-25 AND 2025-26, 760 matches) — a single season is a small enough sample that one hot or cold run can swing the headline number more than the model actually changed.
-
-`06_predict_season_table.py` and `07_predict_blind_season.py` both now report a predicted-vs-actual table pair per season (4 tables total, not 2). `07` re-anchors each season's blind forecast on real history up through its own start — the 2025-26 blind run trains on real data through 2024-25 (which had genuinely already happened by August 2025), it doesn't chain off 2024-25's own predictions. That's how anyone would actually use this: every real August, last season's real table is already known.
+**Current best:** Random Forest, 48.03% on 2024-25 + 2025-26 combined.
 
 ---
 
@@ -121,21 +110,26 @@ Moved from testing on one season (2025-26, 380 matches) to two (2024-25 AND 2025
 football-prediction-model/
 │
 ├── 01_data/                        # raw season CSVs
+├── 01_data_xg/                     # Understat xG data, one CSV per season
+├── 01_data_market_value/           # Kaggle Transfermarkt data (clubs, player valuations)
 ├── 02_processed_data/              # engineered datasets (E0_features.csv, E0_model.csv)
 ├── src/
 │   ├── config.py                   # shared constants (train/test split date)
 │   ├── draw_boost.py               # margin-based draw mechanism (unused by default)
+│   ├── 00_fetch_xg_data.py         # pulls Understat xG data
 │   ├── 01_load_data.py
 │   ├── 02_load_features.py
 │   ├── 03_train_model.py           # trains + compares all 5 models + ensemble
 │   ├── 04_comparing_models.py      # lighter-weight version of the same comparison
 │   ├── 05_predict_scoreline.py     # Poisson goal model — Win/Draw/Loss + scorelines
-│   ├── 06_predict_season_table.py  # simulates a full season, predicted vs. actual table
+│   ├── 06_predict_season_table.py  # simulates each held-out season, predicted vs. actual table
 │   ├── 07_predict_blind_season.py  # genuinely blind season forecast (Monte Carlo, no in-season data)
 │   └── features/
 │       ├── form.py                 # points-based form + win-rate
 │       ├── goals.py
 │       ├── shots.py
+│       ├── xg.py                   # walk-forward rolling xG (Understat)
+│       ├── market_value.py         # season-start squad market value (Transfermarkt)
 │       ├── rest_days.py
 │       ├── head_to_head.py
 │       ├── half_time.py            # second-half goal patterns
@@ -163,6 +157,7 @@ football-prediction-model/
 
 # Next Steps
 
-- Find a real fix for Away Win recognition — head-to-head, win-rate, referee tendencies, corners/cards/fouls, and per-model feature selection were all tried and didn't crack it; the honest read is this needs genuinely new information (real upset-specific signal), not another combination of what's already here. One real root cause WAS found: dual-track Elo's home-context pool drifts up and away-context pool drifts down league-wide by design, so raw EloDifference carries a generic home-field tilt on every match, on top of genuine team-quality gaps -- 43% of actual Away Wins in the test set still showed a home-favoring EloDifference. A de-trended signal (`EloEdgeAboveAverage`, team-quality gap with the league's current average tilt subtracted out) was added to Elo's expectation model and tested properly: it measurably helped 1 of 5 classifiers (LightGBM, +3.0 points) but hurt the other 4 (-0.1 to -1.3 points each), net negative, so it was reverted. Market value (once the Kaggle data is in) is the more promising next angle -- it's the kind of pre-match signal that could actually separate "genuinely elite away team" from "average team that just has a big home-tilted Elo," which nothing currently captures directly.
+- **Clean up Elo's architecture** — a real idea worth testing properly, not yet done: strip Elo back to a purer signal (results, opponent strength, form) and move shots/xG/rest-days out as fully independent classifier features rather than blended into what moves Elo's rating. The current blended design is deliberate and tested (shot-dominance blending and the multi-signal expectation model both measurably helped when added), but that doesn't mean a simpler split wouldn't work just as well or better — genuinely untested, worth a real comparison next session.
+- Away Win recognition has real, measured progress now (recall 45% → 57% this week, via the home-bias correction + market value) but isn't solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
 - Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.

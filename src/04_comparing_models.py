@@ -7,6 +7,7 @@ from sklearn.ensemble import (
 )
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import accuracy_score, f1_score
 
 from xgboost import XGBClassifier
@@ -105,7 +106,52 @@ def choose_weighting(model):
     return balanced_f1 >= unweighted_f1
 
 
+def choose_home_penalty(model, use_balancing):
+    # Every model over-calls Home Win relative to its real ~42% share,
+    # which inflates Home recall for free while capping Away/Draw --
+    # see 03_train_model.py for the full explanation. Searches a
+    # scalar penalty on the Home Win probability, chosen to maximize
+    # f1_macro, averaged across 3 chronological folds (not one single
+    # slice, which overfit badly on an early attempt).
+    tscv = TimeSeriesSplit(n_splits=3)
+    factors = np.arange(1.0, 0.40, -0.02)
+    fold_f1 = {factor: [] for factor in factors}
+    baseline_fold_f1 = []
+
+    for fold_train_idx, fold_val_idx in tscv.split(X_train):
+
+        fold_model = model.__class__(**model.get_params())
+        fold_X_train = X_train.iloc[fold_train_idx]
+        fold_y_train = y_train[fold_train_idx]
+        fold_weight = (
+            compute_sample_weight("balanced", fold_y_train) if use_balancing else None
+        )
+        fold_model.fit(fold_X_train, fold_y_train, sample_weight=fold_weight)
+
+        fold_proba = fold_model.predict_proba(X_train.iloc[fold_val_idx])
+        fold_y_val = y_train[fold_val_idx]
+        baseline_fold_f1.append(
+            f1_score(fold_y_val, np.argmax(fold_proba, axis=1), average="macro")
+        )
+
+        for factor in factors:
+            adjusted = fold_proba.copy()
+            adjusted[:, home_index] *= factor
+            pred = np.argmax(adjusted, axis=1)
+            fold_f1[factor].append(f1_score(fold_y_val, pred, average="macro"))
+
+    best_factor, best_f1 = 1.0, np.mean(baseline_fold_f1)
+
+    for factor in factors:
+        avg_f1 = np.mean(fold_f1[factor])
+        if avg_f1 > best_f1:
+            best_f1, best_factor = avg_f1, factor
+
+    return best_factor
+
+
 draw_index = list(encoder.classes_).index("D")
+home_index = list(encoder.classes_).index("H")
 
 # ----------------------------
 # Models
@@ -158,7 +204,10 @@ for name, model in models.items():
 
     model.fit(X_train, y_train, sample_weight=weight)
 
-    predictions = np.ravel(model.predict(X_test))
+    home_penalty = choose_home_penalty(model, use_balancing)
+    probabilities = model.predict_proba(X_test)
+    probabilities[:, home_index] *= home_penalty
+    predictions = np.argmax(probabilities, axis=1)
 
     accuracy = accuracy_score(y_test, predictions)
     draw_f1 = f1_score(y_test, predictions, labels=[draw_index], average="macro")

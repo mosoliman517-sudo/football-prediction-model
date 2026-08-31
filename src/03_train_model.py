@@ -9,6 +9,7 @@ from sklearn.ensemble import (
 )
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -76,6 +77,7 @@ y_train = encoder.fit_transform(y_train_labels)
 y_test = encoder.transform(y_test_labels)
 
 display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
+HOME_IDX = list(encoder.classes_).index("H")
 
 # Class-balanced weighting is not a universal win -- confirmed
 # directly: on the 2025-26 test season, it helps CatBoost and Random
@@ -122,6 +124,69 @@ def choose_weighting(model):
     )
 
     return balanced_f1 >= unweighted_f1
+
+
+def choose_home_penalty(model, use_balancing):
+    """
+    Every model here calls Home Win far more than its real ~42% share
+    warrants (measured directly: predicted ~52% vs. actual ~42%),
+    which inflates Home recall for free (guess it more, catch more of
+    it) while capping Away/Draw recall -- an uncertain match defaults
+    to Home instead of splitting evenly, because Elo's own home-field
+    tilt (see features/elo.py) nudges the underlying score toward Home
+    on almost every match, even genuine away wins.
+
+    This is a deliberate, chosen trade-off (not a default): searches a
+    single scalar penalty multiplied onto the Home Win probability
+    before argmax, picked to maximize f1_macro. It measurably reduces
+    overall accuracy (Home recall was inflated BY the over-calling, so
+    correcting it gives some of that back) in exchange for Away/Draw
+    recall that isn't just an artifact of guessing Home less. Chosen
+    deliberately over defaulting to Home whenever the model's unsure.
+
+    Scored across 3 chronological folds within the training data, not
+    one single slice -- a small single validation slice is easy for an
+    aggressive single-parameter search to overfit to (confirmed
+    directly: one early attempt picked a factor that looked great on
+    one slice and collapsed real test accuracy). Averaging across
+    folds only keeps a factor that helps consistently.
+    """
+
+    tscv = TimeSeriesSplit(n_splits=3)
+    factors = np.arange(1.0, 0.40, -0.02)
+    fold_f1 = {factor: [] for factor in factors}
+    baseline_fold_f1 = []
+
+    for fold_train_idx, fold_val_idx in tscv.split(X_train):
+
+        fold_model = model.__class__(**model.get_params())
+        fold_X_train = X_train.iloc[fold_train_idx]
+        fold_y_train = y_train[fold_train_idx]
+        fold_weight = (
+            compute_sample_weight("balanced", fold_y_train) if use_balancing else None
+        )
+        fold_model.fit(fold_X_train, fold_y_train, sample_weight=fold_weight)
+
+        fold_proba = fold_model.predict_proba(X_train.iloc[fold_val_idx])
+        fold_y_val = y_train[fold_val_idx]
+        baseline_fold_f1.append(
+            f1_score(fold_y_val, np.argmax(fold_proba, axis=1), average="macro")
+        )
+
+        for factor in factors:
+            adjusted = fold_proba.copy()
+            adjusted[:, HOME_IDX] *= factor
+            pred = np.argmax(adjusted, axis=1)
+            fold_f1[factor].append(f1_score(fold_y_val, pred, average="macro"))
+
+    best_factor, best_f1 = 1.0, np.mean(baseline_fold_f1)
+
+    for factor in factors:
+        avg_f1 = np.mean(fold_f1[factor])
+        if avg_f1 > best_f1:
+            best_f1, best_factor = avg_f1, factor
+
+    return best_factor
 
 
 print(f"Training matches: {X_train.shape}")
@@ -180,6 +245,7 @@ axes = axes.flatten()
 
 results = []
 fitted_models = {}
+fitted_probabilities = {}
 model_weighting_choice = {}
 
 for ax, (name, model) in zip(axes, models.items()):
@@ -195,12 +261,23 @@ for ax, (name, model) in zip(axes, models.items()):
     )
 
     model.fit(X_train, y_train, sample_weight=weight)
-    predictions = np.ravel(model.predict(X_test))   # CatBoost returns (n, 1), not (n,)
+
+    home_penalty = choose_home_penalty(model, use_balancing)
+    print(f"{name}: Home Win penalty factor {home_penalty:.2f} (chosen via internal validation)")
+
+    # Note: the saved football_model.pkl below is the raw fitted model
+    # only -- this penalty is a prediction-time decision correction,
+    # not part of the model itself, so anything loading the .pkl
+    # directly and calling .predict() will NOT get it applied.
+    probabilities = model.predict_proba(X_test)
+    probabilities[:, HOME_IDX] *= home_penalty
+    predictions = np.argmax(probabilities, axis=1)
 
     accuracy = accuracy_score(y_test, predictions)
 
     results.append((name, accuracy))
     fitted_models[name] = model
+    fitted_probabilities[name] = probabilities
 
     print(f"\n{'=' * 60}")
     print(f"{name} — Accuracy: {accuracy:.2%}")
@@ -249,10 +326,16 @@ for ax, (name, model) in zip(axes, models.items()):
 # which would silently throw away each model's own chosen weighting
 # from above. Reusing the models already fitted in the loop preserves
 # that per-model choice correctly.
+#
+# Averages each model's already Home-penalty-corrected probabilities
+# (fitted_probabilities), not a fresh predict_proba() call -- the
+# ensemble should reflect the same corrected decision each model
+# individually makes, not silently revert to their raw, over-calling
+# Home Win probabilities.
 # --------------------------------------------------
 
 ensemble_probabilities = np.mean(
-    [fitted_models[name].predict_proba(X_test) for name in models],
+    [fitted_probabilities[name] for name in models],
     axis=0
 )
 ensemble_predictions = np.argmax(ensemble_probabilities, axis=1)

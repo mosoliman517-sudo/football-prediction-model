@@ -80,26 +80,18 @@ Additional improvements:
 
 ---
 
-## Update 4 — August 28, 2026
+## Update 4 — August 28-31, 2026
 
-Focused on rigor over raw numbers: found and fixed real bugs, tested several ideas honestly, and dropped the ones that didn't hold up.
+A long session focused on rigor over raw numbers: real bugs found and fixed, a lot of ideas tested honestly against real held-out data, most of which didn't survive contact with it.
 
-- Found and removed **betting-market data leakage** — bookmaker odds columns were still in the training data and ranked as the top features, meaning the model was partly reading bookmakers' predictions instead of its own.
-- Rebuilt Elo as a **dual-track (home/away) rating system** with a calibrated multi-signal expectation model (Elo + form + net goal/shot form + rest days, weighted by measured significance) instead of a flat assumed home-advantage constant.
-- Expanded the test set from 1 season to 2 (~760 matches), and added `config.py` as a single source of truth after finding real drift between the training and comparison scripts.
-- Diagnosed a real Home Win over-prediction bug (62.5% predicted vs. 47.2% actual) and fixed it with class-balanced sample weighting — confirmed with a new permanent calibration check, not just eyeballed.
-- Tried hyperparameter tuning and two different draw-prediction mechanisms; tested each honestly and dropped them when the data showed they weren't real improvements.
-- Added `05_predict_scoreline.py` — a Poisson goal model predicting expected home/away goals, deriving Win/Draw/Loss probabilities and a full scoreline grid from one underlying prediction.
-- Added head-to-head history and last-10 win-rate features aimed at Away Win recognition. Confirmed via feature importance they're genuinely used (head-to-head ranks mid-pack, ahead of several existing features) — but the accuracy effect was mixed across models, not the clean fix hoped for. Kept anyway since it's real signal.
-- Added a `USE_CLASS_BALANCING` toggle instead of picking one philosophy permanently — calibrated (predicted proportions match real-world rates) vs. confident (higher Home recall, but only by over-predicting it). Confirmed with real confusion matrices that a margin-based middle ground doesn't escape the trade-off, it just moves which class pays for it.
-- Removed the two weakest features (`HomeMatchesLast14Days`/`AwayMatchesLast14Days`, near-zero importance) and added second-half goal patterns (`half_time.py`) — built only from teams' *past* matches' half-time splits, never the current match's own half-time score, which would be leakage.
-- Shifted the test set back to 1 season and added `06_predict_season_table.py` — simulates the whole held-out season and builds a real league table (Played/W/D/L/GF/GA/GD/Points) from the predicted results next to the actual one, now rendered as an actual styled table image, not just terminal text.
-- Added 2024-25 and 2025-26 data (12 seasons total) and moved the test season to 2025-26, the most recently completed one. Caught several new bookmaker odds columns the newer files introduced before they could reintroduce leakage.
-- Tested six more ideas honestly (recency weighting, isotonic calibration, expected-goals-as-classifier-feature, referee tendencies, corners/cards/fouls, model stacking) — all six came back worse than the existing baseline, a real, evidenced signal that this feature set is near its ceiling for further additions.
-- Found that class-balanced weighting isn't universal — it helps some models and hurts others by a lot (Gradient Boosting: 40.79% balanced vs. 46.58% unweighted). Each model now picks its own weighting, decided on an internal validation slice and scored on f1_macro so the choice can't just reward ignoring Draw. Every model now beats the "always guess Home Win" baseline; three previously didn't.
-- Added `07_predict_blind_season.py` — a genuinely blind full-season forecast. Unlike `06`, it never reads a single 2025-26 result: every match is predicted from the model's own prior predictions fed forward, Elo and form updating on guesses, not reality. Real result: mean position error 4.2 places vs. `06`'s 2.8 — confirming the non-blind version really was getting help from data it shouldn't have had.
+- Removed **betting-market data leakage** (bookmaker odds were the top-ranked features) and rebuilt Elo as a dual-track home/away system with a calibrated, data-weighted expectation model instead of assumed constants.
+- Diagnosed and fixed a real Home Win over-prediction bug (62.5% predicted vs. 47.2% actual) with class-balanced weighting — then found balancing isn't universal, it helps some models and actively hurts others. Each model now picks its own weighting via internal validation, scored so the choice can't just reward ignoring Draw.
+- Added `05_predict_scoreline.py` (a Poisson goal model — Win/Draw/Loss and full scoreline probabilities from one prediction) and `06_predict_season_table.py` (simulates a season and builds a real predicted-vs-actual league table, rendered as a styled image).
+- Added `07_predict_blind_season.py` — a genuinely blind season forecast that never reads a single result from the season it's predicting; every match updates Elo/form/goals purely from the model's own prior guesses, averaged over 20 Monte Carlo runs. Elo is seeded from each team's last 3 seasons, not just one — a single bad season (or a fluke great one) no longer defines a team's entire starting point.
+- Pulled in 2024-25 and 2025-26 data (12 seasons total) and moved testing to 2025-26.
+- Tested and honestly rejected a long list of further ideas — hyperparameter tuning, two different draw-forcing mechanisms, recency weighting, isotonic calibration, expected-goals-as-a-classifier-feature, referee tendencies, corners/cards/fouls, per-model feature selection, an explicit "match closeness" feature, and applying the 3-season Elo blend to the whole pipeline (helped the blind forecast, measurably hurt everything else). Each had a real rationale, each got tested against real data, and each got reverted the moment it didn't hold up. Kept only what actually earned its place.
 
-**Current best:** Random Forest / CatBoost depending on weighting mode, ~47-48% on 2025-26 (380 matches). Genuinely a harder season to call than 2023-24 was — more draws (27.4% vs. 21.6%) and fewer clear favorites winning — reflected honestly in the accuracy, not hidden.
+**Current best:** CatBoost, 47.11% on 2025-26 (380 matches) — and 71.9% specifically on matches that had a winner, the fairer number once draws (which get counted as an automatic miss either way) are set aside.
 
 ---
 
@@ -119,6 +111,7 @@ football-prediction-model/
 │   ├── 04_comparing_models.py      # lighter-weight version of the same comparison
 │   ├── 05_predict_scoreline.py     # Poisson goal model — Win/Draw/Loss + scorelines
 │   ├── 06_predict_season_table.py  # simulates a full season, predicted vs. actual table
+│   ├── 07_predict_blind_season.py  # genuinely blind season forecast (Monte Carlo, no in-season data)
 │   └── features/
 │       ├── form.py                 # points-based form + win-rate
 │       ├── goals.py
@@ -150,6 +143,6 @@ football-prediction-model/
 
 # Next Steps
 
-- Find a real fix for Away Win recognition — still an open problem, several attempts so far haven't cracked it.
+- Find a real fix for Away Win recognition — head-to-head, win-rate, referee tendencies, corners/cards/fouls, and per-model feature selection were all tried and didn't crack it; the honest read is this needs genuinely new information (real upset-specific signal), not another combination of what's already here.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
-- Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week.
+- Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.

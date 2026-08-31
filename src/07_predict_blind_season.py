@@ -13,31 +13,36 @@ from features.head_to_head import matchup_key
 
 # ---------------------------------------------------------------------
 # 06_predict_season_table.py isn't a blind forecast -- every match's
-# pre-match features (Elo, form, goals) are built from the REAL
+# pre-match features (Elo, form, goals, shots) are built from the REAL
 # 2025-26 results, because they already happened by the time this
 # project runs. That's a fair backtest, but it's not "predict the
 # whole season before a ball is kicked."
 #
 # This script is that harder, honest version. It knows real history
 # only through 2024-25. For every 2025-26 match, in fixture order, it
-# predicts a scoreline from whatever it currently believes about both
-# teams -- then treats that PREDICTION as if it were the real result,
-# updating Elo/form/goals/H2H with its own guess, before moving to the
-# next match. No 2025-26 result is ever read, only the fixture list
-# (who plays whom, when -- known in advance, same as a real calendar).
+# predicts a scoreline AND shots AND a half-time split -- then treats
+# every one of those predictions as if it were the real result,
+# updating Elo/form/goals/shots/half-time/H2H with its own guesses,
+# before moving to the next match. Matchday 5 is built entirely from
+# matchdays 1-4's PREDICTED stats, never the real ones. No 2025-26
+# result is ever read, only the fixture list (who plays whom, when --
+# known in advance, same as a real calendar).
 #
-# One disclosed limitation: the Poisson model only ever predicts
-# GOALS, never shots, cards, or half-time splits. So Elo, Form, Goals
-# and Head-to-Head genuinely update match by match from predicted
-# results -- but the Shots and Half-Time feature groups have nothing
-# honest to update with, and stay frozen at each team's last real
-# 2024-25 value for the whole simulated season. Elo here also uses a
-# simpler expectation (plain rating comparison, no shot-blend, no the
-# multi-signal expectation model from elo.py) since those refinements
-# need shot data that doesn't exist for predicted future matches.
+# Disclosed simplifications:
+#   - Shots-on-target and half-time goals are predicted independently
+#     of full-time goals/shots, so they're clamped so a match can't
+#     have more shots-on-target than shots, or more half-time goals
+#     than full-time goals -- a real (if minor) inconsistency of
+#     predicting related quantities separately rather than jointly.
+#   - Elo here uses a simpler expectation (plain rating comparison,
+#     no shot-blend, no the multi-signal expectation model from
+#     elo.py) -- those refinements were fit on real shot data, and
+#     re-deriving them inside a live simulation loop is a separate,
+#     bigger job than this script takes on.
 # ---------------------------------------------------------------------
 
 MAX_GOALS = 8
+MAX_SHOTS = 30
 
 FEATURE_COLUMNS = [
     "HomeLast5Points", "AwayLast5Points",
@@ -60,7 +65,9 @@ FEATURE_COLUMNS = [
 DEFAULT_REST_DAYS = 7
 
 # ---------------------------------------------------------------------
-# Load + train the Poisson goal model on real data only, same as 05/06
+# Load + train every regressor on real data only. Two for the
+# scoreline (same as 05/06), six more so shots, shots-on-target, and
+# the half-time split can be predicted forward too instead of frozen.
 # ---------------------------------------------------------------------
 
 df = pd.read_csv("02_processed_data/E0_features.csv")
@@ -77,6 +84,13 @@ X_train = (X_train_raw - feature_means) / feature_stds
 home_goal_model = PoissonRegressor(max_iter=1000).fit(X_train, train["FTHG"])
 away_goal_model = PoissonRegressor(max_iter=1000).fit(X_train, train["FTAG"])
 
+home_shots_model = PoissonRegressor(max_iter=1000).fit(X_train, train["HS"])
+away_shots_model = PoissonRegressor(max_iter=1000).fit(X_train, train["AS"])
+home_shots_on_target_model = PoissonRegressor(max_iter=1000).fit(X_train, train["HST"])
+away_shots_on_target_model = PoissonRegressor(max_iter=1000).fit(X_train, train["AST"])
+home_ht_goals_model = PoissonRegressor(max_iter=1000).fit(X_train, train["HTHG"])
+away_ht_goals_model = PoissonRegressor(max_iter=1000).fit(X_train, train["HTAG"])
+
 
 def scoreline_grid(home_lambda, away_lambda, max_goals=MAX_GOALS):
     home_probs = poisson.pmf(np.arange(max_goals + 1), home_lambda)
@@ -84,20 +98,55 @@ def scoreline_grid(home_lambda, away_lambda, max_goals=MAX_GOALS):
     return np.outer(home_probs, away_probs)
 
 
-def most_likely_scoreline(grid):
-    h, a = np.unravel_index(np.argmax(grid), grid.shape)
+RNG = np.random.default_rng(42)
+
+
+def sample_scoreline(grid):
+    """
+    Draws a scoreline from the actual probability distribution instead
+    of always taking the single most likely one. Deterministically
+    picking the mode every match sounds "safest", but it isn't
+    realistic -- for two closely-matched teams the single most
+    probable exact score is almost always something boring like 1-1,
+    even though real seasons are full of blowouts that are each
+    individually less likely than that. Worse, in a simulation where
+    predictions feed forward, always picking the safe outcome creates
+    a feedback loop: two teams that draw once stay close in rating,
+    which predicts another draw next time, which keeps them close
+    again -- nothing ever breaks the cycle. Sampling does.
+    """
+
+    flat_probs = grid.flatten()
+    flat_probs = flat_probs / flat_probs.sum()   # grid is truncated at MAX_GOALS, renormalize
+    choice = RNG.choice(len(flat_probs), p=flat_probs)
+    h, a = np.unravel_index(choice, grid.shape)
     return int(h), int(a)
 
 
+def sample_count(lam, cap):
+    """Same idea as sample_scoreline, for a single Poisson(lam) count."""
+    counts = np.arange(cap + 1)
+    probs = poisson.pmf(counts, lam)
+    probs = probs / probs.sum()
+    return int(RNG.choice(counts, p=probs))
+
+
 # ---------------------------------------------------------------------
-# Seed simulation state from real history (2014-15 through 2024-25)
+# Seed simulation state from real history (2014-15 through 2024-25).
+#
+# One deque per team holds everything about their last 5 appearances
+# (any venue) needed downstream: points, goals scored/conceded, shots
+# for/against, shots-on-target for, second-half goals scored/conceded.
+# Same "last 5, any venue" window every Goals/Shots/Half-Time feature
+# in the real pipeline already uses -- this just tracks it
+# incrementally instead of recomputing it from scratch every row.
 # ---------------------------------------------------------------------
 
-recent_overall = defaultdict(lambda: deque(maxlen=5))    # (points, goals_scored, goals_conceded)
+recent_overall = defaultdict(lambda: deque(maxlen=5))
 recent_home_points = defaultdict(lambda: deque(maxlen=5))
 recent_away_points = defaultdict(lambda: deque(maxlen=5))
-winrate_home = defaultdict(lambda: deque(maxlen=10))       # 1/0 flags, home matches only
-winrate_away = defaultdict(lambda: deque(maxlen=10))       # 1/0 flags, away matches only
+winrate_home = defaultdict(lambda: deque(maxlen=10))
+winrate_away = defaultdict(lambda: deque(maxlen=10))
 last_match_date = {}
 h2h_history = defaultdict(list)
 
@@ -109,29 +158,34 @@ h2h_history = defaultdict(list)
 home_elo = {}
 away_elo = {}
 
-# Frozen snapshots -- each team's last REAL shots/half-time features,
-# unchanged for the entire blind simulation (see note above)
-frozen_home_shots = {}
-frozen_away_shots = {}
-frozen_home_ht = {}
-frozen_away_ht = {}
 
-SHOTS_HOME_COLS = ["HomeAvgShotsLast5", "HomeAvgShotsOnTargetLast5", "HomeAvgShotsConcededLast5"]
-SHOTS_AWAY_COLS = ["AwayAvgShotsLast5", "AwayAvgShotsOnTargetLast5", "AwayAvgShotsConcededLast5"]
-HT_HOME_COLS = ["HomeAvgSecondHalfGoalsScoredLast5", "HomeAvgSecondHalfGoalsConcededLast5"]
-HT_AWAY_COLS = ["AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5"]
+def _appearance(points, goals_for, goals_against, shots_for, shots_against, shots_on_target_for, second_half_scored, second_half_conceded):
+    return {
+        "points": points,
+        "goals_for": goals_for, "goals_against": goals_against,
+        "shots_for": shots_for, "shots_against": shots_against,
+        "shots_on_target_for": shots_on_target_for,
+        "second_half_scored": second_half_scored,
+        "second_half_conceded": second_half_conceded,
+    }
+
 
 for i in range(len(train)):
     row = train.iloc[i]
     home, away, date = row["HomeTeam"], row["AwayTeam"], row["Date"]
 
-    home_pts, away_pts = row["HomePoints"], row["AwayPoints"]
-    home_goals, away_goals = row["FTHG"], row["FTAG"]
-
-    recent_overall[home].append((home_pts, home_goals, away_goals))
-    recent_overall[away].append((away_pts, away_goals, home_goals))
-    recent_home_points[home].append(home_pts)
-    recent_away_points[away].append(away_pts)
+    recent_overall[home].append(_appearance(
+        row["HomePoints"], row["FTHG"], row["FTAG"],
+        row["HS"], row["AS"], row["HST"],
+        row["FTHG"] - row["HTHG"], row["FTAG"] - row["HTAG"]
+    ))
+    recent_overall[away].append(_appearance(
+        row["AwayPoints"], row["FTAG"], row["FTHG"],
+        row["AS"], row["HS"], row["AST"],
+        row["FTAG"] - row["HTAG"], row["FTHG"] - row["HTHG"]
+    ))
+    recent_home_points[home].append(row["HomePoints"])
+    recent_away_points[away].append(row["AwayPoints"])
     winrate_home[home].append(1 if row["FTR"] == "H" else 0)
     winrate_away[away].append(1 if row["FTR"] == "A" else 0)
 
@@ -144,11 +198,6 @@ for i in range(len(train)):
     home_elo[home] = row["HomeElo"]
     away_elo[away] = row["AwayElo"]
 
-    frozen_home_shots[home] = row[SHOTS_HOME_COLS].to_dict()
-    frozen_away_shots[away] = row[SHOTS_AWAY_COLS].to_dict()
-    frozen_home_ht[home] = row[HT_HOME_COLS].to_dict()
-    frozen_away_ht[away] = row[HT_AWAY_COLS].to_dict()
-
 print(f"Seeded from real history through {train['Date'].max().date()}")
 print(f"Blind-predicting {len(fixtures)} matches from "
       f"{fixtures['Date'].min().date()} to {fixtures['Date'].max().date()}\n")
@@ -159,13 +208,12 @@ def build_feature_row(home, away, date):
     home_recent = recent_overall.get(home, deque())
     away_recent = recent_overall.get(away, deque())
 
-    home_points_sum = sum(p for p, _, _ in home_recent)
-    away_points_sum = sum(p for p, _, _ in away_recent)
+    def col(recent, key):
+        values = [a[key] for a in recent]
+        return np.mean(values) if values else 0.0
 
-    home_goals_scored = [g for _, g, _ in home_recent]
-    home_goals_conceded = [g for _, _, g in home_recent]
-    away_goals_scored = [g for _, g, _ in away_recent]
-    away_goals_conceded = [g for _, _, g in away_recent]
+    def total(recent, key):
+        return sum(a[key] for a in recent)
 
     home_rating = home_elo.get(home, INITIAL_ELO)
     away_rating = away_elo.get(away, INITIAL_ELO)
@@ -187,14 +235,9 @@ def build_feature_row(home, away, date):
     home_rest = (date - home_last_date).days if home_last_date is not None else DEFAULT_REST_DAYS
     away_rest = (date - away_last_date).days if away_last_date is not None else DEFAULT_REST_DAYS
 
-    shots_home = frozen_home_shots.get(home, {c: 0.0 for c in SHOTS_HOME_COLS})
-    shots_away = frozen_away_shots.get(away, {c: 0.0 for c in SHOTS_AWAY_COLS})
-    ht_home = frozen_home_ht.get(home, {c: 0.0 for c in HT_HOME_COLS})
-    ht_away = frozen_away_ht.get(away, {c: 0.0 for c in HT_AWAY_COLS})
-
     return pd.Series({
-        "HomeLast5Points": home_points_sum,
-        "AwayLast5Points": away_points_sum,
+        "HomeLast5Points": total(home_recent, "points"),
+        "AwayLast5Points": total(away_recent, "points"),
         "HomeLast5HomePoints": sum(recent_home_points.get(home, [])),
         "AwayLast5AwayPoints": sum(recent_away_points.get(away, [])),
         "HomeWinRateLastHome": (
@@ -203,26 +246,26 @@ def build_feature_row(home, away, date):
         "AwayWinRateLastAway": (
             np.mean(winrate_away[away]) if winrate_away.get(away) else 0.5
         ),
-        "HomeAvgGoalsScoredLast5": np.mean(home_goals_scored) if home_goals_scored else 0.0,
-        "HomeAvgGoalsConcededLast5": np.mean(home_goals_conceded) if home_goals_conceded else 0.0,
-        "AwayAvgGoalsScoredLast5": np.mean(away_goals_scored) if away_goals_scored else 0.0,
-        "AwayAvgGoalsConcededLast5": np.mean(away_goals_conceded) if away_goals_conceded else 0.0,
-        "HomeAvgShotsLast5": shots_home["HomeAvgShotsLast5"],
-        "AwayAvgShotsLast5": shots_away["AwayAvgShotsLast5"],
-        "HomeAvgShotsOnTargetLast5": shots_home["HomeAvgShotsOnTargetLast5"],
-        "AwayAvgShotsOnTargetLast5": shots_away["AwayAvgShotsOnTargetLast5"],
-        "HomeAvgShotsConcededLast5": shots_home["HomeAvgShotsConcededLast5"],
-        "AwayAvgShotsConcededLast5": shots_away["AwayAvgShotsConcededLast5"],
+        "HomeAvgGoalsScoredLast5": col(home_recent, "goals_for"),
+        "HomeAvgGoalsConcededLast5": col(home_recent, "goals_against"),
+        "AwayAvgGoalsScoredLast5": col(away_recent, "goals_for"),
+        "AwayAvgGoalsConcededLast5": col(away_recent, "goals_against"),
+        "HomeAvgShotsLast5": col(home_recent, "shots_for"),
+        "AwayAvgShotsLast5": col(away_recent, "shots_for"),
+        "HomeAvgShotsOnTargetLast5": col(home_recent, "shots_on_target_for"),
+        "AwayAvgShotsOnTargetLast5": col(away_recent, "shots_on_target_for"),
+        "HomeAvgShotsConcededLast5": col(home_recent, "shots_against"),
+        "AwayAvgShotsConcededLast5": col(away_recent, "shots_against"),
         "HomeDaysRest": home_rest,
         "AwayDaysRest": away_rest,
         "H2HHomeTeamWinRate": h2h_home_rate,
         "H2HAwayTeamWinRate": h2h_away_rate,
         "H2HDrawRate": h2h_draw_rate,
         "H2HMatchesPlayed": n,
-        "HomeAvgSecondHalfGoalsScoredLast5": ht_home["HomeAvgSecondHalfGoalsScoredLast5"],
-        "HomeAvgSecondHalfGoalsConcededLast5": ht_home["HomeAvgSecondHalfGoalsConcededLast5"],
-        "AwayAvgSecondHalfGoalsScoredLast5": ht_away["AwayAvgSecondHalfGoalsScoredLast5"],
-        "AwayAvgSecondHalfGoalsConcededLast5": ht_away["AwayAvgSecondHalfGoalsConcededLast5"],
+        "HomeAvgSecondHalfGoalsScoredLast5": col(home_recent, "second_half_scored"),
+        "HomeAvgSecondHalfGoalsConcededLast5": col(home_recent, "second_half_conceded"),
+        "AwayAvgSecondHalfGoalsScoredLast5": col(away_recent, "second_half_scored"),
+        "AwayAvgSecondHalfGoalsConcededLast5": col(away_recent, "second_half_conceded"),
         "HomeElo": home_rating,
         "AwayElo": away_rating,
         "EloDifference": home_rating - away_rating,
@@ -232,13 +275,26 @@ def build_feature_row(home, away, date):
     })[FEATURE_COLUMNS]
 
 
-def update_state_with_prediction(home, away, date, home_goals, away_goals):
+def update_state_with_prediction(
+    home, away, date,
+    home_goals, away_goals,
+    home_shots, away_shots, home_shots_on_target, away_shots_on_target,
+    home_ht_goals, away_ht_goals
+):
 
     home_pts = 3 if home_goals > away_goals else (1 if home_goals == away_goals else 0)
     away_pts = 3 if away_goals > home_goals else (1 if away_goals == home_goals else 0)
 
-    recent_overall[home].append((home_pts, home_goals, away_goals))
-    recent_overall[away].append((away_pts, away_goals, home_goals))
+    recent_overall[home].append(_appearance(
+        home_pts, home_goals, away_goals,
+        home_shots, away_shots, home_shots_on_target,
+        home_goals - home_ht_goals, away_goals - away_ht_goals
+    ))
+    recent_overall[away].append(_appearance(
+        away_pts, away_goals, home_goals,
+        away_shots, home_shots, away_shots_on_target,
+        away_goals - away_ht_goals, home_goals - home_ht_goals
+    ))
     recent_home_points[home].append(home_pts)
     recent_away_points[away].append(away_pts)
     winrate_home[home].append(1 if home_goals > away_goals else 0)
@@ -281,7 +337,9 @@ update_state_with_prediction.current_season = get_season(train["Date"].iloc[-1])
 
 
 # ---------------------------------------------------------------------
-# The blind simulation itself
+# The blind simulation itself -- predicts goals, shots, shots-on-
+# target, and the half-time split for every match, then feeds all of
+# it forward as if real.
 # ---------------------------------------------------------------------
 
 predicted_matches = []
@@ -295,13 +353,41 @@ for i in range(len(fixtures)):
 
     home_lambda = home_goal_model.predict(scaled)[0]
     away_lambda = away_goal_model.predict(scaled)[0]
-
-    pred_home_goals, pred_away_goals = most_likely_scoreline(
+    pred_home_goals, pred_away_goals = sample_scoreline(
         scoreline_grid(home_lambda, away_lambda)
     )
 
+    pred_home_shots = sample_count(home_shots_model.predict(scaled)[0], MAX_SHOTS)
+    pred_away_shots = sample_count(away_shots_model.predict(scaled)[0], MAX_SHOTS)
+
+    # Shots-on-target can't exceed shots -- predicted independently,
+    # so clamp rather than let a rare inconsistency ripple forward
+    pred_home_sot = min(
+        sample_count(home_shots_on_target_model.predict(scaled)[0], MAX_SHOTS),
+        pred_home_shots
+    )
+    pred_away_sot = min(
+        sample_count(away_shots_on_target_model.predict(scaled)[0], MAX_SHOTS),
+        pred_away_shots
+    )
+
+    # Half-time goals can't exceed full-time goals -- same clamp
+    pred_home_ht_goals = min(
+        sample_count(home_ht_goals_model.predict(scaled)[0], MAX_GOALS),
+        pred_home_goals
+    )
+    pred_away_ht_goals = min(
+        sample_count(away_ht_goals_model.predict(scaled)[0], MAX_GOALS),
+        pred_away_goals
+    )
+
     predicted_matches.append((home, away, pred_home_goals, pred_away_goals))
-    update_state_with_prediction(home, away, date, pred_home_goals, pred_away_goals)
+    update_state_with_prediction(
+        home, away, date,
+        pred_home_goals, pred_away_goals,
+        pred_home_shots, pred_away_shots, pred_home_sot, pred_away_sot,
+        pred_home_ht_goals, pred_away_ht_goals
+    )
 
 actual_matches = list(zip(
     fixtures["HomeTeam"], fixtures["AwayTeam"], fixtures["FTHG"], fixtures["FTAG"]
@@ -364,7 +450,7 @@ predicted_table = build_table(predicted_matches)
 actual_table = build_table(actual_matches)
 
 print("=" * 78)
-print("PREDICTED TABLE (blind -- built only from the model's own guesses)".center(78))
+print("PREDICTED TABLE (blind -- everything fed forward is a prediction)".center(78))
 print("=" * 78)
 print(predicted_table.to_string())
 

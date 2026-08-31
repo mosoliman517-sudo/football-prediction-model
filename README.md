@@ -95,6 +95,20 @@ A long session focused on rigor over raw numbers: real bugs found and fixed, a l
 
 ---
 
+## Update 5 — August 31, 2026
+
+Found and fixed a real data bug, then added a genuinely new data source the right way — tested against real held-out results, kept only what earned its place.
+
+- **Fixed a duplicate-season bug**: `E0_1516.csv` (meant to be the 2015-16 season) turned out to be a byte-for-byte copy of the 2017-18 season file, mislabeled. That means the real 2015-16 season was never in the training data, and 2017-18 was silently counted twice in every model run this project has ever reported. Replaced it with the real 2015-16 data from football-data.co.uk and re-verified column compatibility before merging it in. This alone moved the honest baseline to 44.74% (XGBoost) — lower than the old 47.11% headline number, because that number was partly inflated by the duplicate.
+- **Added Understat xG data** (`00_fetch_xg_data.py`, all 12 seasons, 99.4% match rate against the existing fixtures) and built walk-forward rolling xG features (`features/xg.py`) — last-5-match average shot quality created and conceded per team, the same no-leakage pattern as goals and shots.
+- **Tested three ways of using it, kept the one that worked**: feeding raw rolling xG straight into the classifiers as extra columns made things worse (43.95%) — same lesson as before, more raw features isn't automatically better for these models. Feeding it into Elo's calibrated expectation model *and* keeping the raw columns was also worse (43.16%). Feeding it into Elo's expectation model *only* — letting the data-driven logistic regression decide how much say xG gets alongside Elo, form, goals, shots and rest — and leaving the raw columns out of the classifiers entirely won clearly: **48.95%**, a real improvement over even the old, bug-inflated number.
+
+**Current best:** CatBoost, 48.95% on 2025-26 (380 matches), on the corrected dataset.
+
+**Not yet done:** market value data (Kaggle's Transfermarkt dataset) — the idea is sound (a team's squad value before a season is real, always-available pre-match information Elo currently has no way to see) but pulling it needs a Kaggle account and API token, which has to happen on the user's end first.
+
+---
+
 # Current Project Structure
 
 ```

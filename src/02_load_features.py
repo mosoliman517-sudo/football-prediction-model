@@ -20,7 +20,13 @@ df = df.drop(columns=[
     "HY",
     "AY",
     "HR",
-    "AR"
+    "AR",
+    "HomeXG",
+    "AwayXG",
+    "HomeAvgXGLast5",
+    "AwayAvgXGLast5",
+    "HomeAvgXGConcededLast5",
+    "AwayAvgXGConcededLast5"
 ], errors="ignore")
 
 # Inputs (what the model can see before the match)

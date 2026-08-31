@@ -4,6 +4,7 @@ import pandas as pd
 from features.form import add_form_features, add_win_rate_features
 from features.goals import add_goals_features
 from features.shots import add_shot_features
+from features.xg import add_xg_features
 from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
 from features.half_time import add_half_time_pattern_features
@@ -190,6 +191,9 @@ df = add_goals_features(df)
 
 print("Creating shot features...")
 df = add_shot_features(df)
+
+print("Creating xG features...")
+df = add_xg_features(df)
 
 print("Creating rest day features...")
 df = add_rest_days_features(df)

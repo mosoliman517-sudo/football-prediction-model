@@ -92,7 +92,7 @@ def get_season(date):
 # how Elo ratings move, automatically, instead of a guessed weight.
 # ---------------------------------------------------------------------
 
-SIGNAL_COLUMNS = ["Elo", "Form", "NetGoalForm", "NetShotForm", "RestAdvantage"]
+SIGNAL_COLUMNS = ["Elo", "Form", "NetGoalForm", "NetShotForm", "NetXGForm", "RestAdvantage"]
 
 
 def _signal_differences(df, elo_difference):
@@ -122,11 +122,19 @@ def _signal_differences(df, elo_difference):
         df["AwayAvgShotsLast5"] - df["AwayAvgShotsConcededLast5"]
     )
 
+    net_xg_home = (
+        df["HomeAvgXGLast5"] - df["HomeAvgXGConcededLast5"]
+    )
+    net_xg_away = (
+        df["AwayAvgXGLast5"] - df["AwayAvgXGConcededLast5"]
+    )
+
     signals = pd.DataFrame({
         "Elo": elo_difference,
         "Form": df["HomeLast5Points"] - df["AwayLast5Points"],
         "NetGoalForm": net_goals_home - net_goals_away,
         "NetShotForm": net_shots_home - net_shots_away,
+        "NetXGForm": net_xg_home - net_xg_away,
         "RestAdvantage": df["HomeDaysRest"] - df["AwayDaysRest"],
     })
 
@@ -292,6 +300,15 @@ def _run_elo_pass(df, expectation_model=None):
                 - df.loc[i, "AwayAvgShotsConcededLast5"]
             )
 
+            net_xg_home = (
+                df.loc[i, "HomeAvgXGLast5"]
+                - df.loc[i, "HomeAvgXGConcededLast5"]
+            )
+            net_xg_away = (
+                df.loc[i, "AwayAvgXGLast5"]
+                - df.loc[i, "AwayAvgXGConcededLast5"]
+            )
+
             raw_signals = {
                 "Elo": home_rating - away_rating,
                 "Form": (
@@ -299,6 +316,7 @@ def _run_elo_pass(df, expectation_model=None):
                 ),
                 "NetGoalForm": net_goals_home - net_goals_away,
                 "NetShotForm": net_shots_home - net_shots_away,
+                "NetXGForm": net_xg_home - net_xg_away,
                 "RestAdvantage": (
                     df.loc[i, "HomeDaysRest"] - df.loc[i, "AwayDaysRest"]
                 ),

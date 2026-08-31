@@ -5,8 +5,7 @@ import joblib
 
 from sklearn.ensemble import (
     RandomForestClassifier,
-    GradientBoostingClassifier,
-    VotingClassifier
+    GradientBoostingClassifier
 )
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils.class_weight import compute_sample_weight
@@ -77,25 +76,44 @@ y_test = encoder.transform(y_test_labels)
 
 display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
 
-# Two honest, different philosophies -- pick one, not a bug either way:
-#
-# True (calibrated): predicted proportions match real-world rates as
-# closely as possible (Home ~47%, Away ~30%, Draw ~22%). Home and Away
-# recall come out close to each other (~60-65% each), because that's
-# what "not over-guessing the favorite" actually looks like.
-#
-# False (confident): no correction for Home Win being the most common
-# outcome. Home recall climbs back to ~75-81% -- but only because the
-# model calls Home Win far more than its real ~47% rate (as high as
-# 62.5% of predictions), which is the exact miscalibration this
-# project spent real effort finding and fixing. Higher Home recall
-# here isn't better judgment, it's a more aggressive guess.
-USE_CLASS_BALANCING = True
+# Class-balanced weighting is not a universal win -- confirmed
+# directly: on the 2025-26 test season, it helps CatBoost and Random
+# Forest by several points, but actively HURTS Gradient Boosting
+# (40.79% balanced vs 46.58% unweighted -- a bigger swing than almost
+# anything else tried this project) and roughly wipes out for
+# XGBoost/LightGBM. One global toggle was hiding that. So each model
+# picks its own weighting here, decided on an internal validation
+# slice carved out of the training data (last 15%, chronologically) --
+# never the real test set, so the choice isn't just fit to these exact
+# 380 matches.
+sample_weight = compute_sample_weight("balanced", y_train)
 
-sample_weight = (
-    compute_sample_weight("balanced", y_train) if USE_CLASS_BALANCING
-    else None
-)
+inner_cutoff = int(len(X_train) * 0.85)
+X_inner_train, X_inner_val = X_train.iloc[:inner_cutoff], X_train.iloc[inner_cutoff:]
+y_inner_train, y_inner_val = y_train[:inner_cutoff], y_train[inner_cutoff:]
+inner_sample_weight = compute_sample_weight("balanced", y_inner_train)
+
+
+def choose_weighting(model):
+    """
+    True if this model does better balanced, False if it does better
+    unweighted -- measured only on the internal validation slice.
+    """
+
+    balanced_model = model.__class__(**model.get_params())
+    balanced_model.fit(X_inner_train, y_inner_train, sample_weight=inner_sample_weight)
+    balanced_accuracy = accuracy_score(
+        y_inner_val, np.ravel(balanced_model.predict(X_inner_val))
+    )
+
+    unweighted_model = model.__class__(**model.get_params())
+    unweighted_model.fit(X_inner_train, y_inner_train)
+    unweighted_accuracy = accuracy_score(
+        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val))
+    )
+
+    return balanced_accuracy >= unweighted_accuracy
+
 
 print(f"Training matches: {X_train.shape}")
 print(f"Testing matches: {X_test.shape}")
@@ -153,10 +171,21 @@ axes = axes.flatten()
 
 results = []
 fitted_models = {}
+model_weighting_choice = {}
 
 for ax, (name, model) in zip(axes, models.items()):
 
-    model.fit(X_train, y_train, sample_weight=sample_weight)
+    use_balancing = choose_weighting(model)
+    model_weighting_choice[name] = use_balancing
+    weight = sample_weight if use_balancing else None
+
+    print(
+        f"\n{name}: using "
+        f"{'calibrated (balanced)' if use_balancing else 'confident (unweighted)'} "
+        f"mode (chosen via internal validation)"
+    )
+
+    model.fit(X_train, y_train, sample_weight=weight)
     predictions = np.ravel(model.predict(X_test))   # CatBoost returns (n, 1), not (n,)
 
     accuracy = accuracy_score(y_test, predictions)
@@ -202,18 +231,22 @@ for ax, (name, model) in zip(axes, models.items()):
     ax.set_title(f"{name}\n{accuracy:.1%} accuracy")
 
 # --------------------------------------------------
-# Ensemble: soft-vote across all 5 models — average
-# every model's predicted probabilities per class,
-# take whichever class comes out highest
+# Ensemble: soft-vote across all 5 already-fitted models — average
+# each one's predicted probabilities per class, take whichever class
+# comes out highest.
+#
+# Built manually instead of sklearn's VotingClassifier: that class
+# clones and refits every sub-estimator with one shared sample_weight,
+# which would silently throw away each model's own chosen weighting
+# from above. Reusing the models already fitted in the loop preserves
+# that per-model choice correctly.
 # --------------------------------------------------
 
-ensemble = VotingClassifier(
-    estimators=list(models.items()),
-    voting="soft"
+ensemble_probabilities = np.mean(
+    [fitted_models[name].predict_proba(X_test) for name in models],
+    axis=0
 )
-
-ensemble.fit(X_train, y_train, sample_weight=sample_weight)
-ensemble_predictions = ensemble.predict(X_test)
+ensemble_predictions = np.argmax(ensemble_probabilities, axis=1)
 
 ensemble_accuracy = accuracy_score(y_test, ensemble_predictions)
 results.append(("Ensemble (all 5, soft vote)", ensemble_accuracy))
@@ -265,10 +298,9 @@ print("\nFinal comparison:\n")
 print(summary.to_string(index=False))
 
 # --------------------------------------------------
-# Save the best individual model (not the ensemble —
-# VotingClassifier pickles fine too, but the whole
-# point of comparing is to see if the ensemble is
-# actually worth the extra complexity over the best
+# Save the best individual model (not the ensemble --
+# the whole point of comparing is to see if the ensemble
+# is actually worth the extra complexity over the best
 # single model, not to assume it always is)
 # --------------------------------------------------
 

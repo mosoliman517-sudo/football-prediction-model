@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from sklearn.ensemble import (
     RandomForestClassifier,
@@ -72,14 +73,36 @@ X_test = X_test.drop(columns=columns_to_remove)
 X_train = X_train.fillna(0)
 X_test = X_test.fillna(0)
 
-# Home Win is the most common outcome in the data (47% vs 30% Away,
-# 22% Draw) -- without correcting for that, a model can rack up
-# accuracy just by leaning on the majority class, which is what was
-# causing every model except Random Forest (the one with
-# class_weight="balanced") to predict Home Win far more than its real
-# rate. Applied uniformly here via sample_weight, which every model
-# below accepts at fit time.
+# Class-balanced weighting is not a universal win -- confirmed
+# directly on the 2025-26 test season: it helps CatBoost and Random
+# Forest, but actively hurts Gradient Boosting (40.79% balanced vs
+# 46.58% unweighted) and roughly wipes out for XGBoost/LightGBM. Each
+# model picks its own weighting here, decided on an internal
+# validation slice (last 15% of training data) -- never the real test
+# set, so the choice isn't just fit to these exact 380 matches.
 sample_weight = compute_sample_weight("balanced", y_train)
+
+inner_cutoff = int(len(X_train) * 0.85)
+X_inner_train, X_inner_val = X_train.iloc[:inner_cutoff], X_train.iloc[inner_cutoff:]
+y_inner_train, y_inner_val = y_train[:inner_cutoff], y_train[inner_cutoff:]
+inner_sample_weight = compute_sample_weight("balanced", y_inner_train)
+
+
+def choose_weighting(model):
+    balanced_model = model.__class__(**model.get_params())
+    balanced_model.fit(X_inner_train, y_inner_train, sample_weight=inner_sample_weight)
+    balanced_accuracy = accuracy_score(
+        y_inner_val, np.ravel(balanced_model.predict(X_inner_val))
+    )
+
+    unweighted_model = model.__class__(**model.get_params())
+    unweighted_model.fit(X_inner_train, y_inner_train)
+    unweighted_accuracy = accuracy_score(
+        y_inner_val, np.ravel(unweighted_model.predict(X_inner_val))
+    )
+
+    return balanced_accuracy >= unweighted_accuracy
+
 
 draw_index = list(encoder.classes_).index("D")
 
@@ -129,9 +152,12 @@ results = []
 
 for name, model in models.items():
 
-    model.fit(X_train, y_train, sample_weight=sample_weight)
+    use_balancing = choose_weighting(model)
+    weight = sample_weight if use_balancing else None
 
-    predictions = model.predict(X_test)
+    model.fit(X_train, y_train, sample_weight=weight)
+
+    predictions = np.ravel(model.predict(X_test))
 
     accuracy = accuracy_score(y_test, predictions)
     draw_f1 = f1_score(y_test, predictions, labels=[draw_index], average="macro")

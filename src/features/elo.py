@@ -95,7 +95,7 @@ def get_season(date):
 
 SIGNAL_COLUMNS = [
     "Elo", "Form", "NetGoalForm", "NetShotForm", "NetXGForm",
-    "TransferActivity", "RestAdvantage"
+    "TransferActivity", "TablePositionGap", "RestAdvantage"
 ]
 
 
@@ -110,13 +110,13 @@ def _signal_differences(df, elo_difference):
     """
     Every pre-match signal fed to the expectation model, each expressed
     as a single Home-minus-Away differential — the same shape as
-    EloDifference itself. All six non-Elo signals are already sitting
+    EloDifference itself. All seven non-Elo signals are already sitting
     in df by the time this runs (form.py, goals.py, shots.py, xg.py,
-    transfer_activity.py and rest_days.py all run earlier in
-    01_load_data.py), this just repackages them. Missing values (a
-    team's very first-ever match in the dataset, before it has any
-    rolling history) are filled with 0 — a neutral "no signal yet"
-    reading, matching how those columns were initialised by the
+    transfer_activity.py, table_position.py and rest_days.py all run
+    earlier in 01_load_data.py), this just repackages them. Missing
+    values (a team's very first-ever match in the dataset, before it
+    has any rolling history) are filled with 0 — a neutral "no signal
+    yet" reading, matching how those columns were initialised by the
     modules that built them.
     """
 
@@ -153,6 +153,7 @@ def _signal_differences(df, elo_difference):
         "NetShotForm": net_shots_home - net_shots_away,
         "NetXGForm": net_xg_home - net_xg_away,
         "TransferActivity": transfer_activity,
+        "TablePositionGap": df["TablePointsGap"],
         "RestAdvantage": df["HomeDaysRest"] - df["AwayDaysRest"],
     })
 
@@ -341,6 +342,7 @@ def _run_elo_pass(df, expectation_model=None):
                 "NetShotForm": net_shots_home - net_shots_away,
                 "NetXGForm": net_xg_home - net_xg_away,
                 "TransferActivity": transfer_activity,
+                "TablePositionGap": df.loc[i, "TablePointsGap"],
                 "RestAdvantage": (
                     df.loc[i, "HomeDaysRest"] - df.loc[i, "AwayDaysRest"]
                 ),

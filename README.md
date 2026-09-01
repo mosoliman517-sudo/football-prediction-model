@@ -95,6 +95,7 @@ A week focused on rigor: real bugs found and fixed, two genuinely new data sourc
 - Tested "clean up Elo" (strip it to just results + opponent strength + form, move everything else out as independent features) — a fair test, but the data said no: roughly a wash on average, helping some models and hurting others equally.
 - Added **transfer activity** (Kaggle Transfermarkt) — summer transfer window volume and net spend per team. Tested the same rigorous way as xG: as a raw feature (net negative), and fed into Elo's calibration only (genuine, broad improvement). Kept the winning version, discarded the rest — including the combination of both ideas together, which was the *worst* result of everything tested. A real but modest effect: net transfer spend correlates weakly-positively with that season's points (r=0.20), buying activity specifically a bit more (r=0.31) — matches its small (~1.5%) share of Elo's calibrated weight, not a dominant signal on its own.
 - Fixed the ensemble to pick its members by validation instead of always averaging all 5 — dropping CatBoost (not the weakest model solo) turned out to beat using all 5, because its errors overlapped too much with the other boosted-tree models rather than adding real diversity.
+- Added **table position** (`features/table_position.py`) — where a team actually sits in the table right now (walk-forward within-season standings, zero new data needed, computed from results already in the pipeline). Genuinely different information from recent form or Elo: a winning streak climbing from 10th means something different than the same streak climbing from 18th. Tested as a raw feature, an Elo signal, and both together — both together won clearly, pushing Random Forest to **49.34%**, the best single number this project has produced. Trade-off disclosed and kept deliberately: it's a clear win in `03`/`04`/`05`/`06` (06's real position error dropped to 1.7/2.3 places), but a modest regression in `07`'s blind forecast (2025-26 error 4.2→4.7 places) since predicted standings compound their own error there in a way real standings never do elsewhere.
 
 **This week's trajectory** (two-season test, 760 matches):
 
@@ -104,9 +105,10 @@ A week focused on rigor: real bugs found and fixed, two genuinely new data sourc
 | + Home Win bias correction | Random Forest | 47.50% | 53% |
 | + Market value | Random Forest | 48.03% | 57% |
 | + Transfer activity (Elo signal) | LightGBM | 48.03% | — |
-| + Validated ensemble selection (current) | **Ensemble (RF + XGBoost)** | **48.16%** | — |
+| + Validated ensemble selection | Ensemble (RF + XGBoost) | 48.16% | — |
+| + Table position (current) | **Random Forest** | **49.34%** | — |
 
-**Current best:** Ensemble (Random Forest + XGBoost, chosen via internal validation), 48.16% on 2024-25 + 2025-26 combined.
+**Current best:** Random Forest, 49.34% on 2024-25 + 2025-26 combined.
 
 ---
 
@@ -136,6 +138,7 @@ football-prediction-model/
 │       ├── xg.py                   # walk-forward rolling xG (Understat)
 │       ├── market_value.py         # season-start squad market value (Transfermarkt)
 │       ├── transfer_activity.py    # summer transfer window volume/spend (Transfermarkt)
+│       ├── table_position.py       # walk-forward in-season table standings
 │       ├── rest_days.py
 │       ├── head_to_head.py
 │       ├── half_time.py            # second-half goal patterns

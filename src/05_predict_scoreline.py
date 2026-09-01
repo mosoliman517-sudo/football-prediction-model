@@ -48,6 +48,7 @@ FEATURE_COLUMNS = [
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
+    "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
 ]
 # The exact same pre-match features the classifiers use. This is
 # deliberate -- the point of this model is to test what a different
@@ -373,6 +374,15 @@ def predict_fixture(home_team, away_team, df):
         ),
         "HomeSquadValueEur": home_row["HomeSquadValueEur"],
         "AwaySquadValueEur": away_row["AwaySquadValueEur"],
+        "HomeTablePosition": home_row["HomeTablePosition"],
+        "AwayTablePosition": away_row["AwayTablePosition"],
+        # Approximation, same spirit as HomeElo/AwaySquadValueEur above
+        # (each team's own latest known row, not a live current table)
+        # -- a real points gap isn't available for an arbitrary
+        # hypothetical fixture, so this uses the position gap instead,
+        # sign-flipped to match TablePointsGap's convention (positive
+        # = home team better placed).
+        "TablePointsGap": away_row["AwayTablePosition"] - home_row["HomeTablePosition"],
     }])[FEATURE_COLUMNS].fillna(0)
 
     features_scaled = (features - feature_means) / feature_stds

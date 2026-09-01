@@ -79,6 +79,7 @@ FEATURE_COLUMNS = [
     "HomeElo", "AwayElo", "EloDifference",
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
+    "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
 ]
 
 DEFAULT_REST_DAYS = 7
@@ -236,6 +237,20 @@ def simulate_season(season_year):
         last_match_date = {}
         h2h_history = defaultdict(list)
 
+        # Table position resets every season boundary (same as the
+        # real table_position.py) -- starts empty here since fixtures
+        # is always exactly one season, no carry-over from train needed.
+        season_table = defaultdict(lambda: {"Points": 0, "GF": 0, "GA": 0})
+
+        def table_position(team):
+            ranking = sorted(
+                season_table.items(),
+                key=lambda kv: (kv[1]["Points"], kv[1]["GF"] - kv[1]["GA"], kv[1]["GF"]),
+                reverse=True
+            )
+            positions = {name: rank + 1 for rank, (name, _) in enumerate(ranking)}
+            return positions.get(team, len(season_table) + 1)
+
         # Elo seeded directly from the real, already-computed values --
         # elo.py already did the sophisticated version (dual-track, shot-
         # blended, multi-signal expectation) for every real match. Each
@@ -375,6 +390,9 @@ def simulate_season(season_year):
                 "OverallEloDifference": home_overall_elo - away_overall_elo,
                 "HomeSquadValueEur": team_squad_value.get(home, 0.0),
                 "AwaySquadValueEur": team_squad_value.get(away, 0.0),
+                "HomeTablePosition": table_position(home),
+                "AwayTablePosition": table_position(away),
+                "TablePointsGap": season_table[home]["Points"] - season_table[away]["Points"],
             })[FEATURE_COLUMNS]
 
         season_state = {"current": get_season(train["Date"].iloc[-1])}
@@ -409,6 +427,13 @@ def simulate_season(season_year):
 
             winner = home if home_goals > away_goals else (away if away_goals > home_goals else None)
             h2h_history[matchup_key(home, away)].append(winner)
+
+            season_table[home]["GF"] += home_goals
+            season_table[home]["GA"] += away_goals
+            season_table[away]["GF"] += away_goals
+            season_table[away]["GA"] += home_goals
+            season_table[home]["Points"] += home_pts
+            season_table[away]["Points"] += away_pts
 
             season = get_season(date)
             if season != season_state["current"]:

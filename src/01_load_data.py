@@ -7,6 +7,7 @@ from features.shots import add_shot_features
 from features.xg import add_xg_features
 from features.market_value import add_market_value_features
 from features.transfer_activity import add_transfer_activity_features
+from features.table_position import add_table_position_features
 from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
 from features.half_time import add_half_time_pattern_features
@@ -202,6 +203,9 @@ df = add_market_value_features(df)
 
 print("Creating transfer activity features...")
 df = add_transfer_activity_features(df)
+
+print("Creating table position features...")
+df = add_table_position_features(df)
 
 print("Creating rest day features...")
 df = add_rest_days_features(df)

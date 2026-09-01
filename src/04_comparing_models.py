@@ -75,12 +75,11 @@ X_train = X_train.fillna(0)
 X_test = X_test.fillna(0)
 
 # Class-balanced weighting is not a universal win -- confirmed
-# directly on the 2025-26 test season: it helps CatBoost and Random
-# Forest, but actively hurts Gradient Boosting (40.79% balanced vs
-# 46.58% unweighted) and roughly wipes out for XGBoost/LightGBM. Each
+# directly: it helps CatBoost and Random Forest, but actively hurts
+# Gradient Boosting and roughly wipes out for XGBoost/LightGBM. Each
 # model picks its own weighting here, decided on an internal
 # validation slice (last 15% of training data) -- never the real test
-# set, so the choice isn't just fit to these exact 380 matches.
+# set, so the choice isn't just fit to these exact test matches.
 sample_weight = compute_sample_weight("balanced", y_train)
 
 inner_cutoff = int(len(X_train) * 0.85)

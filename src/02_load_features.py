@@ -26,14 +26,14 @@ df = df.drop(columns=[
     "HomeAvgXGLast5",
     "AwayAvgXGLast5",
     "HomeAvgXGConcededLast5",
-    "AwayAvgXGConcededLast5"
+    "AwayAvgXGConcededLast5",
+    "HomeTransfersIn",
+    "HomeTransfersOut",
+    "HomeNetTransferSpendEur",
+    "AwayTransfersIn",
+    "AwayTransfersOut",
+    "AwayNetTransferSpendEur"
 ], errors="ignore")
-
-# Inputs (what the model can see before the match)
-X = df.drop(columns=["FTR"])
-
-# Target (what the model should learn to predict)
-y = df["FTR"]
 
 df = df.drop(columns=["HomePoints", "AwayPoints"])
 df.to_csv("02_processed_data/E0_model.csv", index=False)

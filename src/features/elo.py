@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
@@ -92,20 +93,31 @@ def get_season(date):
 # how Elo ratings move, automatically, instead of a guessed weight.
 # ---------------------------------------------------------------------
 
-SIGNAL_COLUMNS = ["Elo", "Form", "NetGoalForm", "NetShotForm", "NetXGForm", "RestAdvantage"]
+SIGNAL_COLUMNS = [
+    "Elo", "Form", "NetGoalForm", "NetShotForm", "NetXGForm",
+    "TransferActivity", "RestAdvantage"
+]
+
+
+def _signed_log(x):
+    # Preserves sign for a net-spend figure that can be negative (a
+    # team that sold more than it bought that summer) -- np.log1p
+    # alone only handles non-negative input.
+    return np.sign(x) * np.log1p(np.abs(x))
 
 
 def _signal_differences(df, elo_difference):
     """
     Every pre-match signal fed to the expectation model, each expressed
     as a single Home-minus-Away differential — the same shape as
-    EloDifference itself. All four non-Elo signals are already sitting
-    in df by the time this runs (form.py, goals.py, shots.py and
-    rest_days.py all run earlier in 01_load_data.py), this just
-    repackages them. Missing values (a team's very first-ever match in
-    the dataset, before it has any rolling history) are filled with 0
-    — a neutral "no signal yet" reading, matching how those columns
-    were initialised by the modules that built them.
+    EloDifference itself. All six non-Elo signals are already sitting
+    in df by the time this runs (form.py, goals.py, shots.py, xg.py,
+    transfer_activity.py and rest_days.py all run earlier in
+    01_load_data.py), this just repackages them. Missing values (a
+    team's very first-ever match in the dataset, before it has any
+    rolling history) are filled with 0 — a neutral "no signal yet"
+    reading, matching how those columns were initialised by the
+    modules that built them.
     """
 
     net_goals_home = (
@@ -129,12 +141,18 @@ def _signal_differences(df, elo_difference):
         df["AwayAvgXGLast5"] - df["AwayAvgXGConcededLast5"]
     )
 
+    transfer_activity = (
+        _signed_log(df["HomeNetTransferSpendEur"])
+        - _signed_log(df["AwayNetTransferSpendEur"])
+    )
+
     signals = pd.DataFrame({
         "Elo": elo_difference,
         "Form": df["HomeLast5Points"] - df["AwayLast5Points"],
         "NetGoalForm": net_goals_home - net_goals_away,
         "NetShotForm": net_shots_home - net_shots_away,
         "NetXGForm": net_xg_home - net_xg_away,
+        "TransferActivity": transfer_activity,
         "RestAdvantage": df["HomeDaysRest"] - df["AwayDaysRest"],
     })
 
@@ -309,6 +327,11 @@ def _run_elo_pass(df, expectation_model=None):
                 - df.loc[i, "AwayAvgXGConcededLast5"]
             )
 
+            transfer_activity = (
+                _signed_log(df.loc[i, "HomeNetTransferSpendEur"])
+                - _signed_log(df.loc[i, "AwayNetTransferSpendEur"])
+            )
+
             raw_signals = {
                 "Elo": home_rating - away_rating,
                 "Form": (
@@ -317,6 +340,7 @@ def _run_elo_pass(df, expectation_model=None):
                 "NetGoalForm": net_goals_home - net_goals_away,
                 "NetShotForm": net_shots_home - net_shots_away,
                 "NetXGForm": net_xg_home - net_xg_away,
+                "TransferActivity": transfer_activity,
                 "RestAdvantage": (
                     df.loc[i, "HomeDaysRest"] - df.loc[i, "AwayDaysRest"]
                 ),

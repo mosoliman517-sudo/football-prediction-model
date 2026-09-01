@@ -1,3 +1,5 @@
+import itertools
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -80,15 +82,14 @@ display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
 HOME_IDX = list(encoder.classes_).index("H")
 
 # Class-balanced weighting is not a universal win -- confirmed
-# directly: on the 2025-26 test season, it helps CatBoost and Random
-# Forest by several points, but actively HURTS Gradient Boosting
-# (40.79% balanced vs 46.58% unweighted -- a bigger swing than almost
+# directly: it helps CatBoost and Random Forest by several points, but
+# actively HURTS Gradient Boosting (a bigger swing than almost
 # anything else tried this project) and roughly wipes out for
 # XGBoost/LightGBM. One global toggle was hiding that. So each model
 # picks its own weighting here, decided on an internal validation
 # slice carved out of the training data (last 15%, chronologically) --
 # never the real test set, so the choice isn't just fit to these exact
-# 380 matches.
+# test matches.
 sample_weight = compute_sample_weight("balanced", y_train)
 
 inner_cutoff = int(len(X_train) * 0.85)
@@ -246,12 +247,11 @@ axes = axes.flatten()
 results = []
 fitted_models = {}
 fitted_probabilities = {}
-model_weighting_choice = {}
+inner_val_probabilities = {}
 
 for ax, (name, model) in zip(axes, models.items()):
 
     use_balancing = choose_weighting(model)
-    model_weighting_choice[name] = use_balancing
     weight = sample_weight if use_balancing else None
 
     print(
@@ -278,6 +278,17 @@ for ax, (name, model) in zip(axes, models.items()):
     results.append((name, accuracy))
     fitted_models[name] = model
     fitted_probabilities[name] = probabilities
+
+    # A second model, fit on X_inner_train only (same weighting/penalty
+    # choices), gives this model's predictions on data it never saw --
+    # needed below to pick which models actually belong in the
+    # ensemble, on real held-out data rather than the test set itself.
+    inner_model = model.__class__(**model.get_params())
+    inner_weight = inner_sample_weight if use_balancing else None
+    inner_model.fit(X_inner_train, y_inner_train, sample_weight=inner_weight)
+    inner_proba = inner_model.predict_proba(X_inner_val)
+    inner_proba[:, HOME_IDX] *= home_penalty
+    inner_val_probabilities[name] = inner_proba
 
     print(f"\n{'=' * 60}")
     print(f"{name} — Accuracy: {accuracy:.2%}")
@@ -317,34 +328,62 @@ for ax, (name, model) in zip(axes, models.items()):
     ax.set_title(f"{name}\n{accuracy:.1%} accuracy")
 
 # --------------------------------------------------
-# Ensemble: soft-vote across all 5 already-fitted models — average
-# each one's predicted probabilities per class, take whichever class
-# comes out highest.
+# Ensemble: soft-vote across a CHOSEN subset of the 5 already-fitted
+# models -- not always all 5. All 5 isn't automatically best: a model
+# that's individually weaker can still add real value if its mistakes
+# are uncorrelated with the others, while a model that's individually
+# strong can still make the ensemble WORSE if it just duplicates votes
+# the others already cast (confirmed directly: dropping CatBoost --
+# the 3rd-best model solo -- beat using all 5, because its errors
+# overlapped too much with the other boosted-tree models).
+#
+# Every non-trivial subset (2-5 models) is scored on f1_macro using
+# the internal validation slice (inner_val_probabilities, built above
+# from models that never saw this data) -- never the real test set,
+# same discipline as every other choice in this file. Whichever subset
+# wins there is what actually gets used below.
 #
 # Built manually instead of sklearn's VotingClassifier: that class
 # clones and refits every sub-estimator with one shared sample_weight,
 # which would silently throw away each model's own chosen weighting
 # from above. Reusing the models already fitted in the loop preserves
 # that per-model choice correctly.
-#
-# Averages each model's already Home-penalty-corrected probabilities
-# (fitted_probabilities), not a fresh predict_proba() call -- the
-# ensemble should reflect the same corrected decision each model
-# individually makes, not silently revert to their raw, over-calling
-# Home Win probabilities.
 # --------------------------------------------------
 
+best_ensemble_members, best_ensemble_f1 = None, -1
+
+for r in range(2, len(models) + 1):
+    for combo in itertools.combinations(models.keys(), r):
+        combo_proba = np.mean([inner_val_probabilities[name] for name in combo], axis=0)
+        combo_f1 = f1_score(
+            y_inner_val, np.argmax(combo_proba, axis=1), average="macro"
+        )
+        if combo_f1 > best_ensemble_f1:
+            best_ensemble_f1, best_ensemble_members = combo_f1, combo
+
+print(
+    f"\nEnsemble members chosen via internal validation: "
+    f"{', '.join(best_ensemble_members)}"
+)
+
+# Averages each chosen model's already Home-penalty-corrected
+# probabilities (fitted_probabilities), not a fresh predict_proba()
+# call -- the ensemble should reflect the same corrected decision each
+# model individually makes, not silently revert to their raw,
+# over-calling Home Win probabilities.
 ensemble_probabilities = np.mean(
-    [fitted_probabilities[name] for name in models],
+    [fitted_probabilities[name] for name in best_ensemble_members],
     axis=0
 )
 ensemble_predictions = np.argmax(ensemble_probabilities, axis=1)
 
 ensemble_accuracy = accuracy_score(y_test, ensemble_predictions)
-results.append(("Ensemble (all 5, soft vote)", ensemble_accuracy))
+results.append((
+    f"Ensemble ({len(best_ensemble_members)}, soft vote)", ensemble_accuracy
+))
 
 print(f"\n{'=' * 60}")
-print(f"Ensemble (all 5 models) — Accuracy: {ensemble_accuracy:.2%}")
+print(f"Ensemble ({', '.join(best_ensemble_members)}) — Accuracy: {ensemble_accuracy:.2%}")
 print("=" * 60)
 
 print(classification_report(
@@ -373,7 +412,7 @@ ConfusionMatrixDisplay(
     display_labels=display_labels
 ).plot(ax=axes[5], values_format=".1f", cmap="Greens", colorbar=False)
 
-axes[5].set_title(f"Ensemble (all 5)\n{ensemble_accuracy:.1%} accuracy")
+axes[5].set_title(f"Ensemble ({len(best_ensemble_members)})\n{ensemble_accuracy:.1%} accuracy")
 
 plt.tight_layout()
 plt.show()

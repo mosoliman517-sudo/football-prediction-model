@@ -91,6 +91,10 @@ A week focused on rigor: real bugs found and fixed, two genuinely new data sourc
 - Diagnosed the real cause of the Home Win bias: Elo's home/away rating pools carry a structural home-field tilt by design, so the model needed far less evidence to call Home than Away. Built and validated a real fix — a probability threshold correction chosen via multi-fold internal validation, not a hand-picked rule — trading some raw accuracy for genuinely better Away/Draw recognition, a deliberate call.
 - Moved to a **two-season test set** (2024-25 + 2025-26, 760 matches) for a more reliable number, and split `06`/`07` into a proper predicted-vs-actual table per season (4 tables, not 2) — `07` now re-anchors each blind forecast on real history through its own season start, the way anyone would actually use it.
 - Tested and honestly rejected a long list of further ideas — hyperparameter tuning, draw-forcing mechanisms, isotonic probability calibration, referee tendencies, corners/cards/fouls, per-model feature selection, a de-trended Elo signal, and more. Each had a real rationale, each got a real test, each got reverted the moment it didn't hold up.
+- Full codebase audit: deleted `draw_boost.py` (fully dead, zero references), removed unused variables/imports, fixed stale comments left over from earlier changes. Verified clean with `pyflakes`.
+- Tested "clean up Elo" (strip it to just results + opponent strength + form, move everything else out as independent features) — a fair test, but the data said no: roughly a wash on average, helping some models and hurting others equally.
+- Added **transfer activity** (Kaggle Transfermarkt) — summer transfer window volume and net spend per team. Tested the same rigorous way as xG: as a raw feature (net negative), and fed into Elo's calibration only (genuine, broad improvement). Kept the winning version, discarded the rest — including the combination of both ideas together, which was the *worst* result of everything tested.
+- Fixed the ensemble to pick its members by validation instead of always averaging all 5 — dropping CatBoost (not the weakest model solo) turned out to beat using all 5, because its errors overlapped too much with the other boosted-tree models rather than adding real diversity.
 
 **This week's trajectory** (two-season test, 760 matches):
 
@@ -98,9 +102,11 @@ A week focused on rigor: real bugs found and fixed, two genuinely new data sourc
 |---|---|---|---|
 | Baseline (data bug fixed, xG added) | Random Forest | 47.89% | 52% |
 | + Home Win bias correction | Random Forest | 47.50% | 53% |
-| + Market value (current) | **Random Forest** | **48.03%** | **57%** |
+| + Market value | Random Forest | 48.03% | 57% |
+| + Transfer activity (Elo signal) | LightGBM | 48.03% | — |
+| + Validated ensemble selection (current) | **Ensemble (RF + XGBoost)** | **48.16%** | — |
 
-**Current best:** Random Forest, 48.03% on 2024-25 + 2025-26 combined.
+**Current best:** Ensemble (Random Forest + XGBoost, chosen via internal validation), 48.16% on 2024-25 + 2025-26 combined.
 
 ---
 
@@ -115,11 +121,10 @@ football-prediction-model/
 ├── 02_processed_data/              # engineered datasets (E0_features.csv, E0_model.csv)
 ├── src/
 │   ├── config.py                   # shared constants (train/test split date)
-│   ├── draw_boost.py               # margin-based draw mechanism (unused by default)
 │   ├── 00_fetch_xg_data.py         # pulls Understat xG data
 │   ├── 01_load_data.py
 │   ├── 02_load_features.py
-│   ├── 03_train_model.py           # trains + compares all 5 models + ensemble
+│   ├── 03_train_model.py           # trains + compares all 5 models + a validated ensemble
 │   ├── 04_comparing_models.py      # lighter-weight version of the same comparison
 │   ├── 05_predict_scoreline.py     # Poisson goal model — Win/Draw/Loss + scorelines
 │   ├── 06_predict_season_table.py  # simulates each held-out season, predicted vs. actual table
@@ -130,6 +135,7 @@ football-prediction-model/
 │       ├── shots.py
 │       ├── xg.py                   # walk-forward rolling xG (Understat)
 │       ├── market_value.py         # season-start squad market value (Transfermarkt)
+│       ├── transfer_activity.py    # summer transfer window volume/spend (Transfermarkt)
 │       ├── rest_days.py
 │       ├── head_to_head.py
 │       ├── half_time.py            # second-half goal patterns
@@ -157,8 +163,9 @@ football-prediction-model/
 
 # Next Steps
 
-- **Clean up Elo's architecture** — a real idea worth testing properly, not yet done: strip Elo back to a purer signal (results, opponent strength, form) and move shots/xG/rest-days out as fully independent classifier features rather than blended into what moves Elo's rating. The current blended design is deliberate and tested (shot-dominance blending and the multi-signal expectation model both measurably helped when added), but that doesn't mean a simpler split wouldn't work just as well or better — genuinely untested, worth a real comparison next session.
-- Away Win recognition has real, measured progress now (recall 45% → 57% this week, via the home-bias correction + market value) but isn't solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
+- **Starting-XI market value** — the Kaggle dataset also has `game_lineups.csv` (real per-match starting lineups). Combined market value of who actually STARTED, not the whole squad, would be a sharper signal than the season-level snapshot currently used — it implicitly captures injuries, rotation and suspensions, which nothing here sees today.
+- ~~Clean up Elo's architecture~~ — tested (stripping Elo to just results + opponent strength + form, moving shots/xG/rest-days/transfer-activity out as independent features): roughly a wash, helped some models and hurt others about equally. Not adopted. Adding transfer activity INTO Elo's calibration (the opposite direction) was the actual winner instead.
+- Away Win recognition has real, measured progress now (recall 45% → 57%+ this week, via the home-bias correction + market value) but isn't solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
 - Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.
 - **Account for manager changes and transfer activity** — real factors nothing here currently captures. A new manager or a squad reshaped by transfer activity can shift a team's level mid-season in a way form/Elo/market-value snapshots don't see coming; still figuring out how this could actually be turned into pre-match data (a manager tenure/change flag? transfer-window net spend or squad-turnover as its own signal, similar in spirit to market_value.py?) without it becoming leakage or hindsight bias.

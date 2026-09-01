@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def matchup_key(team_a, team_b):
     # Unordered pair -- Arsenal vs Chelsea and Chelsea vs Arsenal look up
     # the same history bucket, since head-to-head history doesn't care

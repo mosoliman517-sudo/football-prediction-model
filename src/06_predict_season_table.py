@@ -56,6 +56,8 @@ FEATURE_COLUMNS = [
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
+    "DayOfWeek", "IsWeekend", "KickoffHour",
+    "HomePlayedEuropeMidweek", "AwayPlayedEuropeMidweek",
 ]
 
 # --------------------------------------------------------------------

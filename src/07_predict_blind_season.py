@@ -80,6 +80,8 @@ FEATURE_COLUMNS = [
     "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
+    "DayOfWeek", "IsWeekend", "KickoffHour",
+    "HomePlayedEuropeMidweek", "AwayPlayedEuropeMidweek",
 ]
 
 DEFAULT_REST_DAYS = 7
@@ -189,6 +191,23 @@ def simulate_season(season_year):
     for _, row in fixtures.iterrows():
         team_squad_value[row["HomeTeam"]] = row["HomeSquadValueEur"]
         team_squad_value[row["AwayTeam"]] = row["AwaySquadValueEur"]
+
+    # Same reasoning: the real fixture list (dates, scheduled kickoff
+    # times) and which teams have midweek European football that week
+    # are genuinely known in advance for a real season -- exogenous
+    # facts, not something that needs to be blindly simulated the way
+    # form/Elo/goals do. Keyed by the match itself, not by team, since
+    # these vary match to match rather than being a per-team constant.
+    match_schedule = {}
+    for _, row in fixtures.iterrows():
+        match_key = (row["HomeTeam"], row["AwayTeam"], row["Date"])
+        match_schedule[match_key] = {
+            "DayOfWeek": row["DayOfWeek"],
+            "IsWeekend": row["IsWeekend"],
+            "KickoffHour": row["KickoffHour"],
+            "HomePlayedEuropeMidweek": row["HomePlayedEuropeMidweek"],
+            "AwayPlayedEuropeMidweek": row["AwayPlayedEuropeMidweek"],
+        }
 
     X_train_raw = train[FEATURE_COLUMNS].fillna(0)
     feature_means = X_train_raw.mean()
@@ -393,6 +412,11 @@ def simulate_season(season_year):
                 "HomeTablePosition": table_position(home),
                 "AwayTablePosition": table_position(away),
                 "TablePointsGap": season_table[home]["Points"] - season_table[away]["Points"],
+                "DayOfWeek": match_schedule[(home, away, date)]["DayOfWeek"],
+                "IsWeekend": match_schedule[(home, away, date)]["IsWeekend"],
+                "KickoffHour": match_schedule[(home, away, date)]["KickoffHour"],
+                "HomePlayedEuropeMidweek": match_schedule[(home, away, date)]["HomePlayedEuropeMidweek"],
+                "AwayPlayedEuropeMidweek": match_schedule[(home, away, date)]["AwayPlayedEuropeMidweek"],
             })[FEATURE_COLUMNS]
 
         season_state = {"current": get_season(train["Date"].iloc[-1])}

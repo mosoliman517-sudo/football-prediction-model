@@ -95,7 +95,8 @@ def get_season(date):
 
 SIGNAL_COLUMNS = [
     "Elo", "Form", "NetGoalForm", "NetShotForm", "NetXGForm",
-    "TransferActivity", "TablePositionGap", "RestAdvantage"
+    "TransferActivity", "TablePositionGap", "ManagerBoostGap", "SquadAgeGap",
+    "RestAdvantage"
 ]
 
 
@@ -110,14 +111,21 @@ def _signal_differences(df, elo_difference):
     """
     Every pre-match signal fed to the expectation model, each expressed
     as a single Home-minus-Away differential — the same shape as
-    EloDifference itself. All seven non-Elo signals are already sitting
-    in df by the time this runs (form.py, goals.py, shots.py, xg.py,
-    transfer_activity.py, table_position.py and rest_days.py all run
-    earlier in 01_load_data.py), this just repackages them. Missing
-    values (a team's very first-ever match in the dataset, before it
-    has any rolling history) are filled with 0 — a neutral "no signal
-    yet" reading, matching how those columns were initialised by the
-    modules that built them.
+    EloDifference itself. All non-Elo signals are already sitting in
+    df by the time this runs (form.py, goals.py, shots.py, xg.py,
+    transfer_activity.py, table_position.py, manager_tenure.py,
+    squad_age.py and rest_days.py all run earlier in 01_load_data.py),
+    this just repackages them. Missing values (a team's very first-ever
+    match in the dataset, before it has any rolling history) are
+    filled with 0 — a neutral "no signal yet" reading, matching how
+    those columns were initialised by the modules that built them.
+
+    schedule.py and fixture_congestion.py, by contrast, feed the
+    classifiers directly as raw features rather than through here --
+    tested both ways in combination with everything else, and that
+    split (schedule/congestion raw, manager/squad-age/table-position/
+    transfer-activity through Elo's calibration) is what actually won
+    a real 16-combination search scored on held-out validation.
     """
 
     net_goals_home = (
@@ -154,6 +162,8 @@ def _signal_differences(df, elo_difference):
         "NetXGForm": net_xg_home - net_xg_away,
         "TransferActivity": transfer_activity,
         "TablePositionGap": df["TablePointsGap"],
+        "ManagerBoostGap": df["HomeNewManagerBoost"] - df["AwayNewManagerBoost"],
+        "SquadAgeGap": df["HomeSquadAvgAge"] - df["AwaySquadAvgAge"],
         "RestAdvantage": df["HomeDaysRest"] - df["AwayDaysRest"],
     })
 
@@ -343,6 +353,12 @@ def _run_elo_pass(df, expectation_model=None):
                 "NetXGForm": net_xg_home - net_xg_away,
                 "TransferActivity": transfer_activity,
                 "TablePositionGap": df.loc[i, "TablePointsGap"],
+                "ManagerBoostGap": (
+                    df.loc[i, "HomeNewManagerBoost"] - df.loc[i, "AwayNewManagerBoost"]
+                ),
+                "SquadAgeGap": (
+                    df.loc[i, "HomeSquadAvgAge"] - df.loc[i, "AwaySquadAvgAge"]
+                ),
                 "RestAdvantage": (
                     df.loc[i, "HomeDaysRest"] - df.loc[i, "AwayDaysRest"]
                 ),

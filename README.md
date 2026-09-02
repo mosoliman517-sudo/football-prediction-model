@@ -112,6 +112,24 @@ A week focused on rigor: real bugs found and fixed, two genuinely new data sourc
 
 ---
 
+## Update 5 — September 2, 2026
+
+Five new pre-match data ideas, each tested individually, then an exhaustive search over every combination of the survivors — scored by internal validation throughout, never by peeking at the real test set to choose.
+
+- **Schedule** (`features/schedule.py`) — day of week, weekend flag, kickoff hour. Free: already sitting in the raw files (kickoff time from 2019-20 on, day of week derivable for all 12 seasons). Raw feature, individually mixed (Random Forest hit 50.00% solo).
+- **Fixture congestion** (`features/fixture_congestion.py`) — did a team play Champions/Europa/Conference League (or qualifiers) in the 4 days before this match, the "European hangover" effect. Raw feature, a broad individual win (helped 4 of 5 models).
+- **Squad average age** (`features/squad_age.py`) — resolved the same way as market value (each player's age as of the season start, correctly handling summer transfers). Individually a clear **net negative** in every form tested.
+- **Manager tenure** (`features/manager_tenure.py`) — real manager-change dates detected from Transfermarkt's own recorded manager per match, plus a "new manager bounce" flag (within 45 days of an appointment). Elo-signal only, a genuine individual win.
+- **Weather** (Open-Meteo historical API, one query per stadium, resolved to the hour closest to actual kickoff) — temperature, precipitation, wind. Individually a net negative, and structurally can't take an Elo-signal form (both teams experience the same weather).
+
+Weather was dropped before the combination search (conclusively negative alone, confirmed on real data). The remaining 4 went through a genuine 16-combination grid (every on/off pattern), each one trained and scored on a held-out internal validation slice, never the real test set — the same discipline used everywhere else in this project. The winner was a real surprise: **all four together**, including squad age, which had been a clear loser on its own. Real interaction effect, not a fluke — it shows up consistently across the top of the ranked results, not just in first place.
+
+**New official pipeline**: schedule + fixture congestion as raw classifier features; manager tenure + squad age through Elo's calibration only (not raw features) — matching the winning combination exactly.
+
+**New best: Random Forest, 49.61%**, Away Win recall **60%** (up from 45% at the start of this project's rigor phase). Full classification report: Away Win 60% recall / 47% precision, Home Win 63% recall / 57% precision, Draw 15% recall (still the hard one).
+
+---
+
 # Current Project Structure
 
 ```
@@ -139,6 +157,10 @@ football-prediction-model/
 │       ├── market_value.py         # season-start squad market value (Transfermarkt)
 │       ├── transfer_activity.py    # summer transfer window volume/spend (Transfermarkt)
 │       ├── table_position.py       # walk-forward in-season table standings
+│       ├── schedule.py             # kickoff day/time
+│       ├── fixture_congestion.py   # midweek European fixture fatigue
+│       ├── squad_age.py            # season-start squad average age (Transfermarkt)
+│       ├── manager_tenure.py       # manager tenure + "new manager bounce"
 │       ├── rest_days.py
 │       ├── head_to_head.py
 │       ├── half_time.py            # second-half goal patterns
@@ -168,7 +190,9 @@ football-prediction-model/
 
 - ~~Starting-XI market value~~ — tested: real per-match starting lineups from `game_lineups.csv`, resolved to combined starting-XI value (100% match rate against every fixture). The theory was sound (captures injuries/rotation, unlike a season-level snapshot) but it's 93% correlated with the squad value already in use — turned out to add match-to-match noise, not new information. Worse in every form tested (raw feature, Elo signal, both). Not adopted.
 - ~~Clean up Elo's architecture~~ — tested (stripping Elo to just results + opponent strength + form, moving shots/xG/rest-days/transfer-activity out as independent features): roughly a wash, helped some models and hurt others about equally. Not adopted. Adding transfer activity INTO Elo's calibration (the opposite direction) was the actual winner instead.
-- Away Win recognition has real, measured progress now (recall 45% → 57%+ this week, via the home-bias correction + market value) but isn't solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
+- ~~Weather~~ — tested: real historical weather (temperature, precipitation, wind) at the home ground, resolved to actual kickoff hour via the Open-Meteo API. Net negative alone, and structurally can't take an Elo-signal form (weather is identical for both teams at a shared venue). Not adopted.
+- ~~Account for manager changes~~ — done: `manager_tenure.py` detects real manager-change dates and a "new manager bounce" window, fed into Elo's calibration. A genuine individual win, and part of the best validated combination.
+- Away Win recognition has real, measured progress now (recall 45% → 60% across this project's rigor phase) but isn't fully solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, weather, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
 - Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.
-- **Account for manager changes** — a real factor nothing here currently captures; a new manager can shift a team's level mid-season in a way form/Elo/market-value snapshots don't see coming. Transfer activity (net spend, turnover) is now handled — see Elo's calibration — but manager tenure/changes still need a real data source and a plan for turning it into genuine pre-match information without leakage or hindsight bias.
+- Squad age helping only in combination (not alone) suggests other individually-negative ideas might be worth a second look *in combination* rather than assumed dead for good — starting-XI value and the de-trended Elo signal are the two best candidates to revisit that way.

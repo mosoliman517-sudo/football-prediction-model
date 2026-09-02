@@ -32,7 +32,13 @@ df = df.drop(columns=[
     "HomeNetTransferSpendEur",
     "AwayTransfersIn",
     "AwayTransfersOut",
-    "AwayNetTransferSpendEur"
+    "AwayNetTransferSpendEur",
+    "HomeManagerTenureDays",
+    "HomeNewManagerBoost",
+    "AwayManagerTenureDays",
+    "AwayNewManagerBoost",
+    "HomeSquadAvgAge",
+    "AwaySquadAvgAge"
 ], errors="ignore")
 
 df = df.drop(columns=["HomePoints", "AwayPoints"])

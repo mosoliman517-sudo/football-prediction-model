@@ -8,6 +8,10 @@ from features.xg import add_xg_features
 from features.market_value import add_market_value_features
 from features.transfer_activity import add_transfer_activity_features
 from features.table_position import add_table_position_features
+from features.schedule import add_schedule_features
+from features.fixture_congestion import add_fixture_congestion_features
+from features.squad_age import add_squad_age_features
+from features.manager_tenure import add_manager_tenure_features
 from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
 from features.half_time import add_half_time_pattern_features
@@ -67,7 +71,6 @@ df = (
 columns_to_drop = [
 
     "Referee",
-    "Time",
 
     # ---------------------------------------------------------------
     # Betting market columns. These are bookmakers' own predictions
@@ -206,6 +209,18 @@ df = add_transfer_activity_features(df)
 
 print("Creating table position features...")
 df = add_table_position_features(df)
+
+print("Creating schedule features...")
+df = add_schedule_features(df)
+
+print("Creating fixture congestion features...")
+df = add_fixture_congestion_features(df)
+
+print("Creating squad age features...")
+df = add_squad_age_features(df)
+
+print("Creating manager tenure features...")
+df = add_manager_tenure_features(df)
 
 print("Creating rest day features...")
 df = add_rest_days_features(df)

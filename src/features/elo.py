@@ -107,7 +107,7 @@ def _signed_log(x):
     return np.sign(x) * np.log1p(np.abs(x))
 
 
-def _signal_differences(df, elo_difference):
+def _signal_differences(df, elo_difference, elo_edge_above_average):
     """
     Every pre-match signal fed to the expectation model, each expressed
     as a single Home-minus-Away differential — the same shape as
@@ -126,6 +126,13 @@ def _signal_differences(df, elo_difference):
     split (schedule/congestion raw, manager/squad-age/table-position/
     transfer-activity through Elo's calibration) is what actually won
     a real 16-combination search scored on held-out validation.
+
+    EloEdgeAboveAverage is Elo's own gap with the league's current
+    average home-context-vs-away-context tilt subtracted back out --
+    see league_home_edge_col in _run_elo_pass. Tested alone before and
+    reverted (helped 1 of 5 models, hurt the rest) -- not in
+    SIGNAL_COLUMNS by default, but always computed here so it can be
+    tested again in combination with signals added since.
     """
 
     net_goals_home = (
@@ -164,13 +171,14 @@ def _signal_differences(df, elo_difference):
         "TablePositionGap": df["TablePointsGap"],
         "ManagerBoostGap": df["HomeNewManagerBoost"] - df["AwayNewManagerBoost"],
         "SquadAgeGap": df["HomeSquadAvgAge"] - df["AwaySquadAvgAge"],
+        "EloEdgeAboveAverage": elo_edge_above_average,
         "RestAdvantage": df["HomeDaysRest"] - df["AwayDaysRest"],
     })
 
     return signals.fillna(0.0)
 
 
-def _fit_expectation_model(df, raw_elo_difference, train_cutoff):
+def _fit_expectation_model(df, raw_elo_difference, raw_elo_edge_above_average, train_cutoff):
     """
     Fits the expectation model described above and prints the
     significance ranking it found. Trained only on rows before
@@ -184,7 +192,7 @@ def _fit_expectation_model(df, raw_elo_difference, train_cutoff):
     don't exist yet at the point this model needs to be fit.
     """
 
-    signals = _signal_differences(df, raw_elo_difference)
+    signals = _signal_differences(df, raw_elo_difference, raw_elo_edge_above_average)
 
     is_train = df["Date"] < train_cutoff
     decisive = df["FTR"] != "D"
@@ -257,6 +265,7 @@ def _run_elo_pass(df, expectation_model=None):
     away_elo_col = [0.0] * len(df)
     home_overall_col = [0.0] * len(df)
     away_overall_col = [0.0] * len(df)
+    league_home_edge_col = [0.0] * len(df)
 
     for i in range(len(df)):
 
@@ -301,6 +310,19 @@ def _run_elo_pass(df, expectation_model=None):
 
         home_elo_col[i] = home_rating
         away_elo_col[i] = away_rating
+
+        # The home-context pool drifts up and the away-context pool
+        # drifts down league-wide (by design -- both pools start at
+        # 1500 and home teams win more often), so raw EloDifference
+        # always carries a generic "home field" tilt on top of genuine
+        # team-quality gaps, the same tilt for every match regardless
+        # of who's actually playing. Tracking the league's current
+        # average gap here lets EloEdgeAboveAverage isolate just the
+        # team-quality part, with the generic tilt subtracted back out.
+        league_home_edge_col[i] = (
+            (sum(home_elo.values()) / len(home_elo))
+            - (sum(away_elo.values()) / len(away_elo))
+        )
 
         # A team's "general" strength regardless of venue — averages
         # this team's home-context and away-context ratings together,
@@ -358,6 +380,9 @@ def _run_elo_pass(df, expectation_model=None):
                 ),
                 "SquadAgeGap": (
                     df.loc[i, "HomeSquadAvgAge"] - df.loc[i, "AwaySquadAvgAge"]
+                ),
+                "EloEdgeAboveAverage": (
+                    (home_rating - away_rating) - league_home_edge_col[i]
                 ),
                 "RestAdvantage": (
                     df.loc[i, "HomeDaysRest"] - df.loc[i, "AwayDaysRest"]
@@ -423,7 +448,7 @@ def _run_elo_pass(df, expectation_model=None):
         home_elo[home] = home_rating + k * (actual_home - expected_home)
         away_elo[away] = away_rating + k * (actual_away - expected_away)
 
-    return home_elo_col, away_elo_col, home_overall_col, away_overall_col
+    return home_elo_col, away_elo_col, home_overall_col, away_overall_col, league_home_edge_col
 
 
 def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
@@ -435,22 +460,29 @@ def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
     # is fit against below.
     # ---------------------------------------------------------------
 
-    raw_home_col, raw_away_col, _, _ = _run_elo_pass(df)
+    raw_home_col, raw_away_col, _, _, raw_league_edge_col = _run_elo_pass(df)
 
     raw_elo_difference = pd.Series(
         [h - a for h, a in zip(raw_home_col, raw_away_col)],
         index=df.index
     )
+    raw_elo_edge_above_average = pd.Series(
+        [
+            (h - a) - edge
+            for h, a, edge in zip(raw_home_col, raw_away_col, raw_league_edge_col)
+        ],
+        index=df.index
+    )
 
     expectation_model = _fit_expectation_model(
-        df, raw_elo_difference, train_cutoff
+        df, raw_elo_difference, raw_elo_edge_above_average, train_cutoff
     )
 
     # ---------------------------------------------------------------
     # Pass 2: the real pass, using that calibrated model
     # ---------------------------------------------------------------
 
-    home_col, away_col, home_overall_col, away_overall_col = _run_elo_pass(
+    home_col, away_col, home_overall_col, away_overall_col, _ = _run_elo_pass(
         df, expectation_model=expectation_model
     )
 

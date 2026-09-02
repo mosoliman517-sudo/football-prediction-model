@@ -126,7 +126,14 @@ Weather was dropped before the combination search (conclusively negative alone, 
 
 **New official pipeline**: schedule + fixture congestion as raw classifier features; manager tenure + squad age through Elo's calibration only (not raw features) — matching the winning combination exactly.
 
-**New best: Random Forest, 49.61%**, Away Win recall **60%** (up from 45% at the start of this project's rigor phase). Full classification report: Away Win 60% recall / 47% precision, Home Win 63% recall / 57% precision, Draw 15% recall (still the hard one).
+**New best: Random Forest, 49.61%**, Away Win recall **60%** (up from 45% at the start of this project's rigor phase). Full classification report: Away Win 60% recall / 47% precision, Home Win 63% recall / 57% precision, Draw 15% recall.
+
+**Two more real findings, same day:**
+
+- Squad age helping only in *combination* raised an obvious follow-up: would the de-trended Elo signal from an earlier session (`EloEdgeAboveAverage`, reverted back then for helping only 1 of 5 models) do better alongside today's new signals? Re-tested on top of the winning combination: genuinely mixed, not a clean win — Random Forest (the flagship model) got measurably *worse* (49.61% → 48.82%) while LightGBM improved and a 3-model ensemble reached 47.63%, still below Random Forest alone. Not adopted by default; the code keeps it available (computed but excluded from `SIGNAL_COLUMNS`) for a future combination search now that even more signals exist.
+- **Draw recall was stuck around 14-16%** across every model even after the Home-penalty fix. Extended that same validated technique (never a hand-picked quota) to a second, jointly-searched parameter: a Draw probability boost alongside the existing Home penalty, both chosen together via the same 3-fold internal validation. Real result, not a wash — f1_macro improved for **every one of the 5 models**, and Draw recall roughly doubled (Random Forest 14%→23%, XGBoost 12%→25%, CatBoost 14%→27%), at an accuracy cost ranging from ~0 (Gradient Boosting, where the search correctly found no adjustment helps) to -2.5% (CatBoost, the steepest trade). Adopted for all 5 models.
+
+**Final numbers after the Draw-boost adoption:** Random Forest, 49.08% accuracy, Away Win 55% recall, Home Win 60% recall, **Draw 23% recall** (up from 15%) — the real, deliberate trade of a little raw accuracy for a model that actually tries on Draw instead of defaulting away from it.
 
 ---
 

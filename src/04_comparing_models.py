@@ -105,16 +105,18 @@ def choose_weighting(model):
     return balanced_f1 >= unweighted_f1
 
 
-def choose_home_penalty(model, use_balancing):
-    # Every model over-calls Home Win relative to its real ~42% share,
-    # which inflates Home recall for free while capping Away/Draw --
-    # see 03_train_model.py for the full explanation. Searches a
-    # scalar penalty on the Home Win probability, chosen to maximize
+def choose_probability_adjustments(model, use_balancing):
+    # Home penalty + Draw boost, searched jointly -- every model
+    # over-calls Home Win relative to its real ~42% share, and even
+    # after correcting that, Draw recall stays low unless boosted
+    # separately. See 03_train_model.py for the full explanation. Both
+    # are scalar multipliers on predict_proba(), chosen to maximize
     # f1_macro, averaged across 3 chronological folds (not one single
-    # slice, which overfit badly on an early attempt).
+    # slice, which overfit badly on an early single-parameter attempt).
     tscv = TimeSeriesSplit(n_splits=3)
-    factors = np.arange(1.0, 0.40, -0.02)
-    fold_f1 = {factor: [] for factor in factors}
+    home_factors = np.arange(1.0, 0.40, -0.05)
+    draw_factors = np.arange(1.0, 2.05, 0.1)
+    fold_f1 = {(hf, df): [] for hf in home_factors for df in draw_factors}
     baseline_fold_f1 = []
 
     for fold_train_idx, fold_val_idx in tscv.split(X_train):
@@ -133,20 +135,22 @@ def choose_home_penalty(model, use_balancing):
             f1_score(fold_y_val, np.argmax(fold_proba, axis=1), average="macro")
         )
 
-        for factor in factors:
-            adjusted = fold_proba.copy()
-            adjusted[:, home_index] *= factor
-            pred = np.argmax(adjusted, axis=1)
-            fold_f1[factor].append(f1_score(fold_y_val, pred, average="macro"))
+        for hf in home_factors:
+            for df in draw_factors:
+                adjusted = fold_proba.copy()
+                adjusted[:, home_index] *= hf
+                adjusted[:, draw_index] *= df
+                pred = np.argmax(adjusted, axis=1)
+                fold_f1[(hf, df)].append(f1_score(fold_y_val, pred, average="macro"))
 
-    best_factor, best_f1 = 1.0, np.mean(baseline_fold_f1)
+    best_factors, best_f1 = (1.0, 1.0), np.mean(baseline_fold_f1)
 
-    for factor in factors:
-        avg_f1 = np.mean(fold_f1[factor])
+    for (hf, df), scores in fold_f1.items():
+        avg_f1 = np.mean(scores)
         if avg_f1 > best_f1:
-            best_f1, best_factor = avg_f1, factor
+            best_f1, best_factors = avg_f1, (hf, df)
 
-    return best_factor
+    return best_factors
 
 
 draw_index = list(encoder.classes_).index("D")
@@ -203,9 +207,10 @@ for name, model in models.items():
 
     model.fit(X_train, y_train, sample_weight=weight)
 
-    home_penalty = choose_home_penalty(model, use_balancing)
+    home_penalty, draw_boost = choose_probability_adjustments(model, use_balancing)
     probabilities = model.predict_proba(X_test)
     probabilities[:, home_index] *= home_penalty
+    probabilities[:, draw_index] *= draw_boost
     predictions = np.argmax(probabilities, axis=1)
 
     accuracy = accuracy_score(y_test, predictions)
@@ -227,3 +232,4 @@ results["Accuracy"] = results["Accuracy"].map(lambda x: f"{x:.2%}")
 results["Draw F1"] = results["Draw F1"].map(lambda x: f"{x:.2f}")
 
 print(results.to_string(index=False))
+

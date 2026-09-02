@@ -12,6 +12,8 @@ from features.schedule import add_schedule_features
 from features.fixture_congestion import add_fixture_congestion_features
 from features.squad_age import add_squad_age_features
 from features.manager_tenure import add_manager_tenure_features
+from features.manager_experience import add_manager_experience_features
+from features.recent_placement import add_recent_placement_features
 from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
 from features.half_time import add_half_time_pattern_features
@@ -221,6 +223,12 @@ df = add_squad_age_features(df)
 
 print("Creating manager tenure features...")
 df = add_manager_tenure_features(df)
+
+print("Creating manager experience features...")
+df = add_manager_experience_features(df)
+
+print("Creating recent placement features...")
+df = add_recent_placement_features(df)
 
 print("Creating rest day features...")
 df = add_rest_days_features(df)

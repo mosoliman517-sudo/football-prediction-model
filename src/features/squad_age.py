@@ -1,5 +1,7 @@
 import pandas as pd
 
+from features.elo import get_season
+
 CLUBS_PATH = "01_data_market_value/clubs.csv"
 VALUATIONS_PATH = "01_data_market_value/player_valuations.csv"
 PLAYERS_PATH = "01_data_market_value/players.csv"
@@ -36,9 +38,7 @@ def _squad_age_by_season(df):
     epl_club_ids = set(club_id_to_name.keys())
 
     unique_players = valuations["player_id"].unique()
-    season_years = sorted(df["Date"].apply(
-        lambda d: d.year if d.month >= 7 else d.year - 1
-    ).unique())
+    season_years = sorted(df["Date"].apply(get_season).unique())
 
     rows = []
 
@@ -67,7 +67,7 @@ def _squad_age_by_season(df):
 
 def add_squad_age_features(df):
     df = df.copy()
-    df["SeasonYear"] = df["Date"].apply(lambda d: d.year if d.month >= 7 else d.year - 1)
+    df["SeasonYear"] = df["Date"].apply(get_season)
 
     squad_age = _squad_age_by_season(df)
 

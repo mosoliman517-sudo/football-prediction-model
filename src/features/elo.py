@@ -71,9 +71,21 @@ def shot_dominance_score(home_shots_on_target, away_shots_on_target):
 
 
 def get_season(date):
-    # Premier League seasons run Aug -> May, so July is the cutoff:
+    # Premier League seasons run Aug -> May, so August is the cutoff:
     # Jan 2024 belongs to the 2023 season, Sept 2024 to the 2024 one.
-    return date.year if date.month >= 7 else date.year - 1
+    #
+    # Was month >= 7 (July) until a real bug was found: the 2019-20
+    # season was extended into late July by the COVID-19 "Project
+    # Restart," with real matches played 2020-07-01 through 2020-07-26
+    # -- a July cutoff was silently splitting that one season in half
+    # mid-table-run-in, corrupting Elo's season-reversion and every
+    # within-season table position for exactly the matches that decide
+    # a season (title run-in, relegation battle). Verified August 1 is
+    # a safe universal cutoff across all 12 seasons in this project's
+    # data: the earliest any season has ever actually started is
+    # 2022-08-05, well after August 1, and no other season's matches
+    # run past May.
+    return date.year if date.month >= 8 else date.year - 1
 
 
 # ---------------------------------------------------------------------

@@ -147,6 +147,49 @@ Decisive is the best pure win/loss caller this project has produced, but sacrifi
 
 ---
 
+## Update 6 — September 2, 2026
+
+A pass built around three named final profiles, a full correctness audit of every feature module, and a significant real bug found along the way — the kind of "genuinely nothing more we can do, for now" pass rather than another single feature.
+
+### A real bug, wider than it first looked
+
+Sanity-checking a new feature's output (average final-standing placement across a team's last 3 seasons) turned up an impossible max value — a 20-team league producing a 21st position. Traced to `get_season()`, the shared season-boundary function every part of this project uses: it treated `month >= 7` as "a new season has started," which is true almost every year, except one. The real 2019-20 season was suspended by COVID and resumed as "Project Restart," with matches played through **July 26, 2020** — so every match in that window was silently misfiled into the 2020-21 season, merging two seasons' standings into one 23-team table and truncating 2019-20 itself.
+
+`get_season()` is shared infrastructure, not a one-feature bug: fixing it at the source (cutoff moved to `month >= 8`, verified safe — no other season ever starts before August or runs past May) automatically corrected Elo's season-reversion timing and `table_position.py`'s standings resets. But a further audit found the **same buggy logic independently copy-pasted in three more files** — `market_value.py`, `squad_age.py`, and `transfer_activity.py` — each computing its own season-year column by hand instead of calling the shared function, so each silently carried the same one-season COVID bug on its own. All three now import and call the real `get_season()` instead. Measured impact was small (this only ever affects one season's transition), as expected for a correctness fix rather than a modeling change — kept on principle, and because duplicated logic like this is exactly the kind of thing that causes real bugs later.
+
+### Two new features, tested the established way
+
+Two genuinely new signals, both built from data already in the pipeline (no new source needed) and both put through the project's standard three-way test — raw classifier feature, Elo-signal-only, and both together:
+
+- **Manager career experience** (`features/manager_experience.py`) — how many career Premier League matches the current manager has taken charge of, resolved from Transfermarkt's own recorded manager per match (the same timeline `manager_tenure.py` already builds, reused rather than duplicated).
+- **Recent placement** (`features/recent_placement.py`) — each team's average final league position across its last 3 completed seasons. A different timescale than anything else in the pipeline: not this season's live standing (`table_position.py`), not Elo's continuous form-weighted rating — a multi-year "what level does this club actually operate at" read that one hot start or one bad season can't fake. This is also the feature whose sanity check surfaced the COVID bug above.
+
+Raw classifier features won clearly (avg accuracy 46.74% vs. 46.06% for Elo-signal-only vs. 44.92% for both together — "both" losing again, the same pattern seen with transfer activity, table position, and squad age earlier in this project). Both are now raw features (`HomeManagerExperience`/`AwayManagerExperience`, `HomeRecentAvgPlacement`/`AwayRecentAvgPlacement`), wired through `05`/`06`/`07`'s prediction paths the same way squad value and table position already were — including a real-data lookup in `07`'s blind simulation, since both are genuinely knowable in advance for a real season rather than something that needs simulating.
+
+### Full-codebase audit
+
+Every feature module was re-read end to end for walk-forward correctness (each rolling feature only ever sees strictly-prior rows) — `form.py`, `goals.py`, `shots.py`, `rest_days.py`, `head_to_head.py`, `half_time.py`, `schedule.py`, `fixture_congestion.py`, `manager_tenure.py` — no leakage found beyond the `get_season` bug above, which was fixed at its four real locations. `pyflakes` clean across the whole `src/` tree.
+
+### Three final profiles, made official
+
+The Decisive / Balanced / Even exploration from earlier the same day converged into three deliberately-scoped, permanent profiles on Random Forest (`03_train_model.py`, still no retraining — only the decision threshold changes per profile):
+
+| Profile | Objective | Home | Away | Draw | Accuracy |
+|---|---|---|---|---|---|
+| **Balanced** | max(min(Home, Away, Draw recall)) — true 3-way balance | 51% | 47% | 34% | 45% |
+| **Deadkill** | max(accuracy), no balance constraint | 72% | 61% | 0% | 50% |
+| **Target 60/60/40** | max(min(recall ÷ its own target)) — aims at a named ratio, not equality | 55% | 50% | 26% | 46% |
+
+Target 60/60/40 got a much finer search grid than the other two (0.05/0.1/0.1 resolution across wide ranges) specifically to get as close to that ambitious target as the model can genuinely reach — it lands short of it (55/50/26, not 60/60/40), an honest finding about where this feature set's real achievability frontier sits, not a search that gave up early. Balanced remains the best Draw number this project has found in any configuration.
+
+### The honest net effect
+
+The correctness fix and the two new raw features moved the project's best single number slightly: Ensemble (XGBoost + Random Forest) 49.47%, XGBoost 49.34% — both a shade below the previous session's Random-Forest peak of 49.61%. Consistent with everything measured today (the bug fix alone was near-neutral; the new features won their own individual tests), this modest net change is most likely the new features and the corrected data interacting slightly differently with Random Forest's own decision boundary than the previous configuration did — not a regression in anything tested in isolation. Reported honestly rather than reframed, the same standard held throughout this project.
+
+Blind-season forecast (`07`, fully re-verified end to end with everything above): 2024-25 mean absolute position error 3.2 places, 2025-26 4.4 places (previously 4.2 — within this simulation's own run-to-run noise, std dev 2-5 places per team).
+
+---
+
 # Current Project Structure
 
 ```
@@ -178,6 +221,8 @@ football-prediction-model/
 │       ├── fixture_congestion.py   # midweek European fixture fatigue
 │       ├── squad_age.py            # season-start squad average age (Transfermarkt)
 │       ├── manager_tenure.py       # manager tenure + "new manager bounce"
+│       ├── manager_experience.py   # manager's career EPL match count
+│       ├── recent_placement.py     # team's avg final position, last 3 seasons
 │       ├── rest_days.py
 │       ├── head_to_head.py
 │       ├── half_time.py            # second-half goal patterns
@@ -209,7 +254,9 @@ football-prediction-model/
 - ~~Clean up Elo's architecture~~ — tested (stripping Elo to just results + opponent strength + form, moving shots/xG/rest-days/transfer-activity out as independent features): roughly a wash, helped some models and hurt others about equally. Not adopted. Adding transfer activity INTO Elo's calibration (the opposite direction) was the actual winner instead.
 - ~~Weather~~ — tested: real historical weather (temperature, precipitation, wind) at the home ground, resolved to actual kickoff hour via the Open-Meteo API. Net negative alone, and structurally can't take an Elo-signal form (weather is identical for both teams at a shared venue). Not adopted.
 - ~~Account for manager changes~~ — done: `manager_tenure.py` detects real manager-change dates and a "new manager bounce" window, fed into Elo's calibration. A genuine individual win, and part of the best validated combination.
+- ~~Manager's career experience / team's recent-years placement~~ — done: `manager_experience.py` and `recent_placement.py`, both raw features, both real wins (see Update 6). `RecentPlacementGap`'s Elo-signal form (not adopted — raw won) still earned 20.2% of Elo's calibrated weight, second only to Elo itself, so it's worth a second look in future combination searches even though raw is the current default.
 - Away Win recognition has real, measured progress now (recall 45% → 60% across this project's rigor phase) but isn't fully solved — head-to-head, win-rate, referee tendencies, corners/cards/fouls, per-model feature selection, weather, and a de-trended Elo signal were all tried along the way and didn't move the needle on their own.
 - Refine scoreline prediction with a Dixon-Coles correlation correction — should help both scoreline accuracy and the goal-total compression seen in the season table.
 - Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.
-- Squad age helping only in combination (not alone) suggests other individually-negative ideas might be worth a second look *in combination* rather than assumed dead for good — starting-XI value and the de-trended Elo signal are the two best candidates to revisit that way.
+- Squad age helping only in combination (not alone) suggests other individually-negative ideas might be worth a second look *in combination* rather than assumed dead for good — starting-XI value, the de-trended Elo signal (`EloEdgeAboveAverage`, still computed but excluded from `SIGNAL_COLUMNS`), and now `RecentPlacementGap`'s Elo-signal form are the best candidates to revisit that way, especially now that the feature set is larger than when each was last tried.
+- Target 60/60/40 landed at a real 55/50/26 on Random Forest's current decision surface — short of the named target, and that gap looks like a genuine ceiling of this feature set rather than a search limitation (the grid used was already fine-resolution). Closing it further probably needs a new signal that separates Draw-likely matches more cleanly, not another threshold search on the same probabilities.

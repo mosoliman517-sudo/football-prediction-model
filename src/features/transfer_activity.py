@@ -1,5 +1,7 @@
 import pandas as pd
 
+from features.elo import get_season
+
 TRANSFERS_PATH = "01_data_market_value/transfers.csv"
 CLUBS_PATH = "01_data_market_value/clubs.csv"
 
@@ -40,9 +42,7 @@ def _transfer_activity_by_season(df):
     club_id_to_name = dict(zip(epl_clubs["club_id"], epl_clubs["ProjectName"]))
     epl_club_ids = set(club_id_to_name.keys())
 
-    season_years = sorted(df["Date"].apply(
-        lambda d: d.year if d.month >= 7 else d.year - 1
-    ).unique())
+    season_years = sorted(df["Date"].apply(get_season).unique())
 
     rows = []
 
@@ -90,9 +90,7 @@ def add_transfer_activity_features(df):
     """
 
     df = df.copy()
-    df["SeasonYear"] = df["Date"].apply(
-        lambda d: d.year if d.month >= 7 else d.year - 1
-    )
+    df["SeasonYear"] = df["Date"].apply(get_season)
 
     activity = _transfer_activity_by_season(df)
 

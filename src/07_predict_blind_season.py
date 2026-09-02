@@ -82,6 +82,8 @@ FEATURE_COLUMNS = [
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
     "HomePlayedEuropeMidweek", "AwayPlayedEuropeMidweek",
+    "HomeManagerExperience", "AwayManagerExperience",
+    "HomeRecentAvgPlacement", "AwayRecentAvgPlacement",
 ]
 
 DEFAULT_REST_DAYS = 7
@@ -198,6 +200,18 @@ def simulate_season(season_year):
     # facts, not something that needs to be blindly simulated the way
     # form/Elo/goals do. Keyed by the match itself, not by team, since
     # these vary match to match rather than being a per-team constant.
+    #
+    # Manager career experience and recent-seasons placement belong
+    # here too, for the same reason: both are real, already-known
+    # facts at the moment each fixture is played -- who's actually
+    # managing a club, and how many EPL matches they've taken charge
+    # of in their career so far, is public knowledge before a ball is
+    # kicked (not a result of anything happening during the season
+    # being blindly forecast), and recent placement only looks at
+    # PRIOR completed seasons, never the one being simulated. Manager
+    # experience specifically climbs match by match through a real
+    # season, so it's keyed per fixture (not per team, like squad
+    # value) to avoid freezing every match at one season-end value.
     match_schedule = {}
     for _, row in fixtures.iterrows():
         match_key = (row["HomeTeam"], row["AwayTeam"], row["Date"])
@@ -207,6 +221,10 @@ def simulate_season(season_year):
             "KickoffHour": row["KickoffHour"],
             "HomePlayedEuropeMidweek": row["HomePlayedEuropeMidweek"],
             "AwayPlayedEuropeMidweek": row["AwayPlayedEuropeMidweek"],
+            "HomeManagerExperience": row["HomeManagerExperience"],
+            "AwayManagerExperience": row["AwayManagerExperience"],
+            "HomeRecentAvgPlacement": row["HomeRecentAvgPlacement"],
+            "AwayRecentAvgPlacement": row["AwayRecentAvgPlacement"],
         }
 
     X_train_raw = train[FEATURE_COLUMNS].fillna(0)
@@ -417,6 +435,10 @@ def simulate_season(season_year):
                 "KickoffHour": match_schedule[(home, away, date)]["KickoffHour"],
                 "HomePlayedEuropeMidweek": match_schedule[(home, away, date)]["HomePlayedEuropeMidweek"],
                 "AwayPlayedEuropeMidweek": match_schedule[(home, away, date)]["AwayPlayedEuropeMidweek"],
+                "HomeManagerExperience": match_schedule[(home, away, date)]["HomeManagerExperience"],
+                "AwayManagerExperience": match_schedule[(home, away, date)]["AwayManagerExperience"],
+                "HomeRecentAvgPlacement": match_schedule[(home, away, date)]["HomeRecentAvgPlacement"],
+                "AwayRecentAvgPlacement": match_schedule[(home, away, date)]["AwayRecentAvgPlacement"],
             })[FEATURE_COLUMNS]
 
         season_state = {"current": get_season(train["Date"].iloc[-1])}

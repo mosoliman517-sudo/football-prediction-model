@@ -51,6 +51,8 @@ FEATURE_COLUMNS = [
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
     "HomePlayedEuropeMidweek", "AwayPlayedEuropeMidweek",
+    "HomeManagerExperience", "AwayManagerExperience",
+    "HomeRecentAvgPlacement", "AwayRecentAvgPlacement",
 ]
 # The exact same pre-match features the classifiers use. This is
 # deliberate -- the point of this model is to test what a different
@@ -385,6 +387,10 @@ def predict_fixture(home_team, away_team, df):
         # sign-flipped to match TablePointsGap's convention (positive
         # = home team better placed).
         "TablePointsGap": away_row["AwayTablePosition"] - home_row["HomeTablePosition"],
+        "HomeManagerExperience": home_row["HomeManagerExperience"],
+        "AwayManagerExperience": away_row["AwayManagerExperience"],
+        "HomeRecentAvgPlacement": home_row["HomeRecentAvgPlacement"],
+        "AwayRecentAvgPlacement": away_row["AwayRecentAvgPlacement"],
         # No real scheduled date/time for a hypothetical fixture --
         # neutral defaults (a typical Saturday 3pm kickoff, no midweek
         # European fixture assumed) rather than a guess dressed up as

@@ -483,19 +483,29 @@ print(
 # --------------------------------------------------
 
 
-def search_profile(model, use_balancing, objective):
+def search_profile(
+    model, use_balancing, objective,
+    home_factors=None, away_factors=None, draw_factors=None
+):
     """
     Generalizes choose_probability_adjustments to a configurable
     objective and a 3-way (Home/Away/Draw) search -- same 3-fold
     internal validation discipline as everywhere else in this file,
     optimizing for whatever objective(y_true, y_pred) returns instead
-    of always f1_macro.
+    of always f1_macro. Grid resolution is overridable per call -- a
+    finer grid (more, closer-together candidate factors) finds a
+    closer answer for an ambitious explicit target, at real extra
+    compute cost, so it's used selectively rather than everywhere.
     """
 
+    if home_factors is None:
+        home_factors = np.arange(1.0, 0.35, -0.1)
+    if away_factors is None:
+        away_factors = np.arange(1.0, 2.05, 0.15)
+    if draw_factors is None:
+        draw_factors = np.arange(0.4, 2.05, 0.2)
+
     tscv = TimeSeriesSplit(n_splits=3)
-    home_factors = np.arange(1.0, 0.35, -0.1)
-    away_factors = np.arange(1.0, 2.05, 0.15)
-    draw_factors = np.arange(0.4, 2.05, 0.2)
 
     fold_scores = {
         (hf, af, df): []
@@ -535,24 +545,14 @@ def search_profile(model, use_balancing, objective):
     return best_factors
 
 
-def f1_macro_objective(y_true, y_pred):
-    return f1_score(y_true, y_pred, average="macro")
-
-
-def decisive_objective(y_true, y_pred):
-    # The MINIMUM of Home and Away recall, not their average --
-    # deliberately ignores Draw, for a profile whose entire point is
-    # calling decisive results (who wins) as confidently as possible,
-    # accepting that Draw gets swallowed. Minimum instead of average
-    # specifically to stop the search from maxing out one side (e.g.
-    # 79% Away / 51% Home) at the other's expense -- this is the
-    # objective that actually optimizes for "both genuinely high
-    # together," not just a high mean.
-    home_mask = y_true == HOME_IDX
-    away_mask = y_true == AWAY_IDX
-    home_recall = (y_pred[home_mask] == HOME_IDX).mean() if home_mask.any() else 0.0
-    away_recall = (y_pred[away_mask] == AWAY_IDX).mean() if away_mask.any() else 0.0
-    return min(home_recall, away_recall)
+def accuracy_objective(y_true, y_pred):
+    # "Deadkill": whatever raw accuracy this model can possibly reach,
+    # no constraint on how the three classes get there. Optimizing
+    # accuracy directly (not f1_macro) is exactly the metric that
+    # rewards leaning on the majority class -- deliberate here, this
+    # profile's entire point is squeezing out the last bit of overall
+    # correctness, not balance.
+    return accuracy_score(y_true, y_pred)
 
 
 def even_objective(y_true, y_pred):
@@ -561,7 +561,11 @@ def even_objective(y_true, y_pred):
     # not a 2-way minimum (decisive_objective ignores Draw entirely).
     # This is the actual mathematical definition of "as balanced as
     # possible": whichever class is doing worst, make it do as well as
-    # it can, even if that costs the strongest class some ground.
+    # it can, even if that costs the strongest class some ground. An
+    # UNWEIGHTED 3-way minimum like this one always converges toward
+    # exactly equal Home/Away recall once Draw hits its own ceiling --
+    # that's not an artifact, it's what "maximize the worst one"
+    # necessarily does once two of the three have real headroom left.
     home_mask = y_true == HOME_IDX
     away_mask = y_true == AWAY_IDX
     draw_mask = y_true == DRAW_IDX
@@ -571,10 +575,54 @@ def even_objective(y_true, y_pred):
     return min(home_recall, away_recall, draw_recall)
 
 
+def target_ratio_objective_factory(home_target, away_target, draw_target):
+    """
+    Unlike even_objective (which always converges toward exactly EQUAL
+    recall once the weakest class maxes out), this targets a specific
+    NAMED ratio -- e.g. 55/55/30 -- by dividing each class's recall by
+    its own target before taking the minimum. The search then
+    maximizes "how close is the worst-performing class to ITS OWN
+    goal," not "how close are all three to each other." A class that
+    clears its target with room to spare no longer holds the others
+    back, which is what actually produces results near a chosen ratio
+    like 60/60/20 instead of always sliding toward a flat tie.
+    """
+
+    def objective(y_true, y_pred):
+        home_mask = y_true == HOME_IDX
+        away_mask = y_true == AWAY_IDX
+        draw_mask = y_true == DRAW_IDX
+        home_recall = (y_pred[home_mask] == HOME_IDX).mean() if home_mask.any() else 0.0
+        away_recall = (y_pred[away_mask] == AWAY_IDX).mean() if away_mask.any() else 0.0
+        draw_recall = (y_pred[draw_mask] == DRAW_IDX).mean() if draw_mask.any() else 0.0
+        return min(
+            home_recall / home_target,
+            away_recall / away_target,
+            draw_recall / draw_target,
+        )
+
+    return objective
+
+
+# Three named profiles, each an explicit, different goal -- the three
+# actually wanted, not every candidate objective explored along the
+# way (those are gone: dead code left lying around is exactly what
+# today's audit pass was for).
 PROFILES = {
-    "Balanced": f1_macro_objective,
-    "Decisive (Home/Away only, Draw sacrificed)": decisive_objective,
-    "Even (worst class as strong as possible)": even_objective,
+    "Balanced": (even_objective, {}),
+    "Deadkill (max accuracy, no balance constraint)": (accuracy_objective, {}),
+    # 60/60/40 gets a much finer grid than the others -- a genuinely
+    # ambitious explicit target is worth the extra search cost to get
+    # as close as the model can actually reach, not just whatever a
+    # coarse grid happens to land near.
+    "Target 60/60/40": (
+        target_ratio_objective_factory(0.60, 0.60, 0.40),
+        {
+            "home_factors": np.arange(1.0, 0.30, -0.05),
+            "away_factors": np.arange(1.0, 2.55, 0.1),
+            "draw_factors": np.arange(0.4, 2.55, 0.1),
+        },
+    ),
 }
 
 rf_model = fitted_models["Random Forest"]
@@ -585,9 +633,9 @@ print(f"\n{'=' * 60}")
 print("Random Forest — tuned profiles")
 print("=" * 60)
 
-for profile_name, objective in PROFILES.items():
+for profile_name, (objective, grid_kwargs) in PROFILES.items():
 
-    hf, af, df = search_profile(rf_model, rf_use_balancing, objective)
+    hf, af, df = search_profile(rf_model, rf_use_balancing, objective, **grid_kwargs)
 
     adjusted = rf_base_proba.copy()
     adjusted[:, HOME_IDX] *= hf

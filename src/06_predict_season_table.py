@@ -58,6 +58,8 @@ FEATURE_COLUMNS = [
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
     "HomePlayedEuropeMidweek", "AwayPlayedEuropeMidweek",
+    "HomeManagerExperience", "AwayManagerExperience",
+    "HomeRecentAvgPlacement", "AwayRecentAvgPlacement",
 ]
 
 # --------------------------------------------------------------------

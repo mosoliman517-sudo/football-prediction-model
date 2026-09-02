@@ -81,6 +81,7 @@ y_test = encoder.transform(y_test_labels)
 display_labels = ["Away Win", "Draw", "Home Win"]   # matches A, D, H order
 HOME_IDX = list(encoder.classes_).index("H")
 DRAW_IDX = list(encoder.classes_).index("D")
+AWAY_IDX = list(encoder.classes_).index("A")
 
 # Class-balanced weighting is not a universal win -- confirmed
 # directly: it helps CatBoost and Random Forest by several points, but
@@ -464,3 +465,139 @@ print(
     f"\nBest individual model ({best_name}, {best_accuracy:.2%}) "
     f"saved as football_model.pkl"
 )
+
+# --------------------------------------------------
+# Random Forest, tuned profiles
+#
+# Random Forest has been the strongest, most consistent model
+# throughout this project. Rather than committing to one single
+# decision threshold as "the" answer, this offers a few clearly-named,
+# independently validated profiles on the SAME trained model -- no
+# retraining, just a different decision rule at prediction time, each
+# chosen by internal validation for a different, explicit goal. Real,
+# measured trade-offs, not free lunches: Decisive trades almost all
+# Draw recall for real gains on Home/Away; Balanced (the default
+# elsewhere in this file) keeps Draw genuinely in play at a real cost
+# to Home/Away recall. Neither is "the" answer -- which one to use
+# depends on what the prediction is actually for.
+# --------------------------------------------------
+
+
+def search_profile(model, use_balancing, objective):
+    """
+    Generalizes choose_probability_adjustments to a configurable
+    objective and a 3-way (Home/Away/Draw) search -- same 3-fold
+    internal validation discipline as everywhere else in this file,
+    optimizing for whatever objective(y_true, y_pred) returns instead
+    of always f1_macro.
+    """
+
+    tscv = TimeSeriesSplit(n_splits=3)
+    home_factors = np.arange(1.0, 0.35, -0.1)
+    away_factors = np.arange(1.0, 2.05, 0.15)
+    draw_factors = np.arange(0.4, 2.05, 0.2)
+
+    fold_scores = {
+        (hf, af, df): []
+        for hf in home_factors for af in away_factors for df in draw_factors
+    }
+
+    for fold_train_idx, fold_val_idx in tscv.split(X_train):
+
+        fold_model = model.__class__(**model.get_params())
+        fold_X_train = X_train.iloc[fold_train_idx]
+        fold_y_train = y_train[fold_train_idx]
+        fold_weight = (
+            compute_sample_weight("balanced", fold_y_train) if use_balancing else None
+        )
+        fold_model.fit(fold_X_train, fold_y_train, sample_weight=fold_weight)
+
+        fold_proba = fold_model.predict_proba(X_train.iloc[fold_val_idx])
+        fold_y_val = y_train[fold_val_idx]
+
+        for hf in home_factors:
+            for af in away_factors:
+                for df in draw_factors:
+                    adjusted = fold_proba.copy()
+                    adjusted[:, HOME_IDX] *= hf
+                    adjusted[:, AWAY_IDX] *= af
+                    adjusted[:, DRAW_IDX] *= df
+                    pred = np.argmax(adjusted, axis=1)
+                    fold_scores[(hf, af, df)].append(objective(fold_y_val, pred))
+
+    best_factors, best_score = (1.0, 1.0, 1.0), -1.0
+
+    for factors, scores in fold_scores.items():
+        avg_score = np.mean(scores)
+        if avg_score > best_score:
+            best_score, best_factors = avg_score, factors
+
+    return best_factors
+
+
+def f1_macro_objective(y_true, y_pred):
+    return f1_score(y_true, y_pred, average="macro")
+
+
+def decisive_objective(y_true, y_pred):
+    # The MINIMUM of Home and Away recall, not their average --
+    # deliberately ignores Draw, for a profile whose entire point is
+    # calling decisive results (who wins) as confidently as possible,
+    # accepting that Draw gets swallowed. Minimum instead of average
+    # specifically to stop the search from maxing out one side (e.g.
+    # 79% Away / 51% Home) at the other's expense -- this is the
+    # objective that actually optimizes for "both genuinely high
+    # together," not just a high mean.
+    home_mask = y_true == HOME_IDX
+    away_mask = y_true == AWAY_IDX
+    home_recall = (y_pred[home_mask] == HOME_IDX).mean() if home_mask.any() else 0.0
+    away_recall = (y_pred[away_mask] == AWAY_IDX).mean() if away_mask.any() else 0.0
+    return min(home_recall, away_recall)
+
+
+def even_objective(y_true, y_pred):
+    # The MINIMUM recall across all THREE classes -- not an average
+    # (f1_macro tolerates one weak class if the others are strong) and
+    # not a 2-way minimum (decisive_objective ignores Draw entirely).
+    # This is the actual mathematical definition of "as balanced as
+    # possible": whichever class is doing worst, make it do as well as
+    # it can, even if that costs the strongest class some ground.
+    home_mask = y_true == HOME_IDX
+    away_mask = y_true == AWAY_IDX
+    draw_mask = y_true == DRAW_IDX
+    home_recall = (y_pred[home_mask] == HOME_IDX).mean() if home_mask.any() else 0.0
+    away_recall = (y_pred[away_mask] == AWAY_IDX).mean() if away_mask.any() else 0.0
+    draw_recall = (y_pred[draw_mask] == DRAW_IDX).mean() if draw_mask.any() else 0.0
+    return min(home_recall, away_recall, draw_recall)
+
+
+PROFILES = {
+    "Balanced": f1_macro_objective,
+    "Decisive (Home/Away only, Draw sacrificed)": decisive_objective,
+    "Even (worst class as strong as possible)": even_objective,
+}
+
+rf_model = fitted_models["Random Forest"]
+rf_use_balancing = choose_weighting(rf_model)
+rf_base_proba = rf_model.predict_proba(X_test)
+
+print(f"\n{'=' * 60}")
+print("Random Forest — tuned profiles")
+print("=" * 60)
+
+for profile_name, objective in PROFILES.items():
+
+    hf, af, df = search_profile(rf_model, rf_use_balancing, objective)
+
+    adjusted = rf_base_proba.copy()
+    adjusted[:, HOME_IDX] *= hf
+    adjusted[:, AWAY_IDX] *= af
+    adjusted[:, DRAW_IDX] *= df
+    pred = np.argmax(adjusted, axis=1)
+
+    print(
+        f"\n{profile_name}\n"
+        f"  factors: home={hf:.2f} away={af:.2f} draw={df:.2f} "
+        f"(chosen via internal validation)"
+    )
+    print(classification_report(y_test, pred, target_names=display_labels))

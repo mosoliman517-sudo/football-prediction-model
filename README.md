@@ -135,6 +135,16 @@ Weather was dropped before the combination search (conclusively negative alone, 
 
 **Final numbers after the Draw-boost adoption:** Random Forest, 49.08% accuracy, Away Win 55% recall, Home Win 60% recall, **Draw 23% recall** (up from 15%) — the real, deliberate trade of a little raw accuracy for a model that actually tries on Draw instead of defaulting away from it.
 
+**How far can Home/Away recall go, and is 60/60/30 reachable?** Swept a wide grid of decision thresholds on Random Forest to answer this directly rather than guess: no combination reaches Home ≥60%, Away ≥60% AND Draw ≥30% at once — every extra match called "Draw" is one fewer chance to correctly call Home or Away, a real structural ceiling from splitting one argmax decision three ways, not a tuning shortfall. What the sweep found instead was a genuine trade-off frontier, which became the basis for three named, independently-validated **profiles** on the same trained Random Forest (`03_train_model.py`, no retraining — just a different decision rule per profile, each chosen by internal validation for its own explicit goal):
+
+| Profile | Objective | Home | Away | Draw | Accuracy |
+|---|---|---|---|---|---|
+| Decisive | max(min(Home recall, Away recall)), Draw ignored | 72% | 67% | 0% | 52% |
+| Balanced | max(f1_macro across all 3) | 62% | 47% | 28% | 48% |
+| **Even** | max(min(Home, Away, Draw recall)) | 50% | 50% | **37%** | 47% |
+
+Decisive is the best pure win/loss caller this project has produced, but sacrifices Draw entirely (rejected once seen for exactly that reason — draws are part of the game). Even is the honest answer to "why not a good balance instead of hyperfocusing on one thing" — it's not an average that tolerates one weak class, it directly maximizes whichever class is doing *worst*, which is the actual definition of balanced. 37% Draw recall is the best this project has found anywhere, at any config.
+
 ---
 
 # Current Project Structure

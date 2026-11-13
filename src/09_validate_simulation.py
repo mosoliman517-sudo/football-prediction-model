@@ -211,6 +211,101 @@ for label in labels:
         "baseline_random_shuffle_position_mae": round(float(shuffled), 2),
     }
 
+# ---- 4. rest-of-season odds: the same method the page uses, backtested ----
+# Start each held-out season after its first 100 matches, play out the other
+# 280 with the page's method (outcome from the blended odds, then a scoreline
+# that fits the outcome), and compare with how the season really ended.
+# OPTIMISTIC: each remaining match's odds are built from its real pre-match
+# form, which in a live forecast would not be known yet.
+def conditional_cells(lh, la):
+    g = np.outer(poisson.pmf(np.arange(MAXG + 1), lh), poisson.pmf(np.arange(MAXG + 1), la))
+    g /= g.sum()
+    cells, cums = [], []
+    for c in range(3):                                   # 0 = Away, 1 = Draw, 2 = Home
+        lst = [(i, j) for i in range(MAXG + 1) for j in range(MAXG + 1) if (0 if i < j else 1 if i == j else 2) == c]
+        w = np.array([g[i, j] for i, j in lst]); cells.append(np.array(lst)); cums.append(np.cumsum(w) / w.sum())
+    return cells, cums
+
+
+bt = {"coverage_80": [], "title_prob_of_real_champion": [], "brier_top4": [], "brier_top4_base_rate": [],
+      "brier_relegation": [], "brier_relegation_base_rate": [], "position_mae_projection": [], "position_mae_current_table": []}
+N_BT = 1500
+for label in labels:
+    idx = np.where(test["Season"].values == label)[0]
+    sub = test.iloc[idx]
+    played, rest = idx[:100], idx[100:]
+    real_pos, real_pts = standings(sub)
+    teams = sorted(real_pos); tix = {t: i for i, t in enumerate(teams)}
+    pts0 = np.zeros(20); gd0 = np.zeros(20); gf0 = np.zeros(20)
+    for m in played:
+        h, a = tix[test.at[m, "HomeTeam"]], tix[test.at[m, "AwayTeam"]]
+        x, y_ = hg[m], ag[m]
+        gd0[h] += x - y_; gd0[a] += y_ - x; gf0[h] += x; gf0[a] += y_
+        pts0[h] += 3 if x > y_ else 1 if x == y_ else 0; pts0[a] += 3 if y_ > x else 1 if x == y_ else 0
+    cur_rank = ((-(pts0 * 1e6 + gd0 * 1e3 + gf0)).argsort().argsort() + 1)
+    pts = np.tile(pts0, (N_BT, 1)); gd = np.tile(gd0, (N_BT, 1)); gf = np.tile(gf0, (N_BT, 1))
+    for m in rest:
+        h, a = tix[test.at[m, "HomeTeam"]], tix[test.at[m, "AwayTeam"]]
+        cells, cums = conditional_cells(lamH[m], lamA[m])
+        o = P_blend[m]; u = rng.random(N_BT)
+        cls = np.where(u < o[0], 0, np.where(u < o[0] + o[1], 1, 2))
+        gh = np.zeros(N_BT, int); ga = np.zeros(N_BT, int)
+        for c in range(3):
+            sel = cls == c
+            if sel.any():
+                k_ = np.minimum(np.searchsorted(cums[c], rng.random(sel.sum())), len(cums[c]) - 1)
+                gh[sel], ga[sel] = cells[c][k_, 0], cells[c][k_, 1]
+        pts[:, h] += np.where(cls == 2, 3, np.where(cls == 1, 1, 0)); pts[:, a] += np.where(cls == 0, 3, np.where(cls == 1, 1, 0))
+        gd[:, h] += gh - ga; gd[:, a] += ga - gh; gf[:, h] += gh; gf[:, a] += ga
+    key = pts * 1e6 + gd * 1e3 + gf + rng.random(pts.shape) * 0.5
+    pos = (-key).argsort(axis=1).argsort(axis=1) + 1
+    real_p = np.array([real_pts[t] for t in teams]); real_r = np.array([real_pos[t] for t in teams])
+    lo, hi = np.percentile(pts, 10, axis=0), np.percentile(pts, 90, axis=0)
+    bt["coverage_80"].append(float(((real_p >= lo) & (real_p <= hi)).mean()))
+    bt["title_prob_of_real_champion"].append(float((pos[:, real_r.argmin()] == 1).mean()))
+    top4 = (pos <= 4).mean(0); rel = (pos >= 18).mean(0)
+    bt["brier_top4"].append(float(((top4 - (real_r <= 4)) ** 2).mean())); bt["brier_top4_base_rate"].append(float(((0.2 - (real_r <= 4)) ** 2).mean()))
+    bt["brier_relegation"].append(float(((rel - (real_r >= 18)) ** 2).mean())); bt["brier_relegation_base_rate"].append(float(((0.15 - (real_r >= 18)) ** 2).mean()))
+    proj_rank = pts.mean(0).argsort()[::-1].argsort() + 1
+    bt["position_mae_projection"].append(float(np.abs(proj_rank - real_r).mean())); bt["position_mae_current_table"].append(float(np.abs(cur_rank - real_r).mean()))
+report["rest_backtest"] = {k: round(float(np.mean(v)), 3) for k, v in bt.items()}
+report["rest_backtest"]["started_after_matches"] = 100
+report["rest_backtest"]["seasons"] = labels
+
+# ---- 5. exact scorelines: every call also names a score ---------------------
+# The score named for a match is the goal model's most likely scoreline among
+# those that FIT THE CALL (a Draw call names the likeliest draw, an Away call
+# the likeliest away win, ...), so calls from different profiles name
+# different scores. Scored on the 760 held-out matches against two baselines:
+# always guessing 1-1, and the goal model's single most likely score.
+blend_profiles = json.load(open("02_processed_data/blend_profiles.json"))
+K = np.arange(MAXG + 1)
+cells = []
+for a_, b_ in zip(lamH, lamA):
+    g = np.outer(poisson.pmf(K, a_), poisson.pmf(K, b_)); g /= g.sum()
+    order_ = np.dstack(np.unravel_index(np.argsort(-g, axis=None), g.shape))[0]
+    cells.append([(int(i), int(j), float(g[i, j])) for i, j in order_])
+
+
+def outcome_idx(i, j):
+    return 0 if i < j else 1 if i == j else 2
+
+
+exact = {}
+top_hits = sum(1 for c, h, a_ in zip(cells, hg, ag) if (c[0][0], c[0][1]) == (h, a_))
+one_one = int(((hg == 1) & (ag == 1)).sum())
+for name, f in blend_profiles.items():
+    pick = np.argmax(P_blend * np.array([f["away"], f["draw"], f["home"]]), axis=1)
+    hits, big = 0, 0
+    for c, pk, h, a_ in zip(cells, pick, hg, ag):
+        i, j, pr = next(x for x in c if outcome_idx(x[0], x[1]) == pk)
+        if (i, j) == (h, a_):
+            hits += 1
+            big += int(i + j >= 3)
+    exact[name] = {"hits": hits, "rate": round(hits / len(test), 4), "hits_with_3plus_goals": big}
+report["exact_scores"] = {"by_profile": exact, "always_1_1": {"hits": one_one, "rate": round(one_one / len(test), 4)},
+                          "goal_model_top_score": {"hits": int(top_hits), "rate": round(top_hits / len(test), 4)}}
+
 json.dump(report, open("02_processed_data/validation.json", "w"), separators=(",", ":"))
 
 # ---- printed summary ------------------------------------------------
@@ -236,3 +331,17 @@ for label, v in report["seasons"].items():
         print(f"     {key}: points error {s['points_mae']}, position error {s['position_mae_from_expected_pos']}, "
               f"rank corr {s['spearman']}, real points inside 50/80/90% range: {s['coverage_50']:.0%}/{s['coverage_80']:.0%}/{s['coverage_90']:.0%}")
     print(f"     baselines (position error): last season's table {v['baseline_last_seasons_table_position_mae']}, random shuffle {v['baseline_random_shuffle_position_mae']}")
+
+rb = report["rest_backtest"]
+print("\n4. REST-OF-SEASON ODDS, backtested from round 10 of each held-out season (optimistic: odds use real later form)")
+print(f"   real final points inside the simulated 80% range: {rb['coverage_80']:.0%} of teams")
+print(f"   chance given to the real champion: {rb['title_prob_of_real_champion']:.0%} on average")
+print(f"   top-4 Brier {rb['brier_top4']:.3f} vs {rb['brier_top4_base_rate']:.3f} for 'everyone 20%' (lower is better)")
+print(f"   relegation Brier {rb['brier_relegation']:.3f} vs {rb['brier_relegation_base_rate']:.3f} for 'everyone 15%'")
+print(f"   final-position error: projection {rb['position_mae_projection']:.2f} places vs {rb['position_mae_current_table']:.2f} for 'the table now stays as is'")
+
+ex = report["exact_scores"]
+print("\n5. EXACT SCORELINES (the score that fits each call), held-out 760 matches")
+for name, v in ex["by_profile"].items():
+    print(f"   {name:<9} {v['hits']} hits = {v['rate']:.1%}  (of which {v['hits_with_3plus_goals']} were high-scoring, 3+ goals)")
+print(f"   always guess 1-1: {ex['always_1_1']['hits']} hits = {ex['always_1_1']['rate']:.1%} | goal model's single top score: {ex['goal_model_top_score']['hits']} hits = {ex['goal_model_top_score']['rate']:.1%}")

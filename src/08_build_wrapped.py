@@ -5,7 +5,9 @@ Everything on the page comes from files the pipeline already wrote:
   - 02_processed_data/rf_predictions.csv  (03_train_model.py: Random
     Forest probabilities for every match it never trained on)
   - 02_processed_data/rf_profiles.json    (03_train_model.py: the
-    decision-threshold factors each tuned profile chose)
+    decision-threshold factors each tuned profile chose on the forest)
+  - 02_processed_data/blend_profiles.json (10_tune_blend_profiles.py: the
+    same profiles tuned on the blended odds)
   - 02_processed_data/poisson_lambdas.csv (05_predict_scoreline.py: expected
     goals for every match and for every possible live-season pairing)
   - 02_processed_data/validation.json    (09_validate_simulation.py: how well
@@ -26,6 +28,7 @@ import pandas as pd
 PREDICTIONS = "02_processed_data/rf_predictions.csv"
 PROFILES_JSON = "02_processed_data/rf_profiles.json"
 LAMBDAS = "02_processed_data/poisson_lambdas.csv"
+BLEND_JSON = "02_processed_data/blend_profiles.json"
 TEMPLATE = "site/season_wrapped_template.html"
 OUTPUT = "site/season_wrapped.html"
 
@@ -82,6 +85,14 @@ for key, f in factors.items():
     pid, name, desc = PROFILE_META[key]
     profiles.append({"id": pid, "name": name, "desc": desc,
                      "f": {"h": round(f["home"], 3), "d": round(f["draw"], 3), "a": round(f["away"], 3)}})
+
+# The same four profiles, tuned on the blended odds (10_tune_blend_profiles.py):
+# "f"/"bench" are the Random Forest versions, "fb"/"benchB" the blend versions
+blend_profiles = json.load(open(BLEND_JSON))
+for p in profiles:
+    b = blend_profiles[p["id"]]
+    p["fb"] = {"h": b["home"], "d": b["draw"], "a": b["away"]}
+    p["benchB"] = b["bench"]
 
 # Benchmark recall per profile (same 760 matches 03 reports), as a sanity
 # check against what 03 printed AND as the numbers shown on the chips
@@ -152,8 +163,29 @@ lab = {"season": live_label, "asOf": last_played, "agree": agree,
        "grid": grid}
 print(f"Match lab: {len(grid)} pairings, results up to {last_played}")
 
+# ---- full history for the team page, head-to-head and Elo race ------------
+cols = ["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "HomeTeamOverallElo", "AwayTeamOverallElo"]
+full = pd.concat([pd.read_csv("02_processed_data/E0_features.csv", usecols=cols),
+                  pd.read_csv("02_processed_data/E0_live_features.csv", usecols=cols)])
+full["Date"] = pd.to_datetime(full["Date"], format="mixed")
+full = full.sort_values(["Date", "HomeTeam"]).reset_index(drop=True)
+epoch = pd.Timestamp("2014-08-01")
+full["Day"] = (full["Date"] - epoch).dt.days
+club_list = sorted(set(full["HomeTeam"]) | set(full["AwayTeam"]))
+club_ix = {t: i for i, t in enumerate(club_list)}
+elo_series = {i: [] for i in range(len(club_list))}     # [day, rating before that match]
+for r in full.itertuples():
+    elo_series[club_ix[r.HomeTeam]].append([int(r.Day), int(round(r.HomeTeamOverallElo))])
+    elo_series[club_ix[r.AwayTeam]].append([int(r.Day), int(round(r.AwayTeamOverallElo))])
+history = {
+    "epoch": epoch.strftime("%Y-%m-%d"), "clubs": club_list,
+    "elo": {str(k): v for k, v in elo_series.items()},
+    "matches": [[int(r.Day), club_ix[r.HomeTeam], club_ix[r.AwayTeam], int(r.FTHG), int(r.FTAG)] for r in full.itertuples()],
+}
+print(f"History: {len(club_list)} clubs, {len(history['matches'])} matches")
+
 validation = json.load(open("02_processed_data/validation.json"))
-data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation}
+data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

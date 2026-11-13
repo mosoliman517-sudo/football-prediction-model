@@ -1,5 +1,26 @@
 ## Football Match Prediction Model
 
+> **Resuming after a break? Read this box first.**
+>
+> **What this is.** A machine-learning model that predicts Premier League results (Home win / Draw / Away win) using only information known before kickoff, tested on matches it never trained on (2024-25 and 2025-26, 760 matches). It started as one season of CSVs and grew into 12 seasons, ~50 features, five tree models, a Poisson goal model, three tuned "decision profiles", a season simulator, and an interactive page. The aim: a model that is **balanced**, with Home and Away recall near 60% and Draw 30-40%, instead of one that only ever calls Home wins.
+>
+> **Where it stands (Nov 2026).** Best accuracy 48.55% (ensemble) on 760 held-out matches; Bet365's favourite is 51.4% on the same matches, a plain "always Home" is 41.7%. Best Draw recall found: 40% (Balanced profile on the blended odds, Home 45% / Away 44%). Draw is the hard part: four different approaches have hit the same ceiling. Everything is on GitHub and reproducible from a fresh clone.
+>
+> **The two commands that matter.**
+>
+> ```bash
+> ./refresh.sh                 # download latest 2026-27 results, rebuild everything, verify (~10 min)
+> ./refresh.sh --no-download   # rebuild from the results file already in 01_data/
+> ```
+>
+> Then republish `site/season_wrapped.html` (ask Claude to "republish the page"). Live page: https://claude.ai/artifact/MDgzUP3phkTSLBR4WN29q4 (private).
+>
+> **Pipeline order** (run from the project root): `01_load_data` -> `02_load_features` -> `03_train_model` -> `05_predict_scoreline` -> `10_tune_blend_profiles` -> `09_validate_simulation` -> `08_build_wrapped`. `04` is a quick model comparison, `06` and `07` are season-table simulations. `refresh.sh` runs the chain for you.
+>
+> **Known limits, stated plainly.** (1) Understat (xG) blocks scripted requests, so 2026-27 xG form is carried forward from last season. (2) The Kaggle Transfermarkt data stops in July 2026, so 2026-27 managers and European fixtures are stale; a newer download needs your Kaggle login. (3) football-data's `fixtures.csv` has no Premier League rows during international breaks, so there are no real kickoff dates; the page knows exactly *which* matches remain (every pairing is played once at each ground) but not *when*. (4) Forecasts for unplayed matches are an approximation (one match of staleness, neutral kickoff time); on the 100 matches already played they pick the same result as the exact version 80% of the time. (5) Exact scores are not predictable: guessing 1-1 every time is right as often as the model's best-score guess.
+>
+> **Open ideas, not yet built.** Real kickoff dates once the fixtures file has them; a newer Kaggle copy and a working xG source; revisiting individually-rejected features in combination (starting-XI value, `EloEdgeAboveAverage`, `RecentPlacementGap` as an Elo signal); lineups and injuries (no free source found).
+
 ## Goal
 
 Build a machine learning model that predicts football match outcomes using historical Premier League data and pre-match statistics such as recent form, team strength, home advantage, and other performance metrics.
@@ -231,6 +252,51 @@ Asked directly whether the single-match and season simulations are anything more
 - **A simulated season lands near the real table.** Every match sampled 4,000 times: position error 2.1 (2024-25) and 3.0 (2025-26) places per team, against 3.3 and 3.8 for repeating last season's table and 6.6 for a random shuffle; rank correlation about 0.75 to 0.82; real points inside the simulated 80% range for 65% to 85% of teams (20 teams a season, so noisy). Note these use each match's real pre-match features, so it is a replay with sampled results, not a blind forecast (`07` is the blind one).
 - **The page's random draw was checked too:** 200,000 sampled scorelines from one grid stayed within 0.13 percentage points of the exact odds for every score, the odds sum to 1 for every match, and switching profile changes the calls (135 of 380 differ) but not the odds.
 
+### Calls from the blended odds, and a goal-model finding
+
+The Poisson goal model (`05`) turned out to be the best single source of probabilities: log loss 1.014 against the Random Forest's 1.023, and 49.9% accuracy against 48.0%. That prompted a test of whether the three decision profiles work better when they decide from the **blend** of both models (the odds the page already shows) than from the forest alone. Thresholds were chosen only on out-of-fold training data (3 chronological folds, the same discipline as `03`) and the 760 held-out matches were used once:
+
+| Profile (Home / Draw / Away recall, accuracy) | Random Forest | Blend |
+|---|---|---|
+| Balanced | 49 / 35 / 46, 44% | 45 / **40** / 44, 43.7% |
+| Deadkill | 72 / 0 / 59, 49.2% | 75 / 0 / 56, 49.6% |
+| Target 60/60/40 | 51 / 29 / 49, 45% | **54** / 30 / 49, **46.4%** |
+
+Balanced's weakest class rises from 35% to 40%, the project's balance goal, and the best Draw recall seen anywhere here. It is one test on 760 matches and Draw recall carries roughly +/-3 points of sampling noise, so the page offers both ("Calls made from": Blended odds, the default, or Random Forest only) instead of silently replacing the original profiles. A goal-model-only variant gave similar numbers (Balanced 43 / 40 / 46). The tuning is its own pipeline step, `10_tune_blend_profiles.py`, writing `blend_profiles.json`.
+
+### New on the Season Wrapped page
+
+Everything below is computed in the browser from the data embedded by `08_build_wrapped.py`:
+
+- **Rest of 2026-27** (`#rest`): plays out the 280 matches not yet played 3,000 times from today's table (outcome from the honest odds, then a scoreline that fits it, so goal difference and tie-breaks are real) and shows each club's projected points, range, and chances of the title, top 4 and bottom 3. Backtested in `09` by starting each held-out season after 100 matches: real final points fell inside the simulated 80% range for 75% of teams, the real champion got 70% on average, top-4 and relegation Brier scores were 0.047 and 0.027 against 0.160 and 0.128 for flat base rates, and the projected final position was 1.9 places off against 2.6 for "the table now stays as it is". **That backtest is optimistic**: each remaining match's odds use its real pre-match form, which a live forecast would not have yet.
+- **Teams**: pick any of the 36 clubs seen since 2014: Elo rating over twelve years, last ten results, and for each replayed season the real finish against the model's, record, calls right, best call and biggest miss.
+- **Head to head**: every Premier League meeting since 2014 between two clubs with the tally, and, for two 2026-27 clubs, the real result or the forecast for both fixtures.
+- **Elo race**: every club's rating as of the round on screen, reordering as the replay plays.
+- **Share card**: a one-card summary of the selected season and profile, with Copy summary (text) and Save as image (PNG, via the viewer's downloads prompt).
+- **Seven tabs instead of one long page** (hash-linked, so `#lab`, `#rest`, `#teams`, `#h2h`, `#recap`, `#checks` open directly): Replay, Match lab, Rest of 2026-27, Teams, Head to head, Recap and card, Checks. The season / calls / profile controls follow you to the tabs they affect and hide on the ones they don't.
+
+### Exact-score calls
+
+Every call now also names a scoreline: the goal model's likeliest score *among those that fit the call* (a Draw call names the likeliest draw, an Away call the likeliest away win), so different profiles name different scores. It appears next to each match in the replay (a star on an exact hit), in the match lab, in the recap and on the share card. Scored on the 760 held-out matches (`09_validate_simulation.py`, section 5), cross-checked against an independent implementation in the page:
+
+| What names the score | Exact hits | Rate | Of which high-scoring (3+ goals) |
+|---|---|---|---|
+| Balanced profile | 77 | 10.1% | 12 |
+| Target 60/60/40 | 74 | 9.7% | 15 |
+| Deadkill / Raw | 65 | 8.6% | 26 / 25 |
+| Always guess 1-1 | 92 | 12.1% | n/a |
+| Goal model's single likeliest score | 89 | 11.7% | n/a |
+
+**Naming a score that fits each call does not beat guessing 1-1 every time**, because a Home or Away call has to name something like 2-0 or 0-1, which turns up less often than 1-1. Deadkill and Raw produce the most high-scoring hits (26 and 25 of 65), which is where the "crazy calls" live (the recap shows the boldest exact hits). No exact hit was a score the goal model rated under 7%: a likeliest-fitting score is never that improbable, so "crazy" is defined as a high-scoring hit and not an unlikely one. Exact-score prediction has no real skill beyond 1-1 here, and the page says so.
+
+### Fixtures file, honestly
+
+football-data.co.uk's `fixtures.csv` was downloaded as agreed, but it contains **no Premier League rows** during an international break (51 rows, all other divisions). It would normally add real kickoff days and times to the match lab; until it does, those stay at neutral defaults. The rest-of-season simulation does not need it: since every ordered pairing is played exactly once, the unplayed set is simply every pairing not yet in the results.
+
+### Verification pass
+
+Before this update the whole pipeline was rebuilt from scratch (`01` -> `02` -> `03` -> `05` -> `09` -> `08`) and compared with the committed outputs: identical accuracies, identical validation numbers, a byte-identical page, and prediction files equal to the 16th decimal place (floating-point noise only). `pyflakes` is clean across `src/`. `refresh.sh` was run end to end, download included. A bug introduced during this work (a blanket find-and-replace that turned a default argument into `ms = ms`) was caught by loading the page and fixed before publishing. Probabilities on the page were checked to be well-formed: blended odds sum to 1 for all 860 matches, title chances sum to 100%, top-4 to 400%, bottom-3 to 300%.
+
 **What this says about the ceiling.** Four different kinds of idea aimed at Draw (threshold tuning, scoreline-model corrections, draw-propensity features, an extra Elo signal) have now each been tested honestly, and Draw recall at roughly 34% (Balanced profile) looks like where this data runs out. Pre-match data from these three sources describes how strong each side is and what situation they're in, but a draw is largely what happens when a match stays tight and nobody scores late — which isn't knowable before kickoff. The honest conclusion is that further gains likely need genuinely new *kinds* of information (lineups and injuries on the day, referee-and-weather interactions, or bookmaker-implied probabilities, which this project deliberately excludes) rather than more feature engineering on the same sources.
 
 ---
@@ -254,6 +320,8 @@ football-prediction-model/
 │   ├── 05_predict_scoreline.py     # Poisson goal model — Win/Draw/Loss + scorelines
 │   ├── 06_predict_season_table.py  # simulates each held-out season, predicted vs. actual table
 │   ├── 07_predict_blind_season.py  # genuinely blind season forecast (Monte Carlo, no in-season data)
+│   ├── 09_validate_simulation.py   # tests the odds and simulations against what really happened
+│   ├── 10_tune_blend_profiles.py   # tunes the decision profiles on the blended odds
 │   ├── 08_build_wrapped.py         # builds the interactive Season Wrapped page from saved predictions
 │   └── features/
 │       ├── form.py                 # points-based form + win-rate
@@ -277,6 +345,7 @@ football-prediction-model/
 │       └── elo.py                  # dual-track Elo + calibrated expectation model
 │
 ├── site/                           # Season Wrapped page (template + built HTML)
+├── refresh.sh                      # one-command refresh of the live season
 ├── README.md
 ├── requirements.txt
 └── .gitignore
@@ -308,6 +377,8 @@ football-prediction-model/
 - ~~Dixon-Coles correction for the scoreline model~~ — tested: fitted ρ = −0.02 (essentially zero), a draw-diagonal inflation fitted δ = 0. No measurable benefit. Not adopted (see Update 7).
 - Once 2026-27 is underway, point predictions at the live in-progress season and start tracking real fixtures week to week — `07_predict_blind_season.py` already proves the mechanics work without cheating off real results.
 - Squad age helping only in combination (not alone) suggests other individually-negative ideas might be worth a second look *in combination* rather than assumed dead for good — starting-XI value, the de-trended Elo signal (`EloEdgeAboveAverage`, still computed but excluded from `SIGNAL_COLUMNS`), and now `RecentPlacementGap`'s Elo-signal form are the best candidates to revisit that way, especially now that the feature set is larger than when each was last tried.
+- ~~Real fixtures for the match lab~~: downloaded, but the file has no Premier League rows during breaks; re-check with `curl -L https://www.football-data.co.uk/fixtures.csv` on a normal match week, and if it has them, wire real dates and kickoff times into `fixture_grid.py`.
+- ~~Rest-of-season odds, team page, head to head, Elo race, share card, one-command refresh~~: built (Update 7).
 - **Refresh the 2026-27 inputs:** pull the new Understat season with `00_fetch_xg_data.py` and download a newer Kaggle Transfermarkt copy (needs a Kaggle login) so the live season's xG form, managers and European fixtures stop being carried forward. Then re-run `01`, `02`, `03`, `08` to roll the live season forward.
 - **Deduplicate `TEAM_NAME_MAP`:** the Transfermarkt-to-project team-name map is copy-pasted in five feature files (it needed the same Coventry edit five times). Same shape as the old `get_season` duplication: it should live in one shared module.
 - Target 60/60/40 landed at a real 55/50/26 on Random Forest's current decision surface — short of the named target, and that gap looks like a genuine ceiling of this feature set rather than a search limitation (the grid used was already fine-resolution). Closing it further probably needs a new signal that separates Draw-likely matches more cleanly, not another threshold search on the same probabilities.

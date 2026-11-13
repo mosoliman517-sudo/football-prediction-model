@@ -805,7 +805,7 @@ const TEAM = {
 // short in-browser image URL at load and reused everywhere a club is named. A club
 // without a badge (or a build made without them) falls back to a plain text chip.
 const CREST_URL = {};
-for (const [club, svg] of Object.entries(DATA.crests || {})) CREST_URL[club] = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+for (const [club, svg] of Object.entries(DATA.crests || {})) CREST_URL[club] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 function crest(name) {
   const url = CREST_URL[name];
   if (url) return `<img class="crest" src="${url}" alt="${esc(name)} badge" decoding="async">`;

@@ -1,53 +1,11 @@
 import pandas as pd
 
 from features.elo import get_season
+from features.team_names import TEAM_NAME_MAP
 
 CLUBS_PATH = "01_data_market_value/clubs.csv"
 VALUATIONS_PATH = "01_data_market_value/player_valuations.csv"
 
-# Transfermarkt's club names vs. the naming this project already uses
-# (01_data/) -- same normalization job as Understat's TEAM_NAME_MAP in
-# 00_fetch_xg_data.py, just a different source. Reading FC and Wigan
-# Athletic are real EPL clubs in Transfermarkt's data but never
-# appear in this project's own seasons, so they're left unmapped.
-TEAM_NAME_MAP = {
-    "AFC Bournemouth": "Bournemouth",
-    "Arsenal FC": "Arsenal",
-    "Aston Villa": "Aston Villa",
-    "Brentford FC": "Brentford",
-    "Brighton & Hove Albion": "Brighton",
-    "Burnley FC": "Burnley",
-    "Cardiff City": "Cardiff",
-    "Coventry City": "Coventry",
-    "Chelsea FC": "Chelsea",
-    "Crystal Palace": "Crystal Palace",
-    "Everton FC": "Everton",
-    "Fulham FC": "Fulham",
-    "Huddersfield Town": "Huddersfield",
-    "Hull City": "Hull",
-    "Ipswich Town": "Ipswich",
-    "Leeds United": "Leeds",
-    "Leicester City": "Leicester",
-    "Liverpool FC": "Liverpool",
-    "Luton Town": "Luton",
-    "Manchester City": "Man City",
-    "Manchester United": "Man United",
-    "Middlesbrough FC": "Middlesbrough",
-    "Newcastle United": "Newcastle",
-    "Norwich City": "Norwich",
-    "Nottingham Forest": "Nott'm Forest",
-    "Queens Park Rangers": "QPR",
-    "Sheffield United": "Sheffield United",
-    "Southampton FC": "Southampton",
-    "Stoke City": "Stoke",
-    "Sunderland AFC": "Sunderland",
-    "Swansea City": "Swansea",
-    "Tottenham Hotspur": "Tottenham",
-    "Watford FC": "Watford",
-    "West Bromwich Albion": "West Brom",
-    "West Ham United": "West Ham",
-    "Wolverhampton Wanderers": "Wolves",
-}
 
 
 def _season_start(season_year):

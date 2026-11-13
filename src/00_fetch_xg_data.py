@@ -18,12 +18,14 @@ built) is a separate next step.
 """
 
 import os
+import sys
 import time
 
 import requests
 import pandas as pd
 
-SEASONS = range(2014, 2026)   # 2014 = 2014-15 season, ... 2025 = 2025-26
+SEASONS = range(2014, 2027)   # 2014 = 2014-15 season, ... 2026 = 2026-27
+                              # (in progress: re-run with `2026` to refresh it)
 OUTPUT_DIR = "01_data_xg"
 
 # Understat uses fuller/different team names than 01_data/'s files --
@@ -114,7 +116,11 @@ def main():
     session = requests.Session()
     session.headers.update(HEADERS)
 
-    for season in SEASONS:
+    # Optional: python3 src/00_fetch_xg_data.py 2026  fetches just those
+    # seasons instead of re-downloading all of them
+    seasons = [int(a) for a in sys.argv[1:]] or SEASONS
+
+    for season in seasons:
 
         label = f"{season}-{str(season + 1)[-2:]}"
         print(f"Fetching {label} season...")

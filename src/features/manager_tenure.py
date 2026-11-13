@@ -1,25 +1,13 @@
 import pandas as pd
 
+from features.team_names import TEAM_NAME_MAP
+
 GAMES_PATH = "01_data_market_value/games.csv"
 
 NEW_MANAGER_WINDOW_DAYS = 45   # the well-documented "new manager bounce" --
                                  # results often improve in the weeks right
                                  # after an appointment, before reverting
 
-TEAM_NAME_MAP = {
-    "AFC Bournemouth": "Bournemouth", "Arsenal FC": "Arsenal", "Aston Villa": "Aston Villa",
-    "Brentford FC": "Brentford", "Brighton & Hove Albion": "Brighton", "Burnley FC": "Burnley",
-    "Cardiff City": "Cardiff", "Chelsea FC": "Chelsea", "Crystal Palace": "Crystal Palace",
-    "Everton FC": "Everton", "Fulham FC": "Fulham", "Huddersfield Town": "Huddersfield",
-    "Coventry City": "Coventry", "Hull City": "Hull", "Ipswich Town": "Ipswich", "Leeds United": "Leeds",
-    "Leicester City": "Leicester", "Liverpool FC": "Liverpool", "Luton Town": "Luton",
-    "Manchester City": "Man City", "Manchester United": "Man United", "Middlesbrough FC": "Middlesbrough",
-    "Newcastle United": "Newcastle", "Norwich City": "Norwich", "Nottingham Forest": "Nott'm Forest",
-    "Queens Park Rangers": "QPR", "Sheffield United": "Sheffield United", "Southampton FC": "Southampton",
-    "Stoke City": "Stoke", "Sunderland AFC": "Sunderland", "Swansea City": "Swansea",
-    "Tottenham Hotspur": "Tottenham", "Watford FC": "Watford", "West Bromwich Albion": "West Brom",
-    "West Ham United": "West Ham", "Wolverhampton Wanderers": "Wolves",
-}
 
 
 def _manager_timeline():

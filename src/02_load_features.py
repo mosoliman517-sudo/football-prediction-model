@@ -1,9 +1,8 @@
 import pandas as pd
-# Loads the engineered dataset
-df = pd.read_csv("02_processed_data/E0_features.csv")
 
-# Removes information that would not be known before kickoff
-df = df.drop(columns=[
+# Information that would not be known before kickoff (or that only
+# helps through Elo's calibration, not as a raw classifier feature)
+COLUMNS_TO_DROP = [
     "FTHG",
     "FTAG",
     "HTHG",
@@ -39,7 +38,14 @@ df = df.drop(columns=[
     "AwayNewManagerBoost",
     "HomeSquadAvgAge",
     "AwaySquadAvgAge"
-], errors="ignore")
+]
 
-df = df.drop(columns=["HomePoints", "AwayPoints"])
-df.to_csv("02_processed_data/E0_model.csv", index=False)
+# Benchmark seasons and the live season are processed identically
+for source, target in [
+    ("02_processed_data/E0_features.csv", "02_processed_data/E0_model.csv"),
+    ("02_processed_data/E0_live_features.csv", "02_processed_data/E0_live_model.csv"),
+]:
+    df = pd.read_csv(source)
+    df = df.drop(columns=COLUMNS_TO_DROP, errors="ignore")
+    df = df.drop(columns=["HomePoints", "AwayPoints"])
+    df.to_csv(target, index=False)

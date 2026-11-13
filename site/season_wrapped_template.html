@@ -1,0 +1,693 @@
+<title>Season Wrapped</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one control deck on top, a replay stage below (feed, accuracy
+   chart, live table), then a recap of the whole season in big-number cards.
+   Dark first, like a stadium at night. Each outcome keeps ONE colour on
+   every chart, bar and pill: Home orange, Draw steel, Away cyan. */
+:root {
+  --bg: #0A100E;
+  --surface: #111A16;
+  --surface2: #17231D;
+  --line: #243329;
+  --fg: #E9F1EC;
+  --muted: #8CA095;
+  --accent: #FFC933;
+  --accent-ink: #1A1400;
+  --home: #FF8A5B;
+  --draw: #9AA7B8;
+  --away: #4CC9F0;
+  --ok: #3DDC97;
+  --bad: #FF5D73;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ECF1EE; --surface: #FFFFFF; --surface2: #F2F6F3; --line: #D3DDD7;
+    --fg: #0C1812; --muted: #566A5E; --accent: #F2B705; --accent-ink: #1A1400;
+    --home: #D9561F; --draw: #667587; --away: #0A86B8; --ok: #12905A; --bad: #D42C46;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ECF1EE; --surface: #FFFFFF; --surface2: #F2F6F3; --line: #D3DDD7;
+  --fg: #0C1812; --muted: #566A5E; --accent: #F2B705; --accent-ink: #1A1400;
+  --home: #D9561F; --draw: #667587; --away: #0A86B8; --ok: #12905A; --bad: #D42C46;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 14px/1.5 var(--body);
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+button, select, input { font: inherit; color: inherit; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+
+/* top bar */
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.brand h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 800; line-height: 0.95; }
+.brand h1 span { color: var(--accent); }
+.brand p { margin: 8px 0 0; color: var(--muted); max-width: 56ch; }
+.iconbtn {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  height: 38px; padding: 0 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.iconbtn:hover { border-color: var(--muted); }
+
+/* control deck */
+.deck { display: flex; flex-direction: column; gap: 16px; }
+.deck-row { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+.group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.seg { display: inline-flex; background: var(--surface2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { background: none; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; color: var(--muted); font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button:not([aria-pressed="true"]):hover { color: var(--fg); }
+.live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-right: 6px; vertical-align: 1px; }
+.profiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; width: 100%; }
+.pcard {
+  text-align: left; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.pcard[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.pcard:hover { border-color: var(--muted); }
+.pcard b { font-family: var(--display); font-size: 17px; }
+.pcard small { color: var(--muted); line-height: 1.35; }
+.mini { display: flex; gap: 10px; font-size: 11px; }
+.mini i { font-style: normal; display: inline-flex; align-items: center; gap: 4px; }
+.mini i::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+
+.transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tbtn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface2);
+  display: grid; place-items: center; cursor: pointer;
+}
+.tbtn:hover { border-color: var(--muted); }
+.tbtn.play { width: 52px; height: 52px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tbtn svg { width: 18px; height: 18px; fill: currentColor; }
+.scrub { flex: 1 1 220px; min-width: 160px; accent-color: var(--accent); }
+.roundlabel { min-width: 118px; font-family: var(--mono); font-weight: 700; }
+select { background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+.link { background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 600; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
+.notice { font-size: 13px; color: var(--muted); background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+
+/* stage */
+.stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 980px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.statstrip { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); gap: 22px; align-items: center; }
+@media (max-width: 520px) { .statstrip { grid-template-columns: 1fr; } }
+.bigacc { font-family: var(--display); font-weight: 800; font-size: clamp(54px, 9vw, 84px); line-height: 0.9; letter-spacing: -0.03em; }
+.bigacc small { font-size: 0.4em; color: var(--muted); font-weight: 700; }
+.sub { color: var(--muted); margin-top: 6px; }
+.delta { font-family: var(--mono); font-weight: 700; }
+.delta.up { color: var(--ok); } .delta.down { color: var(--bad); }
+.recalls { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.rrow { display: grid; grid-template-columns: 46px 1fr 92px; gap: 10px; align-items: center; font-size: 12px; }
+.rrow .track { height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.rrow .fill { height: 100%; background: var(--c); border-radius: 99px; transition: width 0.5s ease; }
+.rrow .v { text-align: right; color: var(--muted); }
+.rrow .v b { color: var(--fg); }
+
+.chartbox svg { width: 100%; height: auto; display: block; }
+.chartbox text { fill: var(--muted); font: 500 13px var(--mono); }
+.chartbox .grid { stroke: var(--line); stroke-width: 1; }
+.chartbox .model { stroke: var(--accent); fill: none; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.chartbox .ref { stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
+.chartbox .dot { fill: var(--accent); }
+.chartbox .endlabel { fill: var(--accent); font-weight: 700; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--c); vertical-align: 3px; margin-right: 6px; border-radius: 2px; }
+.legend i.dash { border-top-style: dashed; border-top-width: 2px; }
+
+.cardhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.cardhead h2 { font-size: 19px; font-weight: 700; }
+
+.feed { display: flex; flex-direction: column; gap: 8px; }
+.match {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px 10px; align-items: center;
+  background: var(--surface2); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px;
+  animation: slide 0.42s ease both; animation-delay: calc(var(--i) * 45ms);
+}
+@keyframes slide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.side { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.side.h { justify-content: flex-end; text-align: right; }
+.side span.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score { font-family: var(--mono); font-weight: 700; font-size: 16px; background: var(--bg); border-radius: 8px; padding: 3px 10px; white-space: nowrap; }
+.foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; }
+.verdict { display: flex; align-items: center; gap: 7px; font-size: 12px; white-space: nowrap; }
+.pill { font-family: var(--mono); font-weight: 700; font-size: 11px; border-radius: 99px; padding: 3px 8px; color: #0A100E; background: var(--c); }
+.mark { font-weight: 800; font-size: 15px; width: 18px; text-align: center; }
+.mark.y { color: var(--ok); } .mark.n { color: var(--bad); }
+.pbar { flex: 1 1 auto; display: flex; height: 6px; border-radius: 99px; gap: 2px; min-width: 60px; }
+.pbar i { display: block; background: var(--c); opacity: 0.42; }
+.pbar i.real { opacity: 1; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--fg); border-radius: 99px; }
+.empty { color: var(--muted); padding: 18px 4px; }
+.bardesc { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
+th:nth-child(2), td:nth-child(2) { text-align: left; }
+td { padding: 6px 7px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
+td:nth-child(2) { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+tr.top4 td:first-child { box-shadow: 3px 0 0 var(--ok) inset; }
+tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
+.up { color: var(--ok); } .down { color: var(--bad); }
+.chip { display: inline-grid; place-items: center; min-width: 36px; height: 22px; border-radius: 6px; font: 700 10.5px var(--mono); letter-spacing: 0.04em; box-shadow: 0 0 0 1px rgba(128,128,128,0.35) inset; }
+.sort { display: inline-flex; gap: 2px; }
+.sort button { background: none; border: 0; padding: 4px 8px; border-radius: 7px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
+.sort button[aria-pressed="true"] { background: var(--surface2); color: var(--fg); }
+.note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+/* recap */
+.recaphead { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; padding-top: 8px; }
+.recaphead h2 { font-size: clamp(28px, 4.6vw, 44px); font-weight: 800; line-height: 1; }
+.recaphead h2 span { color: var(--accent); }
+.recap { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+.recap .wide { grid-column: span 2; }
+@media (max-width: 700px) { .recap .wide { grid-column: auto; } }
+.rc { display: flex; flex-direction: column; gap: 10px; }
+.rc .big { font-family: var(--display); font-weight: 800; font-size: clamp(44px, 6vw, 64px); line-height: 0.95; letter-spacing: -0.03em; }
+.rc.hero { background: linear-gradient(160deg, var(--surface2), var(--surface)); border-color: var(--accent); }
+.rc p { margin: 0; color: var(--muted); }
+.rc .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 8px 0; border-top: 1px solid var(--line); }
+.rc .row:first-of-type { border-top: 0; }
+.rc .row .when { color: var(--muted); font-family: var(--mono); font-size: 11px; min-width: 52px; }
+.rc .row .says { margin-left: auto; font-size: 12px; color: var(--muted); text-align: right; }
+.rc .row .says b { color: var(--fg); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 460px) { .pair { grid-template-columns: 1fr; } }
+.tri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tri div { background: var(--surface2); border-radius: 10px; padding: 10px; }
+.tri b { display: block; font-family: var(--display); font-size: 28px; line-height: 1; color: var(--c); }
+.tri small { color: var(--muted); font-size: 12px; }
+.teamrow { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; padding: 6px 0; border-top: 1px solid var(--line); }
+.teamrow:first-of-type { border-top: 0; }
+.teamrow .v { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+.about { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.about h3 { color: var(--fg); font-size: 18px; margin-bottom: 10px; }
+.about ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.about b { color: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .match { animation: none; } .rrow .fill { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Season <span>Wrapped</span></h1>
+      <p>Replay a Premier League season with a Random Forest that has never seen a single one of these matches, then see where it was right, where it got burned, and how its table compares with the real one.</p>
+    </div>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+  </header>
+
+  <section class="card deck" aria-label="Replay controls">
+    <div class="deck-row">
+      <div class="group">
+        <span class="label">Season</span>
+        <div class="seg" id="seasonSeg" role="group" aria-label="Season"></div>
+      </div>
+      <div class="group" style="flex:1 1 420px">
+        <span class="label">Model profile</span>
+        <div class="profiles" id="profiles" role="group" aria-label="Model profile"></div>
+      </div>
+    </div>
+    <div class="transport">
+      <button class="tbtn" id="bStart" type="button" aria-label="Back to start"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="tbtn" id="bBack" type="button" aria-label="Previous round"><svg viewBox="0 0 24 24"><path d="M15 5v14L5 12z"/></svg></button>
+      <button class="tbtn play" id="bPlay" type="button" aria-label="Play"></button>
+      <button class="tbtn" id="bFwd" type="button" aria-label="Next round"><svg viewBox="0 0 24 24"><path d="M9 5v14l10-7z"/></svg></button>
+      <input class="scrub" id="scrub" type="range" min="0" max="38" value="0" step="1" aria-label="Round">
+      <span class="roundlabel" id="roundLabel" aria-live="polite"></span>
+      <select id="speed" aria-label="Playback speed">
+        <option value="1">1x</option><option value="2">2x</option><option value="4">4x</option>
+      </select>
+      <button class="link" id="toRecap" type="button">Jump to recap</button>
+    </div>
+    <div class="notice" id="notice" hidden></div>
+  </section>
+
+  <div class="stage">
+    <div class="col">
+      <section class="card" aria-label="Running scorecard">
+        <div class="statstrip">
+          <div>
+            <div class="label">Right so far</div>
+            <div class="bigacc num" id="bigAcc"></div>
+            <div class="sub" id="accSub"></div>
+          </div>
+          <div class="recalls" id="recalls"></div>
+        </div>
+      </section>
+
+      <section class="card chartbox" aria-label="Accuracy over the season">
+        <div class="cardhead"><h2>Accuracy as the season unfolds</h2></div>
+        <div id="chart"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="card" aria-label="This round's matches">
+        <div class="cardhead"><h2 id="feedTitle">Matches</h2><span class="label" id="feedHint"></span></div>
+        <div class="feed" id="feed"></div>
+        <div class="bardesc">
+          <span>Bar under each match: the model's chance of Home / Draw / Away.</span>
+          <span>Outlined segment: what actually happened.</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card" aria-label="League table, real against model">
+        <div class="cardhead">
+          <h2>Real table vs. the model's</h2>
+          <div class="sort" role="group" aria-label="Sort table by">
+            <button type="button" id="sortActual" aria-pressed="true">Real order</button>
+            <button type="button" id="sortModel" aria-pressed="false">Model order</button>
+          </div>
+        </div>
+        <div class="tablewrap"><table id="table"></table></div>
+        <p class="note">xPts are the model's expected points: each match adds 3 x P(win) + P(draw) for each side, from that profile's probabilities. xPos is where those points would put the team. The arrow in the last column shows how many places a team sits above (up) or below (down) its xPos.</p>
+      </section>
+    </div>
+  </div>
+
+  <section id="recap" aria-label="Season recap">
+    <div class="recaphead">
+      <h2 id="recapTitle"></h2>
+      <span class="label" id="recapSub"></span>
+    </div>
+    <div class="recap" id="recapGrid" style="margin-top:14px"></div>
+  </section>
+
+  <section class="card about">
+    <h3>How to read this</h3>
+    <ul>
+      <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
+      <li><b>Profiles are decision rules, not different models.</b> The Random Forest produces three probabilities per match. A profile nudges them before picking one: Balanced and Target boost Draw and Away so those outcomes get called more often, Deadkill leaves the probabilities alone except to suppress Draw, which gives the best raw accuracy.</li>
+      <li><b>The bookmaker line is a yardstick, not an input.</b> It shows how often simply picking Bet365's pre-match favourite would have been right. The model never uses odds.</li>
+      <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Rounds are every 10 matches in date order.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const OUT = ["A", "D", "H"];
+const OUTNAME = { A: "Away", D: "Draw", H: "Home" };
+const OUTCSS = { A: "var(--away)", D: "var(--draw)", H: "var(--home)" };
+const TEAM = {
+  "Arsenal": ["ARS", "#E10600", "#fff"], "Aston Villa": ["AVL", "#7A1F3D", "#fff"],
+  "Bournemouth": ["BOU", "#C8102E", "#fff"], "Brentford": ["BRE", "#D81920", "#fff"],
+  "Brighton": ["BHA", "#0057B8", "#fff"], "Burnley": ["BUR", "#6C1D45", "#fff"],
+  "Chelsea": ["CHE", "#034694", "#fff"], "Coventry": ["COV", "#4AA9E0", "#04283D"],
+  "Crystal Palace": ["CRY", "#1B458F", "#fff"], "Everton": ["EVE", "#003399", "#fff"],
+  "Fulham": ["FUL", "#111111", "#fff"], "Hull": ["HUL", "#F5A12D", "#111"],
+  "Ipswich": ["IPS", "#3A64A3", "#fff"], "Leeds": ["LEE", "#F2F2F2", "#1D428A"],
+  "Leicester": ["LEI", "#003090", "#fff"], "Liverpool": ["LIV", "#C8102E", "#fff"],
+  "Man City": ["MCI", "#6CABDD", "#0B1F33"], "Man United": ["MUN", "#DA291C", "#fff"],
+  "Newcastle": ["NEW", "#2A2526", "#fff"], "Nott'm Forest": ["NFO", "#DD0000", "#fff"],
+  "Southampton": ["SOU", "#D71920", "#fff"], "Sunderland": ["SUN", "#EB172B", "#fff"],
+  "Tottenham": ["TOT", "#132257", "#fff"], "West Ham": ["WHU", "#7A263A", "#fff"],
+  "Wolves": ["WOL", "#FDB913", "#111"]
+};
+
+const $ = (s) => document.querySelector(s);
+const pct = (x, d = 0) => (x * 100).toFixed(d) + "%";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const chip = (name) => {
+  const t = TEAM[name] || [name.slice(0, 3).toUpperCase(), "#4A5A52", "#fff"];
+  return `<span class="chip" style="background:${t[1]};color:${t[2]}">${t[0]}</span>`;
+};
+const shortDate = (iso) => {
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
+const state = { season: DATA.seasons["2025-26"] ? "2025-26" : Object.keys(DATA.seasons).pop(),
+  profile: "balanced", round: 12, playing: false, speed: 1, sort: "actual" };
+let C = null;       // computed view of the current season + profile
+let timer = null;
+let playedThrough = false;
+
+/* ---------- computation ---------- */
+
+function compute() {
+  const S = DATA.seasons[state.season];
+  const P = DATA.profiles.find((p) => p.id === state.profile);
+  const ms = S.matches.map((m, i) => {
+    const adj = [m[6] * P.f.a, m[7] * P.f.d, m[8] * P.f.h];
+    const sum = adj[0] + adj[1] + adj[2];
+    for (let j = 0; j < 3; j++) adj[j] /= sum;
+    const pick = adj.indexOf(Math.max(adj[0], adj[1], adj[2]));
+    const act = OUT.indexOf(m[5]);
+    return {
+      i, date: m[0], home: m[1], away: m[2], hg: m[3], ag: m[4], res: m[5], adj, pick, act,
+      ok: pick === act, conf: adj[pick], pAct: adj[act],
+      hExp: 3 * adj[2] + adj[1], aExp: 3 * adj[0] + adj[1],
+      hPts: m[5] === "H" ? 3 : m[5] === "D" ? 1 : 0, aPts: m[5] === "A" ? 3 : m[5] === "D" ? 1 : 0,
+    };
+  });
+  const homeShare = ms.filter((m) => m.res === "H").length / ms.length;
+  return { S, P, ms, R: Math.ceil(ms.length / 10), homeShare };
+}
+
+function stats(n) {
+  const calls = [0, 0, 0], hit = [0, 0, 0], real = [0, 0, 0];
+  let c = 0;
+  for (let i = 0; i < n; i++) {
+    const m = C.ms[i];
+    calls[m.pick]++; real[m.act]++;
+    if (m.ok) { c++; hit[m.act]++; }
+  }
+  return { n, c, calls, hit, real };
+}
+
+function buildTable(n) {
+  const T = {};
+  const get = (t) => T[t] || (T[t] = { team: t, p: 0, pts: 0, gf: 0, ga: 0, exp: 0 });
+  C.ms.forEach((m) => { get(m.home); get(m.away); });
+  for (let i = 0; i < n; i++) {
+    const m = C.ms[i], h = get(m.home), a = get(m.away);
+    h.p++; a.p++; h.gf += m.hg; h.ga += m.ag; a.gf += m.ag; a.ga += m.hg;
+    h.pts += m.hPts; a.pts += m.aPts; h.exp += m.hExp; a.exp += m.aExp;
+  }
+  const rows = Object.values(T);
+  [...rows].sort((x, y) => y.pts - x.pts || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf || x.team.localeCompare(y.team))
+    .forEach((r, i) => (r.rank = i + 1));
+  [...rows].sort((x, y) => y.exp - x.exp || y.pts - x.pts || x.team.localeCompare(y.team))
+    .forEach((r, i) => (r.mrank = i + 1));
+  rows.forEach((r) => (r.diff = r.mrank - r.rank));   // positive: finished above where the model put them
+  return rows;
+}
+
+/* ---------- replay rendering ---------- */
+
+function renderControls() {
+  $("#seasonSeg").innerHTML = Object.keys(DATA.seasons).map((k) => {
+    const live = DATA.seasons[k].live;
+    return `<button type="button" data-season="${k}" aria-pressed="${k === state.season}">${live ? '<span class="live-dot"></span>' : ""}${k}${live ? " live" : ""}</button>`;
+  }).join("");
+  $("#profiles").innerHTML = DATA.profiles.map((p) => `
+    <button type="button" class="pcard" data-profile="${p.id}" aria-pressed="${p.id === state.profile}">
+      <b>${esc(p.name)}</b>
+      <small>${esc(p.desc)}</small>
+      <span class="mini num">
+        <i style="--c:var(--home)">${pct(p.bench.H)}</i><i style="--c:var(--draw)">${pct(p.bench.D)}</i><i style="--c:var(--away)">${pct(p.bench.A)}</i>
+      </span>
+    </button>`).join("");
+}
+
+function renderTransport() {
+  $("#scrub").max = C.R;
+  $("#scrub").value = state.round;
+  $("#roundLabel").textContent = state.round === 0 ? `Before round 1` : `Round ${state.round} / ${C.R}`;
+  const play = $("#bPlay");
+  play.innerHTML = state.playing ? ICON_PAUSE : ICON_PLAY;
+  play.setAttribute("aria-label", state.playing ? "Pause" : "Play");
+  const n = $("#notice");
+  if (C.S.live) {
+    n.hidden = false;
+    n.textContent = "2026-27 is still in progress, so this is a live look. The model never trained on it, but its expected-goals, manager and European-fixture inputs stop at the end of last season, so expect it to be a little rougher than on the finished seasons.";
+  } else n.hidden = true;
+}
+
+function renderStats() {
+  const n = Math.min(C.ms.length, state.round * 10);
+  const s = stats(n);
+  const acc = n ? s.c / n : 0;
+  $("#bigAcc").innerHTML = n ? `${(acc * 100).toFixed(0)}<small>%</small>` : `<small>--</small>`;
+  const gap = acc - C.S.bookmaker;
+  $("#accSub").innerHTML = n
+    ? `${s.c} of ${n} matches. ${n >= 30 ? `<span class="delta ${gap >= 0 ? "up" : "down"}">${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)} pts</span> against picking the bookmaker's favourite (${pct(C.S.bookmaker, 1)}).` : "Early rounds are noisy, give it a few weeks."}`
+    : "Press play to start the season.";
+  $("#recalls").innerHTML = [2, 1, 0].map((j) => {
+    const o = OUT[j], real = s.real[j], hit = s.hit[j];
+    const r = real ? hit / real : 0;
+    return `<div class="rrow" style="--c:${OUTCSS[o]}">
+      <span class="label">${OUTNAME[o]}</span>
+      <div class="track"><div class="fill" style="width:${(r * 100).toFixed(0)}%"></div></div>
+      <span class="v num"><b>${real ? pct(r) : "--"}</b> ${hit}/${real}</span></div>`;
+  }).join("") + `<span class="label" style="margin-top:2px">Share of real results the model called right</span>`;
+}
+
+function renderChart() {
+  const W = 640, H = 270, L = 44, Rr = 624, T = 16, B = 236;
+  const n = Math.min(C.ms.length, state.round * 10);
+  const rounds = C.S.live ? Math.max(C.R, 10) : C.R;
+  const x = (r) => L + (rounds <= 1 ? 0 : ((r - 1) / (rounds - 1)) * (Rr - L));
+  const y = (v) => B - ((Math.min(0.8, Math.max(0.2, v)) - 0.2) / 0.6) * (B - T);
+  let g = "";
+  [0.3, 0.4, 0.5, 0.6, 0.7].forEach((v) => {
+    g += `<line class="grid" x1="${L}" x2="${Rr}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  });
+  for (let r = 1; r <= rounds; r++) {
+    if (r === 1 || r % 5 === 0) g += `<text x="${x(r)}" y="${H - 10}" text-anchor="middle">${r}</text>`;
+  }
+  const bm = C.S.bookmaker, hs = C.homeShare;
+  g += `<line class="ref" style="stroke:var(--draw)" x1="${L}" x2="${Rr}" y1="${y(bm)}" y2="${y(bm)}"/><text x="${Rr}" y="${y(bm) - 6}" text-anchor="end">Bookmaker favourite ${pct(bm)}</text>`;
+  g += `<line class="ref" style="stroke:var(--home);opacity:.7" x1="${L}" x2="${Rr}" y1="${y(hs)}" y2="${y(hs) + 0}"/><text x="${Rr}" y="${y(hs) + 15}" text-anchor="end">Always pick Home ${pct(hs)}</text>`;
+  const pts = [];
+  for (let r = 1; r <= state.round; r++) {
+    const k = Math.min(C.ms.length, r * 10);
+    let c = 0;
+    for (let i = 0; i < k; i++) if (C.ms[i].ok) c++;
+    pts.push([x(r), y(c / k), c / k]);
+  }
+  if (pts.length) {
+    g += `<path class="model" d="${pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ")}"/>`;
+    const last = pts[pts.length - 1];
+    g += `<circle class="dot" cx="${last[0]}" cy="${last[1]}" r="5"/><text class="endlabel" x="${Math.min(last[0], Rr - 14)}" y="${last[1] - 11}" text-anchor="middle">${pct(last[2])}</text>`;
+  }
+  $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by round against two reference lines">${g}</svg>`;
+  $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This profile, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home</span>`;
+}
+
+function renderFeed(animate) {
+  const r = state.round;
+  if (r === 0) {
+    $("#feedTitle").textContent = "Matches";
+    $("#feedHint").textContent = "";
+    $("#feed").innerHTML = `<div class="empty">The first round of ${esc(state.season)} is waiting. Press play, or step forward one round at a time.</div>`;
+    return;
+  }
+  const a = (r - 1) * 10, b = Math.min(C.ms.length, r * 10);
+  const first = C.ms[a].date, last = C.ms[b - 1].date;
+  $("#feedTitle").textContent = `Round ${r}`;
+  const right = C.ms.slice(a, b).filter((m) => m.ok).length;
+  $("#feedHint").textContent = `${shortDate(first)} to ${shortDate(last)} · ${right} of ${b - a} called right`;
+  $("#feed").innerHTML = C.ms.slice(a, b).map((m, i) => {
+    const o = OUT[m.pick];
+    const segs = [2, 1, 0].map((j) => `<i class="${j === m.act ? "real" : ""}" style="--c:${OUTCSS[OUT[j]]};flex:${Math.max(0.02, m.adj[j])}"></i>`).join("");
+    return `<div class="match" style="--i:${animate ? i : 0}">
+      <div class="side h"><span class="nm">${esc(m.home)}</span>${chip(m.home)}</div>
+      <div class="score">${m.hg}-${m.ag}</div>
+      <div class="side">${chip(m.away)}<span class="nm">${esc(m.away)}</span></div>
+      <div class="foot"><div class="pbar" aria-hidden="true">${segs}</div><div class="verdict"><span class="pill" style="--c:${OUTCSS[o]}">${OUTNAME[o]} ${pct(m.conf)}</span><span class="mark ${m.ok ? "y" : "n"}" aria-label="${m.ok ? "Right" : "Wrong"}">${m.ok ? "✓" : "✗"}</span></div></div>
+    </div>`;
+  }).join("");
+}
+
+function renderTable() {
+  const n = Math.min(C.ms.length, state.round * 10);
+  const rows = buildTable(n);
+  rows.sort(state.sort === "actual" ? (x, y) => x.rank - y.rank : (x, y) => x.mrank - y.mrank);
+  const N = rows.length;
+  $("#table").innerHTML = `<thead><tr><th>#</th><th>Team</th><th>P</th><th>Pts</th><th title="Expected points from the model">xPts</th><th title="Position the model expects">xPos</th><th title="Places above (up) or below (down) the model's position">±</th></tr></thead><tbody>` +
+    rows.map((r) => {
+      const pos = state.sort === "actual" ? r.rank : r.mrank;
+      const cls = N >= 20 ? (pos <= 4 ? "top4" : pos > N - 3 ? "drop" : "") : "";
+      const d = r.diff;
+      const dd = n === 0 ? "" : d === 0 ? `<span class="num" style="color:var(--muted)">=</span>` : `<span class="num ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d)}</span>`;
+      return `<tr class="${cls}"><td class="num">${pos}</td><td>${chip(r.team)}<span>${esc(r.team)}</span></td><td class="num">${r.p}</td><td class="num"><b>${r.pts}</b></td><td class="num">${r.exp.toFixed(1)}</td><td class="num">${r.mrank}</td><td>${dd}</td></tr>`;
+    }).join("") + `</tbody>`;
+  $("#sortActual").setAttribute("aria-pressed", state.sort === "actual");
+  $("#sortModel").setAttribute("aria-pressed", state.sort === "model");
+}
+
+function renderReplay(animate) {
+  renderTransport(); renderStats(); renderChart(); renderFeed(animate); renderTable();
+}
+
+/* ---------- recap ---------- */
+
+function line(m) {
+  return `${chip(m.home)}<span class="num">${m.hg}-${m.ag}</span>${chip(m.away)}`;
+}
+
+function renderRecap() {
+  const ms = C.ms, n = ms.length, s = stats(n);
+  const acc = s.c / n, bm = C.S.bookmaker, gap = acc - bm;
+  const hits = ms.filter((m) => m.ok).sort((a, b) => b.conf - a.conf).slice(0, 3);
+  const misses = ms.filter((m) => !m.ok).sort((a, b) => a.pAct - b.pAct).slice(0, 3);
+
+  const tm = {};
+  ms.forEach((m) => [m.home, m.away].forEach((t) => { const o = tm[t] || (tm[t] = { t, n: 0, c: 0 }); o.n++; if (m.ok) o.c++; }));
+  const teams = Object.values(tm).filter((x) => x.n >= 6).map((x) => ({ ...x, a: x.c / x.n }))
+    .sort((a, b) => b.a - a.a || a.t.localeCompare(b.t));
+  const easiest = teams.slice(0, 3), hardest = teams.slice(-3).reverse();
+
+  let bestRun = { len: 0 }, worstRun = { len: 0 }, run = { ok: null, len: 0, start: 0 };
+  ms.forEach((m, i) => {
+    if (run.ok === m.ok) run.len++; else run = { ok: m.ok, len: 1, start: i };
+    const rec = { len: run.len, a: ms[run.start], b: m };
+    if (m.ok && run.len > bestRun.len) bestRun = rec;
+    if (!m.ok && run.len > worstRun.len) worstRun = rec;
+  });
+
+  const tb = buildTable(n);
+  const mae = tb.reduce((a, r) => a + Math.abs(r.diff), 0) / tb.length;
+  const exact = tb.filter((r) => r.diff === 0).length;
+  const within2 = tb.filter((r) => Math.abs(r.diff) <= 2).length;
+  const over = [...tb].sort((a, b) => b.diff - a.diff)[0];
+  const under = [...tb].sort((a, b) => a.diff - b.diff)[0];
+
+  const complete = !C.S.live;
+  $("#recapTitle").innerHTML = `${esc(state.season)}, <span>wrapped</span>`;
+  $("#recapSub").textContent = `${C.P.name} profile · ${n} matches${complete ? "" : " so far"}`;
+
+  const hitRow = (m, key) => `<div class="row"><span class="when">${shortDate(m.date)}</span>${line(m)}<span class="says">${key(m)}</span></div>`;
+
+  $("#recapGrid").innerHTML = `
+    <div class="card rc hero">
+      <span class="label">The headline</span>
+      <div class="big num">${(acc * 100).toFixed(1)}<span style="font-size:.45em;color:var(--muted)">%</span></div>
+      <p><b style="color:var(--fg)">${s.c} of ${n}</b> results called right. Picking the bookmaker's favourite every time lands ${pct(bm, 1)}, so the model finished
+        <span class="delta ${gap >= 0 ? "up" : "down"}">${gap >= 0 ? "ahead by" : "behind by"} ${Math.abs(gap * 100).toFixed(1)} pts</span>.
+        Always backing the home side would have scored ${pct(C.homeShare, 1)}.</p>
+    </div>
+
+    <div class="card rc">
+      <span class="label">Home, draw, away</span>
+      <div class="tri">
+        ${[2, 1, 0].map((j) => `<div style="--c:${OUTCSS[OUT[j]]}"><b class="num">${s.real[j] ? Math.round((s.hit[j] / s.real[j]) * 100) : 0}%</b><small>${OUTNAME[OUT[j]]} found<br>${s.hit[j]} of ${s.real[j]}</small></div>`).join("")}
+      </div>
+      <p>Called ${s.calls[1]} draws in total. ${s.real[1] ? `${s.real[1]} actually happened.` : ""} Draws stay the hardest result to see coming from pre-match data.</p>
+    </div>
+
+    <div class="card rc">
+      <span class="label">The table verdict</span>
+      <div class="big num">${mae.toFixed(1)}</div>
+      <p>places off on average per team. ${exact} team${exact === 1 ? "" : "s"} placed exactly, ${within2} of ${tb.length} within two places.</p>
+    </div>
+
+    <div class="card rc">
+      <span class="label">Boldest correct calls</span>
+      ${hits.map((m) => hitRow(m, (x) => `<b>${OUTNAME[OUT[x.pick]]}</b> at ${pct(x.conf)}`)).join("")}
+    </div>
+
+    <div class="card rc">
+      <span class="label">Most surprised by</span>
+      ${misses.map((m) => hitRow(m, (x) => `gave ${OUTNAME[x.res]} only <b>${pct(x.pAct)}</b>`)).join("")}
+    </div>
+
+    <div class="card rc">
+      <span class="label">Streaks</span>
+      <div class="pair">
+        <div><div class="big num" style="color:var(--ok)">${bestRun.len}</div><p>right in a row${bestRun.a ? `<br>${shortDate(bestRun.a.date)} to ${shortDate(bestRun.b.date)}` : ""}</p></div>
+        <div><div class="big num" style="color:var(--bad)">${worstRun.len}</div><p>wrong in a row${worstRun.a ? `<br>${shortDate(worstRun.a.date)} to ${shortDate(worstRun.b.date)}` : ""}</p></div>
+      </div>
+    </div>
+
+    <div class="card rc">
+      <span class="label">Easiest teams to read</span>
+      ${easiest.map((x) => `<div class="teamrow">${chip(x.t)}${esc(x.t)}<span class="v">${pct(x.a)} · ${x.c}/${x.n}</span></div>`).join("")}
+    </div>
+
+    <div class="card rc">
+      <span class="label">Hardest teams to read</span>
+      ${hardest.map((x) => `<div class="teamrow">${chip(x.t)}${esc(x.t)}<span class="v">${pct(x.a)} · ${x.c}/${x.n}</span></div>`).join("")}
+    </div>
+
+    <div class="card rc">
+      <span class="label">Biggest table blind spots</span>
+      <div class="teamrow">${chip(over.team)}${esc(over.team)}<span class="v up">▲ ${Math.max(0, over.diff)} above model</span></div>
+      <div class="teamrow">${chip(under.team)}${esc(under.team)}<span class="v down">▼ ${Math.max(0, -under.diff)} below model</span></div>
+      <p>Model had ${esc(over.team)} ${over.mrank}th and they ${complete ? "finished" : "sit"} ${over.rank}${over.rank === 1 ? "st" : over.rank === 2 ? "nd" : over.rank === 3 ? "rd" : "th"}. It had ${esc(under.team)} ${under.mrank}${under.mrank === 1 ? "st" : under.mrank === 2 ? "nd" : under.mrank === 3 ? "rd" : "th"} and they ${complete ? "finished" : "sit"} ${under.rank}${under.rank === 1 ? "st" : under.rank === 2 ? "nd" : under.rank === 3 ? "rd" : "th"}.</p>
+    </div>`;
+}
+
+/* ---------- playback + wiring ---------- */
+
+function stopPlay() { state.playing = false; clearTimeout(timer); }
+function tick() {
+  if (state.round >= C.R) { stopPlay(); renderTransport(); playedThrough = true; $("#toRecap").textContent = "Season complete: see the recap"; return; }
+  state.round++;
+  renderReplay(true);
+  timer = setTimeout(tick, 1500 / state.speed);
+}
+function play() {
+  if (state.round >= C.R) state.round = 0;
+  state.playing = true; playedThrough = false;
+  $("#toRecap").textContent = "Jump to recap";
+  renderTransport();
+  timer = setTimeout(tick, 250);
+}
+function setRound(r) { stopPlay(); state.round = Math.max(0, Math.min(C.R, r)); renderReplay(false); }
+function refreshAll(resetRound) {
+  stopPlay();
+  C = compute();
+  if (resetRound) state.round = Math.min(C.R, 12);
+  state.round = Math.min(state.round, C.R);
+  renderControls(); renderReplay(false); renderRecap();
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.season) { state.season = b.dataset.season; refreshAll(true); }
+  else if (b.dataset.profile) { state.profile = b.dataset.profile; refreshAll(false); }
+  else if (b.id === "bPlay") { state.playing ? (stopPlay(), renderTransport()) : play(); }
+  else if (b.id === "bFwd") setRound(state.round + 1);
+  else if (b.id === "bBack") setRound(state.round - 1);
+  else if (b.id === "bStart") setRound(0);
+  else if (b.id === "toRecap") $("#recap").scrollIntoView({ behavior: "smooth", block: "start" });
+  else if (b.id === "sortActual") { state.sort = "actual"; renderTable(); }
+  else if (b.id === "sortModel") { state.sort = "model"; renderTable(); }
+  else if (b.id === "themeBtn") toggleTheme();
+});
+$("#scrub").addEventListener("input", (e) => setRound(Number(e.target.value)));
+$("#speed").addEventListener("change", (e) => { state.speed = Number(e.target.value); });
+
+function effectiveTheme() {
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr) return attr;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+function paintThemeBtn() {
+  const t = effectiveTheme();
+  $("#themeBtn").textContent = t === "dark" ? "Light theme" : "Dark theme";
+}
+function toggleTheme() {
+  const next = effectiveTheme() === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("wrapped-theme", next); } catch (e) { /* storage unavailable */ }
+  paintThemeBtn();
+}
+try {
+  const saved = localStorage.getItem("wrapped-theme");
+  if (saved === "light" || saved === "dark") document.documentElement.setAttribute("data-theme", saved);
+} catch (e) { /* storage unavailable */ }
+
+paintThemeBtn();
+refreshAll(true);
+</script>

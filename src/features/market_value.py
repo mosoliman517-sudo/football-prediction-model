@@ -18,6 +18,7 @@ TEAM_NAME_MAP = {
     "Brighton & Hove Albion": "Brighton",
     "Burnley FC": "Burnley",
     "Cardiff City": "Cardiff",
+    "Coventry City": "Coventry",
     "Chelsea FC": "Chelsea",
     "Crystal Palace": "Crystal Palace",
     "Everton FC": "Everton",
@@ -147,8 +148,15 @@ def add_market_value_features(df):
     df = df.merge(home_values, on=["SeasonYear", "HomeTeam"], how="left")
     df = df.merge(away_values, on=["SeasonYear", "AwayTeam"], how="left")
 
-    df["HomeSquadValueEur"] = df["HomeSquadValueEur"].fillna(0.0)
-    df["AwaySquadValueEur"] = df["AwaySquadValueEur"].fillna(0.0)
+    # A club missing from the Transfermarkt dataset altogether (Coventry,
+    # newly promoted for 2026-27 and never tagged as a top-flight club
+    # there) gets that season's LOWEST known EPL squad value -- the
+    # honest stand-in for a freshly promoted side -- instead of 0, which
+    # would tell the model its squad is worth nothing. Never triggers
+    # for 2014-15 through 2025-26 (every club resolves).
+    season_floor = squad_values.groupby("SeasonYear")["SquadValueEur"].min()
+    df["HomeSquadValueEur"] = df["HomeSquadValueEur"].fillna(df["SeasonYear"].map(season_floor)).fillna(0.0)
+    df["AwaySquadValueEur"] = df["AwaySquadValueEur"].fillna(df["SeasonYear"].map(season_floor)).fillna(0.0)
 
     df = df.drop(columns=["SeasonYear"])
 

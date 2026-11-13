@@ -18,7 +18,7 @@ from features.rest_days import add_rest_days_features
 from features.head_to_head import add_head_to_head_features
 from features.half_time import add_half_time_pattern_features
 from features.elo import add_elo_features
-from config import TRAIN_TEST_SPLIT_DATE
+from config import TRAIN_TEST_SPLIT_DATE, LIVE_SEASON_START
 
 # ---------------------------------------
 # Load every CSV
@@ -248,9 +248,19 @@ df = add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE)
 # Save
 # ---------------------------------------
 
-df.to_csv(
+# Benchmark seasons and the live (in-progress) season are saved
+# separately -- features for both were built in one walk-forward pass,
+# so live rows still only ever see strictly-prior matches.
+is_live = df["Date"] >= LIVE_SEASON_START
+
+df[~is_live].to_csv(
     "02_processed_data/E0_features.csv",
     index=False
 )
+df[is_live].to_csv(
+    "02_processed_data/E0_live_features.csv",
+    index=False
+)
+print(f"Saved {(~is_live).sum()} benchmark matches and {is_live.sum()} live-season matches")
 
 print("Finished!")

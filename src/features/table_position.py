@@ -30,10 +30,39 @@ def add_table_position_features(df):
     standings = {}   # season -> {team: {"Points":..,"GF":..,"GA":..}}
     current_season = None
 
+    # Results are applied to the table only once a new MATCH DAY starts,
+    # not row by row: every match on a given date is ranked from the
+    # table as it stood at the start of that day. Applying them row by
+    # row let a match "see" other same-day results that happened to sit
+    # above it in the file -- an arbitrary order (it shifted whenever a
+    # season file was added), and information a simultaneous kickoff
+    # could never have had.
+    pending = []         # (table, home, away, home_goals, away_goals) for the current day
+    current_date = None
+
+    def apply_pending():
+        for tbl, h, a, hg, ag in pending:
+            tbl[h]["GF"] += hg
+            tbl[h]["GA"] += ag
+            tbl[a]["GF"] += ag
+            tbl[a]["GA"] += hg
+            if hg > ag:
+                tbl[h]["Points"] += 3
+            elif hg < ag:
+                tbl[a]["Points"] += 3
+            else:
+                tbl[h]["Points"] += 1
+                tbl[a]["Points"] += 1
+        pending.clear()
+
     for i in range(len(df)):
 
         date = df.loc[i, "Date"]
         season = get_season(date)
+
+        if date != current_date:
+            apply_pending()
+            current_date = date
 
         if season != current_season:
             standings[season] = standings.get(season, {})
@@ -64,22 +93,7 @@ def add_table_position_features(df):
         df.loc[i, "AwayTablePosition"] = position[away]
         df.loc[i, "TablePointsGap"] = table[home]["Points"] - table[away]["Points"]
 
-        # Update AFTER reading -- this match's own result can't affect
-        # the position it's predicted from.
-        home_goals = df.loc[i, "FTHG"]
-        away_goals = df.loc[i, "FTAG"]
-
-        table[home]["GF"] += home_goals
-        table[home]["GA"] += away_goals
-        table[away]["GF"] += away_goals
-        table[away]["GA"] += home_goals
-
-        if home_goals > away_goals:
-            table[home]["Points"] += 3
-        elif home_goals < away_goals:
-            table[away]["Points"] += 3
-        else:
-            table[home]["Points"] += 1
-            table[away]["Points"] += 1
+        # Queue the result -- applied once the day is over (see above)
+        pending.append((table, home, away, df.loc[i, "FTHG"], df.loc[i, "FTAG"]))
 
     return df

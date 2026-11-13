@@ -16,3 +16,11 @@ TRAIN_TEST_SPLIT_DATE = "2024-08-01"   # test = 2024-25 AND 2025-26, two
                                          # through 2023-24 (10 seasons).
                                          # Was "2025-08-01" (test = 2025-26
                                          # only) before this.
+
+
+LIVE_SEASON_START = "2026-08-01"   # 2026-27 onward is kept in its own files
+                                    # (E0_live_*.csv), never mixed into the
+                                    # 760-match benchmark above: the benchmark
+                                    # stays comparable run to run while the
+                                    # live season grows week by week. The
+                                    # model never trains on any of it.

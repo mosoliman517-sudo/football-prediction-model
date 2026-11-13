@@ -1,4 +1,5 @@
 import itertools
+import json
 
 import pandas as pd
 import numpy as np
@@ -633,9 +634,12 @@ print(f"\n{'=' * 60}")
 print("Random Forest — tuned profiles")
 print("=" * 60)
 
+profile_factors = {}   # saved below for the Season Wrapped site (08)
+
 for profile_name, (objective, grid_kwargs) in PROFILES.items():
 
     hf, af, df = search_profile(rf_model, rf_use_balancing, objective, **grid_kwargs)
+    profile_factors[profile_name] = {"home": float(hf), "away": float(af), "draw": float(df)}
 
     adjusted = rf_base_proba.copy()
     adjusted[:, HOME_IDX] *= hf
@@ -649,3 +653,36 @@ for profile_name, (objective, grid_kwargs) in PROFILES.items():
         f"(chosen via internal validation)"
     )
     print(classification_report(y_test, pred, target_names=display_labels))
+
+
+# --------------------------------------------------
+# Save the Random Forest's raw probabilities for every match it never
+# trained on -- the 760-match benchmark AND the live 2026-27 season --
+# plus each profile's chosen factors. 08_build_wrapped.py turns these
+# into the interactive Season Wrapped page; nothing here is re-trained
+# or re-tuned for display purposes.
+# --------------------------------------------------
+
+live = pd.read_csv("02_processed_data/E0_live_model.csv")
+live["Date"] = pd.to_datetime(live["Date"], format="mixed")
+X_live = live.drop(columns=["FTR", "Div", "Date", "HomeTeam", "AwayTeam"])
+X_live.columns = X_train.columns
+X_live = X_live.fillna(0)
+live_proba = rf_model.predict_proba(X_live)
+
+classes = list(encoder.classes_)
+rows = []
+for split, frame, proba in (
+    ("benchmark", test, rf_base_proba),
+    ("live", live, live_proba),
+):
+    out = frame[["Date", "HomeTeam", "AwayTeam", "FTR"]].copy()
+    out["Split"] = split
+    for i, cls in enumerate(classes):
+        out[f"P_{cls}"] = proba[:, i]
+    rows.append(out)
+
+pd.concat(rows).to_csv("02_processed_data/rf_predictions.csv", index=False)
+with open("02_processed_data/rf_profiles.json", "w") as f:
+    json.dump(profile_factors, f, indent=2)
+print("\nSaved rf_predictions.csv and rf_profiles.json for the Season Wrapped site")

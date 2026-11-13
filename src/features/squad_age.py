@@ -11,7 +11,7 @@ TEAM_NAME_MAP = {
     "Brentford FC": "Brentford", "Brighton & Hove Albion": "Brighton", "Burnley FC": "Burnley",
     "Cardiff City": "Cardiff", "Chelsea FC": "Chelsea", "Crystal Palace": "Crystal Palace",
     "Everton FC": "Everton", "Fulham FC": "Fulham", "Huddersfield Town": "Huddersfield",
-    "Hull City": "Hull", "Ipswich Town": "Ipswich", "Leeds United": "Leeds",
+    "Coventry City": "Coventry", "Hull City": "Hull", "Ipswich Town": "Ipswich", "Leeds United": "Leeds",
     "Leicester City": "Leicester", "Liverpool FC": "Liverpool", "Luton Town": "Luton",
     "Manchester City": "Man City", "Manchester United": "Man United", "Middlesbrough FC": "Middlesbrough",
     "Newcastle United": "Newcastle", "Norwich City": "Norwich", "Nottingham Forest": "Nott'm Forest",

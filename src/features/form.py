@@ -31,7 +31,7 @@ def add_form_features(df):
         home_points = pd.concat([
             home_home_games["HomePoints"],
             home_away_games["AwayPoints"]
-        ])
+        ]).sort_index()
 
         df.loc[df.index[i], "HomeLast5Points"] = (
             home_points.tail(5).sum()
@@ -48,7 +48,7 @@ def add_form_features(df):
         away_points = pd.concat([
             away_home_games["HomePoints"],
             away_away_games["AwayPoints"]
-        ])
+        ]).sort_index()
 
         df.loc[df.index[i], "AwayLast5Points"] = (
             away_points.tail(5).sum()

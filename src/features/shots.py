@@ -34,17 +34,17 @@ def add_shot_features(df):
         home_shots = pd.concat([
             home_home["HS"],
             home_away["AS"]
-        ])
+        ]).sort_index()
 
         home_shots_target = pd.concat([
             home_home["HST"],
             home_away["AST"]
-        ])
+        ]).sort_index()
 
         home_shots_conceded = pd.concat([
             home_home["AS"],
             home_away["HS"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # AWAY TEAM HISTORY
@@ -61,17 +61,17 @@ def add_shot_features(df):
         away_shots = pd.concat([
             away_home["HS"],
             away_away["AS"]
-        ])
+        ]).sort_index()
 
         away_shots_target = pd.concat([
             away_home["HST"],
             away_away["AST"]
-        ])
+        ]).sort_index()
 
         away_shots_conceded = pd.concat([
             away_home["AS"],
             away_away["HS"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # SAVE FEATURES

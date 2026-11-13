@@ -460,7 +460,10 @@ def _run_elo_pass(df, expectation_model=None):
         home_elo[home] = home_rating + k * (actual_home - expected_home)
         away_elo[away] = away_rating + k * (actual_away - expected_away)
 
-    return home_elo_col, away_elo_col, home_overall_col, away_overall_col, league_home_edge_col
+    return (
+        home_elo_col, away_elo_col, home_overall_col, away_overall_col, league_home_edge_col,
+        {"home": dict(home_elo), "away": dict(away_elo)}   # ratings AFTER the last match
+    )
 
 
 def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
@@ -472,7 +475,7 @@ def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
     # is fit against below.
     # ---------------------------------------------------------------
 
-    raw_home_col, raw_away_col, _, _, raw_league_edge_col = _run_elo_pass(df)
+    raw_home_col, raw_away_col, _, _, raw_league_edge_col, _ = _run_elo_pass(df)
 
     raw_elo_difference = pd.Series(
         [h - a for h, a in zip(raw_home_col, raw_away_col)],
@@ -494,9 +497,14 @@ def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
     # Pass 2: the real pass, using that calibrated model
     # ---------------------------------------------------------------
 
-    home_col, away_col, home_overall_col, away_overall_col, _ = _run_elo_pass(
+    home_col, away_col, home_overall_col, away_overall_col, _, final_state = _run_elo_pass(
         df, expectation_model=expectation_model
     )
+
+    # Every row above holds the rating BEFORE that match. The ratings AFTER
+    # the final real match are what the next, unplayed matchday must be
+    # forecast from, so they travel with the frame (01 saves them).
+    df.attrs["final_elo"] = final_state
 
     df["HomeElo"] = home_col
     df["AwayElo"] = away_col

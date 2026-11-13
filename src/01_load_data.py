@@ -1,4 +1,6 @@
 import glob
+import json
+
 import pandas as pd
 
 from features.form import add_form_features, add_win_rate_features
@@ -243,6 +245,11 @@ print("Creating Elo ratings...")
 # Elo calibrates its own form-blend weight using only matches before
 # this date, so it never peeks at the test seasons — see config.py
 df = add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE)
+
+# Ratings AFTER the last real match: what the next, unplayed matchday is
+# forecast from (see features/fixture_grid.py)
+with open("02_processed_data/elo_state.json", "w") as f:
+    json.dump(df.attrs["final_elo"], f)
 
 # ---------------------------------------
 # Save

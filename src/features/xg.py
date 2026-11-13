@@ -94,12 +94,12 @@ def add_xg_features(df):
         home_created = pd.concat([
             home_home["HomeXG"],
             home_away["AwayXG"]
-        ])
+        ]).sort_index()
 
         home_conceded = pd.concat([
             home_home["AwayXG"],
             home_away["HomeXG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # AWAY TEAM HISTORY
@@ -116,12 +116,12 @@ def add_xg_features(df):
         away_created = pd.concat([
             away_home["HomeXG"],
             away_away["AwayXG"]
-        ])
+        ]).sort_index()
 
         away_conceded = pd.concat([
             away_home["AwayXG"],
             away_away["HomeXG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # SAVE FEATURES

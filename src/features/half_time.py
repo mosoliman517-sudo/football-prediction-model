@@ -37,12 +37,12 @@ def add_half_time_pattern_features(df):
         home_second_half_scored = pd.concat([
             home_home["FTHG"] - home_home["HTHG"],
             home_away["FTAG"] - home_away["HTAG"]
-        ])
+        ]).sort_index()
 
         home_second_half_conceded = pd.concat([
             home_home["FTAG"] - home_home["HTAG"],
             home_away["FTHG"] - home_away["HTHG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # AWAY TEAM HISTORY
@@ -54,12 +54,12 @@ def add_half_time_pattern_features(df):
         away_second_half_scored = pd.concat([
             away_home["FTHG"] - away_home["HTHG"],
             away_away["FTAG"] - away_away["HTAG"]
-        ])
+        ]).sort_index()
 
         away_second_half_conceded = pd.concat([
             away_home["FTAG"] - away_home["HTAG"],
             away_away["FTHG"] - away_away["HTHG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # SAVE FEATURES

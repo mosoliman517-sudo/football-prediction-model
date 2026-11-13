@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* Layout: one control deck on top, a replay stage below (feed, accuracy
@@ -44,6 +44,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--fg);
   font: 400 14px/1.5 var(--body);
@@ -209,6 +210,21 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .about ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
 .about b { color: var(--fg); }
 
+/* rest-of-season visuals */
+.racecards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.racecard { position: relative; overflow: hidden; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 1px solid var(--line); background: linear-gradient(150deg, color-mix(in srgb, var(--tc) 26%, var(--surface2)), var(--surface2) 70%); }
+.racecard .rk { font: 700 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.racecard .rn { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.racecard small { color: var(--muted); }
+.ringwrap { position: relative; display: inline-grid; place-items: center; }
+.ringwrap svg { position: absolute; inset: 0; }
+.ringnum { font-family: var(--display); font-weight: 800; font-size: 26px; position: relative; }
+.heat { display: grid; gap: 2px; min-width: 640px; }
+.hrow { display: grid; grid-template-columns: 56px repeat(var(--n), 1fr); gap: 2px; align-items: center; }
+.hrow .hc { text-align: center; font: 600 10px var(--mono); color: var(--muted); min-width: 0; }
+.hrow .hc.cell { height: 22px; display: grid; place-items: center; border-radius: 4px; background: color-mix(in srgb, var(--accent) calc(var(--a) * 100%), var(--surface2)); color: var(--accent-ink); }
+.hrow .hc.cell.now { box-shadow: 0 0 0 2px var(--fg) inset; }
+.hhead .hc { padding-bottom: 4px; }
 /* nav, race, new sections */
 .jump { display: flex; gap: 6px; flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: 8px 0; margin-block: -8px; }
 @media (max-width: 900px) { .jump { position: static; margin-block: 0; padding: 0; } }
@@ -322,15 +338,173 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .rangesvg .tk { font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { .simscore.pop { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .match { animation: none; } .rrow .fill { transition: none; } }
+
+/* wrapped story */
+.story { position: fixed; inset: 0; z-index: 100; color: #fff; background: #04100c; display: flex; align-items: center; justify-content: center; }
+.story[hidden] { display: none; }
+.story-body { position: relative; z-index: 1; width: min(100%, 720px); height: 100%; padding: 76px clamp(22px, 6vw, 56px) 70px; display: flex; flex-direction: column; justify-content: safe center; gap: 16px; overflow-y: auto; animation: slidein 0.45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes slidein { from { opacity: 0; transform: translateY(18px) scale(0.985); } to { opacity: 1; transform: none; } }
+.story::before { content: ""; position: absolute; inset: 0; background: radial-gradient(900px 600px at 20% 10%, rgba(255,255,255,0.10), transparent 60%), repeating-linear-gradient(90deg, transparent 0 84px, rgba(255,255,255,0.025) 84px 168px); pointer-events: none; }
+.story-progress { position: absolute; z-index: 3; left: 18px; right: 70px; top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 5px; }
+.story-progress i { flex: 1; height: 4px; border-radius: 99px; background: rgba(255,255,255,0.25); overflow: hidden; }
+.story-progress i b { display: block; height: 100%; width: 0; background: #fff; }
+.story-progress i.done b { width: 100%; }
+.story-progress i.now b { animation: fill var(--dur, 6.5s) linear forwards; }
+.story-progress.paused i.now b { animation-play-state: paused; }
+@keyframes fill { to { width: 100%; } }
+.story-x { position: absolute; z-index: 4; right: 14px; top: calc(6px + env(safe-area-inset-top, 0px)); background: none; border: 0; color: #fff; font-size: 34px; line-height: 1; cursor: pointer; padding: 4px 10px; }
+.story-nav { position: absolute; z-index: 2; top: 56px; bottom: 56px; width: 34%; background: none; border: 0; cursor: pointer; }
+.story-nav.prev { left: 0; } .story-nav.next { right: 0; }
+.story-pause { position: absolute; z-index: 4; left: 18px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: rgba(255,255,255,0.14); color: #fff; border: 0; border-radius: 99px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
+.sl-k { font: 700 13px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+.sl-big { font-family: var(--display); font-weight: 900; font-size: clamp(72px, min(30vw, 30vh), 250px); line-height: 0.82; letter-spacing: -0.03em; }
+.sl-big small { font-size: 0.42em; opacity: 0.7; }
+.sl-h { font-family: var(--display); font-weight: 800; font-size: clamp(24px, min(6.2vw, 7vh), 54px); line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.sl-d { font-size: clamp(15px, 2.4vw, 19px); line-height: 1.45; color: rgba(255,255,255,0.82); max-width: 46ch; }
+.sl-d b { color: #fff; }
+.sl-chips { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 7vw, 56px); flex-wrap: wrap; }
+.sl-chips .chip { min-width: 56px; height: 36px; font-size: 15px; border-radius: 10px; }
+.sl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.story .wcard { margin: 0 auto; }
+.story .btn { color: var(--accent-ink); }
+.story .btn.ghost { background: rgba(255,255,255,0.14); color: #fff; border: 0; }
+@media (max-height: 520px) { .story-body { padding-top: 56px; padding-bottom: 56px; gap: 8px; } }
+@media (prefers-reduced-motion: reduce) { .story-body { animation: none; } .story-progress i.now b { animation: none; width: 100%; } }
+/* lab visuals */
+.odds3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.o3 { border-radius: 14px; padding: 10px 12px; background: color-mix(in srgb, var(--c) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 35%, var(--line)); }
+.o3 b { display: block; font-family: var(--display); font-weight: 900; font-size: 46px; line-height: 0.95; color: var(--c); }
+.o3 b small { font-size: 0.5em; }
+.o3 span { font: 700 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.o3.real { box-shadow: 0 0 0 2px var(--fg); }
+.tug { display: flex; gap: 3px; height: 12px; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.tug i { display: block; background: var(--c); }
+.tug.wide { height: 16px; }
+.sheat { display: grid; grid-template-columns: 22px repeat(7, 1fr); gap: 3px; }
+.sh-h { display: grid; place-items: center; font: 600 11px var(--mono); color: var(--muted); }
+.sh-c { aspect-ratio: 1; display: grid; place-items: center; border-radius: 7px; font: 700 11px var(--mono); color: color-mix(in srgb, var(--fg) 92%, var(--c)); background: color-mix(in srgb, var(--c) calc(var(--a) * 100%), var(--surface)); }
+.sh-c.real { box-shadow: 0 0 0 2.5px var(--ok); z-index: 1; }
+.sh-c.sim { outline: 2.5px dashed var(--fg); outline-offset: -1px; }
+.shlegend { display: flex; gap: 12px; flex-wrap: wrap; font: 600 10.5px var(--mono); color: var(--muted); margin-top: 6px; }
+.simscore { font-size: 72px; font-weight: 900; }
+.sub-card h3 { font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+/* team + head to head */
+.teamhero { border-radius: 22px; padding: 22px 26px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; border: 1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); background: linear-gradient(120deg, color-mix(in srgb, var(--tc) 55%, var(--surface)), var(--surface) 78%); }
+.th-name { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.th-name .chip { min-width: 54px; height: 34px; font-size: 14px; border-radius: 9px; }
+.th-name h3 { font-size: clamp(38px, 7vw, 76px); font-weight: 900; text-transform: uppercase; line-height: 0.9; }
+.th-stats { display: flex; gap: 22px; }
+.th-stats b { display: block; font-family: var(--display); font-weight: 900; font-size: 44px; line-height: 0.95; }
+.th-stats b small { font-size: 0.5em; color: var(--muted); }
+.th-stats small { color: var(--muted); font-size: 11.5px; }
+.h2hhero { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; border-radius: 22px; overflow: hidden; margin-bottom: 14px; }
+.hh-side { padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+.hh-side.a { background: linear-gradient(120deg, color-mix(in srgb, var(--ca) 62%, var(--surface)), var(--surface) 95%); align-items: flex-start; }
+.hh-side.b { background: linear-gradient(240deg, color-mix(in srgb, var(--cb) 62%, var(--surface)), var(--surface) 95%); align-items: flex-end; text-align: right; }
+.hh-side h3 { font-size: clamp(28px, 5vw, 56px); font-weight: 900; text-transform: uppercase; line-height: 0.92; }
+.hh-side b { font-family: var(--display); font-weight: 900; font-size: clamp(56px, 10vw, 110px); line-height: 0.85; }
+.hh-mid { display: grid; place-content: center; text-align: center; padding: 0 6px; }
+.hh-mid span { font-family: var(--display); font-weight: 900; font-size: 36px; color: var(--accent); }
+.hh-mid small { color: var(--muted); font-size: 11px; }
+.timeline { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 14px; }
+.timeline i { width: 12px; height: 28px; border-radius: 4px; }
+.timeline i.W { background: var(--ok); } .timeline i.D { background: var(--draw); } .timeline i.L { background: var(--bad); }
+@media (max-width: 640px) { .h2hhero { grid-template-columns: 1fr; } .hh-side.b { align-items: flex-start; text-align: left; } .th-stats { width: 100%; } }
+/* replay hero */
+.sb { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center; padding: 26px 28px; border-radius: 24px; border: 1px solid var(--line); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface) 58%); }
+.sb .pitchart { position: absolute; right: -30px; top: 50%; width: 470px; transform: translateY(-50%); opacity: 0.7; pointer-events: none; }
+.sb > *:not(.pitchart) { position: relative; }
+.sb-ring { position: relative; width: 176px; height: 176px; }
+.sb-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sb-ring .trk { fill: none; stroke: var(--line); stroke-width: 14; }
+.sb-ring .val { fill: none; stroke: var(--accent); stroke-width: 14; stroke-linecap: round; transition: stroke-dasharray 0.7s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 55%, transparent)); }
+.sb-ringtxt { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.sb-ringtxt .bigacc { font-family: var(--display); font-weight: 900; font-size: 64px; line-height: 0.9; letter-spacing: -0.02em; }
+.sb-kicker { font: 700 12px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.sb-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.tile { background: color-mix(in srgb, var(--bg) 55%, transparent); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; backdrop-filter: blur(4px); }
+.tile b { display: block; font-family: var(--display); font-weight: 900; font-size: 44px; line-height: 0.95; letter-spacing: -0.01em; }
+.tile b small { font-size: 0.5em; color: var(--muted); font-weight: 700; }
+.tile small { color: var(--muted); font-size: 11.5px; line-height: 1.3; display: block; margin-top: 3px; }
+.tile.up b { color: var(--ok); } .tile.down b { color: var(--bad); }
+.sb .recalls { max-width: 560px; }
+@media (max-width: 760px) { .sb { grid-template-columns: 1fr; justify-items: center; text-align: left; } .sb-main { width: 100%; } .sb .pitchart { opacity: 0.35; } }
+.match { background: linear-gradient(90deg, color-mix(in srgb, var(--hc) 16%, var(--surface2)), var(--surface2) 38%, var(--surface2) 62%, color-mix(in srgb, var(--ac) 16%, var(--surface2))); }
+.score { font-family: var(--display); font-weight: 900; font-size: 24px; letter-spacing: 0.02em; padding: 2px 14px; }
+/* ===================== v2 visual identity =====================
+   Floodlit pitch at night: mown-turf stripes, chalk-line graphics, tall
+   scoreboard numerals. Outcome colours are unchanged everywhere. */
+:root {
+  --bg: #060C0A; --surface: #0C1713; --surface2: #122019; --line: #1D3329;
+  --fg: #EEF5F0; --muted: #86A094; --accent: #FFD23F; --accent-ink: #1A1400;
+  --accent2: #2EE6A6;
+  --home: #FF7A4D; --draw: #9DB0B8; --away: #46C6FF; --ok: #38E39B; --bad: #FF5F78;
+  --display: "Big Shoulders Display", "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --chalk: color-mix(in srgb, var(--fg) 14%, transparent);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EEF3EF; --surface: #FFFFFF; --surface2: #F1F6F2; --line: #D1DDD5;
+    --fg: #0B1711; --muted: #566B5E; --accent: #F0B400; --accent-ink: #1A1400; --accent2: #0E9F6E;
+    --home: #D9561F; --draw: #667587; --away: #0A86B8; --ok: #12905A; --bad: #D42C46;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #EEF3EF; --surface: #FFFFFF; --surface2: #F1F6F2; --line: #D1DDD5;
+  --fg: #0B1711; --muted: #566B5E; --accent: #F0B400; --accent-ink: #1A1400; --accent2: #0E9F6E;
+  --home: #D9561F; --draw: #667587; --away: #0A86B8; --ok: #12905A; --bad: #D42C46;
+}
+body { position: relative; }
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(900px 420px at 12% -8%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 62%),
+    radial-gradient(700px 380px at 95% 8%, color-mix(in srgb, var(--accent2) 9%, transparent), transparent 60%),
+    repeating-linear-gradient(90deg, transparent 0 84px, color-mix(in srgb, var(--fg) 2.4%, transparent) 84px 168px);
+}
+h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
+.card { border-radius: 18px; background: linear-gradient(180deg, color-mix(in srgb, var(--fg) 3%, var(--surface)), var(--surface) 60%); box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent) inset, 0 18px 40px -28px rgba(0, 0, 0, 0.6); }
+.cardhead h2 { font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+.label { letter-spacing: 0.12em; }
+
+/* masthead */
+.mast { display: flex; flex-direction: column; gap: 14px; }
+.mast-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.wordmark { display: flex; align-items: center; gap: 14px; }
+.wordmark svg { width: 54px; height: 54px; flex: none; }
+.wordmark h1 { font-size: clamp(44px, 9vw, 92px); font-weight: 900; line-height: 0.86; text-transform: uppercase; letter-spacing: 0.005em; }
+.wordmark h1 em { font-style: normal; color: var(--accent); }
+.mast-sub { margin: 0; color: var(--muted); max-width: 70ch; font-size: 15px; }
+.ticker { overflow: hidden; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.ticker-track { display: inline-flex; gap: 34px; padding: 9px 0; white-space: nowrap; animation: tick 70s linear infinite; font: 600 12.5px var(--mono); }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker-track span { display: inline-flex; align-items: center; gap: 8px; }
+.ticker-track b { color: var(--accent); font-weight: 700; }
+@keyframes tick { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } .ticker { overflow-x: auto; } }
+
+/* tabs */
+.tabs { gap: 4px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); padding: 10px 0; margin-block: -6px; }
+.jump button { border-radius: 12px; padding: 9px 15px; font: 700 13px var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+.jump button[aria-selected="true"] { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent2))); box-shadow: 0 6px 22px -8px var(--accent); }
+.btn { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, var(--accent2))); box-shadow: 0 8px 22px -12px var(--accent); transition: transform 0.15s ease, filter 0.15s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn.ghost { background: var(--surface); box-shadow: none; }
+.seg button[aria-pressed="true"], .pcard[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--accent) inset, 0 8px 24px -14px var(--accent); }
+.pcard b { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
 </style>
 
 <div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <h1>Season <span>Wrapped</span></h1>
-      <p>Replay a Premier League season with a Random Forest and goal model that have never seen a single one of these matches, see where they were right and where they got burned, then simulate any 2026-27 match, project the rest of the season, and look up any club.</p>
+  <header class="mast">
+    <div class="mast-top">
+      <div class="wordmark">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M32 13 42 20 38 32 26 32 22 20Z" fill="var(--accent)"/><path d="M26 32 18 38 21 49M38 32 46 38 43 49M32 13 32 6M22 20 12 18M42 20 52 18M21 49 32 56 43 49" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/></svg>
+        <h1>Season <em>Wrapped</em></h1>
+      </div>
+      <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
     </div>
-    <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
+    <p class="mast-sub">Replay a Premier League season with a Random Forest and goal model that have never seen a single one of these matches, see where they were right and where they got burned, then simulate any 2026-27 match, project the rest of the season, and look up any club.</p>
+    <div class="ticker" aria-label="Latest 2026-27 results"><div class="ticker-track" id="ticker"></div></div>
   </header>
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
@@ -374,19 +548,22 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
     <div class="notice" id="notice" hidden></div>
   </section>
 
+  <section class="hero sb" data-views="replay" aria-label="Running scorecard">
+    <svg class="pitchart" viewBox="0 0 420 270" aria-hidden="true"><g fill="none" stroke="var(--chalk)" stroke-width="2.2"><rect x="10" y="10" width="400" height="250" rx="4"/><path d="M210 10V260"/><circle cx="210" cy="135" r="46"/><circle cx="210" cy="135" r="3" fill="var(--chalk)"/><rect x="10" y="72" width="64" height="126"/><rect x="10" y="102" width="26" height="66"/><rect x="346" y="72" width="64" height="126"/><rect x="384" y="102" width="26" height="66"/><path d="M74 108A36 36 0 0 1 74 162M346 108A36 36 0 0 0 346 162"/></g></svg>
+    <div class="sb-ring">
+      <svg viewBox="0 0 176 176" aria-hidden="true"><circle class="trk" cx="88" cy="88" r="78"/><circle class="val" id="ringVal" cx="88" cy="88" r="78" transform="rotate(-90 88 88)"/></svg>
+      <div class="sb-ringtxt"><div class="bigacc num" id="bigAcc"></div><div class="label">right so far</div></div>
+    </div>
+    <div class="sb-main">
+      <div class="sb-kicker" id="sbKicker"></div>
+      <div class="sb-tiles" id="sbTiles"></div>
+      <div class="recalls" id="recalls"></div>
+      <div class="sub" id="accSub"></div>
+    </div>
+  </section>
+
   <div class="stage" data-views="replay">
     <div class="col">
-      <section class="card" aria-label="Running scorecard">
-        <div class="statstrip">
-          <div>
-            <div class="label">Right so far</div>
-            <div class="bigacc num" id="bigAcc"></div>
-            <div class="sub" id="accSub"></div>
-          </div>
-          <div class="recalls" id="recalls"></div>
-        </div>
-      </section>
-
       <section class="card chartbox" aria-label="Accuracy over the season">
         <div class="cardhead"><h2>Accuracy as the season unfolds</h2></div>
         <div id="chart"></div>
@@ -437,9 +614,13 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
   </section>
 
   <section class="card" id="rest" data-views="rest" aria-label="Rest of the season">
-    <div class="cardhead"><h2>Rest of 2026-27: who wins it, who goes down</h2><div class="btnrow"><button class="btn" id="restRun" type="button">Re-run 3,000 seasons</button></div></div>
-    <p class="fineprint" id="restNote" style="margin:0 0 12px"></p>
+    <div class="cardhead"><h2>Rest of 2026-27: who wins it, who goes down</h2><div class="btnrow"><div class="seg" id="restSeg" role="group" aria-label="Simulation type"></div><button class="btn" id="restRun" type="button">Re-run 3,000 seasons</button></div></div>
+    <div class="racecards" id="restRace"></div>
+    <p class="fineprint" id="restNote" style="margin:14px 0 12px"></p>
     <div class="restwrap"><table id="restTable"></table></div>
+    <h3 style="margin:22px 0 8px;font-size:17px">Where each club finishes</h3>
+    <p class="fineprint" style="margin:0 0 10px">Each row is a club, each column a league place. The brighter the cell, the more often that club finished there across the simulated seasons (numbers show chances of 10% or more). The ring marks where the club sits now.</p>
+    <div class="restwrap" id="restHeat"></div>
   </section>
 
   <section class="card" id="team" data-views="teams" aria-label="Team page">
@@ -456,7 +637,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
   <section id="recap" data-views="recap" aria-label="Season recap">
     <div class="recaphead">
       <h2 id="recapTitle"></h2>
-      <span class="label" id="recapSub"></span>
+      <div class="btnrow"><span class="label" id="recapSub"></span><button class="btn" id="storyBtn" type="button">&#9654; Play my Wrapped</button></div>
     </div>
     <div class="recap" id="recapGrid" style="margin-top:14px"></div>
   </section>
@@ -491,11 +672,21 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
       <li><b>Percentages are honest odds; profiles only pick the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A profile is a decision rule on the forest's probabilities and decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
       <li><b>Profiles are decision rules, not different models.</b> A profile scales the three probabilities before picking one: Balanced and Target boost Draw so it gets called more often, Deadkill suppresses it, which gives the best raw accuracy. The decision can be made from the blended odds (the default, tuned in step 10 of the pipeline) or from the Random Forest's probabilities alone (the original profiles). The percentages next to the chips are each profile's Home, Draw and Away recall on the 760 held-out matches.</li>
-      <li><b>The bookmaker line is a yardstick, not an input.</b> It shows how often simply picking Bet365's pre-match favourite would have been right. The model never uses odds.</li>
+      <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with Bet365's pre-match odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
+      <li><b>Two kinds of simulation, kept apart on purpose.</b> Replays and next-matchday forecasts are always built from real past results only. The blind rest-of-season simulation is the one place predicted results feed predictions: after each simulated match, Elo, form and the table update with the simulated result.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
       <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Rounds are every 10 matches in date order.</li>
     </ul>
   </section>
+</div>
+
+<div class="story" id="story" role="dialog" aria-modal="true" aria-label="Your season, wrapped" tabindex="-1" hidden>
+  <div class="story-progress" id="storyProg"></div>
+  <button class="story-x" id="storyX" type="button" aria-label="Close">&times;</button>
+  <button class="story-nav prev" id="storyPrev" type="button" aria-label="Previous slide"></button>
+  <button class="story-nav next" id="storyNext" type="button" aria-label="Next slide"></button>
+  <div class="story-body" id="storyBody"></div>
+  <button class="story-pause" id="storyPause" type="button">Pause</button>
 </div>
 
 <script>
@@ -552,7 +743,7 @@ function computeSeason(key) {
     // Random Forest's probabilities). Every percentage shown is the honest
     // odds: an even blend of the forest and the goal model, which the
     // validation section shows to be calibrated.
-    const adj = blendOdds(m);
+    const adj = oddsOf(m);
     const dec = decide(m, P);
     const pick = dec.indexOf(Math.max(dec[0], dec[1], dec[2]));
     const act = OUT.indexOf(m[5]);
@@ -602,14 +793,14 @@ function buildTable(n, ms = C.ms) {
 
 /* ---------- replay rendering ---------- */
 
-function benchOf(p) { return state.base === "blend" ? p.benchB : p.bench; }
+function benchOf(p) { return state.base === "hybrid" ? p.benchH : state.base === "blend" ? p.benchB : p.bench; }
 
 function renderControls() {
   $("#seasonSeg").innerHTML = Object.keys(DATA.seasons).map((k) => {
     const live = DATA.seasons[k].live;
     return `<button type="button" data-season="${k}" aria-pressed="${k === state.season}">${live ? '<span class="live-dot"></span>' : ""}${k}${live ? " live" : ""}</button>`;
   }).join("");
-  $("#baseSeg").innerHTML = [["blend", "Blended odds"], ["rf", "Random Forest only"]].map(([k, t]) =>
+  $("#baseSeg").innerHTML = [["blend", "Blended odds"], ["rf", "Random Forest only"], ["hybrid", "Model + bookmaker odds"]].map(([k, t]) =>
     `<button type="button" data-base="${k}" aria-pressed="${state.base === k}">${t}</button>`).join("");
   $("#profiles").innerHTML = DATA.profiles.map((p) => `
     <button type="button" class="pcard" data-profile="${p.id}" aria-pressed="${p.id === state.profile}">
@@ -628,21 +819,30 @@ function renderTransport() {
   const play = $("#bPlay");
   play.innerHTML = state.playing ? ICON_PAUSE : ICON_PLAY;
   play.setAttribute("aria-label", state.playing ? "Pause" : "Play");
-  const n = $("#notice");
-  if (C.S.live) {
-    n.hidden = false;
-    n.textContent = "2026-27 is still in progress, so this is a live look. The model never trained on it, but its expected-goals, manager and European-fixture inputs stop at the end of last season, so expect it to be a little rougher than on the finished seasons.";
-  } else n.hidden = true;
+  const n = $("#notice"), notes = [];
+  if (C.S.live) notes.push("2026-27 is still in progress, so this is a live look. The model never trained on it, but its expected-goals, manager and European-fixture inputs stop at the end of last season, so expect it to be a little rougher than on the finished seasons.");
+  if (state.base === "hybrid") notes.push("Model + bookmaker odds stacks our blend with Bet365's pre-match odds. That is real pre-match information, but it carries what the market knows (lineups, injuries, news), so it is market-informed, not the model alone. It only applies to matches whose odds exist; an unplayed match with no odds falls back to the blend.");
+  n.hidden = !notes.length;
+  n.innerHTML = notes.map((t) => `<p style="margin:0 0 4px">${esc(t)}</p>`).join("");
 }
 
 function renderStats() {
   const n = Math.min(C.ms.length, state.round * 10);
   const s = stats(n);
   const acc = n ? s.c / n : 0;
-  $("#bigAcc").innerHTML = n ? `${(acc * 100).toFixed(0)}<small>%</small>` : `<small>--</small>`;
   const gap = acc - C.S.bookmaker;
+  $("#bigAcc").innerHTML = n ? `${(acc * 100).toFixed(0)}<small>%</small>` : `<small>--</small>`;
+  const circ = 2 * Math.PI * 78;
+  $("#ringVal").style.strokeDasharray = `${(circ * acc).toFixed(1)} ${circ.toFixed(1)}`;
+  $("#sbKicker").textContent = `${state.round === 0 ? "Before round 1" : "Round " + state.round + " of " + C.R} · ${state.season} · ${currentProfile().name} profile`;
+  $("#sbTiles").innerHTML = [
+    [`${s.c}<small>/${n}</small>`, "called right", ""],
+    [n >= 30 ? `${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)}` : "--", `pts vs bookmaker ${pct(C.S.bookmaker, 1)}`, n >= 30 ? (gap >= 0 ? "up" : "down") : ""],
+    [`${s.ex}`, `exact scores (1-1 every time: ${s.one})`, ""],
+    [`${s.hit[1]}<small>/${s.real[1]}</small>`, "draws found", ""],
+  ].map(([v, l, c]) => `<div class="tile ${c}"><b class="num">${v}</b><small>${l}</small></div>`).join("");
   $("#accSub").innerHTML = n
-    ? `${s.c} of ${n} matches. ${n >= 30 ? `<span class="delta ${gap >= 0 ? "up" : "down"}">${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)} pts</span> against picking the bookmaker's favourite (${pct(C.S.bookmaker, 1)}).` : "Early rounds are noisy, give it a few weeks."}`
+    ? (n >= 30 ? "" : "Early rounds are noisy, give it a few weeks.")
     : "Press play to start the season.";
   $("#recalls").innerHTML = [2, 1, 0].map((j) => {
     const o = OUT[j], real = s.real[j], hit = s.hit[j];
@@ -651,8 +851,7 @@ function renderStats() {
       <span class="label">${OUTNAME[o]}</span>
       <div class="track"><div class="fill" style="width:${(r * 100).toFixed(0)}%"></div></div>
       <span class="v num"><b>${real ? pct(r) : "--"}</b> ${hit}/${real}</span></div>`;
-  }).join("") + `<span class="label" style="margin-top:2px">Share of real results the model called right</span>
-    <span class="fineprint">Exact scores named: <b>${s.ex}</b> of ${n}${n ? ` (${pct(s.ex / n, 1)})` : ""}. Guessing 1-1 every time would hit ${s.one}.</span>`;
+  }).join("");
 }
 
 function renderChart() {
@@ -703,7 +902,7 @@ function renderFeed(animate) {
   $("#feed").innerHTML = C.ms.slice(a, b).map((m, i) => {
     const o = OUT[m.pick];
     const segs = [2, 1, 0].map((j) => `<i class="${j === m.act ? "real" : ""}" style="--c:${OUTCSS[OUT[j]]};flex:${Math.max(0.02, m.adj[j])}"></i>`).join("");
-    return `<div class="match" style="--i:${animate ? i : 0}">
+    return `<div class="match" style="--i:${animate ? i : 0};--hc:${(TEAM[m.home] || ["", "#4A5A52"])[1]};--ac:${(TEAM[m.away] || ["", "#4A5A52"])[1]}">
       <div class="side h"><span class="nm">${esc(m.home)}</span>${chip(m.home)}</div>
       <div class="score">${m.hg}-${m.ag}</div>
       <div class="side">${chip(m.away)}<span class="nm">${esc(m.away)}</span></div>
@@ -892,6 +1091,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.season) { state.season = b.dataset.season; refreshAll(true); }
   else if (b.dataset.profile) { state.profile = b.dataset.profile; refreshAll(false); }
   else if (b.dataset.base) { state.base = b.dataset.base; refreshAll(false); }
+  else if (b.dataset.rest) { restMode = b.dataset.rest; renderRest(); }
   else if (b.id === "bPlay") { state.playing ? (stopPlay(), renderTransport()) : play(); }
   else if (b.id === "bFwd") setRound(state.round + 1);
   else if (b.id === "bBack") setRound(state.round - 1);
@@ -938,6 +1138,19 @@ function teamCode(n) { const t = TEAM[n]; return t ? t[0] : n.replace(/[^A-Za-z0
 function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
 function liveMatches() { return DATA.seasons[LAB.season].matches; }
 function currentProfile() { return DATA.profiles.find((p) => p.id === state.profile); }
+function labOdds(q) {
+  const b = blendFrom(q.probs, q.lam);
+  return state.base === "hybrid" && q.mkt ? hybridFrom(b, q.mkt) : b;
+}
+function labDecision(q) {
+  const P = currentProfile();
+  let f, b;
+  if (state.base === "rf") { f = P.f; b = q.probs; }
+  else if (state.base === "hybrid" && q.mkt) { f = P.fh; b = labOdds(q); }
+  else { f = P.fb; b = blendFrom(q.probs, q.lam); }
+  const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h], sum = adj[0] + adj[1] + adj[2];
+  return adj.map((v) => v / sum);
+}
 function adjustProbs(probs, lam) {
   const f = baseFactors(currentProfile()), b = state.base === "blend" ? blendFrom(probs, lam) : probs;
   const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h];
@@ -965,10 +1178,23 @@ const outcomeOf = (h, a) => (h > a ? "H" : h < a ? "A" : "D");
 
 // The decision rule: scale the base probabilities by the profile's factors.
 // Base = the blended odds (default) or the Random Forest's raw probabilities.
-function baseFactors(P) { return state.base === "blend" ? P.fb : P.f; }
+function baseFactors(P) { return state.base === "hybrid" ? P.fh : state.base === "blend" ? P.fb : P.f; }
 function decide(m, P) {
-  const f = baseFactors(P), b = state.base === "blend" ? blendOdds(m) : [m[6], m[7], m[8]];
+  const f = baseFactors(P), b = state.base === "rf" ? [m[6], m[7], m[8]] : oddsOf(m);
   return [b[0] * f.a, b[1] * f.d, b[2] * f.h];
+}
+
+// Market-informed hybrid: a logistic-regression stack of our blend and
+// Bet365's pre-match odds, fitted on out-of-fold training data (10_tune_blend_profiles.py).
+function hybridFrom(blend, mkt) {
+  const x = [...blend, ...mkt].map((v) => Math.log(Math.max(v, 1e-6))), H = DATA.hybrid;
+  const z = H.coef.map((row, i) => row.reduce((a, w, j) => a + w * x[j], H.intercept[i]));
+  const mx = Math.max(...z), e = z.map((v) => Math.exp(v - mx)), t = e[0] + e[1] + e[2];
+  return e.map((v) => v / t);
+}
+function oddsOf(m) {
+  if (state.base === "hybrid" && m[11] != null) return m._h || (m._h = hybridFrom(blendOdds(m), [m[11], m[12], m[13]]));
+  return blendOdds(m);
 }
 
 // Every call also names a score: the goal model's likeliest scoreline among
@@ -992,9 +1218,32 @@ function blendOdds(m) { return m._o || (m._o = blendFrom([m[6], m[7], m[8]], [m[
 
 function lookup(home, away) {
   const m = liveMatches().find((x) => x[1] === home && x[2] === away);
-  if (m) return { played: true, date: m[0], hg: m[3], ag: m[4], res: m[5], probs: [m[6], m[7], m[8]], lam: [m[9], m[10]] };
+  if (m) return { played: true, date: m[0], hg: m[3], ag: m[4], res: m[5], probs: [m[6], m[7], m[8]], lam: [m[9], m[10]], mkt: m[11] != null ? [m[11], m[12], m[13]] : null };
   const g = LAB.grid[home + "|" + away];
   return { played: false, probs: [g[0], g[1], g[2]], lam: [g[3], g[4]] };
+}
+
+function bigOdds(adj, realOutcome) {
+  return `<div class="odds3">` + [2, 1, 0].map((j) => {
+    const o = OUT[j];
+    return `<div class="o3 ${realOutcome === o ? "real" : ""}" style="--c:${OUTCSS[o]}"><b class="num">${Math.round(adj[j] * 100)}<small>%</small></b><span>${OUTNAME[o]}</span></div>`;
+  }).join("") + `</div><div class="tug">` + [2, 1, 0].map((j) => `<i style="--c:${OUTCSS[OUT[j]]};flex:${Math.max(0.02, adj[j])}"></i>`).join("") + `</div>`;
+}
+
+function scoreHeat(g, realScore, simScore) {
+  const N = 6;
+  let max = 0;
+  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) max = Math.max(max, g[i][j]);
+  let html = `<div class="sheat"><div class="sh-corner"></div>` + Array.from({ length: N + 1 }, (_, j) => `<div class="sh-h">${j}</div>`).join("");
+  for (let i = 0; i <= N; i++) {
+    html += `<div class="sh-h">${i}</div>`;
+    for (let j = 0; j <= N; j++) {
+      const c = i > j ? "var(--home)" : i === j ? "var(--draw)" : "var(--away)";
+      const v = g[i][j], real = realScore && realScore[0] === i && realScore[1] === j, sim = simScore && simScore[0] === i && simScore[1] === j;
+      html += `<div class="sh-c ${real ? "real" : ""} ${sim ? "sim" : ""}" style="--c:${c};--a:${(0.1 + (v / max) * 0.9).toFixed(2)}" title="${i}-${j}: ${(v * 100).toFixed(1)}%">${v >= 0.03 ? Math.round(v * 100) : ""}</div>`;
+    }
+  }
+  return html + `</div><div class="shlegend"><span>Rows: home goals</span><span>Columns: away goals</span><span style="color:var(--home)">Home win</span><span style="color:var(--draw)">Draw</span><span style="color:var(--away)">Away win</span></div>`;
 }
 
 function probRows(adj, realOutcome) {
@@ -1007,9 +1256,9 @@ function probRows(adj, realOutcome) {
 function renderLab() {
   if (!lab.home) return;
   const q = lookup(lab.home, lab.away);
-  const dec = adjustProbs(q.probs, q.lam);
+  const dec = labDecision(q);
   const pick = dec.indexOf(Math.max(dec[0], dec[1], dec[2]));
-  const adj = blendFrom(q.probs, q.lam);          // honest odds shown on screen
+  const adj = labOdds(q);          // honest odds shown on screen
   const P = currentProfile();
   const g = scoreGrid(q.lam[0], q.lam[1]);
   const sm = gridSummary(g);
@@ -1030,25 +1279,20 @@ function renderLab() {
     <div class="bigpick"><span class="pill" style="--c:${OUTCSS[OUT[pick]]}">${OUTNAME[OUT[pick]]} ${pct(adj[pick])}</span>
     ${q.played ? `<span class="verdictline ${OUT[pick] === q.res ? "up" : "down"}">${OUT[pick] === q.res ? "Right" : "Wrong"}: it ended ${OUTNAME[q.res]}</span>` : ""}</div>
     ${callScore}
-    ${probRows(adj, q.played ? q.res : null)}
+    ${bigOdds(adj, q.played ? q.res : null)}
     <span class="fineprint">The ${esc(P.name)} profile picks the call. The percentages are honest odds, an even blend of the Random Forest and the goal model${q.played ? ", from the exact pre-match features" : ""}. Change the profile at the top to see the call change.</span></div>`;
 
-  const top = sm.list.slice(0, 6);
   let realRank = "";
   if (q.played) {
     const idx = sm.list.findIndex((x) => x[0] === q.hg && x[1] === q.ag);
-    realRank = idx >= 0 ? `The real ${q.hg}-${q.ag} had a ${pct(sm.list[idx][2], 1)} chance, ${idx === 0 ? "the single most likely score" : `the ${idx + 1}${[11, 12, 13].includes(idx + 1) ? "th" : ["th", "st", "nd", "rd"][(idx + 1) % 10] || "th"} most likely of ${g.length * g[0].length}`}.` : `The real ${q.hg}-${q.ag} was outside the modelled range.`;
+    realRank = idx >= 0 ? `The real ${q.hg}-${q.ag} had a ${pct(sm.list[idx][2], 1)} chance, ${idx === 0 ? "the single most likely score" : `the ${idx + 1}${ordinal(idx + 1)} most likely of ${g.length * g[0].length}`}.` : `The real ${q.hg}-${q.ag} was outside the modelled range.`;
   }
-  const rows = top.map(([i, j, v]) => {
-    const isReal = q.played && i === q.hg && j === q.ag;
-    return `<div class="srow2 ${isReal ? "real" : ""}"><span class="num">${i}-${j}</span><div class="track"><div class="fill" style="width:${Math.min(100, (v / top[0][2]) * 100).toFixed(0)}%"></div></div><span class="num">${pct(v, 1)}</span></div>`;
-  }).join("");
-  const scoreCard = `<div class="sub-card"><h3>Scoreline odds</h3>
-    <div class="scorelist">${rows}</div>
-    <span class="fineprint">Expected goals ${q.lam[0].toFixed(2)} to ${q.lam[1].toFixed(2)}. The goal model alone says Home ${pct(sm.H)}, Draw ${pct(sm.D)}, Away ${pct(sm.A)}.</span>
+  const scoreCard = `<div class="sub-card"><h3>Every possible score</h3>
+    ${scoreHeat(g, q.played ? [q.hg, q.ag] : null, lab.sim ? [lab.sim.h, lab.sim.a] : null)}
+    <span class="fineprint">Expected goals ${q.lam[0].toFixed(2)} to ${q.lam[1].toFixed(2)}. Brighter means more likely; numbers show chances of 3% or more. The goal model alone says Home ${pct(sm.H)}, Draw ${pct(sm.D)}, Away ${pct(sm.A)}.${q.played ? " Green ring: the real score." : ""}${lab.sim ? " Dashed ring: your simulation." : ""}</span>
     ${realRank ? `<span class="verdictline">${realRank}</span>` : ""}</div>`;
 
-  let simBody = `<div class="fineprint">Draws one scoreline at random from the odds on the left, so 1-0 comes up far more often than 5-4.</div>`;
+  let simBody = `<div class="simout"><span class="simscore num" id="simScore">?-?</span></div><div class="fineprint">Draws one scoreline at random from the odds, so 1-0 comes up far more often than 5-4.</div>`;
   if (sim) {
     const so = outcomeOf(sim.h, sim.a);
     let cmp = "";
@@ -1118,8 +1362,8 @@ function persistLocal() {
 async function saveCall() {
   const q = lookup(lab.home, lab.away);
   if (q.played) return;
-  const dec = adjustProbs(q.probs, q.lam);
-  const odds = blendFrom(q.probs, q.lam);
+  const dec = labDecision(q);
+  const odds = labOdds(q);
   const body = {
     home: lab.home, away: lab.away, profile: state.profile,
     probs: odds.map((v) => +v.toFixed(4)), pick: OUT[dec.indexOf(Math.max(dec[0], dec[1], dec[2]))],
@@ -1193,9 +1437,19 @@ $("#lab").addEventListener("click", (e) => {
   else if (b.id === "labSim") {
     const q = lookup(lab.home, lab.away);
     const [h, a] = sampleScore(scoreGrid(q.lam[0], q.lam[1]));
-    lab.sim = { h, a }; lab.simCount++;
-    if (q.played && outcomeOf(h, a) === q.res) lab.simHits++;
-    renderLab();
+    const finish = () => {
+      lab.sim = { h, a }; lab.simCount++;
+      if (q.played && outcomeOf(h, a) === q.res) lab.simHits++;
+      renderLab();
+    };
+    const el = $("#simScore");
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
+    b.disabled = true;
+    let ticks = 0;
+    const roll = setInterval(() => {
+      el.textContent = `${Math.floor(Math.random() * 5)}-${Math.floor(Math.random() * 4)}`;
+      if (++ticks >= 11) { clearInterval(roll); finish(); }
+    }, 60);
   } else if (b.id === "labSave") saveCall();
   else if (b.dataset.del) deleteCall(b.dataset.del);
 });
@@ -1210,10 +1464,13 @@ function renderSanity() {
   $("#sanityLead").innerHTML = `No. Each check below compares the odds or the simulations with what really happened in ${V.n_matches} matches, against a baseline that knows nothing. The short version: the odds carry real information, the average chances match real rates, and a simulated season stays close to the real table. What they cannot do is predict an exact score, and the page says so.`;
 
   // 1. single match table
+  const HY = DATA.hybrid.test;
+  const oddsRows = names.map((n) => [n, mp[n].log_loss, mp[n].accuracy]).concat([["Bet365's own odds (the market)", HY.market_log_loss, HY.market_accuracy], ["Our blend + Bet365 (hybrid, opt-in)", HY.log_loss, HY.accuracy]]);
+  const bestAll = Math.min(...oddsRows.map((r) => r[1]));
   const tbl = `<div class="kv"><span class="h">Odds from</span><span class="h">Log loss</span><span class="h">Right</span>` +
-    names.map((n) => `<span>${esc(n)}</span><span class="r ${mp[n].log_loss === best ? "best" : ""}">${mp[n].log_loss.toFixed(3)}</span><span class="r">${pct(mp[n].accuracy, 1)}</span>`).join("") + `</div>`;
+    oddsRows.map(([n, ll, ac]) => `<span>${esc(n)}</span><span class="r ${ll === bestAll ? "best" : ""}">${ll.toFixed(3)}</span><span class="r">${pct(ac, 1)}</span>`).join("") + `</div>`;
   const card1 = `<div class="sub-card"><h3>One match: do the odds know anything?</h3>${tbl}
-    <span class="fineprint">Log loss is lower when you put more probability on what happens. Knowing nothing but the league-wide rates scores ${lead.toFixed(3)}; the blended odds score ${blend.toFixed(3)}. A random number generator could not beat the first number, these do, on matches they never saw. The gain is modest because football is noisy, which is why picking the right result lands near 50%, not 80%.</span></div>`;
+    <span class="fineprint">Log loss is lower when you put more probability on what happens. Knowing nothing but the league-wide rates scores ${lead.toFixed(3)}; the blended odds score ${blend.toFixed(3)}. A random number generator could not beat the first number, these do, on matches they never saw. The gain is modest because football is noisy, which is why picking the right result lands near 50%, not 80%. The bookmaker's odds are better than our model alone because they also know lineups, injuries and news; stacking the two (the opt-in hybrid) lands at the market's level and no higher in a meaningful way.</span></div>`;
 
   // 2. calibration chart (blend)
   const W = 300, H = 230, L = 36, R = 10, T = 10, B = 30;
@@ -1293,6 +1550,12 @@ function runSeasonSim() {
 }
 $("#seasonSim").addEventListener("click", runSeasonSim);
 
+const ordinal = (n) => (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+function ring(frac, size = 96, stroke = 9) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return `<span class="ringwrap" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${(c * Math.min(1, frac)).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/></svg><span class="ringnum num">${Math.round(frac * 100)}%</span></span>`;
+}
+
 /* ---------- history helpers (team page, head to head, Elo race) ---------- */
 
 const HIST = DATA.history;
@@ -1323,7 +1586,7 @@ function renderRace() {
     teams.forEach((t) => {
       const d = document.createElement("div");
       d.className = "rr"; d.style.transform = `translateY(${teams.indexOf(t) * ROW}px)`;
-      d.innerHTML = `${chip(t)}<div><div class="bar" style="--c:var(--accent);width:4px"></div></div><span class="v"></span>`;
+      d.innerHTML = `${chip(t)}<div><div class="bar" style="--c:${(TEAM[t] || ["", "#4A5A52"])[1]};width:4px"></div></div><span class="v"></span>`;
       host.appendChild(d); raceState.rows[t] = d;
     });
   }
@@ -1339,7 +1602,7 @@ function renderRace() {
 
 /* ---------- rest of the season ---------- */
 
-let restData = null;
+let restData = null, restMode = "blind";
 function simulateRest(N) {
   const live = liveMatches(), teams = LAB.teams, ix = Object.fromEntries(teams.map((t, i) => [t, i])), n = teams.length;
   const pts0 = new Array(n).fill(0), gd0 = new Array(n).fill(0), gf0 = new Array(n).fill(0), pl = new Array(n).fill(0);
@@ -1378,19 +1641,42 @@ function simulateRest(N) {
   const rows = teams.map((t, i) => {
     const sorted = Array.from(ptsAll[i]).sort((a, b) => a - b);
     return { t, now: cur.indexOf(i) + 1, pts: pts0[i], played: pl[i], mean: ptsSum[i] / N, p10: sorted[Math.floor(N * 0.1)], p90: sorted[Math.floor(N * 0.9)],
-      title: posCount[i][0] / N, top4: posCount[i].slice(0, 4).reduce((a, b) => a + b, 0) / N, down: posCount[i].slice(n - 3).reduce((a, b) => a + b, 0) / N };
+      title: posCount[i][0] / N, top4: posCount[i].slice(0, 4).reduce((a, b) => a + b, 0) / N, down: posCount[i].slice(n - 3).reduce((a, b) => a + b, 0) / N, pos: posCount[i].map((v) => v / N) };
   }).sort((a, b) => b.mean - a.mean);
   return { rows, fixtures: fixtures.length, N };
 }
 
+function restRows() {
+  if (restMode === "blind") {
+    const B = DATA.blind;
+    return { rows: B.rows.map((r) => ({ t: r.team, now: r.now, pts: r.pts, played: r.played, mean: r.mean, p10: r.p10, p90: r.p90, title: r.title, top4: r.top4, down: r.down, pos: r.pos })), N: B.n_sims, fixtures: B.remaining };
+  }
+  if (!restData) restData = simulateRest(3000);
+  return restData;
+}
+
 function renderRest() {
-  restData = simulateRest(3000);
-  const R = restData;
+  const R = restRows(), blind = restMode === "blind";
   const cell = (v, c) => `<td><div class="pbarcell" style="--c:${c}"><div class="track"><div class="fill" style="width:${(v * 100).toFixed(0)}%"></div></div><span class="num">${v < 0.005 ? "<1" : (v * 100).toFixed(0)}%</span></div></td>`;
+  $("#restSeg").innerHTML = [["blind", "Blind simulation"], ["frozen", "Quick check (frozen state)"]].map(([k, t]) => `<button type="button" data-rest="${k}" aria-pressed="${restMode === k}">${t}</button>`).join("");
+  $("#restRun").hidden = blind;
+
+  const top = [...R.rows].sort((a, b) => b.title - a.title).slice(0, 3);
+  $("#restRace").innerHTML = top.map((r, i) => `<div class="racecard" style="--tc:${(TEAM[r.t] || ["", "#4A5A52"])[1]}"><div class="rk">${["Favourite", "Challenger", "Outsider"][i]}</div>${ring(r.title, 84)}<div class="rn">${chip(r.t)}<b>${esc(r.t)}</b></div><small>projected <b class="num">${r.mean.toFixed(0)}</b> pts, now ${r.now}${ordinal(r.now)}</small></div>`).join("");
+
   $("#restTable").innerHTML = `<thead><tr><th>Team</th><th>Now</th><th>Pts</th><th>Projected</th><th>Range</th><th>Title</th><th>Top 4</th><th>Bottom 3</th></tr></thead><tbody>` +
     R.rows.map((r) => `<tr><td>${chip(r.t)}<span>${esc(r.t)}</span></td><td class="num">${r.now}</td><td class="num">${r.pts} <small style="color:var(--muted)">(${r.played})</small></td><td class="num"><b>${r.mean.toFixed(0)}</b></td><td class="num" style="color:var(--muted)">${r.p10} to ${r.p90}</td>${cell(r.title, "var(--accent)")}${cell(r.top4, "var(--ok)")}${cell(r.down, "var(--bad)")}</tr>`).join("") + `</tbody>`;
-  const bt = DATA.validation.rest_backtest;
-  $("#restNote").innerHTML = `Plays out the ${R.fixtures} fixtures not yet played (every pairing of the 20 clubs happens once at each ground, so the unplayed set is exact), ${R.N.toLocaleString()} times, from today's table. Each match draws a result from its honest odds, then a scoreline that fits it, so goal difference and tie-breaks are real. Kickoff dates aren't in the data, so only the final table is simulated, not the order. Odds use each club's latest form and don't change as the simulated season moves on, so read the percentages as a rough guide. Range is the middle 80% of simulated final points. ${bt ? `<b>Backtest:</b> the same method started after round 10 of the two held-out seasons put the real final points inside its 80% range for ${pct(bt.coverage_80, 0)} of teams. That test is optimistic because each remaining match's odds already contain that match's real form, so a live forecast should do a little worse.` : ""}`;
+
+  // finishing-position heatmap: one row per club, one column per place
+  const n = R.rows.length;
+  $("#restHeat").innerHTML = `<div class="heat" style="--n:${n}"><div class="hrow hhead"><span></span>${Array.from({ length: n }, (_, i) => `<span class="hc">${i + 1}</span>`).join("")}</div>` +
+    R.rows.map((r) => `<div class="hrow"><span class="hn">${chip(r.t)}</span>${r.pos.map((v, i) => `<span class="hc cell ${i + 1 === r.now ? "now" : ""}" style="--a:${Math.min(1, v * 2.4).toFixed(2)}" title="${esc(r.t)} finishes ${i + 1}${ordinal(i + 1)}: ${(v * 100).toFixed(0)}%">${v >= 0.1 ? Math.round(v * 100) : ""}</span>`).join("")}</div>`).join("") + `</div>`;
+
+  const bt = DATA.blind.backtest, fz = DATA.validation.rest_backtest;
+  const common = `Plays out the ${R.fixtures} fixtures not yet played (every pairing of the 20 clubs happens once at each ground, so the unplayed set is exact), ${R.N.toLocaleString()} times. Kickoff dates aren't in the data, so the remaining matches are laid out in an assumed weekly order and only the final table is meaningful. `;
+  $("#restNote").innerHTML = blind
+    ? `<b>Blind simulation.</b> ${common}It starts from the real current state, then predicts one simulated match at a time and <b>feeds each simulated result forward</b>: Elo, form, goals, shots, head-to-head and the table all update with the model's own results, so a team that wins its next simulated matches gets stronger for the ones after. Real results are used only for matches that have really been played (as of ${shortDate(DATA.blind.as_of)}). <b>Honest backtest</b> (same method started after round 10 of the two held-out seasons, seeing no real result after that): real final points inside the simulated 80% range for ${pct(bt.coverage_80, 0)} of teams; top-4 and relegation Brier scores ${bt.brier_top4.toFixed(3)} and ${bt.brier_relegation.toFixed(3)} against ${bt.brier_top4_base_rate.toFixed(3)} and ${bt.brier_relegation_base_rate.toFixed(3)} for flat base rates, so the percentages carry real information. But the projected finishing order was ${bt.position_mae_projection.toFixed(2)} places off against ${bt.position_mae_current_table.toFixed(2)} for simply keeping the current table, so it is not better at ranking than the table already is.`
+    : `<b>Quick check, frozen state.</b> ${common}Each remaining match uses odds from every club's latest form, and those odds do <b>not</b> update as the simulated season moves on. That makes it fast and a useful cross-check, but it is not the blind simulation. Its backtest looks better (final position ${fz.position_mae_projection.toFixed(2)} places off against ${bt.position_mae_projection.toFixed(2)} for the blind version) only because it is optimistic: each remaining match's odds already contain that match's real form.`;
 }
 
 /* ---------- team page ---------- */
@@ -1438,7 +1724,9 @@ function renderTeam() {
     rows.map((r) => `<tr><td style="text-align:left">${r.key}${r.live ? " (so far)" : ""}</td><td class="num"><b>${r.tb.rank}</b></td><td class="num">${r.tb.mrank} <span class="${r.tb.diff > 0 ? "up" : r.tb.diff < 0 ? "down" : ""}">${r.tb.diff === 0 ? "=" : (r.tb.diff > 0 ? "▲" : "▼") + Math.abs(r.tb.diff)}</span></td><td class="num">${r.tb.pts}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num">${r.right}/${r.n}</td>
       <td style="text-align:left;white-space:normal">${r.bestHit ? `${shortDate(r.bestHit.date)} ${r.bestHit.home} ${r.bestHit.hg}-${r.bestHit.ag} ${r.bestHit.away} (${pct(r.bestHit.conf)})` : "-"}</td>
       <td style="text-align:left;white-space:normal">${r.worst ? `${shortDate(r.worst.date)} ${r.worst.home} ${r.worst.hg}-${r.worst.ag} ${r.worst.away} (only ${pct(r.worst.pAct)})` : "-"}</td></tr>`).join("") + `</tbody></table></div><span class="fineprint">Model rank orders clubs by expected points. ▲ means the club finished above where the model had it. Uses the profile and decision base selected at the top.</span>` : `<div class="empty">${esc(club)} wasn't in the Premier League in the three replayed seasons.</div>`) + `</div>`;
-  $("#teamOut").innerHTML = `<div class="banner" style="margin-bottom:14px">${chip(club)}<span class="res">${esc(club)}</span><span class="fineprint">Elo ${now[1]}${LAB.teams.includes(club) ? " · in 2026-27" : ""}</span></div><div class="teamgrid">${chartCard}${form}${seasons}</div>`;
+  const tcol = (TEAM[club] || ["", "#4A5A52"])[1];
+  const rankNow = LAB.teams.includes(club) ? [...LAB.teams].map((t) => ({ t, e: eloAt(clubIx[t], maxDay) })).sort((a, b) => b.e - a.e).findIndex((x) => x.t === club) + 1 : null;
+  $("#teamOut").innerHTML = `<div class="teamhero" style="--tc:${tcol}"><div class="th-name">${chip(club)}<h3>${esc(club)}</h3></div><div class="th-stats"><div><b class="num">${now[1]}</b><small>Elo now</small></div><div><b class="num">${peak[1]}</b><small>Elo peak</small></div>${rankNow ? `<div><b class="num">${rankNow}<small>/20</small></b><small>Elo rank in 2026-27</small></div>` : ""}</div></div><div class="teamgrid">${chartCard}${form}${seasons}</div>`;
 }
 
 /* ---------- head to head ---------- */
@@ -1466,7 +1754,13 @@ function renderH2H() {
     };
     next = `<div class="labgrid" style="margin-bottom:14px">${one(A, B)}${one(B, A)}</div>`;
   }
-  $("#h2hOut").innerHTML = next + tiles + `<div style="margin-top:12px">${list}</div>`;
+  const ca = (TEAM[A] || ["", "#4A5A52"])[1], cb = (TEAM[B] || ["", "#4A5A52"])[1];
+  const tot = Math.max(1, ms.length);
+  const hero = `<div class="h2hhero" style="--ca:${ca};--cb:${cb}"><div class="hh-side a">${chip(A)}<h3>${esc(A)}</h3><b class="num">${aw}</b></div><div class="hh-mid"><span>V</span><small>${ms.length} meetings</small></div><div class="hh-side b">${chip(B)}<h3>${esc(B)}</h3><b class="num">${bw}</b></div></div>
+    <div class="tug wide"><i style="--c:${ca};flex:${Math.max(0.02, aw / tot)}"></i><i style="--c:var(--draw);flex:${Math.max(0.02, dr / tot)}"></i><i style="--c:${cb};flex:${Math.max(0.02, bw / tot)}"></i></div>
+    <div class="legend" style="margin:6px 0 14px"><span style="color:${ca}">${esc(A)} wins ${aw}</span><span>Draws ${dr}</span><span style="color:${cb}">${esc(B)} wins ${bw}</span></div>
+    <div class="timeline" title="Every meeting since 2014, oldest on the left, from ${esc(A)}'s point of view">${[...rows].reverse().map((r) => `<i class="${r.r}" title="${r.d}: ${esc(r.home)} ${r.hg}-${r.ag} ${esc(r.away)}"></i>`).join("")}</div>`;
+  $("#h2hOut").innerHTML = hero + next + tiles + `<div style="margin-top:12px">${list}</div>`;
 }
 
 /* ---------- shareable card ---------- */
@@ -1483,44 +1777,133 @@ function summaryText() {
     "The model never trained on these matches."].filter(Boolean).join("\n");
 }
 
-function renderCard() {
-  const r = RECAP; if (!r) return;
+function cardHTML() {
+  const r = RECAP;
   const hit = r.hits[0], miss = r.misses[0], easy = r.easiest[0];
   const m = (x) => `${(TEAM[x.home] || [x.home.slice(0, 3)])[0]} ${x.hg}-${x.ag} ${(TEAM[x.away] || [x.away.slice(0, 3)])[0]}`;
-  $("#wcard").innerHTML = `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} profile${r.complete ? "" : ", so far"}</div></div>
+    return `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} profile${r.complete ? "" : ", so far"}</div></div>
     <div><div class="wbig num">${(r.acc * 100).toFixed(0)}<small>%</small></div><div class="wsub">of ${r.n} results called right, ${r.gap >= 0 ? "ahead of" : "behind"} the bookmaker's favourite by ${Math.abs(r.gap * 100).toFixed(1)} pts</div></div>
     <div class="wrow"><div><b class="num">${r.s.hit[1]}/${r.s.real[1]}</b><small>draws found</small></div><div><b class="num">${r.bestRun.len}</b><small>best streak</small></div><div><b class="num">${r.mae.toFixed(1)}</b><small>table places off</small></div></div>
     <div class="wline">${hit ? `<b>Boldest hit:</b> ${esc(m(hit))}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}<br>` : ""}${miss ? `<b>Biggest miss:</b> ${esc(m(miss))}, real result had ${pct(miss.pAct)}<br>` : ""}${easy ? `<b>Easiest to read:</b> ${esc(easy.t)} (${pct(easy.a)})<br>` : ""}<b>Exact scores:</b> ${r.exactHits.length} of ${r.n}${r.boldest[0] ? `, boldest ${esc(m(r.boldest[0]))}` : ""}</div>
     <div class="wfoot">A Random Forest and goal model that never saw these matches</div>`;
 }
 
-async function copySummary() {
-  const text = summaryText(), st = $("#cardStatus");
+function renderCard() {
+  if (!RECAP) return;
+  $("#wcard").innerHTML = cardHTML();
+}
+
+async function copySummary(statusSel = "#cardStatus") {
+  const text = summaryText(), st = $(statusSel);
   try { await navigator.clipboard.writeText(text); st.textContent = "Copied."; }
   catch (e) { st.innerHTML = `Copy was blocked here. Select the text instead:<br><textarea readonly rows="7" style="width:100%;margin-top:6px;background:var(--surface2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px">${esc(text)}</textarea>`; }
 }
-async function saveCard() {
-  const st = $("#cardStatus");
+async function saveCard(sel = "#wcard", statusSel = "#cardStatus") {
+  const st = $(statusSel);
   try {
     const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
     if (!dl) { st.textContent = "Saving images needs the claude.ai viewer. Use Copy summary instead."; return; }
     if (typeof html2canvas !== "function") { st.textContent = "The image library did not load. Use Copy summary instead."; return; }
     st.textContent = "Rendering...";
-    const canvas = await html2canvas($("#wcard"), { backgroundColor: null, scale: 2 });
+    const canvas = await html2canvas($(sel), { backgroundColor: null, scale: 2 });
     const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
     await dl.save({ filename: `season-wrapped-${state.season}.png`, data: blob });
     st.textContent = "Saved.";
   } catch (e) { st.textContent = e && e.code === "declined" ? "Cancelled." : "Could not save the image. Use Copy summary instead."; }
 }
 
+function renderTicker() {
+  const last = liveMatches().slice(-14).reverse();
+  const one = last.map((m) => `<span>${chip(m[1])}<b class="num">${m[3]}-${m[4]}</b>${chip(m[2])}<i style="color:var(--muted);font-style:normal">${shortDate(m[0])}</i></span>`).join("");
+  $("#ticker").innerHTML = one + one;
+}
+
+/* ---------- Wrapped story mode ---------- */
+
+const story = { i: 0, slides: [], timer: null, paused: false, opener: null };
+const STORY_MS = 6500;
+
+function storySlides() {
+  const r = RECAP, n = r.n, m = (x) => `${chip(x.home)}<span class="num">${x.hg}-${x.ag}</span>${chip(x.away)}`;
+  const hit = r.hits[0], miss = r.misses[0], ex = r.boldest[0];
+  const ahead = r.gap >= 0;
+  const slides = [
+    { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} profile`, d: `A model that never saw these matches replayed <b>${n}</b> of them. Here is how it did, where it shone, and where it got burned. Tap or press the arrow keys to move.` },
+    { bg: ["#1D2F8C", "#080F33"], k: "The headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: "of results called right", d: `<b>${r.s.c}</b> of ${n} matches. A model that knew nothing but the league-wide rates would get about ${(Math.max(r.s.real[0], r.s.real[1], r.s.real[2]) / n * 100).toFixed(0)}%.` },
+    { bg: ahead ? ["#0B5B3F", "#03160F"] : ["#7A1F45", "#26060F"], k: "Against the bookmaker", big: `${ahead ? "+" : "-"}${Math.abs(r.gap * 100).toFixed(1)}`, h: ahead ? "points ahead of the bookmaker's favourite" : "points behind the bookmaker's favourite", d: `Picking Bet365's favourite every time lands <b>${pct(r.bm, 1)}</b>. Always backing the home side lands ${pct(C.homeShare, 1)}.` },
+    { bg: ["#3A4A63", "#0F1622"], k: "The hardest result", big: `${r.s.hit[1]}<small>/${r.s.real[1]}</small>`, h: "draws found", d: `Draws are the result pre-match data says least. The model called <b>${r.s.calls[1]}</b> in total.` },
+  ];
+  if (hit) slides.push({ bg: ["#8A4B00", "#2B1500"], k: "Boldest correct call", big: `${pct(hit.conf)}`, h: `${OUTNAME[OUT[hit.pick]]} win, and it was`, d: `<div class="sl-chips">${m(hit)}</div><br>${shortDate(hit.date)}. The model was <b>${pct(hit.conf)}</b> sure, and it came in.` });
+  if (miss) slides.push({ bg: ["#7A1A2E", "#240610"], k: "Most surprised by", big: `${pct(miss.pAct)}`, h: "chance given to what really happened", d: `<div class="sl-chips">${m(miss)}</div><br>${shortDate(miss.date)}. The model backed <b>${OUTNAME[OUT[miss.pick]]}</b> at ${pct(miss.conf)} and got burned.` });
+  slides.push({ bg: ["#0F6A5A", "#031C18"], k: "Streaks", big: `${r.bestRun.len}`, h: "right in a row at the best", d: `From ${r.bestRun.a ? shortDate(r.bestRun.a.date) : ""} to ${r.bestRun.b ? shortDate(r.bestRun.b.date) : ""}. The worst run was <b>${r.worstRun.len}</b> wrong in a row.` });
+  slides.push({ bg: ["#4E2A94", "#190E38"], k: "Exact scores", big: `${r.exactHits.length}<small>/${n}</small>`, h: "scorelines named exactly", d: `Guessing 1-1 every time would hit ${r.s.one}. ${ex ? `The boldest hit: <b>${esc(ex.home)} ${ex.hg}-${ex.ag} ${esc(ex.away)}</b>.` : ""} Exact scores stay a long shot in football.` });
+  if (r.easiest[0]) slides.push({ bg: ["#1B5877", "#08202C"], k: "Easiest and hardest to read", big: "", h: `${esc(r.easiest[0].t)} <span style="opacity:.6">was a book. ${esc(r.hardest[0].t)} was a riddle.</span>`, d: `${esc(r.easiest[0].t)}: <b>${pct(r.easiest[0].a)}</b> of its matches called right. ${esc(r.hardest[0].t)}: just <b>${pct(r.hardest[0].a)}</b>.` });
+  slides.push({ bg: ["#6B5700", "#221C00"], k: "The table verdict", big: r.mae.toFixed(1), h: "places off per club on average", d: `${r.exact} club${r.exact === 1 ? "" : "s"} placed exactly. Biggest blind spot: <b>${esc(r.over.team)}</b> finished ${Math.max(0, r.over.diff)} places above where the model had them.` });
+  slides.push({ bg: ["#0E4A36", "#03130E"], k: "Share it", big: "", h: "", d: `<div class="wcard" id="wcard2">${cardHTML()}</div><div class="btnrow" style="justify-content:center;margin-top:14px"><button class="btn" id="stCopy" type="button">Copy summary</button><button class="btn ghost" id="stSave" type="button">Save as image</button></div><div class="fineprint" id="stStatus" style="text-align:center;color:rgba(255,255,255,.7)"></div>`, last: true });
+  return slides;
+}
+
+function renderSlide() {
+  const sl = story.slides[story.i];
+  $("#story").style.background = `linear-gradient(165deg, ${sl.bg[0]}, ${sl.bg[1]})`;
+  $("#storyBody").innerHTML = `${sl.k ? `<div class="sl-k">${sl.k}</div>` : ""}${sl.big ? `<div class="sl-big num">${sl.big}</div>` : ""}${sl.h ? `<div class="sl-h">${sl.h}</div>` : ""}<div class="sl-d">${sl.d}</div>`;
+  $("#storyBody").style.animation = "none"; void $("#storyBody").offsetWidth; $("#storyBody").style.animation = "";
+  $("#storyProg").innerHTML = story.slides.map((_, k) => `<i class="${k < story.i ? "done" : k === story.i ? "now" : ""}"><b></b></i>`).join("");
+  $("#storyProg").classList.toggle("paused", story.paused);
+  if (sl.last) {
+    $("#stCopy").addEventListener("click", () => copySummary("#stStatus"));
+    $("#stSave").addEventListener("click", () => saveCard("#wcard2", "#stStatus"));
+  }
+  scheduleNext();
+}
+function scheduleNext() {
+  clearTimeout(story.timer);
+  const sl = story.slides[story.i];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (story.paused || reduce || sl.last) return;
+  story.timer = setTimeout(() => goSlide(story.i + 1), STORY_MS);
+}
+function goSlide(k) {
+  if (k < 0) k = 0;
+  if (k >= story.slides.length) { closeStory(); return; }
+  story.i = k; renderSlide();
+}
+function openStory() {
+  if (!RECAP) return;
+  story.slides = storySlides(); story.i = 0; story.paused = false; story.opener = document.activeElement;
+  $("#storyPause").textContent = "Pause";
+  $("#story").hidden = false; document.body.style.overflow = "hidden";
+  renderSlide(); $("#story").focus();
+}
+function closeStory() {
+  clearTimeout(story.timer); $("#story").hidden = true; document.body.style.overflow = "";
+  if (story.opener && story.opener.focus) story.opener.focus();
+}
+document.addEventListener("keydown", (e) => {
+  if ($("#story").hidden) return;
+  if (e.key === "Escape") closeStory();
+  else if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); goSlide(story.i + 1); }
+  else if (e.key === "ArrowLeft") goSlide(story.i - 1);
+});
+$("#storyNext").addEventListener("click", () => goSlide(story.i + 1));
+$("#storyPrev").addEventListener("click", () => goSlide(story.i - 1));
+$("#storyX").addEventListener("click", closeStory);
+$("#storyPause").addEventListener("click", () => {
+  story.paused = !story.paused; $("#storyPause").textContent = story.paused ? "Play" : "Pause";
+  $("#storyProg").classList.toggle("paused", story.paused);
+  if (story.paused) clearTimeout(story.timer); else scheduleNext();
+});
+
 function initExtras() {
+  renderTicker();
   const opts = HIST.clubs.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
   $("#teamSel").innerHTML = opts; $("#h2hA").innerHTML = opts; $("#h2hB").innerHTML = opts;
   $("#teamSel").value = "Arsenal"; $("#h2hA").value = "Arsenal"; $("#h2hB").value = "Tottenham";
   $("#teamSel").addEventListener("change", renderTeam);
   $("#h2hA").addEventListener("change", renderH2H); $("#h2hB").addEventListener("change", renderH2H);
-  $("#restRun").addEventListener("click", renderRest);
-  $("#cardCopy").addEventListener("click", copySummary); $("#cardSave").addEventListener("click", saveCard);
+  $("#restRun").addEventListener("click", () => { restData = null; renderRest(); });
+  $("#cardCopy").addEventListener("click", () => copySummary()); $("#cardSave").addEventListener("click", () => saveCard());
+  $("#storyBtn").addEventListener("click", openStory);
   teamReady = true; renderTeam(); renderH2H(); renderRest(); renderRace();
 }
 

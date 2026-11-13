@@ -31,12 +31,12 @@ def add_goals_features(df):
         home_scored = pd.concat([
             home_home["FTHG"],
             home_away["FTAG"]
-        ])
+        ]).sort_index()
 
         home_conceded = pd.concat([
             home_home["FTAG"],
             home_away["FTHG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # AWAY TEAM HISTORY
@@ -53,12 +53,12 @@ def add_goals_features(df):
         away_scored = pd.concat([
             away_home["FTHG"],
             away_away["FTAG"]
-        ])
+        ]).sort_index()
 
         away_conceded = pd.concat([
             away_home["FTAG"],
             away_away["FTHG"]
-        ])
+        ]).sort_index()
 
         # -----------------------------
         # SAVE FEATURES

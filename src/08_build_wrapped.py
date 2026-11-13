@@ -6,8 +6,10 @@ Everything on the page comes from files the pipeline already wrote:
     Forest probabilities for every match it never trained on)
   - 02_processed_data/rf_profiles.json    (03_train_model.py: the
     decision-threshold factors each tuned profile chose on the forest)
-  - 02_processed_data/blend_profiles.json (10_tune_blend_profiles.py: the
-    same profiles tuned on the blended odds)
+  - 02_processed_data/blend_profiles.json, hybrid.json (10_tune_blend_profiles.py:
+    the same profiles tuned on the blended odds / on the market-informed hybrid)
+  - 02_processed_data/blind_rest.json + blind_rest_backtest.json
+    (12_blind_rest_of_season.py: the blind rest-of-season simulation)
   - 02_processed_data/poisson_lambdas.csv (05_predict_scoreline.py: expected
     goals for every match and for every possible live-season pairing)
   - 02_processed_data/validation.json    (09_validate_simulation.py: how well
@@ -29,6 +31,9 @@ PREDICTIONS = "02_processed_data/rf_predictions.csv"
 PROFILES_JSON = "02_processed_data/rf_profiles.json"
 LAMBDAS = "02_processed_data/poisson_lambdas.csv"
 BLEND_JSON = "02_processed_data/blend_profiles.json"
+HYBRID_JSON = "02_processed_data/hybrid.json"
+BLIND_JSON = "02_processed_data/blind_rest.json"
+BLIND_BACKTEST_JSON = "02_processed_data/blind_rest_backtest.json"
 TEMPLATE = "site/season_wrapped_template.html"
 OUTPUT = "site/season_wrapped.html"
 
@@ -94,6 +99,13 @@ for p in profiles:
     p["fb"] = {"h": b["home"], "d": b["draw"], "a": b["away"]}
     p["benchB"] = b["bench"]
 
+# ... and tuned on the market-informed hybrid ("fh"/"benchH")
+hybrid = json.load(open(HYBRID_JSON))
+for p in profiles:
+    b = hybrid["profiles"][p["id"]]
+    p["fh"] = {"h": b["home"], "d": b["draw"], "a": b["away"]}
+    p["benchH"] = b["bench"]
+
 # Benchmark recall per profile (same 760 matches 03 reports), as a sanity
 # check against what 03 printed AND as the numbers shown on the chips
 bench = df[df["Split"] == "benchmark"]
@@ -131,6 +143,16 @@ for label, g in df.groupby("Season"):
     }
     print(label, len(g), "matches, bookmaker favourite", f"{bookmaker[label]:.1%}")
 
+# ---- Bet365 pre-match odds per match (margin removed), for the market-informed hybrid ----
+import glob
+raw_odds = pd.concat([pd.read_csv(f, usecols=lambda c: c in ["Date", "HomeTeam", "AwayTeam", "B365H", "B365D", "B365A"])
+                      for f in glob.glob("01_data/*.csv")]).dropna()
+raw_odds["Date"] = pd.to_datetime(raw_odds["Date"], format="mixed", dayfirst=True).dt.strftime("%Y-%m-%d")
+inv = 1 / raw_odds[["B365A", "B365D", "B365H"]].values
+mk = inv / inv.sum(1, keepdims=True)
+raw_odds[["MA", "MD", "MH"]] = mk
+market_lookup = raw_odds.drop_duplicates(["Date", "HomeTeam", "AwayTeam"]).set_index(["Date", "HomeTeam", "AwayTeam"])[["MA", "MD", "MH"]]
+
 # ---- expected goals for every match (the goal model's view of it) ----
 played_lam = lambdas[lambdas["Split"].isin(["benchmark", "live"])].copy()
 played_lam["Date"] = pd.to_datetime(played_lam["Date"], format="mixed").dt.strftime("%Y-%m-%d")
@@ -139,6 +161,8 @@ for season in seasons.values():
     for m in season["matches"]:
         row = played_lam.loc[(m[0], m[1], m[2])]
         m.extend([round(float(row["LamH"]), 3), round(float(row["LamA"]), 3)])
+        key = (m[0], m[1], m[2])
+        m.extend([round(float(x), 4) for x in market_lookup.loc[key]] if key in market_lookup.index else [None, None, None])
 
 # ---- match lab: the full grid of possible live-season pairings ----
 live_label = next(k for k, v in seasons.items() if v["live"])
@@ -185,7 +209,10 @@ history = {
 print(f"History: {len(club_list)} clubs, {len(history['matches'])} matches")
 
 validation = json.load(open("02_processed_data/validation.json"))
-data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history}
+blind = json.load(open(BLIND_JSON))
+blind["backtest"] = json.load(open(BLIND_BACKTEST_JSON))
+data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history,
+        "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]}}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

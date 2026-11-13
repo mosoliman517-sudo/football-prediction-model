@@ -452,11 +452,15 @@ if __name__ == "__main__":
 # --------------------------------------------------------------------
 
 lam_frames = []
-for split, path in (("live", "02_processed_data/E0_live_model.csv"),
+for split, path in (("benchmark", "02_processed_data/E0_features.csv"),
+                    ("live", "02_processed_data/E0_live_model.csv"),
                     ("grid", "02_processed_data/E0_grid_model.csv")):
     frame = pd.read_csv(path)
+    if split == "benchmark":   # only the held-out seasons, never the training ones
+        frame["Date"] = pd.to_datetime(frame["Date"], format="mixed")
+        frame = frame[frame["Date"] >= TRAIN_TEST_SPLIT_DATE].reset_index(drop=True)
     scaled = (frame[FEATURE_COLUMNS].fillna(0) - feature_means) / feature_stds
-    out = frame[["HomeTeam", "AwayTeam"]].copy()
+    out = frame[["Date", "HomeTeam", "AwayTeam"]].copy()
     out["Split"] = split
     out["LamH"] = home_goal_model.predict(scaled)
     out["LamA"] = away_goal_model.predict(scaled)

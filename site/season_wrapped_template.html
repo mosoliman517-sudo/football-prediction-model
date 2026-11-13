@@ -268,6 +268,18 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .xbtn { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; }
 .xbtn:hover { color: var(--bad); }
 @media (max-width: 620px) { .srow { grid-template-columns: 1fr auto; } .srow .d { grid-column: 1 / -1; } }
+
+.sanity { display: flex; flex-direction: column; gap: 14px; }
+.sanity .intro { color: var(--muted); margin: 0; max-width: 80ch; }
+.kv { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 14px; font-size: 13px; align-items: baseline; }
+.kv .h { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; text-align: right; }
+.kv .h:first-child { text-align: left; }
+.kv .r { text-align: right; font-family: var(--mono); }
+.kv .best { color: var(--ok); font-weight: 700; }
+.relsvg, .rangesvg { width: 100%; height: auto; display: block; }
+.relsvg text, .rangesvg text { fill: var(--muted); font: 500 12px var(--mono); }
+.relsvg .grid, .rangesvg .grid { stroke: var(--line); stroke-width: 1; }
+.rangesvg .tk { font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { .simscore.pop { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .match { animation: none; } .rrow .fill { transition: none; } }
 </style>
@@ -373,10 +385,23 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
     <div class="recap" id="recapGrid" style="margin-top:14px"></div>
   </section>
 
+  <section class="card sanity" id="sanity" aria-label="Does the simulation make sense">
+    <div class="cardhead"><h2>Is it just a random number generator?</h2><span class="label">Checked on the 760 matches the model never trained on</span></div>
+    <p class="intro" id="sanityLead"></p>
+    <div class="labgrid" id="sanityGrid"></div>
+    <div class="sub-card" style="margin-top:14px">
+      <h3>Simulate a whole season yourself</h3>
+      <p class="fineprint" style="margin:0" id="simNote"></p>
+      <div class="btnrow"><button class="btn" id="seasonSim" type="button">Run 1,000 simulated seasons</button><span class="fineprint" id="seasonSimStatus"></span></div>
+      <div id="seasonSimOut"></div>
+    </div>
+  </section>
+
   <section class="card about">
     <h3>How to read this</h3>
     <ul>
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
+      <li><b>Percentages are honest odds; profiles only pick the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A profile is a decision rule on the forest's probabilities and decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
       <li><b>Profiles are decision rules, not different models.</b> The Random Forest produces three probabilities per match. A profile nudges them before picking one: Balanced and Target boost Draw and Away so those outcomes get called more often, Deadkill leaves the probabilities alone except to suppress Draw, which gives the best raw accuracy.</li>
       <li><b>The bookmaker line is a yardstick, not an input.</b> It shows how often simply picking Bet365's pre-match favourite would have been right. The model never uses odds.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
@@ -433,10 +458,13 @@ function compute() {
   const S = DATA.seasons[state.season];
   const P = DATA.profiles.find((p) => p.id === state.profile);
   const ms = S.matches.map((m, i) => {
-    const adj = [m[6] * P.f.a, m[7] * P.f.d, m[8] * P.f.h];
-    const sum = adj[0] + adj[1] + adj[2];
-    for (let j = 0; j < 3; j++) adj[j] /= sum;
-    const pick = adj.indexOf(Math.max(adj[0], adj[1], adj[2]));
+    // The profile only decides the CALL (its tuned decision rule on the
+    // Random Forest's probabilities). Every percentage shown is the honest
+    // odds: an even blend of the forest and the goal model, which the
+    // validation section shows to be calibrated.
+    const dec = [m[6] * P.f.a, m[7] * P.f.d, m[8] * P.f.h];
+    const pick = dec.indexOf(Math.max(dec[0], dec[1], dec[2]));
+    const adj = blendOdds(m);
     const act = OUT.indexOf(m[5]);
     return {
       i, date: m[0], home: m[1], away: m[2], hg: m[3], ag: m[4], res: m[5], adj, pick, act,
@@ -728,6 +756,7 @@ function refreshAll(resetRound) {
   state.round = Math.min(state.round, C.R);
   renderControls(); renderReplay(false); renderRecap();
   if (typeof renderLab === "function" && lab.home) { renderLab(); renderSaved(); }
+  if (typeof renderSanity === "function" && DATA.validation) { $("#simNote").textContent = `Samples every match of the selected season (${state.season}) from the honest odds, then compares the simulated points range for each team with its real total. Change the season at the top first.`; $("#seasonSimOut").innerHTML = ""; $("#seasonSimStatus").textContent = ""; }
 }
 
 document.addEventListener("click", (e) => {
@@ -805,6 +834,14 @@ function sampleScore(g) {
 }
 const outcomeOf = (h, a) => (h > a ? "H" : h < a ? "A" : "D");
 
+function blendFrom(probs, lam) {
+  const g = gridSummary(scoreGrid(lam[0], lam[1]));
+  const o = [(probs[0] + g.A) / 2, (probs[1] + g.D) / 2, (probs[2] + g.H) / 2];
+  const t = o[0] + o[1] + o[2];          // stored probabilities are rounded to 4 decimals
+  return o.map((v) => v / t);
+}
+function blendOdds(m) { return m._o || (m._o = blendFrom([m[6], m[7], m[8]], [m[9], m[10]])); }
+
 function lookup(home, away) {
   const m = liveMatches().find((x) => x[1] === home && x[2] === away);
   if (m) return { played: true, date: m[0], hg: m[3], ag: m[4], res: m[5], probs: [m[6], m[7], m[8]], lam: [m[9], m[10]] };
@@ -822,8 +859,9 @@ function probRows(adj, realOutcome) {
 function renderLab() {
   if (!lab.home) return;
   const q = lookup(lab.home, lab.away);
-  const adj = adjustProbs(q.probs);
-  const pick = adj.indexOf(Math.max(adj[0], adj[1], adj[2]));
+  const dec = adjustProbs(q.probs);
+  const pick = dec.indexOf(Math.max(dec[0], dec[1], dec[2]));
+  const adj = blendFrom(q.probs, q.lam);          // honest odds shown on screen
   const P = currentProfile();
   const g = scoreGrid(q.lam[0], q.lam[1]);
   const sm = gridSummary(g);
@@ -842,7 +880,7 @@ function renderLab() {
     <div class="bigpick"><span class="pill" style="--c:${OUTCSS[OUT[pick]]}">${OUTNAME[OUT[pick]]} ${pct(adj[pick])}</span>
     ${q.played ? `<span class="verdictline ${OUT[pick] === q.res ? "up" : "down"}">${OUT[pick] === q.res ? "Right" : "Wrong"}: it ended ${OUTNAME[q.res]}</span>` : ""}</div>
     ${probRows(adj, q.played ? q.res : null)}
-    <span class="fineprint">${esc(P.name)} profile${q.played ? ", using the exact pre-match features." : ". Change the profile at the top to see the call shift."}</span></div>`;
+    <span class="fineprint">The ${esc(P.name)} profile picks the call. The percentages are honest odds, an even blend of the Random Forest and the goal model${q.played ? ", from the exact pre-match features" : ""}. Change the profile at the top to see the call change.</span></div>`;
 
   const top = sm.list.slice(0, 6);
   let realRank = "";
@@ -929,10 +967,11 @@ function persistLocal() {
 async function saveCall() {
   const q = lookup(lab.home, lab.away);
   if (q.played) return;
-  const adj = adjustProbs(q.probs);
+  const dec = adjustProbs(q.probs);
+  const odds = blendFrom(q.probs, q.lam);
   const body = {
     home: lab.home, away: lab.away, profile: state.profile,
-    probs: adj.map((v) => +v.toFixed(4)), pick: OUT[adj.indexOf(Math.max(adj[0], adj[1], adj[2]))],
+    probs: odds.map((v) => +v.toFixed(4)), pick: OUT[dec.indexOf(Math.max(dec[0], dec[1], dec[2]))],
     lam: q.lam, sim: lab.sim ? [lab.sim.h, lab.sim.a] : null,
     savedAt: new Date().toISOString(), asOf: LAB.asOf,
   };
@@ -1010,8 +1049,102 @@ $("#lab").addEventListener("click", (e) => {
   else if (b.dataset.del) deleteCall(b.dataset.del);
 });
 
+/* ---------- sanity checks ---------- */
+
+function renderSanity() {
+  const V = DATA.validation, mp = V.match_probs;
+  const names = Object.keys(mp);
+  const best = Math.min(...names.map((n) => mp[n].log_loss));
+  const lead = mp[names[0]].log_loss, blend = mp[names[3]].log_loss;
+  $("#sanityLead").innerHTML = `No. Each check below compares the odds or the simulations with what really happened in ${V.n_matches} matches, against a baseline that knows nothing. The short version: the odds carry real information, the average chances match real rates, and a simulated season stays close to the real table. What they cannot do is predict an exact score, and the page says so.`;
+
+  // 1. single match table
+  const tbl = `<div class="kv"><span class="h">Odds from</span><span class="h">Log loss</span><span class="h">Right</span>` +
+    names.map((n) => `<span>${esc(n)}</span><span class="r ${mp[n].log_loss === best ? "best" : ""}">${mp[n].log_loss.toFixed(3)}</span><span class="r">${pct(mp[n].accuracy, 1)}</span>`).join("") + `</div>`;
+  const card1 = `<div class="sub-card"><h3>One match: do the odds know anything?</h3>${tbl}
+    <span class="fineprint">Log loss is lower when you put more probability on what happens. Knowing nothing but the league-wide rates scores ${lead.toFixed(3)}; the blended odds score ${blend.toFixed(3)}. A random number generator could not beat the first number, these do, on matches they never saw. The gain is modest because football is noisy, which is why picking the right result lands near 50%, not 80%.</span></div>`;
+
+  // 2. calibration chart (blend)
+  const W = 300, H = 230, L = 36, R = 10, T = 10, B = 30;
+  const x = (v) => L + v * (W - L - R), y = (v) => H - B - v * (H - T - B);
+  let g = "";
+  [0, 0.25, 0.5, 0.75, 1].forEach((t) => { g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 5}" y="${y(t) + 4}" text-anchor="end">${Math.round(t * 100)}</text><text x="${x(t)}" y="${H - 10}" text-anchor="middle">${Math.round(t * 100)}</text>`; });
+  g += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+  const rel = V.reliability.Blend;
+  [["Home", "var(--home)"], ["Draw", "var(--draw)"], ["Away", "var(--away)"]].forEach(([k, c]) => {
+    const pts = rel[k].bins.map((b) => [x(b[0]), y(b[1])]);
+    g += `<polyline fill="none" stroke="${c}" stroke-width="2.2" points="${pts.map((p) => p.join(",")).join(" ")}"/>` + pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.6" fill="${c}"/>`).join("");
+  });
+  g += `<text x="${(L + W - R) / 2}" y="${H - 0}" text-anchor="middle" style="font-size:11px">what the odds said (%)</text>`;
+  const card2 = `<div class="sub-card"><h3>Do 60% chances happen 60% of the time?</h3>
+    <svg class="relsvg" viewBox="0 0 ${W} ${H + 6}" role="img" aria-label="Calibration: predicted chance against how often it happened">${g}</svg>
+    <span class="fineprint">Each dot groups matches by the chance the odds gave, then shows how often that outcome really happened (vertical, %). On the dashed line the odds are exactly right. Average Home ${pct(rel.Home.mean_predicted, 1)} against ${pct(rel.Home.actual, 1)} real, Draw ${pct(rel.Draw.mean_predicted, 1)} against ${pct(rel.Draw.actual, 1)}, Away ${pct(rel.Away.mean_predicted, 1)} against ${pct(rel.Away.actual, 1)}. Dots wobble because each group is only about 95 matches.</span></div>`;
+
+  // 3. scorelines
+  const sc = V.scorelines, dist = sc.goal_count_distribution;
+  const maxv = Math.max(...dist.flatMap((r) => [r[1], r[2]]));
+  const bars = dist.map((r) => `<div class="srow2" style="grid-template-columns:30px 1fr 74px"><span class="num">${r[0]}</span><div class="track" style="height:14px;position:relative"><div class="fill" style="width:${(r[1] / maxv * 100).toFixed(0)}%;background:var(--muted);height:7px"></div><div class="fill" style="width:${(r[2] / maxv * 100).toFixed(0)}%;background:var(--accent);height:7px;margin-top:0"></div></div><span class="num" style="font-size:11px">${r[1]} v ${r[2]}</span></div>`).join("");
+  const hit = sc.exact_score_hit_rate, hk = Object.keys(hit);
+  const ll = sc.scoreline_log_likelihood_per_match;
+  const card3 = `<div class="sub-card"><h3>Simulated scores: realistic, but not predictions</h3>
+    <div class="scorelist">${bars}</div>
+    <div class="legend" style="margin:0"><span><i style="--c:var(--muted)"></i>Goal model expected</span><span><i style="--c:var(--accent)"></i>Home goals that really happened</span></div>
+    <span class="fineprint">The simulator draws from these goal-count odds, so its scorelines look like real football: ${sc.mean_goals_predicted[0].toFixed(2)} home and ${sc.mean_goals_predicted[1].toFixed(2)} away goals per match against ${sc.mean_goals_actual[0].toFixed(2)} and ${sc.mean_goals_actual[1].toFixed(2)} real. It scores ${ll.goal_model.toFixed(3)} per match on the real scorelines against ${ll.naive_league_score_frequencies.toFixed(3)} for just using league score frequencies, a real but small edge. <b>Exact scores are a different matter:</b> always guessing 1-1 is right ${pct(hit[hk[0]], 1)} of the time and the model's best-score guess ${pct(hit[hk[1]], 1)}. A simulated score is one draw from honest odds, not a forecast of that exact result.</span></div>`;
+
+  // 4. season, offline validation
+  const rows = Object.entries(V.seasons).map(([label, s]) => {
+    const b = s.randomly_sampled_blended_odds;
+    return `<span>${esc(label)}</span><span class="r best">${b.position_mae_from_expected_pos.toFixed(1)}</span><span class="r">${s.baseline_last_seasons_table_position_mae.toFixed(1)}</span><span class="r">${s.baseline_random_shuffle_position_mae.toFixed(1)}</span>`;
+  }).join("");
+  const cov = Object.values(V.seasons).map((s) => s.randomly_sampled_blended_odds.coverage_80);
+  const card4 = `<div class="sub-card"><h3>A whole season: does the table land near the real one?</h3>
+    <div class="kv" style="grid-template-columns:1fr repeat(3,auto)"><span class="h">Places off per team</span><span class="h">Simulated</span><span class="h">Last year's table</span><span class="h">Shuffled</span>${rows}</div>
+    <span class="fineprint">Every match of the season sampled ${V.n_sims.toLocaleString()} times from the odds, teams ranked by simulated points. The simulated table is closer to the real one than simply repeating last season's, and far closer than a shuffle (a shuffle is wrong by about 6.6 places on average). Real points fell inside the simulated 80% range for ${Math.round(cov[0] * 100)}% and ${Math.round(cov[1] * 100)}% of teams, near the 80% a calibrated simulation should give, from only 20 teams a season.</span></div>`;
+
+  $("#sanityGrid").innerHTML = card1 + card2 + card3 + card4;
+  $("#simNote").textContent = `Samples every match of the selected season (${state.season}) from the honest odds, then compares the simulated points range for each team with its real total. Change the season at the top first.`;
+}
+
+function runSeasonSim() {
+  const N = 1000, ms = C.ms;
+  const teams = [...new Set(ms.flatMap((m) => [m.home, m.away]))];
+  const ix = Object.fromEntries(teams.map((t, i) => [t, i]));
+  const sims = teams.map(() => new Array(N).fill(0));
+  for (let s = 0; s < N; s++) {
+    for (const m of ms) {
+      const r = Math.random(), o = m.adj;
+      const res = r < o[2] ? 2 : r < o[2] + o[1] ? 1 : 0;       // Home, Draw, Away
+      const h = ix[m.home], a = ix[m.away];
+      if (res === 2) sims[h][s] += 3; else if (res === 1) { sims[h][s] += 1; sims[a][s] += 1; } else sims[a][s] += 3;
+    }
+  }
+  const real = {}; ms.forEach((m) => { real[m.home] = (real[m.home] || 0) + m.hPts; real[m.away] = (real[m.away] || 0) + m.aPts; });
+  const pctl = (arr, q) => { const a = [...arr].sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(q * a.length))]; };
+  const rows = teams.map((t, i) => ({ t, real: real[t], p10: pctl(sims[i], 0.1), p90: pctl(sims[i], 0.9), mean: sims[i].reduce((x, y) => x + y, 0) / N }))
+    .sort((a, b) => b.real - a.real || a.t.localeCompare(b.t));
+  const inside = rows.filter((r) => r.real >= r.p10 && r.real <= r.p90).length;
+  const maxPts = Math.max(...rows.map((r) => Math.max(r.p90, r.real))) + 2;
+  const RH = 22, W = 640, L = 56, R = 16, T = 8, B = 28, H = T + B + rows.length * RH;
+  const x = (v) => L + (v / maxPts) * (W - L - R);
+  let g = "";
+  for (let v = 0; v <= maxPts; v += 10) g += `<line class="grid" x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${H - B}"/><text class="tk" x="${x(v)}" y="${H - 10}" text-anchor="middle">${v}</text>`;
+  rows.forEach((r, i) => {
+    const cy = T + i * RH + RH / 2, ok = r.real >= r.p10 && r.real <= r.p90;
+    g += `<text class="tk" x="${L - 8}" y="${cy + 4}" text-anchor="end">${esc((TEAM[r.t] || [r.t.slice(0, 3).toUpperCase()])[0])}</text>
+      <line x1="${x(r.p10)}" x2="${x(r.p90)}" y1="${cy}" y2="${cy}" stroke="var(--draw)" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+      <line x1="${x(r.mean)}" x2="${x(r.mean)}" y1="${cy - 7}" y2="${cy + 7}" stroke="var(--fg)" stroke-width="2"/>
+      <circle cx="${x(r.real)}" cy="${cy}" r="5.5" fill="${ok ? "var(--ok)" : "var(--bad)"}" stroke="var(--bg)" stroke-width="1.5"/>`;
+  });
+  $("#seasonSimOut").innerHTML = `<svg class="rangesvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Simulated points range per team against real points">${g}</svg>
+    <div class="legend"><span><i style="--c:var(--draw)"></i>Middle 80% of ${N.toLocaleString()} simulated seasons</span><span>| Simulated average</span><span style="color:var(--ok)">● Real points, inside the range</span><span style="color:var(--bad)">● Real points, outside</span></div>
+    <span class="fineprint"><b>${inside} of ${rows.length} teams</b> finished inside their simulated range (about ${Math.round(rows.length * 0.8)} expected if the simulation is well calibrated). ${C.S.live ? "This season is still in progress, so these are points so far." : ""}</span>`;
+  $("#seasonSimStatus").textContent = `Ran ${N.toLocaleString()} seasons for ${state.season}`;
+}
+$("#seasonSim").addEventListener("click", runSeasonSim);
+
 paintThemeBtn();
 initLab();
 refreshAll(true);
+renderSanity();
 initStore();
 </script>

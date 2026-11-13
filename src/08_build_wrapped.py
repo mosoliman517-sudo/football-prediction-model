@@ -7,7 +7,9 @@ Everything on the page comes from files the pipeline already wrote:
   - 02_processed_data/rf_profiles.json    (03_train_model.py: the
     decision-threshold factors each tuned profile chose)
   - 02_processed_data/poisson_lambdas.csv (05_predict_scoreline.py: expected
-    goals for the live season's matches and for every possible pairing)
+    goals for every match and for every possible live-season pairing)
+  - 02_processed_data/validation.json    (09_validate_simulation.py: how well
+    the odds and simulations match what really happened)
   - real scores from E0_features.csv / E0_live_features.csv
   - Bet365 pre-match odds from the raw season files, used ONLY as a
     reference line to compare the model against, never as a feature
@@ -118,12 +120,17 @@ for label, g in df.groupby("Season"):
     }
     print(label, len(g), "matches, bookmaker favourite", f"{bookmaker[label]:.1%}")
 
-# ---- match lab: expected goals for played live matches + the full grid ----
+# ---- expected goals for every match (the goal model's view of it) ----
+played_lam = lambdas[lambdas["Split"].isin(["benchmark", "live"])].copy()
+played_lam["Date"] = pd.to_datetime(played_lam["Date"], format="mixed").dt.strftime("%Y-%m-%d")
+played_lam = played_lam.set_index(["Date", "HomeTeam", "AwayTeam"])
+for season in seasons.values():
+    for m in season["matches"]:
+        row = played_lam.loc[(m[0], m[1], m[2])]
+        m.extend([round(float(row["LamH"]), 3), round(float(row["LamA"]), 3)])
+
+# ---- match lab: the full grid of possible live-season pairings ----
 live_label = next(k for k, v in seasons.items() if v["live"])
-live_lam = lambdas[lambdas["Split"] == "live"].set_index(["HomeTeam", "AwayTeam"])
-for m in seasons[live_label]["matches"]:
-    lh, la = live_lam.loc[(m[1], m[2])]["LamH"], live_lam.loc[(m[1], m[2])]["LamA"]
-    m.extend([round(float(lh), 3), round(float(la), 3)])
 
 grid_lam = lambdas[lambdas["Split"] == "grid"].set_index(["HomeTeam", "AwayTeam"])
 grid = {}
@@ -145,7 +152,8 @@ lab = {"season": live_label, "asOf": last_played, "agree": agree,
        "grid": grid}
 print(f"Match lab: {len(grid)} pairings, results up to {last_played}")
 
-data = {"profiles": profiles, "seasons": seasons, "lab": lab}
+validation = json.load(open("02_processed_data/validation.json"))
+data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

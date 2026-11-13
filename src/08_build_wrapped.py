@@ -23,6 +23,8 @@ Run from the project root, after 03_train_model.py:
 """
 
 import json
+import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -35,7 +37,7 @@ HYBRID_JSON = "02_processed_data/hybrid.json"
 BLIND_JSON = "02_processed_data/blind_rest.json"
 BLIND_BACKTEST_JSON = "02_processed_data/blind_rest_backtest.json"
 TEMPLATE = "site/season_wrapped_template.html"
-OUTPUT = "site/season_wrapped.html"
+OUTPUT = os.environ.get("WRAPPED_OUT", "site/season_wrapped.html")
 
 RAW_FILES = {
     "2024-25": "01_data/E0_2425.csv",
@@ -206,10 +208,29 @@ history = {
 print(f"History: {len(club_list)} clubs, {len(history['matches'])} matches")
 
 validation = json.load(open("02_processed_data/validation.json"))
+# Official club badges, embedded once and shared by every use on the page. They are
+# trademarked artwork, fetched locally by 13_fetch_crests.py into a git-ignored folder;
+# a club without one (or a machine that never ran 13) simply shows a text chip.
+def minify_svg(svg):
+    svg = re.sub(r"<\?xml[^>]*\?>|<!--.*?-->|<!DOCTYPE[^>]*>", "", svg, flags=re.S)
+    svg = re.sub(r"<metadata.*?</metadata>|<title>.*?</title>", "", svg, flags=re.S)
+    return re.sub(r">\s+<", "><", svg).strip()
+
+
+crests = {}
+crest_index = "site/crests/index.json"
+if os.path.exists(crest_index):
+    only = [c for c in os.environ.get("CRESTS_ONLY", "").split(",") if c]    # preview builds: a few badges only
+    for club, fname in json.load(open(crest_index)).items():
+        if only and club not in only:
+            continue
+        crests[club] = minify_svg(open(f"site/crests/{fname}", encoding="utf-8").read())
+print(f"Crests embedded: {len(crests)}" + ("" if crests else " (none found; clubs show as text chips. Run 13_fetch_crests.py)"))
+
 blind = json.load(open(BLIND_JSON))
 blind["backtest"] = json.load(open(BLIND_BACKTEST_JSON))
 data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history,
-        "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]}}
+        "crests": crests, "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]}}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

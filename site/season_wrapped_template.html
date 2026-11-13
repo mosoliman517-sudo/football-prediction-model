@@ -173,10 +173,11 @@ td:nth-child(2) { display: flex; align-items: center; gap: 8px; font-weight: 600
 tr.top4 td:first-child { box-shadow: 3px 0 0 var(--ok) inset; }
 tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .up { color: var(--ok); } .down { color: var(--bad); }
-.crest { width: 22px; height: 25px; flex: none; vertical-align: middle; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35)); }
-.ticker-track .crest { width: 19px; height: 22px; }
-.heat .crest { width: 17px; height: 19px; }
-.race .crest { width: 20px; height: 23px; }
+.crest { width: 24px; height: 24px; object-fit: contain; flex: none; vertical-align: middle; }
+.chip { display: inline-grid; place-items: center; min-width: 34px; height: 22px; border-radius: 6px; font: 700 10.5px var(--mono); letter-spacing: 0.04em; box-shadow: 0 0 0 1px rgba(128,128,128,0.35) inset; flex: none; }
+.ticker-track .crest { width: 20px; height: 20px; }
+.heat .crest { width: 18px; height: 18px; }
+.race .crest { width: 22px; height: 22px; }
 .sort { display: inline-flex; gap: 2px; }
 .sort button { background: none; border: 0; padding: 4px 8px; border-radius: 7px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
 .sort button[aria-pressed="true"] { background: var(--surface2); color: var(--fg); }
@@ -246,7 +247,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .form { display: flex; gap: 6px; flex-wrap: wrap; }
 .form span { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font: 600 10px var(--mono); color: var(--muted); }
 .form b { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: #06140D; font-size: 12px; }
-.form .crest { width: 21px; height: 24px; }
+.form .crest { width: 22px; height: 22px; }
 .form em { font-style: normal; font: 600 10px var(--mono); color: var(--muted); }
 .form b.W { background: var(--ok); } .form b.D { background: var(--draw); } .form b.L { background: var(--bad); }
 .meet { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
@@ -352,7 +353,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .pk-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--line); cursor: pointer; text-align: left; min-height: 48px; }
 .pk-btn:hover { border-color: var(--muted); }
 .pk-btn[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.pk-btn .crest { width: 28px; height: 32px; }
+.pk-btn .crest { width: 32px; height: 32px; }
 .pk-btn b { font-family: var(--display); font-size: 21px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pk-chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: 0 4px 3px 0; flex: none; }
 .pk-panel { position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(440px, calc(100vw - 32px)); max-height: 340px; overflow-y: auto; padding: 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7); display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 4px; }
@@ -387,12 +388,12 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .adv summary { cursor: pointer; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 2px 0; }
 .adv[open] summary { margin-bottom: 8px; }
 .foot-note { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; padding-top: 6px; border-top: 1px solid var(--line); }
-.hh-side .crest { width: 58px; height: 66px; }
-.racecard .rn .crest { width: 28px; height: 32px; }
-.banner .crest { width: 28px; height: 32px; }
-.teamgrid .crest, .meet .crest { width: 20px; height: 23px; }
-.srow .m .crest { width: 24px; height: 27px; }
-td .crest { width: 21px; height: 24px; }
+.hh-side .crest { width: 64px; height: 64px; }
+.racecard .rn .crest { width: 30px; height: 30px; }
+.banner .crest { width: 30px; height: 30px; }
+.teamgrid .crest, .meet .crest { width: 22px; height: 22px; }
+.srow .m .crest { width: 26px; height: 26px; }
+td .crest { width: 22px; height: 22px; }
 @media (max-width: 560px) { .pk-panel { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-height: 55vh; z-index: 60; } }
 /* wrapped story */
 .story { position: fixed; inset: 0; z-index: 100; color: #fff; background: #04100c; display: flex; align-items: center; justify-content: center; }
@@ -418,7 +419,8 @@ td .crest { width: 21px; height: 24px; }
 .sl-d { font-size: clamp(15px, 2.4vw, 19px); line-height: 1.45; color: rgba(255,255,255,0.82); max-width: 46ch; }
 .sl-d b { color: #fff; }
 .sl-chips { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 7vw, 56px); flex-wrap: wrap; }
-.sl-chips .crest { width: 46px; height: 52px; }
+.sl-chips .crest { width: 52px; height: 52px; }
+.sl-chips .chip { min-width: 56px; height: 36px; font-size: 15px; border-radius: 10px; }
 .sl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .story .wcard { margin: 0 auto; }
 .story .btn { color: var(--accent-ink); }
@@ -446,7 +448,8 @@ td .crest { width: 21px; height: 24px; }
 /* team + head to head */
 .teamhero { border-radius: 22px; padding: 22px 26px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; border: 1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); background: linear-gradient(120deg, color-mix(in srgb, var(--tc) 55%, var(--surface)), var(--surface) 78%); }
 .th-name { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.th-name .crest { width: 66px; height: 75px; }
+.th-name .crest { width: 78px; height: 78px; }
+.th-name .chip { min-width: 64px; height: 40px; font-size: 16px; border-radius: 10px; }
 .th-name h3 { font-size: clamp(38px, 7vw, 76px); font-weight: 900; text-transform: uppercase; line-height: 0.9; }
 .th-stats { display: flex; gap: 22px; }
 .th-stats b { display: block; font-family: var(--display); font-weight: 900; font-size: 44px; line-height: 0.95; }
@@ -563,13 +566,13 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   </header>
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
-    <button type="button" role="tab" data-tab="replay">Season replay</button>
-    <button type="button" role="tab" data-tab="lab">Predict a match</button>
-    <button type="button" role="tab" data-tab="rest">Title race</button>
-    <button type="button" role="tab" data-tab="teams">Clubs</button>
-    <button type="button" role="tab" data-tab="h2h">Rivalries</button>
-    <button type="button" role="tab" data-tab="recap">My Wrapped</button>
-    <button type="button" role="tab" data-tab="checks">Can I trust it?</button>
+    <button type="button" role="tab" data-tab="replay">Matchday</button>
+    <button type="button" role="tab" data-tab="lab">Prediction Desk</button>
+    <button type="button" role="tab" data-tab="rest">Title Race</button>
+    <button type="button" role="tab" data-tab="teams">Club Files</button>
+    <button type="button" role="tab" data-tab="h2h">Derby Days</button>
+    <button type="button" role="tab" data-tab="recap">Season Review</button>
+    <button type="button" role="tab" data-tab="checks">Fact Check</button>
   </nav>
 
   <section class="welcome" id="welcome" data-views="replay" aria-label="Start here">
@@ -577,10 +580,10 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <button class="wl-x" id="welcomeX" type="button" aria-label="Hide this introduction">&times;</button>
       <div class="wl-kicker">New here? Start here</div>
       <h2>Can a computer predict football?</h2>
-      <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one round at a time, then check its work against what really happened. Pick a starting point:</p>
+      <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one matchday at a time, then check its work against what really happened. Pick a starting point:</p>
       <div class="wl-grid">
         <button type="button" class="wl-card" data-start="watch"><b>Watch a season</b><span>Press play and see every call, right or wrong, as the table builds.</span></button>
-        <button type="button" class="wl-card" data-start="predict"><b>Predict a match</b><span>Pick any two clubs, see the odds, simulate the score and save your call.</span></button>
+        <button type="button" class="wl-card" data-start="predict"><b>Open the Prediction Desk</b><span>Pick any two clubs, see the odds, simulate the score and save your call.</span></button>
         <button type="button" class="wl-card" data-start="title"><b>Who wins the title?</b><span>Thousands of simulated seasons for the rest of 2026-27.</span></button>
         <button type="button" class="wl-card" data-start="story"><b>Play my Wrapped</b><span>A full-screen story of how the model did, ready to share.</span></button>
       </div>
@@ -613,10 +616,10 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     </details>
     <div class="transport" data-views="replay">
       <button class="tbtn" id="bStart" type="button" aria-label="Back to start"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
-      <button class="tbtn" id="bBack" type="button" aria-label="Previous round"><svg viewBox="0 0 24 24"><path d="M15 5v14L5 12z"/></svg></button>
+      <button class="tbtn" id="bBack" type="button" aria-label="Previous matchday"><svg viewBox="0 0 24 24"><path d="M15 5v14L5 12z"/></svg></button>
       <button class="tbtn play" id="bPlay" type="button" aria-label="Play"></button>
-      <button class="tbtn" id="bFwd" type="button" aria-label="Next round"><svg viewBox="0 0 24 24"><path d="M9 5v14l10-7z"/></svg></button>
-      <input class="scrub" id="scrub" type="range" min="0" max="38" value="0" step="1" aria-label="Round">
+      <button class="tbtn" id="bFwd" type="button" aria-label="Next matchday"><svg viewBox="0 0 24 24"><path d="M9 5v14l10-7z"/></svg></button>
+      <input class="scrub" id="scrub" type="range" min="0" max="38" value="0" step="1" aria-label="Matchday">
       <span class="roundlabel" id="roundLabel" aria-live="polite"></span>
       <select id="speed" aria-label="Playback speed">
         <option value="1">1x</option><option value="2">2x</option><option value="4">4x</option>
@@ -644,12 +647,12 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   <div class="stage" data-views="replay">
     <div class="col">
       <section class="card chartbox" aria-label="Accuracy over the season">
-        <div class="cardhead"><h2>Accuracy as the season unfolds</h2></div>
+        <div class="cardhead"><h2>Form guide</h2></div>
         <div id="chart"></div>
         <div class="legend" id="legend"></div>
       </section>
 
-      <section class="card" aria-label="This round's matches">
+      <section class="card" aria-label="This matchday's matches">
         <div class="cardhead"><h2 id="feedTitle">Matches</h2><span class="label" id="feedHint"></span></div>
         <div class="feed" id="feed"></div>
         <div class="bardesc">
@@ -660,14 +663,14 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     </div>
 
     <div class="col">
-      <section class="card" aria-label="Elo race">
-        <div class="cardhead"><h2>Elo race</h2><span class="label" id="raceHint"></span></div>
+      <section class="card" aria-label="Power rankings">
+        <div class="cardhead"><h2>Power rankings</h2><span class="label" id="raceHint"></span></div>
         <div class="race" id="race"></div>
-        <p class="note">Each club's Elo rating (before its latest match) as of the round on screen. Ratings rise with wins, more against stronger opponents, and drift back toward the average every summer.</p>
+        <p class="note">Each club's Elo rating (before its latest match) as of the matchday on screen. Ratings rise with wins, more against stronger opponents, and drift back toward the average every summer.</p>
       </section>
       <section class="card" aria-label="League table, real against model">
         <div class="cardhead">
-          <h2>Real table vs. the model's</h2>
+          <h2>League table: reality vs model</h2>
           <div class="sort" role="group" aria-label="Sort table by">
             <button type="button" id="sortActual" aria-pressed="true">Real order</button>
             <button type="button" id="sortModel" aria-pressed="false">Model order</button>
@@ -754,11 +757,11 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with Bet365's pre-match odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
       <li><b>Two kinds of simulation, kept apart on purpose.</b> Replays and next-matchday forecasts are always built from real past results only. The blind rest-of-season simulation is the one place predicted results feed predictions: after each simulated match, Elo, form and the table update with the simulated result.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
-      <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Rounds are every 10 matches in date order.</li>
+      <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Matchdays are every 10 matches in date order.</li>
     </ul>
   </section>
   <footer class="foot-note">
-    <span>Season Wrapped. Crests are original shield badges in each club's kit colours, not official club crests.</span>
+    <span>Season Wrapped. Club badges are the property of their clubs and the Premier League, shown only to identify each club.</span>
     <span>Data: football-data.co.uk, Understat, Transfermarkt (Kaggle). Source and write-up on GitHub: mosoliman517-sudo/football-prediction-model.</span>
   </footer>
 </div>
@@ -798,39 +801,17 @@ const TEAM = {
   "Watford": ["WAT", "#FBEE23", "#ED2127"], "West Brom": ["WBA", "#122F67", "#fff"]
 };
 
-// Kit colours and pattern per club (main, second, pattern). These are original
-// crest-style badges drawn in each club's kit colours, not the official crests.
-const KIT = {
-  "Arsenal": ["#E10600", "#FFFFFF", "solid"], "Aston Villa": ["#7A1F3D", "#95BFE5", "halves"], "Bournemouth": ["#C8102E", "#111111", "stripes"],
-  "Brentford": ["#E30613", "#FFFFFF", "stripes"], "Brighton": ["#0057B8", "#FFFFFF", "stripes"], "Burnley": ["#6C1D45", "#99D6EA", "halves"],
-  "Cardiff": ["#0070B5", "#FFFFFF", "solid"], "Chelsea": ["#034694", "#FFFFFF", "solid"], "Coventry": ["#4AA9E0", "#0B1F33", "solid"],
-  "Crystal Palace": ["#1B458F", "#C4122E", "stripes"], "Everton": ["#003399", "#FFFFFF", "solid"], "Fulham": ["#FFFFFF", "#111111", "solid"],
-  "Huddersfield": ["#0E63AD", "#FFFFFF", "stripes"], "Hull": ["#F5A12D", "#111111", "stripes"], "Ipswich": ["#3A64A3", "#FFFFFF", "solid"],
-  "Leeds": ["#FFFFFF", "#1D428A", "solid"], "Leicester": ["#003090", "#FDBE11", "solid"], "Liverpool": ["#C8102E", "#F6EB61", "solid"],
-  "Luton": ["#F78F1E", "#002D62", "solid"], "Man City": ["#6CABDD", "#FFFFFF", "solid"], "Man United": ["#DA291C", "#FBE122", "solid"],
-  "Middlesbrough": ["#E21A22", "#FFFFFF", "sash"], "Newcastle": ["#241F20", "#FFFFFF", "stripes"], "Norwich": ["#00A650", "#FFF200", "halves"],
-  "Nott'm Forest": ["#DD0000", "#FFFFFF", "solid"], "QPR": ["#1D5BA4", "#FFFFFF", "hoops"], "Sheffield United": ["#EE2737", "#111111", "stripes"],
-  "Southampton": ["#D71920", "#FFFFFF", "stripes"], "Stoke": ["#E03A3E", "#FFFFFF", "stripes"], "Sunderland": ["#EB172B", "#FFFFFF", "stripes"],
-  "Swansea": ["#FFFFFF", "#111111", "solid"], "Tottenham": ["#FFFFFF", "#132257", "solid"], "Watford": ["#FBEE23", "#ED2127", "solid"],
-  "West Brom": ["#122F67", "#FFFFFF", "stripes"], "West Ham": ["#7A263A", "#1BB1E7", "halves"], "Wolves": ["#FDB913", "#231F20", "solid"]
-};
-const SHIELD = "M14 1.2 25.6 4.6V15c0 7.3-5.2 13.3-11.6 15.8C7.6 28.3 2.4 22.3 2.4 15V4.6Z";
-let crestN = 0;
-const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
+// Official club badges (embedded once by 08_build_wrapped.py). Each is turned into a
+// short in-browser image URL at load and reused everywhere a club is named. A club
+// without a badge (or a build made without them) falls back to a plain text chip.
+const CREST_URL = {};
+for (const [club, svg] of Object.entries(DATA.crests || {})) CREST_URL[club] = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
 function crest(name) {
+  const url = CREST_URL[name];
+  if (url) return `<img class="crest" src="${url}" alt="${esc(name)} badge" decoding="async">`;
   const t = TEAM[name] || [name.slice(0, 3).toUpperCase(), "#4A5A52", "#fff"];
-  const [c1, c2, pat] = KIT[name] || [t[1], "#FFFFFF", "solid"];
-  const id = "cr" + (++crestN);
-  let art = `<rect width="28" height="32" fill="${c1}"/>`;
-  if (pat === "halves") art += `<rect x="14" width="14" height="32" fill="${c2}"/>`;
-  else if (pat === "stripes") for (let i = 1; i < 5; i += 2) art += `<rect x="${i * 5.6}" width="5.6" height="32" fill="${c2}"/>`;
-  else if (pat === "hoops") for (let i = 1; i < 5; i += 2) art += `<rect y="${i * 6.4}" width="28" height="6.4" fill="${c2}"/>`;
-  else if (pat === "sash") art += `<path d="M-2 27 22 -2 31 6 6 35Z" fill="${c2}"/>`;
-  const light = lum(c1) > 0.62;
-  const tf = light ? "#111" : "#fff", ts = light ? "rgba(255,255,255,.85)" : "rgba(0,0,0,.65)";
-  return `<svg class="crest" viewBox="0 0 28 32" role="img" aria-label="${esc(name)} crest"><defs><clipPath id="${id}"><path d="${SHIELD}"/></clipPath></defs><g clip-path="url(#${id})">${art}<ellipse cx="14" cy="3" rx="14" ry="8" fill="#fff" opacity=".13"/></g><path d="${SHIELD}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/><text x="14" y="20.2" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="10.5" fill="${tf}" stroke="${ts}" stroke-width="1.7" paint-order="stroke" letter-spacing=".3">${t[0]}</text></svg>`;
+  return `<span class="chip" style="background:${t[1]};color:${t[2]}">${t[0]}</span>`;
 }
-
 const $ = (s) => document.querySelector(s);
 const pct = (x, d = 0) => (x * 100).toFixed(d) + "%";
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -932,7 +913,7 @@ function renderControls() {
 function renderTransport() {
   $("#scrub").max = C.R;
   $("#scrub").value = state.round;
-  $("#roundLabel").textContent = state.round === 0 ? `Before round 1` : `Round ${state.round} / ${C.R}`;
+  $("#roundLabel").textContent = state.round === 0 ? `Before matchday 1` : `Matchday ${state.round} / ${C.R}`;
   const play = $("#bPlay");
   play.innerHTML = state.playing ? ICON_PAUSE : ICON_PLAY;
   play.setAttribute("aria-label", state.playing ? "Pause" : "Play");
@@ -951,15 +932,15 @@ function renderStats() {
   $("#bigAcc").innerHTML = n ? `${(acc * 100).toFixed(0)}<small>%</small>` : `<small>--</small>`;
   const circ = 2 * Math.PI * 78;
   $("#ringVal").style.strokeDasharray = `${(circ * acc).toFixed(1)} ${circ.toFixed(1)}`;
-  $("#sbKicker").textContent = `${state.round === 0 ? "Before round 1" : "Round " + state.round + " of " + C.R} · ${state.season} · ${currentProfile().name} style`;
+  $("#sbKicker").textContent = `${state.round === 0 ? "Before matchday 1" : "Matchday " + state.round + " of " + C.R} · ${state.season} · ${currentProfile().name} style`;
   $("#sbTiles").innerHTML = [
-    [`${s.c}<small>/${n}</small>`, "called right", ""],
-    [n >= 30 ? `${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)}` : "--", `pts vs bookmaker ${pct(C.S.bookmaker, 1)}`, n >= 30 ? (gap >= 0 ? "up" : "down") : ""],
-    [`${s.ex}`, `exact scores (1-1 every time: ${s.one})`, ""],
-    [`${s.hit[1]}<small>/${s.real[1]}</small>`, "draws found", ""],
+    [`${s.c}<small>/${n}</small>`, "Scoreboard", ""],
+    [n >= 30 ? `${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)}` : "--", `Versus the bookmakers, pts (${pct(C.S.bookmaker, 1)})`, n >= 30 ? (gap >= 0 ? "up" : "down") : ""],
+    [`${s.ex}`, `Perfect scores (1-1 every time: ${s.one})`, ""],
+    [`${s.hit[1]}<small>/${s.real[1]}</small>`, "Draws spotted", ""],
   ].map(([v, l, c]) => `<div class="tile ${c}"><b class="num">${v}</b><small>${l}</small></div>`).join("");
   $("#accSub").innerHTML = n
-    ? (n >= 30 ? "" : "Early rounds are noisy, give it a few weeks.")
+    ? (n >= 30 ? "" : "Early matchdays are noisy, give it a few weeks.")
     : "Press play to start the season.";
   $("#recalls").innerHTML = [2, 1, 0].map((j) => {
     const o = OUT[j], real = s.real[j], hit = s.hit[j];
@@ -999,7 +980,7 @@ function renderChart() {
     const last = pts[pts.length - 1];
     g += `<circle class="dot" cx="${last[0]}" cy="${last[1]}" r="5"/><text class="endlabel" x="${Math.min(last[0], Rr - 14)}" y="${last[1] - 11}" text-anchor="middle">${pct(last[2])}</text>`;
   }
-  $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by round against two reference lines">${g}</svg>`;
+  $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by matchday against two reference lines">${g}</svg>`;
   $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This style, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home</span>`;
 }
 
@@ -1008,12 +989,12 @@ function renderFeed(animate) {
   if (r === 0) {
     $("#feedTitle").textContent = "Matches";
     $("#feedHint").textContent = "";
-    $("#feed").innerHTML = `<div class="empty">The first round of ${esc(state.season)} is waiting. Press play, or step forward one round at a time.</div>`;
+    $("#feed").innerHTML = `<div class="empty">The first matchday of ${esc(state.season)} is waiting. Press play, or step forward one matchday at a time.</div>`;
     return;
   }
   const a = (r - 1) * 10, b = Math.min(C.ms.length, r * 10);
   const first = C.ms[a].date, last = C.ms[b - 1].date;
-  $("#feedTitle").textContent = `Round ${r}`;
+  $("#feedTitle").textContent = `Matchday ${r}`;
   const right = C.ms.slice(a, b).filter((m) => m.ok).length;
   $("#feedHint").textContent = `${shortDate(first)} to ${shortDate(last)} · ${right} of ${b - a} called right`;
   $("#feed").innerHTML = C.ms.slice(a, b).map((m, i) => {
@@ -1095,7 +1076,7 @@ function renderRecap() {
 
   $("#recapGrid").innerHTML = `
     <div class="card rc hero">
-      <span class="label">The headline</span>
+      <span class="label">Your headline</span>
       <div class="big num">${(acc * 100).toFixed(1)}<span style="font-size:.45em;color:var(--muted)">%</span></div>
       <p><b style="color:var(--fg)">${s.c} of ${n}</b> results called right. Picking the bookmaker's favourite every time lands ${pct(bm, 1)}, so the model finished
         <span class="delta ${gap >= 0 ? "up" : "down"}">${gap >= 0 ? "ahead by" : "behind by"} ${Math.abs(gap * 100).toFixed(1)} pts</span>.
@@ -1103,7 +1084,7 @@ function renderRecap() {
     </div>
 
     <div class="card rc">
-      <span class="label">Home, draw, away</span>
+      <span class="label">Result split</span>
       <div class="tri">
         ${[2, 1, 0].map((j) => `<div style="--c:${OUTCSS[OUT[j]]}"><b class="num">${s.real[j] ? Math.round((s.hit[j] / s.real[j]) * 100) : 0}%</b><small>${OUTNAME[OUT[j]]} found<br>${s.hit[j]} of ${s.real[j]}</small></div>`).join("")}
       </div>
@@ -1111,23 +1092,23 @@ function renderRecap() {
     </div>
 
     <div class="card rc">
-      <span class="label">The table verdict</span>
+      <span class="label">Table verdict</span>
       <div class="big num">${mae.toFixed(1)}</div>
       <p>places off on average per team. ${exact} team${exact === 1 ? "" : "s"} placed exactly, ${within2} of ${tb.length} within two places.</p>
     </div>
 
     <div class="card rc">
-      <span class="label">Boldest correct calls</span>
+      <span class="label">Moment of glory</span>
       ${hits.map((m) => hitRow(m, (x) => `<b>${OUTNAME[OUT[x.pick]]}</b> at ${pct(x.conf)}`)).join("")}
     </div>
 
     <div class="card rc">
-      <span class="label">Most surprised by</span>
+      <span class="label">Shocker of the season</span>
       ${misses.map((m) => hitRow(m, (x) => `gave ${OUTNAME[x.res]} only <b>${pct(x.pAct)}</b>`)).join("")}
     </div>
 
     <div class="card rc">
-      <span class="label">Exact-score calls</span>
+      <span class="label">Sniper scores</span>
       <div class="big num">${exactHits.length}<span style="font-size:.45em;color:var(--muted)"> of ${n}</span></div>
       <p>${pct(exactHits.length / n, 1)} of matches. Guessing 1-1 every time would hit ${s.one} (${pct(s.one / n, 1)}). Naming a score that fits each call lands less often than that, because a Home or Away call must name a 2-0 or a 1-0, which turn up less than 1-1.</p>
       ${boldest.map((m) => hitRow(m, (x) => `named <b>${x.ps[0]}-${x.ps[1]}</b> at ${pct(x.psp, 1)}`)).join("")}
@@ -1142,17 +1123,17 @@ function renderRecap() {
     </div>
 
     <div class="card rc">
-      <span class="label">Easiest teams to read</span>
+      <span class="label">Teacher's pets</span>
       ${easiest.map((x) => `<div class="teamrow">${chip(x.t)}${esc(x.t)}<span class="v">${pct(x.a)} · ${x.c}/${x.n}</span></div>`).join("")}
     </div>
 
     <div class="card rc">
-      <span class="label">Hardest teams to read</span>
+      <span class="label">Troublemakers</span>
       ${hardest.map((x) => `<div class="teamrow">${chip(x.t)}${esc(x.t)}<span class="v">${pct(x.a)} · ${x.c}/${x.n}</span></div>`).join("")}
     </div>
 
     <div class="card rc">
-      <span class="label">Biggest table blind spots</span>
+      <span class="label">Biggest miss on the table</span>
       <div class="teamrow">${chip(over.team)}${esc(over.team)}<span class="v up">▲ ${Math.max(0, over.diff)} above model</span></div>
       <div class="teamrow">${chip(under.team)}${esc(under.team)}<span class="v down">▼ ${Math.max(0, -under.diff)} below model</span></div>
       <p>Model had ${esc(over.team)} ${over.mrank}th and they ${complete ? "finished" : "sit"} ${over.rank}${over.rank === 1 ? "st" : over.rank === 2 ? "nd" : over.rank === 3 ? "rd" : "th"}. It had ${esc(under.team)} ${under.mrank}${under.mrank === 1 ? "st" : under.mrank === 2 ? "nd" : under.mrank === 3 ? "rd" : "th"} and they ${complete ? "finished" : "sit"} ${under.rank}${under.rank === 1 ? "st" : under.rank === 2 ? "nd" : under.rank === 3 ? "rd" : "th"}.</p>
@@ -1674,7 +1655,7 @@ function ring(frac, size = 96, stroke = 9) {
   return `<span class="ringwrap" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${(c * Math.min(1, frac)).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/></svg><span class="ringnum num">${Math.round(frac * 100)}%</span></span>`;
 }
 
-/* ---------- history helpers (team page, head to head, Elo race) ---------- */
+/* ---------- history helpers (club files, derby days, power rankings) ---------- */
 
 const HIST = DATA.history;
 const clubIx = Object.fromEntries(HIST.clubs.map((c, i) => [c, i]));
@@ -1715,7 +1696,7 @@ function renderRace() {
     d.querySelector(".bar").style.width = Math.max(4, ((r.e - lo) / (hi - lo)) * 100).toFixed(1) + "%";
     d.querySelector(".v").textContent = r.e;
   });
-  $("#raceHint").textContent = state.round === 0 ? "Before round 1" : `After round ${state.round}`;
+  $("#raceHint").textContent = state.round === 0 ? "Before matchday 1" : `After matchday ${state.round}`;
 }
 
 /* ---------- rest of the season ---------- */
@@ -1889,7 +1870,7 @@ function summaryText() {
   return [`Season Wrapped, ${state.season} (${currentProfile().name} style, ${state.base === "blend" ? "our model" : state.base === "hybrid" ? "model + bookmaker odds" : "forest only"})`,
     `Called ${r.s.c} of ${r.n} results right: ${(r.acc * 100).toFixed(1)}%. Picking the bookmaker's favourite: ${(r.bm * 100).toFixed(1)}% (${r.gap >= 0 ? "+" : ""}${(r.gap * 100).toFixed(1)} pts).`,
     hit ? `Boldest correct call: ${hit.home} ${hit.hg}-${hit.ag} ${hit.away}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}.` : "",
-    miss ? `Most surprised by: ${miss.home} ${miss.hg}-${miss.ag} ${miss.away}, gave the real result ${pct(miss.pAct)}.` : "",
+    miss ? `Shocker of the season: ${miss.home} ${miss.hg}-${miss.ag} ${miss.away}, gave the real result ${pct(miss.pAct)}.` : "",
     `Named the exact score in ${r.exactHits.length} of ${r.n} matches${r.boldest[0] ? ` (boldest: ${r.boldest[0].home} ${r.boldest[0].hg}-${r.boldest[0].ag} ${r.boldest[0].away})` : ""}.`,
     `Longest right streak ${r.bestRun.len}, longest wrong streak ${r.worstRun.len}. Table off by ${r.mae.toFixed(1)} places per team.`,
     "The model never trained on these matches."].filter(Boolean).join("\n");
@@ -1947,16 +1928,16 @@ function storySlides() {
   const ahead = r.gap >= 0;
   const slides = [
     { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} style`, d: `A model that never saw these matches replayed <b>${n}</b> of them. Here is how it did, where it shone, and where it got burned. Tap or press the arrow keys to move.` },
-    { bg: ["#1D2F8C", "#080F33"], k: "The headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: "of results called right", d: `<b>${r.s.c}</b> of ${n} matches. A model that knew nothing but the league-wide rates would get about ${(Math.max(r.s.real[0], r.s.real[1], r.s.real[2]) / n * 100).toFixed(0)}%.` },
+    { bg: ["#1D2F8C", "#080F33"], k: "Your headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: "of results called right", d: `<b>${r.s.c}</b> of ${n} matches. A model that knew nothing but the league-wide rates would get about ${(Math.max(r.s.real[0], r.s.real[1], r.s.real[2]) / n * 100).toFixed(0)}%.` },
     { bg: ahead ? ["#0B5B3F", "#03160F"] : ["#7A1F45", "#26060F"], k: "Against the bookmaker", big: `${ahead ? "+" : "-"}${Math.abs(r.gap * 100).toFixed(1)}`, h: ahead ? "points ahead of the bookmaker's favourite" : "points behind the bookmaker's favourite", d: `Picking Bet365's favourite every time lands <b>${pct(r.bm, 1)}</b>. Always backing the home side lands ${pct(C.homeShare, 1)}.` },
-    { bg: ["#3A4A63", "#0F1622"], k: "The hardest result", big: `${r.s.hit[1]}<small>/${r.s.real[1]}</small>`, h: "draws found", d: `Draws are the result pre-match data says least. The model called <b>${r.s.calls[1]}</b> in total.` },
+    { bg: ["#3A4A63", "#0F1622"], k: "Draws spotted", big: `${r.s.hit[1]}<small>/${r.s.real[1]}</small>`, h: "draws found", d: `Draws are the result pre-match data says least. The model called <b>${r.s.calls[1]}</b> in total.` },
   ];
-  if (hit) slides.push({ bg: ["#8A4B00", "#2B1500"], k: "Boldest correct call", big: `${pct(hit.conf)}`, h: `${OUTNAME[OUT[hit.pick]]} win, and it was`, d: `<div class="sl-chips">${m(hit)}</div><br>${shortDate(hit.date)}. The model was <b>${pct(hit.conf)}</b> sure, and it came in.` });
-  if (miss) slides.push({ bg: ["#7A1A2E", "#240610"], k: "Most surprised by", big: `${pct(miss.pAct)}`, h: "chance given to what really happened", d: `<div class="sl-chips">${m(miss)}</div><br>${shortDate(miss.date)}. The model backed <b>${OUTNAME[OUT[miss.pick]]}</b> at ${pct(miss.conf)} and got burned.` });
+  if (hit) slides.push({ bg: ["#8A4B00", "#2B1500"], k: "Moment of glory", big: `${pct(hit.conf)}`, h: `${OUTNAME[OUT[hit.pick]]} win, and it was`, d: `<div class="sl-chips">${m(hit)}</div><br>${shortDate(hit.date)}. The model was <b>${pct(hit.conf)}</b> sure, and it came in.` });
+  if (miss) slides.push({ bg: ["#7A1A2E", "#240610"], k: "Shocker of the season", big: `${pct(miss.pAct)}`, h: "chance given to what really happened", d: `<div class="sl-chips">${m(miss)}</div><br>${shortDate(miss.date)}. The model backed <b>${OUTNAME[OUT[miss.pick]]}</b> at ${pct(miss.conf)} and got burned.` });
   slides.push({ bg: ["#0F6A5A", "#031C18"], k: "Streaks", big: `${r.bestRun.len}`, h: "right in a row at the best", d: `From ${r.bestRun.a ? shortDate(r.bestRun.a.date) : ""} to ${r.bestRun.b ? shortDate(r.bestRun.b.date) : ""}. The worst run was <b>${r.worstRun.len}</b> wrong in a row.` });
-  slides.push({ bg: ["#4E2A94", "#190E38"], k: "Exact scores", big: `${r.exactHits.length}<small>/${n}</small>`, h: "scorelines named exactly", d: `Guessing 1-1 every time would hit ${r.s.one}. ${ex ? `The boldest hit: <b>${esc(ex.home)} ${ex.hg}-${ex.ag} ${esc(ex.away)}</b>.` : ""} Exact scores stay a long shot in football.` });
-  if (r.easiest[0]) slides.push({ bg: ["#1B5877", "#08202C"], k: "Easiest and hardest to read", big: "", h: `${esc(r.easiest[0].t)} <span style="opacity:.6">was a book. ${esc(r.hardest[0].t)} was a riddle.</span>`, d: `${esc(r.easiest[0].t)}: <b>${pct(r.easiest[0].a)}</b> of its matches called right. ${esc(r.hardest[0].t)}: just <b>${pct(r.hardest[0].a)}</b>.` });
-  slides.push({ bg: ["#6B5700", "#221C00"], k: "The table verdict", big: r.mae.toFixed(1), h: "places off per club on average", d: `${r.exact} club${r.exact === 1 ? "" : "s"} placed exactly. Biggest blind spot: <b>${esc(r.over.team)}</b> finished ${Math.max(0, r.over.diff)} places above where the model had them.` });
+  slides.push({ bg: ["#4E2A94", "#190E38"], k: "Sniper scores", big: `${r.exactHits.length}<small>/${n}</small>`, h: "scorelines named exactly", d: `Guessing 1-1 every time would hit ${r.s.one}. ${ex ? `The boldest hit: <b>${esc(ex.home)} ${ex.hg}-${ex.ag} ${esc(ex.away)}</b>.` : ""} Exact scores stay a long shot in football.` });
+  if (r.easiest[0]) slides.push({ bg: ["#1B5877", "#08202C"], k: "Teacher's pets and troublemakers", big: "", h: `${esc(r.easiest[0].t)} <span style="opacity:.6">was a book. ${esc(r.hardest[0].t)} was a riddle.</span>`, d: `${esc(r.easiest[0].t)}: <b>${pct(r.easiest[0].a)}</b> of its matches called right. ${esc(r.hardest[0].t)}: just <b>${pct(r.hardest[0].a)}</b>.` });
+  slides.push({ bg: ["#6B5700", "#221C00"], k: "Table verdict", big: r.mae.toFixed(1), h: "places off per club on average", d: `${r.exact} club${r.exact === 1 ? "" : "s"} placed exactly. Biggest blind spot: <b>${esc(r.over.team)}</b> finished ${Math.max(0, r.over.diff)} places above where the model had them.` });
   slides.push({ bg: ["#0E4A36", "#03130E"], k: "Share it", big: "", h: "", d: `<div class="wcard" id="wcard2">${cardHTML()}</div><div class="btnrow" style="justify-content:center;margin-top:14px"><button class="btn" id="stCopy" type="button">Copy summary</button><button class="btn ghost" id="stSave" type="button">Save as image</button></div><div class="fineprint" id="stStatus" style="text-align:center;color:rgba(255,255,255,.7)"></div>`, last: true });
   return slides;
 }

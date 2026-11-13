@@ -35,6 +35,7 @@ step "4/8 Goal model";           python3 src/05_predict_scoreline.py 2>&1 | grep
 step "5/8 Blend + hybrid profiles";       python3 src/10_tune_blend_profiles.py | grep -v Warn
 step "6/8 Validation";           python3 src/09_validate_simulation.py 2>&1 | grep -E "Blend of both|REST-OF-SEASON|inside the simulated"
 step "7/8 Blind rest of season"; python3 src/12_blind_rest_of_season.py --backtest 2>&1 | grep -E "Arsenal|backtest|coverage|position_mae"
+[[ -f site/crests/index.json ]] || { step "Fetching club badges (first run only)"; python3 src/13_fetch_crests.py; }
 step "8/8 Build the page";       python3 src/08_build_wrapped.py | tail -3
 
 step "Checks"

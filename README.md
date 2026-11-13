@@ -14,7 +14,7 @@
 > ./refresh.sh --check         # also run the live-flow proof (11_check_live_flow.py, +5 min)
 > ```
 >
-> Then republish `site/season_wrapped.html` (ask Claude to "republish the page"). Live page: https://claude.ai/artifact/MDgzUP3phkTSLBR4WN29q4 (private).
+> Then republish `site/season_wrapped.html` (ask Claude to "republish the page"). The built page and the club badges are git-ignored: on a fresh clone run `python3 src/13_fetch_crests.py` once, then `python3 src/08_build_wrapped.py`. Live page: https://claude.ai/artifact/MDgzUP3phkTSLBR4WN29q4 (private).
 >
 > **Pipeline order** (from the project root): `01_load_data` -> `02_load_features` -> `03_train_model` -> `05_predict_scoreline` -> `10_tune_blend_profiles` -> `09_validate_simulation` -> `12_blind_rest_of_season` -> `08_build_wrapped`. `04` is a quick model comparison, `06` and `07` are season-table simulations (07 shares its engine with 12 through `blind_engine.py`), `11` proves the live season follows along correctly. `refresh.sh` runs the chain for you.
 >
@@ -373,11 +373,13 @@ The page was functional but flat. New identity: a floodlit pitch at night, with 
 
 **Naming, decided by a poll.** The profile names were developer shorthand. Asked to name each, the owner chose: **"Deadkill" is now "Max Accuracy"**, **"Raw model" is now "Pure Model"**, **"Balanced" stays**, and **"Target 60/60/40" was removed entirely** (it aimed at 60% Home / 60% Away / 40% Draw recall, landed around 53 / 52 / 26 and was confusing next to the other two). The removal went all the way through: the profile, its objective function and its fine-grained search grid are gone from `03`, `10` and `08` (no dead code left), and the retrain, retune and re-validate were rerun; Balanced and Max Accuracy reproduced their earlier numbers exactly. "Profile" is now called **playing style** everywhere on the page. Older updates in this README still use the old names: Deadkill = Max Accuracy, Raw model = Pure Model, Target 60/60/40 = removed.
 
-**Plain-English interface.** Tabs are now Season replay, Predict a match, Title race, Clubs, Rivalries, My Wrapped and Can I trust it? (the `#lab`, `#rest`, `#teams`, `#h2h`, `#recap` and `#checks` links are unchanged). The prediction-engine choice moved under "More options" and is named Our model / Forest only / Model + bookmaker odds, so a newcomer sees only season and playing style.
+**Names for every category, decided by a second poll.** After the profile names, the owner chose naming sets for each group of the interface: the **tabs** use the TV-broadcast set (Matchday, Prediction Desk, Title Race, Club Files, Derby Days, Season Review, Fact Check), the **Matchday screen** uses it too (tiles: Scoreboard, Versus the bookmakers, Perfect scores, Draws spotted; cards: Form guide, Matchday N, Power rankings, League table: reality vs model), the **Season Review cards** use the story set (Your headline, Result split, Table verdict, Moment of glory, Shocker of the season, Sniper scores, Streaks, Teacher's pets, Troublemakers, Biggest miss on the table, with the Wrapped story slides renamed to match), and the **settings wording** stays as it was (playing style, prediction engine, call, expected points). "Round" became "Matchday" everywhere. The `#lab`, `#rest`, `#teams`, `#h2h`, `#recap` and `#checks` links are unchanged, and the prediction-engine choice sits under "More options" as Our model / Forest only / Model + bookmaker odds.
 
 **Start-here welcome** (dismissible, remembered in the browser): "Can a computer predict football?" with four one-click starting points (Watch a season, Predict a match, Who wins the title?, Play my Wrapped) and a 20-second "how to read this" (what a call is, what the percentages mean, why about 50% is a good score, what "never seen these matches" means).
 
-**Club crests everywhere a club is named.** Every club (all 36 in the data) gets an original shield badge drawn in its kit colours and pattern (stripes, halves, hoops, sash or solid) with its three-letter code, in the ticker, match rows, tables, heatmaps, club and rivalry heroes, the story mode and the share card. **These are not the clubs' official crests**: those are trademarked artwork, and a published page cannot load outside images, so shipping them would mean embedding copyrighted images. If licensed crest images are supplied later, only the `crest()` function in `site/season_wrapped_template.html` needs to change. The dropdowns for choosing clubs are replaced by a **crest picker** (a grid of the clubs' badges; the original select stays underneath for accessibility and for the page logic).
+**Official club badges everywhere a club is named.** The first attempt drew original shield badges in each club's kit colours; the owner asked for the official ones instead, with plain text as the fallback if that was not possible. It was possible: `src/13_fetch_crests.py` downloads each club's badge (one SVG per club, 35 files, about 1.3 MB) from the Premier League's public badge host into `site/crests/`. Every badge was checked by eye against its label, because the league codes were entered from memory and a wrong one would have shown the wrong club. **Coventry is the one club the host refuses (403), so it shows as a text chip.** The badges are embedded once in the page and shared by every use (an in-browser image URL per club, so about 265 uses cost one copy each), and every club without a badge falls back to the coloured text chip.
+
+**The badges are the clubs' and the league's trademarked artwork, so they are kept out of the public repo:** `site/crests/` is git-ignored, and because the built page contains them, `site/season_wrapped.html` is git-ignored too (rebuild it with `python3 src/08_build_wrapped.py` after running `13_fetch_crests.py` once; `refresh.sh` does both). The committed template and builder contain no logos. The club dropdowns are replaced by a **crest picker** (a grid of badges; the original select stays underneath for accessibility and for the page logic), and opponents' badges show in each club's last-10 results. Preview builds for testing can embed a few badges only: `CRESTS_ONLY="Wolves,Fulham" WRAPPED_OUT=site/_preview.html python3 src/08_build_wrapped.py`.
 
 ### Ideas still on the table
 
@@ -408,6 +410,7 @@ football-prediction-model/
 │   ├── 10_tune_blend_profiles.py   # tunes profiles on the blend and on the market-informed hybrid
 │   ├── 11_check_live_flow.py       # proves the live season follows along (no look-ahead, Elo adjusts)
 │   ├── 12_blind_rest_of_season.py  # blind simulation of the rest of the live season (+ backtest)
+│   ├── 13_fetch_crests.py          # downloads official club badges into site/crests/ (git-ignored)
 │   ├── blind_engine.py             # the state-updating simulation engine shared by 07 and 12
 │   ├── 08_build_wrapped.py         # builds the interactive Season Wrapped page from saved predictions
 │   └── features/
@@ -431,7 +434,7 @@ football-prediction-model/
 │       ├── half_time.py            # second-half goal patterns
 │       └── elo.py                  # dual-track Elo + calibrated expectation model
 │
-├── site/                           # Season Wrapped page (template + built HTML)
+├── site/                           # Season Wrapped page template (the built page and site/crests/ are git-ignored)
 ├── refresh.sh                      # one-command refresh of the live season
 ├── README.md
 ├── requirements.txt

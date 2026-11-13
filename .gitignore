@@ -11,3 +11,10 @@ football_model.pkl
 
 # macOS Finder metadata
 .DS_Store
+
+# Official club badges are the clubs' trademarked artwork: fetched locally by
+# src/13_fetch_crests.py, embedded into the page you build, never committed.
+# The built page contains them, so it is not committed either (rebuild with 08).
+site/crests/
+site/season_wrapped.html
+site/_preview.html

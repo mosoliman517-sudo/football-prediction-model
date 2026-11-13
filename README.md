@@ -208,6 +208,19 @@ Picked the project back up after a long gap. Step zero was proving the foundatio
 
 `src/08_build_wrapped.py` builds `site/season_wrapped.html` from the saved Random Forest probabilities (`03_train_model.py` now writes `02_processed_data/rf_predictions.csv` and `rf_profiles.json` for every match the model never trained on, benchmark and live). It is one self-contained page: pick a season (2024-25, 2025-26, or 2026-27 live) and a profile (Raw, Balanced, Deadkill, Target 60/60/40), then replay the season round by round. A live scorecard, an accuracy-over-time chart against the bookmaker line, each round's matches with a probability bar and a right/wrong mark, and a real-versus-model league table with position differences all update as it plays. Below the replay is a recap: the headline accuracy against the bookmaker and an always-Home baseline, recall by outcome, boldest correct calls, the matches that surprised the model most, longest right and wrong streaks, the easiest and hardest teams to read, and the biggest blind spots in the table. Profiles are applied in the browser, so switching is instant. Rebuild after any retrain: `python3 src/03_train_model.py && python3 src/08_build_wrapped.py`.
 
+### Match lab: simulate any 2026-27 match, then be scored on it
+
+The Season Wrapped page has a lab for the live season. Pick a home and an away team:
+
+- **Already played:** the model's call (using the exact pre-match features) against the real result, the scoreline odds with the real score highlighted and ranked, and a button that draws random scorelines from those odds so you can see how often a simulation lands the real result.
+- **Not played yet:** a forecast, the same scoreline odds, a "Simulate this match" button and "Save my call". Saved calls are stored privately per viewer (the artifact's `db` capability, falling back to browser storage) and are scored automatically once the real result appears in the data after a rebuild. A tally tracks calls right, simulated results right and exact scores.
+
+How an unplayed match gets features (`features/fixture_grid.py`, written by `02_load_features.py` to `E0_grid_model.csv`): every possible pairing of the 20 live-season teams (380 rows) is built from each team's latest state. Rolling form and Elo come from the team's most recent match (so they are one match stale), table position and points gap come from the real current standings, head-to-head from all history, and kickoff day/time, rest days and European fixtures take neutral values because they are unknown. `03` scores the grid with the Random Forest and `05` with the Poisson goal models. **Measured against the 100 matches already played** (where exact features exist), the quick version has 0.90 to 0.93 correlation on Home/Away probabilities and picks the same result 80% of the time, and the page states that number.
+
+Two guards came out of this. **Live rows can no longer carry post-match information:** the newer football-data file includes the match's own xG and closing odds columns; they are empty in every benchmark row (so the 760-match numbers were never affected, and trees ignore a column that was constant in training), but any column empty throughout the benchmark is now blanked in the live file too. And the Transfermarkt name map now lives once in `features/team_names.py`, not in five pasted copies.
+
+**Understat xG for 2026-27 could not be fetched.** Its data endpoint now returns a content-free placeholder page to scripted requests for every season, so `00_fetch_xg_data.py` fails everywhere (it now accepts season arguments, e.g. `python3 src/00_fetch_xg_data.py 2026`, once that works again). The live rows carry last season's xG form forward.
+
 **What this says about the ceiling.** Four different kinds of idea aimed at Draw (threshold tuning, scoreline-model corrections, draw-propensity features, an extra Elo signal) have now each been tested honestly, and Draw recall at roughly 34% (Balanced profile) looks like where this data runs out. Pre-match data from these three sources describes how strong each side is and what situation they're in, but a draw is largely what happens when a match stays tight and nobody scores late — which isn't knowable before kickoff. The honest conclusion is that further gains likely need genuinely new *kinds* of information (lineups and injuries on the day, referee-and-weather interactions, or bookmaker-implied probabilities, which this project deliberately excludes) rather than more feature engineering on the same sources.
 
 ---
@@ -245,6 +258,8 @@ football-prediction-model/
 │       ├── squad_age.py            # season-start squad average age (Transfermarkt)
 │       ├── manager_tenure.py       # manager tenure + "new manager bounce"
 │       ├── manager_experience.py   # manager's career EPL match count
+│       ├── team_names.py           # shared Transfermarkt -> project team-name map
+│       ├── fixture_grid.py         # features for every possible live-season pairing (unplayed matches)
 │       ├── recent_placement.py     # team's avg final position, last 3 seasons
 │       ├── rest_days.py
 │       ├── head_to_head.py

@@ -670,11 +670,20 @@ X_live.columns = X_train.columns
 X_live = X_live.fillna(0)
 live_proba = rf_model.predict_proba(X_live)
 
+# Hypothetical fixtures (every pairing of the live season's teams) --
+# scored the same way, for matches that have not been played yet
+grid = pd.read_csv("02_processed_data/E0_grid_model.csv")
+X_grid = grid.drop(columns=["FTR", "Div", "Date", "HomeTeam", "AwayTeam"])
+X_grid.columns = X_train.columns
+X_grid = X_grid.fillna(0)
+grid_proba = rf_model.predict_proba(X_grid)
+
 classes = list(encoder.classes_)
 rows = []
 for split, frame, proba in (
     ("benchmark", test, rf_base_proba),
     ("live", live, live_proba),
+    ("grid", grid, grid_proba),
 ):
     out = frame[["Date", "HomeTeam", "AwayTeam", "FTR"]].copy()
     out["Split"] = split

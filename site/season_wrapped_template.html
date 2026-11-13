@@ -206,6 +206,69 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .about h3 { color: var(--fg); font-size: 18px; margin-bottom: 10px; }
 .about ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
 .about b { color: var(--fg); }
+
+/* match lab */
+.lab { display: flex; flex-direction: column; gap: 14px; }
+.lab .intro { color: var(--muted); margin: 0; max-width: 78ch; }
+.labpick { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.labpick label { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 190px; }
+.labpick select { width: 100%; }
+.recent { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.recent button { background: var(--surface2); border: 1px solid var(--line); border-radius: 99px; padding: 5px 10px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font-size: 12px; }
+.recent button:hover { border-color: var(--muted); }
+.banner { border-radius: 11px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border: 1px solid var(--line); background: var(--surface2); }
+.banner.played { border-color: var(--ok); }
+.banner.upcoming { border-color: var(--accent); }
+.banner .tag { font: 700 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; color: var(--accent-ink); background: var(--accent); }
+.banner.played .tag { background: var(--ok); }
+.banner .res { font-weight: 700; display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.labgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.sub-card { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sub-card h3 { font-size: 15px; }
+.bigpick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bigpick .pill { font-size: 14px; padding: 5px 12px; }
+.verdictline { font-weight: 600; }
+.probrow { display: grid; grid-template-columns: 52px 1fr 44px; gap: 8px; align-items: center; font-size: 12px; }
+.probrow .track { height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.probrow .fill { height: 100%; background: var(--c); border-radius: 99px; }
+.probrow.real .label { color: var(--fg); }
+.probrow.real .track { box-shadow: 0 0 0 2px var(--fg); }
+.scorelist { display: flex; flex-direction: column; gap: 6px; }
+.srow2 { display: grid; grid-template-columns: 46px 1fr 44px; gap: 8px; align-items: center; font-size: 13px; }
+.srow2 .track { height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.srow2 .fill { height: 100%; background: var(--muted); border-radius: 99px; }
+.srow2.real .fill { background: var(--ok); }
+.srow2.real { font-weight: 700; }
+.srow2.mine .fill { background: var(--accent); }
+.simout { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.simscore { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: -0.02em; line-height: 1; }
+.simscore.pop { animation: pop 0.4s ease both; }
+@keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+.btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+.btn:hover { filter: brightness(1.06); }
+.btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); }
+.btn.ghost:hover { border-color: var(--muted); filter: none; }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.fineprint { font-size: 12px; color: var(--muted); }
+.saved { display: flex; flex-direction: column; gap: 8px; }
+.tally { display: flex; gap: 10px; flex-wrap: wrap; }
+.tally div { background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.tally b { font-family: var(--display); font-size: 22px; display: block; line-height: 1.1; }
+.tally small { color: var(--muted); font-size: 11px; }
+.srow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) auto; gap: 10px 14px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; }
+.srow.done { border-color: var(--line); }
+.srow .m { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 600; min-width: 0; }
+.srow .d { font-size: 12.5px; color: var(--muted); min-width: 0; }
+.srow .d b { color: var(--fg); }
+.status { font: 700 11px var(--mono); border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+.status.pending { background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.status.hit { background: var(--ok); color: #06140D; }
+.status.miss { background: var(--bad); color: #1A0309; }
+.xbtn { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; }
+.xbtn:hover { color: var(--bad); }
+@media (max-width: 620px) { .srow { grid-template-columns: 1fr auto; } .srow .d { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: reduce) { .simscore.pop { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .match { animation: none; } .rrow .fill { transition: none; } }
 </style>
 
@@ -240,6 +303,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
         <option value="1">1x</option><option value="2">2x</option><option value="4">4x</option>
       </select>
       <button class="link" id="toRecap" type="button">Jump to recap</button>
+      <button class="link" id="toLab" type="button">2026-27 match lab</button>
     </div>
     <div class="notice" id="notice" hidden></div>
   </section>
@@ -288,6 +352,19 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
     </div>
   </div>
 
+  <section class="card lab" id="lab" aria-label="2026-27 match lab">
+    <div class="cardhead"><h2>2026-27 match lab</h2><span class="label" id="labAsof"></span></div>
+    <p class="intro">Pick any home and away team. If that match has been played, you see the model's call and its simulated scorelines next to the real result. If it hasn't, you get a forecast you can simulate and save. When the real result shows up in the data, your saved call is scored.</p>
+    <div class="labpick">
+      <label><span class="label">Home</span><select id="labHome"></select></label>
+      <button class="btn ghost" id="labSwap" type="button" aria-label="Swap home and away">Swap</button>
+      <label><span class="label">Away</span><select id="labAway"></select></label>
+    </div>
+    <div class="recent" id="labRecent"></div>
+    <div id="labOut"></div>
+    <div class="saved" id="labSaved"></div>
+  </section>
+
   <section id="recap" aria-label="Season recap">
     <div class="recaphead">
       <h2 id="recapTitle"></h2>
@@ -302,6 +379,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
       <li><b>Profiles are decision rules, not different models.</b> The Random Forest produces three probabilities per match. A profile nudges them before picking one: Balanced and Target boost Draw and Away so those outcomes get called more often, Deadkill leaves the probabilities alone except to suppress Draw, which gives the best raw accuracy.</li>
       <li><b>The bookmaker line is a yardstick, not an input.</b> It shows how often simply picking Bet365's pre-match favourite would have been right. The model never uses odds.</li>
+      <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
       <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Rounds are every 10 matches in date order.</li>
     </ul>
   </section>
@@ -649,6 +727,7 @@ function refreshAll(resetRound) {
   if (resetRound) state.round = Math.min(C.R, 12);
   state.round = Math.min(state.round, C.R);
   renderControls(); renderReplay(false); renderRecap();
+  if (typeof renderLab === "function" && lab.home) { renderLab(); renderSaved(); }
 }
 
 document.addEventListener("click", (e) => {
@@ -661,6 +740,7 @@ document.addEventListener("click", (e) => {
   else if (b.id === "bBack") setRound(state.round - 1);
   else if (b.id === "bStart") setRound(0);
   else if (b.id === "toRecap") $("#recap").scrollIntoView({ behavior: "smooth", block: "start" });
+  else if (b.id === "toLab") $("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
   else if (b.id === "sortActual") { state.sort = "actual"; renderTable(); }
   else if (b.id === "sortModel") { state.sort = "model"; renderTable(); }
   else if (b.id === "themeBtn") toggleTheme();
@@ -688,6 +768,250 @@ try {
   if (saved === "light" || saved === "dark") document.documentElement.setAttribute("data-theme", saved);
 } catch (e) { /* storage unavailable */ }
 
+
+/* ---------- match lab ---------- */
+
+const LAB = DATA.lab;
+const lab = { home: null, away: null, sim: null, simCount: 0, simHits: 0 };
+const saved = { mode: "local", coll: null, items: {} };
+const LOCAL_KEY = "wrapped-saved-calls";
+
+function teamCode(n) { const t = TEAM[n]; return t ? t[0] : n.replace(/[^A-Za-z0-9]/g, "").slice(0, 6).toUpperCase(); }
+function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
+function liveMatches() { return DATA.seasons[LAB.season].matches; }
+function currentProfile() { return DATA.profiles.find((p) => p.id === state.profile); }
+function adjustProbs(probs) {
+  const P = currentProfile();
+  const adj = [probs[0] * P.f.a, probs[1] * P.f.d, probs[2] * P.f.h];
+  const sum = adj[0] + adj[1] + adj[2];
+  return adj.map((v) => v / sum);
+}
+function pmf(k, l) { let p = Math.exp(-l); for (let i = 1; i <= k; i++) p *= l / i; return p; }
+function scoreGrid(lh, la) {
+  const N = 8, g = []; let tot = 0;
+  for (let i = 0; i <= N; i++) { g.push([]); for (let j = 0; j <= N; j++) { const v = pmf(i, lh) * pmf(j, la); g[i].push(v); tot += v; } }
+  return g.map((row) => row.map((v) => v / tot));
+}
+function gridSummary(g) {
+  const list = []; let H = 0, D = 0, A = 0;
+  g.forEach((row, i) => row.forEach((v, j) => { list.push([i, j, v]); if (i > j) H += v; else if (i === j) D += v; else A += v; }));
+  list.sort((a, b) => b[2] - a[2]);
+  return { list, H, D, A };
+}
+function sampleScore(g) {
+  let r = Math.random(), acc = 0;
+  for (let i = 0; i < g.length; i++) for (let j = 0; j < g[i].length; j++) { acc += g[i][j]; if (r <= acc) return [i, j]; }
+  return [0, 0];
+}
+const outcomeOf = (h, a) => (h > a ? "H" : h < a ? "A" : "D");
+
+function lookup(home, away) {
+  const m = liveMatches().find((x) => x[1] === home && x[2] === away);
+  if (m) return { played: true, date: m[0], hg: m[3], ag: m[4], res: m[5], probs: [m[6], m[7], m[8]], lam: [m[9], m[10]] };
+  const g = LAB.grid[home + "|" + away];
+  return { played: false, probs: [g[0], g[1], g[2]], lam: [g[3], g[4]] };
+}
+
+function probRows(adj, realOutcome) {
+  return [2, 1, 0].map((j) => {
+    const o = OUT[j];
+    return `<div class="probrow ${realOutcome === o ? "real" : ""}" style="--c:${OUTCSS[o]}"><span class="label">${OUTNAME[o]}</span><div class="track"><div class="fill" style="width:${(adj[j] * 100).toFixed(0)}%"></div></div><span class="num">${pct(adj[j])}</span></div>`;
+  }).join("");
+}
+
+function renderLab() {
+  if (!lab.home) return;
+  const q = lookup(lab.home, lab.away);
+  const adj = adjustProbs(q.probs);
+  const pick = adj.indexOf(Math.max(adj[0], adj[1], adj[2]));
+  const P = currentProfile();
+  const g = scoreGrid(q.lam[0], q.lam[1]);
+  const sm = gridSummary(g);
+  const key = matchKey(lab.home, lab.away);
+  const mine = saved.items[key];
+  const sim = lab.sim;
+
+  let banner;
+  if (q.played) {
+    banner = `<div class="banner played"><span class="tag">Played</span><span class="res">${chip(lab.home)} ${esc(lab.home)} <span class="num">${q.hg}-${q.ag}</span> ${esc(lab.away)} ${chip(lab.away)}</span><span class="fineprint">${shortDate(q.date)}</span></div>`;
+  } else {
+    banner = `<div class="banner upcoming"><span class="tag">Not played yet</span><span class="res">${chip(lab.home)} ${esc(lab.home)} v ${esc(lab.away)} ${chip(lab.away)}</span><span class="fineprint">Forecast from each team's latest state</span></div>`;
+  }
+
+  const callCard = `<div class="sub-card"><h3>The model's call</h3>
+    <div class="bigpick"><span class="pill" style="--c:${OUTCSS[OUT[pick]]}">${OUTNAME[OUT[pick]]} ${pct(adj[pick])}</span>
+    ${q.played ? `<span class="verdictline ${OUT[pick] === q.res ? "up" : "down"}">${OUT[pick] === q.res ? "Right" : "Wrong"}: it ended ${OUTNAME[q.res]}</span>` : ""}</div>
+    ${probRows(adj, q.played ? q.res : null)}
+    <span class="fineprint">${esc(P.name)} profile${q.played ? ", using the exact pre-match features." : ". Change the profile at the top to see the call shift."}</span></div>`;
+
+  const top = sm.list.slice(0, 6);
+  let realRank = "";
+  if (q.played) {
+    const idx = sm.list.findIndex((x) => x[0] === q.hg && x[1] === q.ag);
+    realRank = idx >= 0 ? `The real ${q.hg}-${q.ag} had a ${pct(sm.list[idx][2], 1)} chance, ${idx === 0 ? "the single most likely score" : `the ${idx + 1}${[11, 12, 13].includes(idx + 1) ? "th" : ["th", "st", "nd", "rd"][(idx + 1) % 10] || "th"} most likely of ${g.length * g[0].length}`}.` : `The real ${q.hg}-${q.ag} was outside the modelled range.`;
+  }
+  const rows = top.map(([i, j, v]) => {
+    const isReal = q.played && i === q.hg && j === q.ag;
+    return `<div class="srow2 ${isReal ? "real" : ""}"><span class="num">${i}-${j}</span><div class="track"><div class="fill" style="width:${Math.min(100, (v / top[0][2]) * 100).toFixed(0)}%"></div></div><span class="num">${pct(v, 1)}</span></div>`;
+  }).join("");
+  const scoreCard = `<div class="sub-card"><h3>Scoreline odds</h3>
+    <div class="scorelist">${rows}</div>
+    <span class="fineprint">Expected goals ${q.lam[0].toFixed(2)} to ${q.lam[1].toFixed(2)}. The goal model alone says Home ${pct(sm.H)}, Draw ${pct(sm.D)}, Away ${pct(sm.A)}.</span>
+    ${realRank ? `<span class="verdictline">${realRank}</span>` : ""}</div>`;
+
+  let simBody = `<div class="fineprint">Draws one scoreline at random from the odds on the left, so 1-0 comes up far more often than 5-4.</div>`;
+  if (sim) {
+    const so = outcomeOf(sim.h, sim.a);
+    let cmp = "";
+    if (q.played) {
+      cmp = sim.h === q.hg && sim.a === q.ag ? `<span class="verdictline up">Exact score. The real match ended ${q.hg}-${q.ag}.</span>`
+        : so === q.res ? `<span class="verdictline up">Right result (${OUTNAME[so]}), real score ${q.hg}-${q.ag}.</span>`
+        : `<span class="verdictline down">Different result. The real match ended ${q.hg}-${q.ag}.</span>`;
+      cmp += `<span class="fineprint">${lab.simHits} of ${lab.simCount} simulations so far landed the real result.</span>`;
+    } else cmp = `<span class="fineprint">${lab.simCount} simulation${lab.simCount === 1 ? "" : "s"} so far. Save one as your call whenever you like.</span>`;
+    simBody = `<div class="simout"><span class="simscore num pop" id="simScore">${sim.h}-${sim.a}</span><span class="pill" style="--c:${OUTCSS[so]}">${OUTNAME[so]}</span></div>${cmp}`;
+  }
+  const simCard = `<div class="sub-card"><h3>Simulate it</h3>${simBody}
+    <div class="btnrow"><button class="btn" id="labSim" type="button">${sim ? "Simulate again" : "Simulate this match"}</button>
+    ${q.played ? "" : `<button class="btn ghost" id="labSave" type="button">${mine ? "Update my saved call" : "Save my call"}</button>`}</div>
+    ${!q.played && mine ? `<span class="fineprint">Saved ${shortDate(mine.savedAt.slice(0, 10))}: ${OUTNAME[mine.pick]}${mine.sim ? `, simulated ${mine.sim[0]}-${mine.sim[1]}` : ""}.</span>` : ""}
+    ${!q.played ? `<span class="fineprint">This forecast skips kickoff time, rest days and European games, which aren't known yet. On the ${liveMatches().length} matches already played it picked the same result as the exact version ${Math.round(LAB.agree * 100)}% of the time.</span>` : ""}</div>`;
+
+  $("#labOut").innerHTML = banner + `<div class="labgrid" style="margin-top:14px">${callCard}${scoreCard}${simCard}</div>`;
+}
+
+function renderSaved() {
+  const items = Object.entries(saved.items).map(([k, v]) => ({ k, ...v })).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""));
+  const box = $("#labSaved");
+  if (!items.length) {
+    box.innerHTML = `<h3 style="font-size:17px">My saved calls</h3><div class="empty">Nothing saved yet. Pick a match that hasn't been played, simulate it, and save your call. It will be scored here once the real result is in the data.</div>`;
+    return;
+  }
+  let resolved = 0, pickOk = 0, simOk = 0, exact = 0, simN = 0;
+  const rows = items.map((it) => {
+    const m = liveMatches().find((x) => x[1] === it.home && x[2] === it.away);
+    let status = `<span class="status pending">PENDING</span>`, detail = "";
+    if (m) {
+      resolved++;
+      const real = m[5], okPick = it.pick === real;
+      if (okPick) pickOk++;
+      let simTxt = "";
+      if (it.sim) {
+        simN++;
+        const so = outcomeOf(it.sim[0], it.sim[1]), ex = it.sim[0] === m[3] && it.sim[1] === m[4];
+        if (so === real) simOk++;
+        if (ex) exact++;
+        simTxt = ` · simulated <b>${it.sim[0]}-${it.sim[1]}</b> ${ex ? "(exact)" : so === real ? "(right result)" : "(wrong result)"}`;
+      }
+      status = `<span class="status ${okPick ? "hit" : "miss"}">${okPick ? "CALL RIGHT" : "CALL WRONG"}</span>`;
+      detail = `Real <b>${m[3]}-${m[4]}</b> on ${shortDate(m[0])} · you had <b>${OUTNAME[it.pick]}</b> ${pct(it.probs[OUT.indexOf(it.pick)])}${simTxt}`;
+    } else {
+      detail = `Called <b>${OUTNAME[it.pick]}</b> ${pct(it.probs[OUT.indexOf(it.pick)])}${it.sim ? ` · simulated <b>${it.sim[0]}-${it.sim[1]}</b>` : ""} · saved ${shortDate((it.savedAt || "").slice(0, 10))}`;
+    }
+    return `<div class="srow ${m ? "done" : ""}"><div class="m">${chip(it.home)}${esc(it.home)} v ${esc(it.away)}${chip(it.away)}</div><div class="d">${detail}</div><div style="display:flex;gap:6px;align-items:center">${status}<button class="xbtn" type="button" data-del="${it.k}" aria-label="Delete this saved call">×</button></div></div>`;
+  }).join("");
+  box.innerHTML = `<h3 style="font-size:17px">My saved calls</h3>
+    <div class="tally"><div><b class="num">${items.length}</b><small>saved</small></div><div><b class="num">${resolved}</b><small>scored</small></div>
+    <div><b class="num">${resolved ? `${pickOk}/${resolved}` : "--"}</b><small>calls right</small></div>
+    <div><b class="num">${simN && resolved ? `${simOk}/${simN}` : "--"}</b><small>simulated results right</small></div>
+    <div><b class="num">${exact}</b><small>exact scores</small></div></div>
+    <div class="saved">${rows}</div>
+    <span class="fineprint">${saved.mode === "cloud" ? "Stored privately for you, so it stays when this page is rebuilt." : "Stored in this browser only."} Results appear after the page is rebuilt with new match data.</span>`;
+}
+
+function loadLocal() {
+  try { const raw = localStorage.getItem(LOCAL_KEY); saved.items = raw ? JSON.parse(raw) : {}; } catch (e) { saved.items = {}; }
+}
+function persistLocal() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(saved.items)); } catch (e) { /* storage unavailable */ }
+}
+
+async function saveCall() {
+  const q = lookup(lab.home, lab.away);
+  if (q.played) return;
+  const adj = adjustProbs(q.probs);
+  const body = {
+    home: lab.home, away: lab.away, profile: state.profile,
+    probs: adj.map((v) => +v.toFixed(4)), pick: OUT[adj.indexOf(Math.max(adj[0], adj[1], adj[2]))],
+    lam: q.lam, sim: lab.sim ? [lab.sim.h, lab.sim.a] : null,
+    savedAt: new Date().toISOString(), asOf: LAB.asOf,
+  };
+  const key = matchKey(lab.home, lab.away);
+  saved.items[key] = body;
+  renderSaved(); renderLab();
+  if (saved.coll) {
+    try { await saved.coll.doc(key).set(body); }
+    catch (e) { saved.mode = "local"; persistLocal(); renderSaved(); }
+  } else persistLocal();
+}
+async function deleteCall(key) {
+  delete saved.items[key];
+  renderSaved(); renderLab();
+  if (saved.coll) { try { await saved.coll.doc(key).delete(); } catch (e) { /* will reappear from the store */ } }
+  else persistLocal();
+}
+
+async function initStore() {
+  loadLocal(); renderSaved(); renderLab();
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const uid = user ? await user.id() : null;
+    if (!db || !uid) return;
+    saved.coll = db.collection("data/users/" + uid);
+    saved.mode = "cloud";
+    saved.coll.onSnapshot((snap) => {
+      const items = {};
+      snap.docs.forEach((d) => { if (d.exists) items[d.id] = d.data(); });
+      saved.items = items;
+      renderSaved(); renderLab();
+    }, () => { saved.coll = null; saved.mode = "local"; loadLocal(); renderSaved(); renderLab(); });
+  } catch (e) { /* stay on browser storage */ }
+}
+
+function initLab() {
+  const teams = LAB.teams;
+  const opts = teams.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  $("#labHome").innerHTML = opts; $("#labAway").innerHTML = opts;
+  const last = liveMatches()[liveMatches().length - 1];
+  lab.home = last[1]; lab.away = last[2];
+  $("#labHome").value = lab.home; $("#labAway").value = lab.away;
+  $("#labAsof").textContent = `Results in the data up to ${shortDate(LAB.asOf)}`;
+  const recent = liveMatches().slice(-6).reverse();
+  $("#labRecent").innerHTML = `<span class="label">Recently played</span>` + recent.map((m) =>
+    `<button type="button" data-lh="${esc(m[1])}" data-la="${esc(m[2])}">${chip(m[1])}<span class="num">${m[3]}-${m[4]}</span>${chip(m[2])}</button>`).join("");
+}
+function setLabTeams(h, a) {
+  lab.home = h; lab.away = a; lab.sim = null; lab.simCount = 0; lab.simHits = 0;
+  $("#labHome").value = h; $("#labAway").value = a;
+  renderLab();
+}
+
+$("#labHome").addEventListener("change", (e) => {
+  let a = lab.away; if (e.target.value === a) a = LAB.teams.find((t) => t !== e.target.value);
+  setLabTeams(e.target.value, a);
+});
+$("#labAway").addEventListener("change", (e) => {
+  let h = lab.home; if (e.target.value === h) h = LAB.teams.find((t) => t !== e.target.value);
+  setLabTeams(h, e.target.value);
+});
+$("#lab").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.id === "labSwap") setLabTeams(lab.away, lab.home);
+  else if (b.dataset.lh) setLabTeams(b.dataset.lh, b.dataset.la);
+  else if (b.id === "labSim") {
+    const q = lookup(lab.home, lab.away);
+    const [h, a] = sampleScore(scoreGrid(q.lam[0], q.lam[1]));
+    lab.sim = { h, a }; lab.simCount++;
+    if (q.played && outcomeOf(h, a) === q.res) lab.simHits++;
+    renderLab();
+  } else if (b.id === "labSave") saveCall();
+  else if (b.dataset.del) deleteCall(b.dataset.del);
+});
+
 paintThemeBtn();
+initLab();
 refreshAll(true);
+initStore();
 </script>

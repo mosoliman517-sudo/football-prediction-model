@@ -6,6 +6,8 @@ Everything on the page comes from files the pipeline already wrote:
     Forest probabilities for every match it never trained on)
   - 02_processed_data/rf_profiles.json    (03_train_model.py: the
     decision-threshold factors each tuned profile chose)
+  - 02_processed_data/poisson_lambdas.csv (05_predict_scoreline.py: expected
+    goals for the live season's matches and for every possible pairing)
   - real scores from E0_features.csv / E0_live_features.csv
   - Bet365 pre-match odds from the raw season files, used ONLY as a
     reference line to compare the model against, never as a feature
@@ -21,6 +23,7 @@ import pandas as pd
 
 PREDICTIONS = "02_processed_data/rf_predictions.csv"
 PROFILES_JSON = "02_processed_data/rf_profiles.json"
+LAMBDAS = "02_processed_data/poisson_lambdas.csv"
 TEMPLATE = "site/season_wrapped_template.html"
 OUTPUT = "site/season_wrapped.html"
 
@@ -54,7 +57,10 @@ def apply_factors(proba, f):
 
 
 preds = pd.read_csv(PREDICTIONS)
-preds["Date"] = pd.to_datetime(preds["Date"])
+preds["Date"] = pd.to_datetime(preds["Date"], format="mixed")
+grid_preds = preds[preds["Split"] == "grid"].copy()
+preds = preds[preds["Split"] != "grid"].copy()
+lambdas = pd.read_csv(LAMBDAS)
 
 scores = pd.concat([
     pd.read_csv("02_processed_data/E0_features.csv", usecols=["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG"]),
@@ -112,7 +118,34 @@ for label, g in df.groupby("Season"):
     }
     print(label, len(g), "matches, bookmaker favourite", f"{bookmaker[label]:.1%}")
 
-data = {"profiles": profiles, "seasons": seasons}
+# ---- match lab: expected goals for played live matches + the full grid ----
+live_label = next(k for k, v in seasons.items() if v["live"])
+live_lam = lambdas[lambdas["Split"] == "live"].set_index(["HomeTeam", "AwayTeam"])
+for m in seasons[live_label]["matches"]:
+    lh, la = live_lam.loc[(m[1], m[2])]["LamH"], live_lam.loc[(m[1], m[2])]["LamA"]
+    m.extend([round(float(lh), 3), round(float(la), 3)])
+
+grid_lam = lambdas[lambdas["Split"] == "grid"].set_index(["HomeTeam", "AwayTeam"])
+grid = {}
+for r in grid_preds.itertuples():
+    lh, la = grid_lam.loc[(r.HomeTeam, r.AwayTeam)]["LamH"], grid_lam.loc[(r.HomeTeam, r.AwayTeam)]["LamA"]
+    grid[f"{r.HomeTeam}|{r.AwayTeam}"] = [round(r.P_A, 4), round(r.P_D, 4), round(r.P_H, 4),
+                                          round(float(lh), 3), round(float(la), 3)]
+# How often does the quick no-features-yet forecast pick the same result as
+# the exact version, on the live matches that HAVE been played? Shown on the
+# page so the approximation is stated, not assumed.
+same = [
+    int(np.argmax(m[6:9]) == np.argmax(grid[f"{m[1]}|{m[2]}"][:3]))
+    for m in seasons[live_label]["matches"]
+]
+agree = round(float(np.mean(same)), 2)
+last_played = max(m[0] for m in seasons[live_label]["matches"])
+lab = {"season": live_label, "asOf": last_played, "agree": agree,
+       "teams": sorted({m[1] for m in seasons[live_label]["matches"]} | {m[2] for m in seasons[live_label]["matches"]}),
+       "grid": grid}
+print(f"Match lab: {len(grid)} pairings, results up to {last_played}")
+
+data = {"profiles": profiles, "seasons": seasons, "lab": lab}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

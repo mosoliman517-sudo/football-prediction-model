@@ -443,3 +443,24 @@ if __name__ == "__main__":
 
     for home_team, away_team in fixtures_to_predict:
         predict_fixture(home_team, away_team, df)
+
+
+# --------------------------------------------------------------------
+# Save expected goals for the live season's played matches and for every
+# possible pairing of its teams, so the Season Wrapped page can simulate
+# a scoreline for any match (08_build_wrapped.py reads this file).
+# --------------------------------------------------------------------
+
+lam_frames = []
+for split, path in (("live", "02_processed_data/E0_live_model.csv"),
+                    ("grid", "02_processed_data/E0_grid_model.csv")):
+    frame = pd.read_csv(path)
+    scaled = (frame[FEATURE_COLUMNS].fillna(0) - feature_means) / feature_stds
+    out = frame[["HomeTeam", "AwayTeam"]].copy()
+    out["Split"] = split
+    out["LamH"] = home_goal_model.predict(scaled)
+    out["LamA"] = away_goal_model.predict(scaled)
+    lam_frames.append(out)
+
+pd.concat(lam_frames).to_csv("02_processed_data/poisson_lambdas.csv", index=False)
+print("\nSaved poisson_lambdas.csv for the Season Wrapped match picker")

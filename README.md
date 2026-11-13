@@ -2,9 +2,9 @@
 
 > **Resuming after a break? Read this box first.**
 >
-> **What this is.** A machine-learning model that predicts Premier League results (Home win / Draw / Away win) using only information known before kickoff, tested on matches it never trained on (2024-25 and 2025-26, 760 matches). It started as one season of CSVs and grew into 12 seasons, ~50 features, five tree models, a Poisson goal model, three tuned "decision profiles", two kinds of season simulation, and an interactive page. The aim: a model that is **balanced**, with Home and Away recall near 60% and Draw 30-40%, instead of one that only ever calls Home wins.
+> **What this is.** A machine-learning model that predicts Premier League results (Home win / Draw / Away win) using only information known before kickoff, tested on matches it never trained on (2024-25 and 2025-26, 760 matches). It started as one season of CSVs and grew into 12 seasons, ~50 features, five tree models, a Poisson goal model, two tuned "playing styles" (Balanced and Max Accuracy, plus the untouched Pure Model), two kinds of season simulation, and an interactive page. The aim: a model that is **balanced**, with Home and Away recall near 60% and Draw 30-40%, instead of one that only ever calls Home wins.
 >
-> **Where it stands (Nov 2026).** On the 760 held-out matches: the goal model gets **50.0%**, our blend of goal model and forest **49.9%**, Bet365's pre-match favourite **51.6%**, and the opt-in hybrid that stacks our blend with Bet365's odds **52.1%**. A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling: stacking the two gains almost nothing, so our features add very little the odds don't already contain. Best balance found: the hybrid's Balanced profile at Home 48 / Draw 38 / Away 41; on our own data alone, Balanced is 44 / 36 / 46. Draw is the hard part. Everything is on GitHub and reproducible from a fresh clone.
+> **Where it stands (Nov 2026).** On the 760 held-out matches: the goal model gets **50.0%**, our blend of goal model and forest **49.9%**, Bet365's pre-match favourite **51.6%**, and the opt-in hybrid that stacks our blend with Bet365's odds **52.1%**. A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling: stacking the two gains almost nothing, so our features add very little the odds don't already contain. Best balance found: the hybrid's Balanced style at Home 48 / Draw 38 / Away 41; on our own data alone, Balanced is 44 / 36 / 46. Draw is the hard part. Everything is on GitHub and reproducible from a fresh clone.
 >
 > **The commands that matter.**
 >
@@ -323,11 +323,10 @@ Fixed by restoring chronological order (`.sort_index()`) after each concat in `f
 
 Calibration of the blend: average Home 41.1% against 41.7% real, Draw 25.8% against 25.9%, Away 33.1% against 32.4%. The forest alone under-rates Home (37.8%) and over-rates Draw (28.8%).
 
-| Profile (Home / Draw / Away recall, accuracy) | Forest only | Blend | Hybrid (market-informed) |
+| Style (Home / Draw / Away recall, accuracy) | Forest only | Blend | Hybrid (market-informed) |
 |---|---|---|---|
 | Balanced | 48 / 31 / 47, 43% | 44 / **36** / 46, 42.5% | 48 / **38** / 41, 43.3% |
-| Deadkill | 72 / 0 / 61, 49% | 76 / 0 / 57, 50.1% | 84 / 0 / 53, **52.1%** |
-| Target 60/60/40 | 51 / 22 / 56, 45% | 53 / 26 / 52, 45.5% | 57 / 28 / 50, 47.4% |
+| Max Accuracy | 72 / 0 / 61, 49% | 76 / 0 / 57, 50.1% | 84 / 0 / 53, **52.1%** |
 
 **Correction:** Update 7 highlighted Balanced-on-blend Draw recall of 40%. With the corrected features it is 36%. Draw recall carries about +/-3 points of sampling noise on 197 draws, and the 40% was partly that noise.
 
@@ -363,12 +362,22 @@ Live result (as of 8 Nov): Arsenal title 76% (projected 92 points), Man City 18%
 ### Match lab, hybrid mode and exact scores, after the fix
 
 - Calls can now be made from **Blended odds**, **Random Forest only**, or **Model + bookmaker odds** (the hybrid, labelled market-informed; for an unplayed match with no odds it falls back to the blend).
-- Exact-score calls (score that fits each call): Balanced 83 hits (10.9%), Target 82 (10.8%), Deadkill 73 (9.6%), Raw 72 (9.5%), against 92 (12.1%) for always guessing 1-1 and 89 (11.7%) for the goal model's single likeliest score. Same conclusion as before. (The page computes these counts itself and agrees with the Python figures to within one hit per profile: it embeds probabilities rounded to four decimals, which can flip a near-exact tie between two outcomes.)
+- Exact-score calls (score that fits each call): Balanced 83 hits (10.9%), Max Accuracy 73 (9.6%), Pure Model 72 (9.5%), against 92 (12.1%) for always guessing 1-1 and 89 (11.7%) for the goal model's single likeliest score. Same conclusion as before. (The page computes these counts itself and agrees with the Python figures to within one hit per style: it embeds probabilities rounded to four decimals, which can flip a near-exact tie between two outcomes.)
 - Simulation sanity numbers, recomputed: blended odds sampled for whole seasons put the table 2.0 and 2.7 places off against 3.3 and 3.8 for repeating last season's and 6.6 to 6.7 for a shuffle.
 
 ### The redesign
 
 The page was functional but flat. New identity: a floodlit pitch at night, with mown-turf stripes, chalk-line graphics, tall condensed scoreboard numerals (Big Shoulders Display), club colours throughout, outcome colours unchanged. New pieces: a live results **ticker**; a **scoreboard hero** with an animated accuracy ring and tiles; match rows tinted with both clubs' colours; the lab's **scoreline heatmap** (every score, coloured by who wins it, real score ringed, simulated score dashed), a big three-way odds readout and a rolling-digit simulation; **title-race cards and a 20 x 20 finishing-position heatmap** on the rest-of-season tab; club-coloured **team and head-to-head heroes** with a win/draw/loss tug-of-war bar and a meeting timeline; club-coloured Elo race bars; and a full-screen **Wrapped story mode** (11 slides, one giant number each, tap or arrow keys, progress bar, ending on the shareable card). Responsive down to a phone, with reduced-motion handled.
+
+### Names, logos and a friendlier front door
+
+**Naming, decided by a poll.** The profile names were developer shorthand. Asked to name each, the owner chose: **"Deadkill" is now "Max Accuracy"**, **"Raw model" is now "Pure Model"**, **"Balanced" stays**, and **"Target 60/60/40" was removed entirely** (it aimed at 60% Home / 60% Away / 40% Draw recall, landed around 53 / 52 / 26 and was confusing next to the other two). The removal went all the way through: the profile, its objective function and its fine-grained search grid are gone from `03`, `10` and `08` (no dead code left), and the retrain, retune and re-validate were rerun; Balanced and Max Accuracy reproduced their earlier numbers exactly. "Profile" is now called **playing style** everywhere on the page. Older updates in this README still use the old names: Deadkill = Max Accuracy, Raw model = Pure Model, Target 60/60/40 = removed.
+
+**Plain-English interface.** Tabs are now Season replay, Predict a match, Title race, Clubs, Rivalries, My Wrapped and Can I trust it? (the `#lab`, `#rest`, `#teams`, `#h2h`, `#recap` and `#checks` links are unchanged). The prediction-engine choice moved under "More options" and is named Our model / Forest only / Model + bookmaker odds, so a newcomer sees only season and playing style.
+
+**Start-here welcome** (dismissible, remembered in the browser): "Can a computer predict football?" with four one-click starting points (Watch a season, Predict a match, Who wins the title?, Play my Wrapped) and a 20-second "how to read this" (what a call is, what the percentages mean, why about 50% is a good score, what "never seen these matches" means).
+
+**Club crests everywhere a club is named.** Every club (all 36 in the data) gets an original shield badge drawn in its kit colours and pattern (stripes, halves, hoops, sash or solid) with its three-letter code, in the ticker, match rows, tables, heatmaps, club and rivalry heroes, the story mode and the share card. **These are not the clubs' official crests**: those are trademarked artwork, and a published page cannot load outside images, so shipping them would mean embedding copyrighted images. If licensed crest images are supplied later, only the `crest()` function in `site/season_wrapped_template.html` needs to change. The dropdowns for choosing clubs are replaced by a **crest picker** (a grid of the clubs' badges; the original select stays underneath for accessibility and for the page logic).
 
 ### Ideas still on the table
 

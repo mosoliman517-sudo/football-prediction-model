@@ -173,7 +173,10 @@ td:nth-child(2) { display: flex; align-items: center; gap: 8px; font-weight: 600
 tr.top4 td:first-child { box-shadow: 3px 0 0 var(--ok) inset; }
 tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .up { color: var(--ok); } .down { color: var(--bad); }
-.chip { display: inline-grid; place-items: center; min-width: 36px; height: 22px; border-radius: 6px; font: 700 10.5px var(--mono); letter-spacing: 0.04em; box-shadow: 0 0 0 1px rgba(128,128,128,0.35) inset; }
+.crest { width: 22px; height: 25px; flex: none; vertical-align: middle; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35)); }
+.ticker-track .crest { width: 19px; height: 22px; }
+.heat .crest { width: 17px; height: 19px; }
+.race .crest { width: 20px; height: 23px; }
 .sort { display: inline-flex; gap: 2px; }
 .sort button { background: none; border: 0; padding: 4px 8px; border-radius: 7px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
 .sort button[aria-pressed="true"] { background: var(--surface2); color: var(--fg); }
@@ -243,6 +246,8 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .form { display: flex; gap: 6px; flex-wrap: wrap; }
 .form span { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font: 600 10px var(--mono); color: var(--muted); }
 .form b { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: #06140D; font-size: 12px; }
+.form .crest { width: 21px; height: 24px; }
+.form em { font-style: normal; font: 600 10px var(--mono); color: var(--muted); }
 .form b.W { background: var(--ok); } .form b.D { background: var(--draw); } .form b.L { background: var(--bad); }
 .meet { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .meet .row { display: grid; grid-template-columns: 64px 1fr auto 24px; gap: 8px; align-items: center; font-size: 12.5px; padding: 5px 8px; background: var(--surface2); border-radius: 8px; }
@@ -339,6 +344,56 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 @media (prefers-reduced-motion: reduce) { .simscore.pop { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .match { animation: none; } .rrow .fill { transition: none; } }
 
+/* v3: crest picker, welcome, helpers */
+.sr-only { position: absolute !important; left: 0; top: 0; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.labpick, .labpick label { position: relative; }
+.hint { font-style: normal; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); margin-left: 6px; opacity: 0.85; }
+.picker { position: relative; min-width: 0; }
+.pk-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--line); cursor: pointer; text-align: left; min-height: 48px; }
+.pk-btn:hover { border-color: var(--muted); }
+.pk-btn[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.pk-btn .crest { width: 28px; height: 32px; }
+.pk-btn b { font-family: var(--display); font-size: 21px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: 0 4px 3px 0; flex: none; }
+.pk-panel { position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(440px, calc(100vw - 32px)); max-height: 340px; overflow-y: auto; padding: 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7); display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 4px; }
+.pk-panel[hidden] { display: none; }
+.pk-opt { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 10px; background: none; border: 1px solid transparent; cursor: pointer; text-align: left; font-weight: 600; font-size: 13px; min-width: 0; }
+.pk-opt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-opt:hover { background: var(--surface2); }
+.pk-opt.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface2)); }
+.labpick label { min-width: 0; }
+.labpick .picker { margin-top: 2px; }
+.welcome { position: relative; border-radius: 24px; padding: 0; }
+.wl-full { position: relative; overflow: hidden; border-radius: 24px; padding: 28px clamp(18px, 4vw, 34px) 24px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); background: radial-gradient(700px 300px at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), linear-gradient(160deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface) 60%); }
+.welcome.collapsed .wl-full { display: none; }
+.wl-mini { display: none; background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 2px 0; }
+.welcome.collapsed .wl-mini { display: inline-block; }
+.wl-x { position: absolute; right: 12px; top: 8px; background: none; border: 0; color: var(--muted); font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 10px; }
+.wl-x:hover { color: var(--fg); }
+.wl-kicker { font: 700 12px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.wl-full h2 { font-size: clamp(34px, 6vw, 60px); font-weight: 900; text-transform: uppercase; line-height: 0.92; margin-bottom: 12px; }
+.wl-full p { margin: 0 0 18px; max-width: 62ch; color: var(--muted); font-size: 15px; }
+.wl-full p b { color: var(--fg); }
+.wl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.wl-card { text-align: left; border-radius: 16px; padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; background: color-mix(in srgb, var(--bg) 55%, transparent); border: 1px solid var(--line); transition: transform 0.15s ease, border-color 0.15s ease; }
+.wl-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.wl-card b { font-family: var(--display); font-size: 25px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; }
+.wl-card span { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.wl-how { margin-top: 14px; color: var(--muted); font-size: 13.5px; }
+.wl-how summary { cursor: pointer; font-weight: 600; color: var(--fg); }
+.wl-how ul { margin: 10px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+.wl-how b { color: var(--fg); }
+.adv { margin-top: -4px; }
+.adv summary { cursor: pointer; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 2px 0; }
+.adv[open] summary { margin-bottom: 8px; }
+.foot-note { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; padding-top: 6px; border-top: 1px solid var(--line); }
+.hh-side .crest { width: 58px; height: 66px; }
+.racecard .rn .crest { width: 28px; height: 32px; }
+.banner .crest { width: 28px; height: 32px; }
+.teamgrid .crest, .meet .crest { width: 20px; height: 23px; }
+.srow .m .crest { width: 24px; height: 27px; }
+td .crest { width: 21px; height: 24px; }
+@media (max-width: 560px) { .pk-panel { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-height: 55vh; z-index: 60; } }
 /* wrapped story */
 .story { position: fixed; inset: 0; z-index: 100; color: #fff; background: #04100c; display: flex; align-items: center; justify-content: center; }
 .story[hidden] { display: none; }
@@ -363,7 +418,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .sl-d { font-size: clamp(15px, 2.4vw, 19px); line-height: 1.45; color: rgba(255,255,255,0.82); max-width: 46ch; }
 .sl-d b { color: #fff; }
 .sl-chips { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 7vw, 56px); flex-wrap: wrap; }
-.sl-chips .chip { min-width: 56px; height: 36px; font-size: 15px; border-radius: 10px; }
+.sl-chips .crest { width: 46px; height: 52px; }
 .sl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .story .wcard { margin: 0 auto; }
 .story .btn { color: var(--accent-ink); }
@@ -391,7 +446,7 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 /* team + head to head */
 .teamhero { border-radius: 22px; padding: 22px 26px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; border: 1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); background: linear-gradient(120deg, color-mix(in srgb, var(--tc) 55%, var(--surface)), var(--surface) 78%); }
 .th-name { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.th-name .chip { min-width: 54px; height: 34px; font-size: 14px; border-radius: 9px; }
+.th-name .crest { width: 66px; height: 75px; }
 .th-name h3 { font-size: clamp(38px, 7vw, 76px); font-weight: 900; text-transform: uppercase; line-height: 0.9; }
 .th-stats { display: flex; gap: 22px; }
 .th-stats b { display: block; font-family: var(--display); font-weight: 900; font-size: 44px; line-height: 0.95; }
@@ -508,14 +563,38 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   </header>
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
-    <button type="button" role="tab" data-tab="replay">Replay</button>
-    <button type="button" role="tab" data-tab="lab">Match lab</button>
-    <button type="button" role="tab" data-tab="rest">Rest of 2026-27</button>
-    <button type="button" role="tab" data-tab="teams">Teams</button>
-    <button type="button" role="tab" data-tab="h2h">Head to head</button>
-    <button type="button" role="tab" data-tab="recap">Recap and card</button>
-    <button type="button" role="tab" data-tab="checks">Checks</button>
+    <button type="button" role="tab" data-tab="replay">Season replay</button>
+    <button type="button" role="tab" data-tab="lab">Predict a match</button>
+    <button type="button" role="tab" data-tab="rest">Title race</button>
+    <button type="button" role="tab" data-tab="teams">Clubs</button>
+    <button type="button" role="tab" data-tab="h2h">Rivalries</button>
+    <button type="button" role="tab" data-tab="recap">My Wrapped</button>
+    <button type="button" role="tab" data-tab="checks">Can I trust it?</button>
   </nav>
+
+  <section class="welcome" id="welcome" data-views="replay" aria-label="Start here">
+    <div class="wl-full">
+      <button class="wl-x" id="welcomeX" type="button" aria-label="Hide this introduction">&times;</button>
+      <div class="wl-kicker">New here? Start here</div>
+      <h2>Can a computer predict football?</h2>
+      <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one round at a time, then check its work against what really happened. Pick a starting point:</p>
+      <div class="wl-grid">
+        <button type="button" class="wl-card" data-start="watch"><b>Watch a season</b><span>Press play and see every call, right or wrong, as the table builds.</span></button>
+        <button type="button" class="wl-card" data-start="predict"><b>Predict a match</b><span>Pick any two clubs, see the odds, simulate the score and save your call.</span></button>
+        <button type="button" class="wl-card" data-start="title"><b>Who wins the title?</b><span>Thousands of simulated seasons for the rest of 2026-27.</span></button>
+        <button type="button" class="wl-card" data-start="story"><b>Play my Wrapped</b><span>A full-screen story of how the model did, ready to share.</span></button>
+      </div>
+      <details class="wl-how"><summary>How to read this in 20 seconds</summary>
+        <ul>
+          <li><b>A call</b> is the result the model picks for a match: Home win, Draw or Away win. A green tick means it was right.</li>
+          <li><b>The percentages</b> are the model's honest chances. 70% means it should be right about 7 times in 10.</li>
+          <li><b>Football is noisy.</b> Even bookmakers get only about half of results right, so about 50% is a good score, not a bad one.</li>
+          <li><b>Never seen these matches</b> means it was trained on 2014 to 2024 only, so every number here is a real test.</li>
+        </ul>
+      </details>
+    </div>
+    <button class="wl-mini" id="welcomeOpen" type="button">Show the introduction</button>
+  </section>
 
   <section class="card deck" id="deck" data-views="replay lab teams recap checks" aria-label="Replay controls">
     <div class="deck-row">
@@ -523,15 +602,15 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
         <span class="label">Season</span>
         <div class="seg" id="seasonSeg" role="group" aria-label="Season"></div>
       </div>
-      <div class="group">
-        <span class="label">Calls made from</span>
-        <div class="seg" id="baseSeg" role="group" aria-label="Which odds the profile decides from"></div>
-      </div>
       <div class="group" style="flex:1 1 420px">
-        <span class="label">Model profile</span>
-        <div class="profiles" id="profiles" role="group" aria-label="Model profile"></div>
+        <span class="label">Playing style <i class="hint">how bold the model is about draws</i></span>
+        <div class="profiles" id="profiles" role="group" aria-label="Playing style"></div>
       </div>
     </div>
+    <details class="adv"><summary>More options: prediction engine</summary>
+      <div class="group"><span class="label">Prediction engine <i class="hint">which odds the model works from</i></span>
+        <div class="seg" id="baseSeg" role="group" aria-label="Prediction engine"></div></div>
+    </details>
     <div class="transport" data-views="replay">
       <button class="tbtn" id="bStart" type="button" aria-label="Back to start"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
       <button class="tbtn" id="bBack" type="button" aria-label="Previous round"><svg viewBox="0 0 24 24"><path d="M15 5v14L5 12z"/></svg></button>
@@ -595,7 +674,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
           </div>
         </div>
         <div class="tablewrap"><table id="table"></table></div>
-        <p class="note">xPts are the model's expected points: each match adds 3 x P(win) + P(draw) for each side, from that profile's probabilities. xPos is where those points would put the team. The arrow in the last column shows how many places a team sits above (up) or below (down) its xPos.</p>
+        <p class="note">xPts are the model's expected points: each match adds 3 x P(win) + P(draw) for each side, from the model's probabilities. xPos is where those points would put the team. The arrow in the last column shows how many places a team sits above (up) or below (down) its xPos.</p>
       </section>
     </div>
   </div>
@@ -647,7 +726,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <div class="cardwrap">
       <div class="wcard" id="wcard"></div>
       <div class="cardside">
-        <p class="fineprint" style="margin:0">Built from the season and profile selected at the top. Copy the summary as text, or save the card as an image.</p>
+        <p class="fineprint" style="margin:0">Built from the season and playing style selected at the top. Copy the summary as text, or save the card as an image.</p>
         <div class="btnrow"><button class="btn" id="cardCopy" type="button">Copy summary</button><button class="btn ghost" id="cardSave" type="button">Save as image</button></div>
         <span class="fineprint" id="cardStatus"></span>
       </div>
@@ -670,14 +749,18 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <h3>How to read this</h3>
     <ul>
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
-      <li><b>Percentages are honest odds; profiles only pick the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A profile is a decision rule on the forest's probabilities and decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
-      <li><b>Profiles are decision rules, not different models.</b> A profile scales the three probabilities before picking one: Balanced and Target boost Draw so it gets called more often, Deadkill suppresses it, which gives the best raw accuracy. The decision can be made from the blended odds (the default, tuned in step 10 of the pipeline) or from the Random Forest's probabilities alone (the original profiles). The percentages next to the chips are each profile's Home, Draw and Away recall on the 760 held-out matches.</li>
+      <li><b>Percentages are honest odds; the playing style only picks the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A playing style decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
+      <li><b>Playing styles are decision rules, not different models.</b> <b>Pure Model</b> picks the single most probable result. <b>Balanced</b> boosts Draw so draws actually get called, which costs some overall accuracy. <b>Max Accuracy</b> suppresses Draw, which gives the most results right. The three coloured numbers on each card are the share of real Home wins, Draws and Away wins that style found on the 760 held-out matches. The decision can be made from our blended model (the default, tuned in step 10 of the pipeline), from the Random Forest alone, or from the model plus bookmaker odds.</li>
       <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with Bet365's pre-match odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
       <li><b>Two kinds of simulation, kept apart on purpose.</b> Replays and next-matchday forecasts are always built from real past results only. The blind rest-of-season simulation is the one place predicted results feed predictions: after each simulated match, Elo, form and the table update with the simulated result.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
       <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Rounds are every 10 matches in date order.</li>
     </ul>
   </section>
+  <footer class="foot-note">
+    <span>Season Wrapped. Crests are original shield badges in each club's kit colours, not official club crests.</span>
+    <span>Data: football-data.co.uk, Understat, Transfermarkt (Kaggle). Source and write-up on GitHub: mosoliman517-sudo/football-prediction-model.</span>
+  </footer>
 </div>
 
 <div class="story" id="story" role="dialog" aria-modal="true" aria-label="Your season, wrapped" tabindex="-1" hidden>
@@ -708,16 +791,50 @@ const TEAM = {
   "Newcastle": ["NEW", "#2A2526", "#fff"], "Nott'm Forest": ["NFO", "#DD0000", "#fff"],
   "Southampton": ["SOU", "#D71920", "#fff"], "Sunderland": ["SUN", "#EB172B", "#fff"],
   "Tottenham": ["TOT", "#132257", "#fff"], "West Ham": ["WHU", "#7A263A", "#fff"],
-  "Wolves": ["WOL", "#FDB913", "#111"]
+  "Wolves": ["WOL", "#FDB913", "#111"],
+  "Cardiff": ["CAR", "#0070B5", "#fff"], "Huddersfield": ["HUD", "#0E63AD", "#fff"], "Luton": ["LUT", "#F78F1E", "#002D62"],
+  "Middlesbrough": ["MID", "#E21A22", "#fff"], "Norwich": ["NOR", "#00A650", "#FFF200"], "QPR": ["QPR", "#1D5BA4", "#fff"],
+  "Sheffield United": ["SHU", "#EE2737", "#fff"], "Stoke": ["STK", "#E03A3E", "#fff"], "Swansea": ["SWA", "#FFFFFF", "#111"],
+  "Watford": ["WAT", "#FBEE23", "#ED2127"], "West Brom": ["WBA", "#122F67", "#fff"]
 };
+
+// Kit colours and pattern per club (main, second, pattern). These are original
+// crest-style badges drawn in each club's kit colours, not the official crests.
+const KIT = {
+  "Arsenal": ["#E10600", "#FFFFFF", "solid"], "Aston Villa": ["#7A1F3D", "#95BFE5", "halves"], "Bournemouth": ["#C8102E", "#111111", "stripes"],
+  "Brentford": ["#E30613", "#FFFFFF", "stripes"], "Brighton": ["#0057B8", "#FFFFFF", "stripes"], "Burnley": ["#6C1D45", "#99D6EA", "halves"],
+  "Cardiff": ["#0070B5", "#FFFFFF", "solid"], "Chelsea": ["#034694", "#FFFFFF", "solid"], "Coventry": ["#4AA9E0", "#0B1F33", "solid"],
+  "Crystal Palace": ["#1B458F", "#C4122E", "stripes"], "Everton": ["#003399", "#FFFFFF", "solid"], "Fulham": ["#FFFFFF", "#111111", "solid"],
+  "Huddersfield": ["#0E63AD", "#FFFFFF", "stripes"], "Hull": ["#F5A12D", "#111111", "stripes"], "Ipswich": ["#3A64A3", "#FFFFFF", "solid"],
+  "Leeds": ["#FFFFFF", "#1D428A", "solid"], "Leicester": ["#003090", "#FDBE11", "solid"], "Liverpool": ["#C8102E", "#F6EB61", "solid"],
+  "Luton": ["#F78F1E", "#002D62", "solid"], "Man City": ["#6CABDD", "#FFFFFF", "solid"], "Man United": ["#DA291C", "#FBE122", "solid"],
+  "Middlesbrough": ["#E21A22", "#FFFFFF", "sash"], "Newcastle": ["#241F20", "#FFFFFF", "stripes"], "Norwich": ["#00A650", "#FFF200", "halves"],
+  "Nott'm Forest": ["#DD0000", "#FFFFFF", "solid"], "QPR": ["#1D5BA4", "#FFFFFF", "hoops"], "Sheffield United": ["#EE2737", "#111111", "stripes"],
+  "Southampton": ["#D71920", "#FFFFFF", "stripes"], "Stoke": ["#E03A3E", "#FFFFFF", "stripes"], "Sunderland": ["#EB172B", "#FFFFFF", "stripes"],
+  "Swansea": ["#FFFFFF", "#111111", "solid"], "Tottenham": ["#FFFFFF", "#132257", "solid"], "Watford": ["#FBEE23", "#ED2127", "solid"],
+  "West Brom": ["#122F67", "#FFFFFF", "stripes"], "West Ham": ["#7A263A", "#1BB1E7", "halves"], "Wolves": ["#FDB913", "#231F20", "solid"]
+};
+const SHIELD = "M14 1.2 25.6 4.6V15c0 7.3-5.2 13.3-11.6 15.8C7.6 28.3 2.4 22.3 2.4 15V4.6Z";
+let crestN = 0;
+const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
+function crest(name) {
+  const t = TEAM[name] || [name.slice(0, 3).toUpperCase(), "#4A5A52", "#fff"];
+  const [c1, c2, pat] = KIT[name] || [t[1], "#FFFFFF", "solid"];
+  const id = "cr" + (++crestN);
+  let art = `<rect width="28" height="32" fill="${c1}"/>`;
+  if (pat === "halves") art += `<rect x="14" width="14" height="32" fill="${c2}"/>`;
+  else if (pat === "stripes") for (let i = 1; i < 5; i += 2) art += `<rect x="${i * 5.6}" width="5.6" height="32" fill="${c2}"/>`;
+  else if (pat === "hoops") for (let i = 1; i < 5; i += 2) art += `<rect y="${i * 6.4}" width="28" height="6.4" fill="${c2}"/>`;
+  else if (pat === "sash") art += `<path d="M-2 27 22 -2 31 6 6 35Z" fill="${c2}"/>`;
+  const light = lum(c1) > 0.62;
+  const tf = light ? "#111" : "#fff", ts = light ? "rgba(255,255,255,.85)" : "rgba(0,0,0,.65)";
+  return `<svg class="crest" viewBox="0 0 28 32" role="img" aria-label="${esc(name)} crest"><defs><clipPath id="${id}"><path d="${SHIELD}"/></clipPath></defs><g clip-path="url(#${id})">${art}<ellipse cx="14" cy="3" rx="14" ry="8" fill="#fff" opacity=".13"/></g><path d="${SHIELD}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/><text x="14" y="20.2" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="10.5" fill="${tf}" stroke="${ts}" stroke-width="1.7" paint-order="stroke" letter-spacing=".3">${t[0]}</text></svg>`;
+}
 
 const $ = (s) => document.querySelector(s);
 const pct = (x, d = 0) => (x * 100).toFixed(d) + "%";
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const chip = (name) => {
-  const t = TEAM[name] || [name.slice(0, 3).toUpperCase(), "#4A5A52", "#fff"];
-  return `<span class="chip" style="background:${t[1]};color:${t[2]}">${t[0]}</span>`;
-};
+const chip = crest;
 const shortDate = (iso) => {
   const d = new Date(iso + "T12:00:00");
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -800,7 +917,7 @@ function renderControls() {
     const live = DATA.seasons[k].live;
     return `<button type="button" data-season="${k}" aria-pressed="${k === state.season}">${live ? '<span class="live-dot"></span>' : ""}${k}${live ? " live" : ""}</button>`;
   }).join("");
-  $("#baseSeg").innerHTML = [["blend", "Blended odds"], ["rf", "Random Forest only"], ["hybrid", "Model + bookmaker odds"]].map(([k, t]) =>
+  $("#baseSeg").innerHTML = [["blend", "Our model"], ["rf", "Forest only"], ["hybrid", "Model + bookmaker odds"]].map(([k, t]) =>
     `<button type="button" data-base="${k}" aria-pressed="${state.base === k}">${t}</button>`).join("");
   $("#profiles").innerHTML = DATA.profiles.map((p) => `
     <button type="button" class="pcard" data-profile="${p.id}" aria-pressed="${p.id === state.profile}">
@@ -834,7 +951,7 @@ function renderStats() {
   $("#bigAcc").innerHTML = n ? `${(acc * 100).toFixed(0)}<small>%</small>` : `<small>--</small>`;
   const circ = 2 * Math.PI * 78;
   $("#ringVal").style.strokeDasharray = `${(circ * acc).toFixed(1)} ${circ.toFixed(1)}`;
-  $("#sbKicker").textContent = `${state.round === 0 ? "Before round 1" : "Round " + state.round + " of " + C.R} · ${state.season} · ${currentProfile().name} profile`;
+  $("#sbKicker").textContent = `${state.round === 0 ? "Before round 1" : "Round " + state.round + " of " + C.R} · ${state.season} · ${currentProfile().name} style`;
   $("#sbTiles").innerHTML = [
     [`${s.c}<small>/${n}</small>`, "called right", ""],
     [n >= 30 ? `${gap >= 0 ? "+" : ""}${(gap * 100).toFixed(1)}` : "--", `pts vs bookmaker ${pct(C.S.bookmaker, 1)}`, n >= 30 ? (gap >= 0 ? "up" : "down") : ""],
@@ -883,7 +1000,7 @@ function renderChart() {
     g += `<circle class="dot" cx="${last[0]}" cy="${last[1]}" r="5"/><text class="endlabel" x="${Math.min(last[0], Rr - 14)}" y="${last[1] - 11}" text-anchor="middle">${pct(last[2])}</text>`;
   }
   $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by round against two reference lines">${g}</svg>`;
-  $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This profile, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home</span>`;
+  $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This style, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home</span>`;
 }
 
 function renderFeed(animate) {
@@ -972,7 +1089,7 @@ function renderRecap() {
   RECAP = { exactHits, boldest, acc, s, n, gap, bm, hits, misses, easiest, hardest, bestRun, worstRun, mae, exact, within2, over, under, complete: !C.S.live };
   renderCard();
   $("#recapTitle").innerHTML = `${esc(state.season)}, <span>wrapped</span>`;
-  $("#recapSub").textContent = `${C.P.name} profile · ${n} matches${complete ? "" : " so far"}`;
+  $("#recapSub").textContent = `${C.P.name} style · ${n} matches${complete ? "" : " so far"}`;
 
   const hitRow = (m, key) => `<div class="row"><span class="when">${shortDate(m.date)}</span>${line(m)}<span class="says">${key(m)}</span></div>`;
 
@@ -1280,7 +1397,7 @@ function renderLab() {
     ${q.played ? `<span class="verdictline ${OUT[pick] === q.res ? "up" : "down"}">${OUT[pick] === q.res ? "Right" : "Wrong"}: it ended ${OUTNAME[q.res]}</span>` : ""}</div>
     ${callScore}
     ${bigOdds(adj, q.played ? q.res : null)}
-    <span class="fineprint">The ${esc(P.name)} profile picks the call. The percentages are honest odds, an even blend of the Random Forest and the goal model${q.played ? ", from the exact pre-match features" : ""}. Change the profile at the top to see the call change.</span></div>`;
+    <span class="fineprint">The ${esc(P.name)} style picks the call. The percentages are honest odds, an even blend of the Random Forest and the goal model${q.played ? ", from the exact pre-match features" : ""}. Change the playing style at the top to see the call change.</span></div>`;
 
   let realRank = "";
   if (q.played) {
@@ -1418,6 +1535,7 @@ function initLab() {
 function setLabTeams(h, a) {
   lab.home = h; lab.away = a; lab.sim = null; lab.simCount = 0; lab.simHits = 0;
   $("#labHome").value = h; $("#labAway").value = a;
+  refreshPickers();
   renderLab();
 }
 
@@ -1716,7 +1834,7 @@ function renderTeam() {
   const form = `<div class="sub-card"><h3>Last 10 matches</h3><div class="form">` + mine.map((m) => {
     const home = m[1] === ci, gf = home ? m[3] : m[4], ga = home ? m[4] : m[3], opp = HIST.clubs[home ? m[2] : m[1]];
     const r = gf > ga ? "W" : gf === ga ? "D" : "L";
-    return `<span title="${esc(opp)} ${home ? "(H)" : "(A)"} ${m[3]}-${m[4]}"><b class="${r}">${r}</b>${esc((TEAM[opp] || [opp.slice(0, 3).toUpperCase()])[0])}</span>`;
+    return `<span title="${esc(opp)} ${home ? "(H)" : "(A)"} ${m[3]}-${m[4]}"><b class="${r}">${r}</b>${crest(opp)}<em>${home ? "H" : "A"}</em></span>`;
   }).join("") + `</div><span class="fineprint">Most recent on the right. Hover a square for the score.</span></div>`;
 
   const rows = teamSeasonRows(club);
@@ -1768,7 +1886,7 @@ function renderH2H() {
 function summaryText() {
   const r = RECAP; if (!r) return "";
   const hit = r.hits[0], miss = r.misses[0];
-  return [`Season Wrapped, ${state.season} (${currentProfile().name}, ${state.base === "blend" ? "blended odds" : "Random Forest"})`,
+  return [`Season Wrapped, ${state.season} (${currentProfile().name} style, ${state.base === "blend" ? "our model" : state.base === "hybrid" ? "model + bookmaker odds" : "forest only"})`,
     `Called ${r.s.c} of ${r.n} results right: ${(r.acc * 100).toFixed(1)}%. Picking the bookmaker's favourite: ${(r.bm * 100).toFixed(1)}% (${r.gap >= 0 ? "+" : ""}${(r.gap * 100).toFixed(1)} pts).`,
     hit ? `Boldest correct call: ${hit.home} ${hit.hg}-${hit.ag} ${hit.away}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}.` : "",
     miss ? `Most surprised by: ${miss.home} ${miss.hg}-${miss.ag} ${miss.away}, gave the real result ${pct(miss.pAct)}.` : "",
@@ -1781,7 +1899,7 @@ function cardHTML() {
   const r = RECAP;
   const hit = r.hits[0], miss = r.misses[0], easy = r.easiest[0];
   const m = (x) => `${(TEAM[x.home] || [x.home.slice(0, 3)])[0]} ${x.hg}-${x.ag} ${(TEAM[x.away] || [x.away.slice(0, 3)])[0]}`;
-    return `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} profile${r.complete ? "" : ", so far"}</div></div>
+    return `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} style${r.complete ? "" : ", so far"}</div></div>
     <div><div class="wbig num">${(r.acc * 100).toFixed(0)}<small>%</small></div><div class="wsub">of ${r.n} results called right, ${r.gap >= 0 ? "ahead of" : "behind"} the bookmaker's favourite by ${Math.abs(r.gap * 100).toFixed(1)} pts</div></div>
     <div class="wrow"><div><b class="num">${r.s.hit[1]}/${r.s.real[1]}</b><small>draws found</small></div><div><b class="num">${r.bestRun.len}</b><small>best streak</small></div><div><b class="num">${r.mae.toFixed(1)}</b><small>table places off</small></div></div>
     <div class="wline">${hit ? `<b>Boldest hit:</b> ${esc(m(hit))}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}<br>` : ""}${miss ? `<b>Biggest miss:</b> ${esc(m(miss))}, real result had ${pct(miss.pAct)}<br>` : ""}${easy ? `<b>Easiest to read:</b> ${esc(easy.t)} (${pct(easy.a)})<br>` : ""}<b>Exact scores:</b> ${r.exactHits.length} of ${r.n}${r.boldest[0] ? `, boldest ${esc(m(r.boldest[0]))}` : ""}</div>
@@ -1828,7 +1946,7 @@ function storySlides() {
   const hit = r.hits[0], miss = r.misses[0], ex = r.boldest[0];
   const ahead = r.gap >= 0;
   const slides = [
-    { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} profile`, d: `A model that never saw these matches replayed <b>${n}</b> of them. Here is how it did, where it shone, and where it got burned. Tap or press the arrow keys to move.` },
+    { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} style`, d: `A model that never saw these matches replayed <b>${n}</b> of them. Here is how it did, where it shone, and where it got burned. Tap or press the arrow keys to move.` },
     { bg: ["#1D2F8C", "#080F33"], k: "The headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: "of results called right", d: `<b>${r.s.c}</b> of ${n} matches. A model that knew nothing but the league-wide rates would get about ${(Math.max(r.s.real[0], r.s.real[1], r.s.real[2]) / n * 100).toFixed(0)}%.` },
     { bg: ahead ? ["#0B5B3F", "#03160F"] : ["#7A1F45", "#26060F"], k: "Against the bookmaker", big: `${ahead ? "+" : "-"}${Math.abs(r.gap * 100).toFixed(1)}`, h: ahead ? "points ahead of the bookmaker's favourite" : "points behind the bookmaker's favourite", d: `Picking Bet365's favourite every time lands <b>${pct(r.bm, 1)}</b>. Always backing the home side lands ${pct(C.homeShare, 1)}.` },
     { bg: ["#3A4A63", "#0F1622"], k: "The hardest result", big: `${r.s.hit[1]}<small>/${r.s.real[1]}</small>`, h: "draws found", d: `Draws are the result pre-match data says least. The model called <b>${r.s.calls[1]}</b> in total.` },
@@ -1894,11 +2012,61 @@ $("#storyPause").addEventListener("click", () => {
   if (story.paused) clearTimeout(story.timer); else scheduleNext();
 });
 
+/* ---------- crest picker (replaces the plain dropdowns) ---------- */
+const pickers = [];
+function closePickers() { pickers.forEach((p) => { p.panel.hidden = true; p.btn.setAttribute("aria-expanded", "false"); }); }
+function refreshPickers() { pickers.forEach((p) => p.paint()); }
+function initPicker(selector, clubs) {
+  const sel = $(selector);
+  sel.classList.add("sr-only"); sel.tabIndex = -1; sel.setAttribute("aria-hidden", "true");
+  const wrap = document.createElement("div");
+  wrap.className = "picker";
+  wrap.innerHTML = `<button type="button" class="pk-btn" aria-haspopup="listbox" aria-expanded="false"></button><div class="pk-panel" role="listbox" hidden></div>`;
+  sel.after(wrap);
+  const btn = wrap.querySelector(".pk-btn"), panel = wrap.querySelector(".pk-panel");
+  const paint = () => { btn.innerHTML = `${crest(sel.value)}<b>${esc(sel.value)}</b><i class="pk-chev" aria-hidden="true"></i>`; };
+  btn.addEventListener("click", () => {
+    const wasOpen = !panel.hidden;
+    closePickers();
+    if (wasOpen) return;
+    panel.innerHTML = clubs.map((c) => `<button type="button" role="option" class="pk-opt ${c === sel.value ? "on" : ""}" data-club="${esc(c)}" aria-selected="${c === sel.value}">${crest(c)}<span>${esc(c)}</span></button>`).join("");
+    panel.hidden = false; btn.setAttribute("aria-expanded", "true");
+    const on = panel.querySelector(".on"); if (on) on.scrollIntoView({ block: "nearest" });
+  });
+  panel.addEventListener("click", (e) => {
+    const o = e.target.closest(".pk-opt");
+    if (!o) return;
+    sel.value = o.dataset.club; sel.dispatchEvent(new Event("change"));
+    paint(); closePickers(); btn.focus();
+  });
+  pickers.push({ sel, btn, panel, paint });
+  paint();
+}
+document.addEventListener("click", (e) => { if (!e.target.closest(".picker")) closePickers(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePickers(); });
+
+/* ---------- welcome + quick starts ---------- */
+const WELCOME_KEY = "wrapped-welcome-hidden";
+function welcomeHidden() { try { return localStorage.getItem(WELCOME_KEY) === "1"; } catch (e) { return false; } }
+function setWelcome(hidden) {
+  try { localStorage.setItem(WELCOME_KEY, hidden ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+  $("#welcome").classList.toggle("collapsed", hidden);
+}
+function quickStart(which) {
+  if (which === "watch") { state.season = DATA.seasons["2025-26"] ? "2025-26" : state.season; refreshAll(true); state.round = 0; renderReplay(false); goTo("replay"); play(); }
+  else if (which === "predict") goTo("lab");
+  else if (which === "title") goTo("rest");
+  else if (which === "story") { goTo("recap"); openStory(); }
+}
+
 function initExtras() {
   renderTicker();
   const opts = HIST.clubs.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
   $("#teamSel").innerHTML = opts; $("#h2hA").innerHTML = opts; $("#h2hB").innerHTML = opts;
   $("#teamSel").value = "Arsenal"; $("#h2hA").value = "Arsenal"; $("#h2hB").value = "Tottenham";
+  initPicker("#labHome", LAB.teams); initPicker("#labAway", LAB.teams); initPicker("#teamSel", HIST.clubs); initPicker("#h2hA", HIST.clubs); initPicker("#h2hB", HIST.clubs);
+  setWelcome(welcomeHidden());
+  $("#welcome").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.start) quickStart(b.dataset.start); else if (b.id === "welcomeX") setWelcome(true); else if (b.id === "welcomeOpen") setWelcome(false); });
   $("#teamSel").addEventListener("change", renderTeam);
   $("#h2hA").addEventListener("change", renderH2H); $("#h2hB").addEventListener("change", renderH2H);
   $("#restRun").addEventListener("click", () => { restData = null; renderRest(); });

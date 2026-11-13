@@ -547,7 +547,7 @@ def search_profile(
 
 
 def accuracy_objective(y_true, y_pred):
-    # "Deadkill": whatever raw accuracy this model can possibly reach,
+    # "Max Accuracy": whatever raw accuracy this model can possibly reach,
     # no constraint on how the three classes get there. Optimizing
     # accuracy directly (not f1_macro) is exactly the metric that
     # rewards leaning on the majority class -- deliberate here, this
@@ -576,54 +576,13 @@ def even_objective(y_true, y_pred):
     return min(home_recall, away_recall, draw_recall)
 
 
-def target_ratio_objective_factory(home_target, away_target, draw_target):
-    """
-    Unlike even_objective (which always converges toward exactly EQUAL
-    recall once the weakest class maxes out), this targets a specific
-    NAMED ratio -- e.g. 55/55/30 -- by dividing each class's recall by
-    its own target before taking the minimum. The search then
-    maximizes "how close is the worst-performing class to ITS OWN
-    goal," not "how close are all three to each other." A class that
-    clears its target with room to spare no longer holds the others
-    back, which is what actually produces results near a chosen ratio
-    like 60/60/20 instead of always sliding toward a flat tie.
-    """
-
-    def objective(y_true, y_pred):
-        home_mask = y_true == HOME_IDX
-        away_mask = y_true == AWAY_IDX
-        draw_mask = y_true == DRAW_IDX
-        home_recall = (y_pred[home_mask] == HOME_IDX).mean() if home_mask.any() else 0.0
-        away_recall = (y_pred[away_mask] == AWAY_IDX).mean() if away_mask.any() else 0.0
-        draw_recall = (y_pred[draw_mask] == DRAW_IDX).mean() if draw_mask.any() else 0.0
-        return min(
-            home_recall / home_target,
-            away_recall / away_target,
-            draw_recall / draw_target,
-        )
-
-    return objective
-
-
-# Three named profiles, each an explicit, different goal -- the three
-# actually wanted, not every candidate objective explored along the
-# way (those are gone: dead code left lying around is exactly what
-# today's audit pass was for).
+# Two tuned profiles, each an explicit, different goal (plus the untouched
+# "Pure Model" the page adds itself). A third, "Target 60/60/40", was
+# removed at the owner's request: it aimed at 60/60/40 recall, never got
+# near it, and was confusing next to the other two.
 PROFILES = {
     "Balanced": (even_objective, {}),
-    "Deadkill (max accuracy, no balance constraint)": (accuracy_objective, {}),
-    # 60/60/40 gets a much finer grid than the others -- a genuinely
-    # ambitious explicit target is worth the extra search cost to get
-    # as close as the model can actually reach, not just whatever a
-    # coarse grid happens to land near.
-    "Target 60/60/40": (
-        target_ratio_objective_factory(0.60, 0.60, 0.40),
-        {
-            "home_factors": np.arange(1.0, 0.30, -0.05),
-            "away_factors": np.arange(1.0, 2.55, 0.1),
-            "draw_factors": np.arange(0.4, 2.55, 0.1),
-        },
-    ),
+    "Max Accuracy": (accuracy_objective, {}),
 }
 
 rf_model = fitted_models["Random Forest"]

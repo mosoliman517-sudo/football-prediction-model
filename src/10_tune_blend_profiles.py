@@ -91,12 +91,10 @@ def recalls(pick, y):
 
 OBJECTIVES = {
     "balanced": lambda r: min(r[0], r[1], r[2]),
-    "deadkill": lambda r: r[3],
-    "target": lambda r: min(r[0] / 0.60, r[2] / 0.60, r[1] / 0.40),
+    "accuracy": lambda r: r[3],
 }
 COARSE = (np.arange(1.0, 0.35, -0.1), np.arange(1.0, 2.05, 0.15), np.arange(0.4, 2.05, 0.2))
-FINE = (np.arange(1.0, 0.30, -0.05), np.arange(1.0, 2.55, 0.1), np.arange(0.4, 2.55, 0.1))
-GRIDS = {"balanced": COARSE, "deadkill": COARSE, "target": FINE}
+GRIDS = {"balanced": COARSE, "accuracy": COARSE}
 
 
 def search(objective, home_f, away_f, draw_f):

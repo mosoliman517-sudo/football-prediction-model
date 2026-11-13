@@ -47,12 +47,9 @@ RAW_FILES = {
 CLASSES = ["A", "D", "H"]
 
 PROFILE_META = {
-    "Raw model": ("raw", "Plain Random Forest", "Calls whatever is most probable. No tuning."),
-    "Balanced": ("balanced", "Balanced", "Tuned so Home, Draw and Away recall are as even as possible."),
-    "Deadkill (max accuracy, no balance constraint)": (
-        "deadkill", "Deadkill", "Tuned purely for accuracy. Almost never calls a draw."),
-    "Target 60/60/40": (
-        "target", "Target 60/60/40", "Aims at 60% Home, 60% Away and 40% Draw recall."),
+    "Raw model": ("raw", "Pure Model", "The model's single best guess for every match, with no tuning."),
+    "Balanced": ("balanced", "Balanced", "Tuned to find Home, Draw and Away results about equally often. Gives up some overall accuracy to call draws."),
+    "Max Accuracy": ("accuracy", "Max Accuracy", "Tuned to get the most results right overall. Almost never calls a draw."),
 }
 
 
@@ -84,7 +81,7 @@ df["Season"] = df["Date"].apply(season_label)
 
 # ---- profiles -------------------------------------------------------
 factors = json.load(open(PROFILES_JSON))
-profiles = [{"id": "raw", "name": "Raw model", "desc": PROFILE_META["Raw model"][2],
+profiles = [{"id": "raw", "name": PROFILE_META["Raw model"][1], "desc": PROFILE_META["Raw model"][2],
              "f": {"h": 1.0, "d": 1.0, "a": 1.0}}]
 for key, f in factors.items():
     pid, name, desc = PROFILE_META[key]

@@ -4,14 +4,9 @@
     "away": 1.15,
     "draw": 1.4000000000000004
   },
-  "Deadkill (max accuracy, no balance constraint)": {
+  "Max Accuracy": {
     "home": 1.0,
     "away": 1.0,
     "draw": 0.4
-  },
-  "Target 60/60/40": {
-    "home": 0.8499999999999999,
-    "away": 1.0,
-    "draw": 1.0999999999999999
   }
 }

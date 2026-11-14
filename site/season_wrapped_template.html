@@ -164,6 +164,12 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .empty { color: var(--muted); padding: 18px 4px; }
 .bardesc { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
 
+.twin { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.twin h3 { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+.twin table td, .twin table th { padding-left: 5px; padding-right: 5px; }
+.twin tr[data-team] { cursor: pointer; }
+.twin tr.hl td { background: var(--surface2); }
+@media (max-width: 640px) { .twin { gap: 8px; } .twin td:nth-child(2) span { display: none; } .twin th:nth-child(2) { font-size: 0; } .twin table { font-size: 12px; } }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
@@ -668,19 +674,14 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
         <div class="race" id="race"></div>
         <p class="note">Each club's Elo rating (before its latest match) as of the matchday on screen. Ratings rise with wins, more against stronger opponents, and drift back toward the average every summer.</p>
       </section>
-      <section class="card" aria-label="League table, real against model">
-        <div class="cardhead">
-          <h2>League table: reality vs model</h2>
-          <div class="sort" role="group" aria-label="Sort table by">
-            <button type="button" id="sortActual" aria-pressed="true">Real order</button>
-            <button type="button" id="sortModel" aria-pressed="false">Model order</button>
-          </div>
-        </div>
-        <div class="tablewrap"><table id="table"></table></div>
-        <p class="note">xPts are the model's expected points: each match adds 3 x P(win) + P(draw) for each side, from the model's probabilities. xPos is where those points would put the team. The arrow in the last column shows how many places a team sits above (up) or below (down) its xPos.</p>
-      </section>
     </div>
   </div>
+
+  <section class="card" data-views="replay" aria-label="League table, real against model">
+    <div class="cardhead"><h2>League table: reality vs model</h2><span class="label">Tap a club to follow it across both</span></div>
+    <div class="twin" id="table"></div>
+    <p class="note">Left: the real table. Right: the table the model's expected points would give, where each match adds 3 x P(win) + P(draw) for each side. The arrow shows how far a club sits from the same club in the other table (green: the club is doing better than the model expected).</p>
+  </section>
 
   <section class="card lab" id="lab" data-views="lab" aria-label="2026-27 match lab">
     <div class="cardhead"><h2>2026-27 match lab</h2><span class="label" id="labAsof"></span></div>
@@ -824,7 +825,7 @@ const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 
 const state = { season: DATA.seasons["2025-26"] ? "2025-26" : Object.keys(DATA.seasons).pop(),
-  profile: "balanced", base: "blend", view: "replay", round: 12, playing: false, speed: 1, sort: "actual" };
+  profile: "accuracy", base: "blend", view: "replay", round: 12, playing: false, speed: 1 };
 let C = null;       // computed view of the current season + profile
 let timer = null;
 let playedThrough = false;
@@ -939,8 +940,9 @@ function renderStats() {
     [`${s.ex}`, `Perfect scores (1-1 every time: ${s.one})`, ""],
     [`${s.hit[1]}<small>/${s.real[1]}</small>`, "Draws spotted", ""],
   ].map(([v, l, c]) => `<div class="tile ${c}"><b class="num">${v}</b><small>${l}</small></div>`).join("");
+  const homeBase = n ? s.real[2] / n : 0;
   $("#accSub").innerHTML = n
-    ? (n >= 30 ? "" : "Early matchdays are noisy, give it a few weeks.")
+    ? (n >= 30 ? `For scale: always picking Home gets <b>${pct(homeBase, 1)}</b>, the bookmaker's favourite <b>${pct(C.S.bookmaker, 1)}</b>. ${acc <= homeBase + 0.01 ? "This style trades overall accuracy for calling draws, so it lands about level with always-Home. Switch to Max Accuracy to see the best overall score." : ""}` : "Early matchdays are noisy, give it a few weeks.")
     : "Press play to start the season.";
   $("#recalls").innerHTML = [2, 1, 0].map((j) => {
     const o = OUT[j], real = s.real[j], hit = s.hit[j];
@@ -1011,20 +1013,28 @@ function renderFeed(animate) {
 
 function renderTable() {
   const n = Math.min(C.ms.length, state.round * 10);
-  const rows = buildTable(n);
-  rows.sort(state.sort === "actual" ? (x, y) => x.rank - y.rank : (x, y) => x.mrank - y.mrank);
-  const N = rows.length;
-  $("#table").innerHTML = `<thead><tr><th>#</th><th>Team</th><th>P</th><th>Pts</th><th title="Expected points from the model">xPts</th><th title="Position the model expects">xPos</th><th title="Places above (up) or below (down) the model's position">±</th></tr></thead><tbody>` +
-    rows.map((r) => {
-      const pos = state.sort === "actual" ? r.rank : r.mrank;
+  const rows = buildTable(n), N = rows.length;
+  const side = (list, real) => {
+    const head = `<h3>${real ? "Real table" : "Model table (expected points)"}</h3>`;
+    const body = list.map((r) => {
+      const pos = real ? r.rank : r.mrank;
       const cls = N >= 20 ? (pos <= 4 ? "top4" : pos > N - 3 ? "drop" : "") : "";
-      const d = r.diff;
-      const dd = n === 0 ? "" : d === 0 ? `<span class="num" style="color:var(--muted)">=</span>` : `<span class="num ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d)}</span>`;
-      return `<tr class="${cls}"><td class="num">${pos}</td><td>${chip(r.team)}<span>${esc(r.team)}</span></td><td class="num">${r.p}</td><td class="num"><b>${r.pts}</b></td><td class="num">${r.exp.toFixed(1)}</td><td class="num">${r.mrank}</td><td>${dd}</td></tr>`;
-    }).join("") + `</tbody>`;
-  $("#sortActual").setAttribute("aria-pressed", state.sort === "actual");
-  $("#sortModel").setAttribute("aria-pressed", state.sort === "model");
+      const d = real ? r.diff : -r.diff;      // positive: this club is doing better than the other table says
+      const dd = n === 0 || d === 0 ? `<span class="num" style="color:var(--muted)">=</span>` : `<span class="num ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d)}</span>`;
+      return `<tr class="${cls}" data-team="${esc(r.team)}"><td class="num">${pos}</td><td>${chip(r.team)}<span>${esc(r.team)}</span></td><td class="num"><b>${real ? r.pts : r.exp.toFixed(1)}</b></td><td>${dd}</td></tr>`;
+    }).join("");
+    return `<div class="tcol">${head}<table><thead><tr><th>#</th><th>Team</th><th>${real ? "Pts" : "xPts"}</th><th>±</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  };
+  const byReal = [...rows].sort((x, y) => x.rank - y.rank), byModel = [...rows].sort((x, y) => x.mrank - y.mrank);
+  $("#table").innerHTML = side(byReal, true) + side(byModel, false);
 }
+$("#table").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr[data-team]");
+  if (!tr) return;
+  const team = tr.dataset.team, was = tr.classList.contains("hl");
+  $("#table").querySelectorAll("tr.hl").forEach((x) => x.classList.remove("hl"));
+  if (!was) $("#table").querySelectorAll("tr[data-team]").forEach((x) => { if (x.dataset.team === team) x.classList.add("hl"); });
+});
 
 function renderReplay(animate) {
   renderTransport(); renderStats(); renderChart(); renderFeed(animate); renderTable(); renderRace();
@@ -1067,7 +1077,12 @@ function renderRecap() {
 
   const complete = !C.S.live;
   const exactHits = ms.filter((m) => m.exact), boldest = [...exactHits].sort((a, b) => (b.hg + b.ag) - (a.hg + a.ag) || a.psp - b.psp).slice(0, 3);
-  RECAP = { exactHits, boldest, acc, s, n, gap, bm, hits, misses, easiest, hardest, bestRun, worstRun, mae, exact, within2, over, under, complete: !C.S.live };
+  const N = tb.length, byR = [...tb].sort((a, b) => a.rank - b.rank), byM = [...tb].sort((a, b) => a.mrank - b.mrank);
+  const names = (arr) => new Set(arr.map((x) => x.team));
+  const rT4 = names(byR.slice(0, 4)), mT4 = names(byM.slice(0, 4)), rRel = names(byR.slice(N - 3)), mRel = names(byM.slice(N - 3));
+  const race = { champReal: byR[0], champModel: byM[0], champOk: byR[0].team === byM[0].team, champReal2: byR[1],
+    top4: [...rT4].filter((t) => mT4.has(t)).length, rel: [...rRel].filter((t) => mRel.has(t)).length, realT4: [...rT4], modelT4: [...mT4], realRel: [...rRel], modelRel: [...mRel] };
+  RECAP = { race, exactHits, boldest, acc, s, n, gap, bm, hits, misses, easiest, hardest, bestRun, worstRun, mae, exact, within2, over, under, complete: !C.S.live };
   renderCard();
   $("#recapTitle").innerHTML = `${esc(state.season)}, <span>wrapped</span>`;
   $("#recapSub").textContent = `${C.P.name} style · ${n} matches${complete ? "" : " so far"}`;
@@ -1197,8 +1212,6 @@ document.addEventListener("click", (e) => {
   else if (b.id === "toRecap") goTo("recap");
   else if (b.id === "toLab") goTo("lab");
   else if (b.dataset.tab) goTo(b.dataset.tab);
-  else if (b.id === "sortActual") { state.sort = "actual"; renderTable(); }
-  else if (b.id === "sortModel") { state.sort = "model"; renderTable(); }
   else if (b.id === "themeBtn") toggleTheme();
 });
 $("#scrub").addEventListener("input", (e) => setRound(Number(e.target.value)));
@@ -1872,18 +1885,17 @@ function summaryText() {
     hit ? `Boldest correct call: ${hit.home} ${hit.hg}-${hit.ag} ${hit.away}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}.` : "",
     miss ? `Shocker of the season: ${miss.home} ${miss.hg}-${miss.ag} ${miss.away}, gave the real result ${pct(miss.pAct)}.` : "",
     `Named the exact score in ${r.exactHits.length} of ${r.n} matches${r.boldest[0] ? ` (boldest: ${r.boldest[0].home} ${r.boldest[0].hg}-${r.boldest[0].ag} ${r.boldest[0].away})` : ""}.`,
-    `Longest right streak ${r.bestRun.len}, longest wrong streak ${r.worstRun.len}. Table off by ${r.mae.toFixed(1)} places per team.`,
+    `Always picking Home: ${(r.s.real[2] / r.n * 100).toFixed(1)}%. Champion: ${r.race.champReal.team}${r.race.champOk ? " (model agreed)" : ` (model had ${r.race.champModel.team})`}. Top four found: ${r.race.top4}/4. Relegated found: ${r.race.rel}/3. Table off by ${r.mae.toFixed(1)} places per team.`,
     "The model never trained on these matches."].filter(Boolean).join("\n");
 }
 
 function cardHTML() {
-  const r = RECAP;
-  const hit = r.hits[0], miss = r.misses[0], easy = r.easiest[0];
-  const m = (x) => `${(TEAM[x.home] || [x.home.slice(0, 3)])[0]} ${x.hg}-${x.ag} ${(TEAM[x.away] || [x.away.slice(0, 3)])[0]}`;
-    return `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} style${r.complete ? "" : ", so far"}</div></div>
-    <div><div class="wbig num">${(r.acc * 100).toFixed(0)}<small>%</small></div><div class="wsub">of ${r.n} results called right, ${r.gap >= 0 ? "ahead of" : "behind"} the bookmaker's favourite by ${Math.abs(r.gap * 100).toFixed(1)} pts</div></div>
-    <div class="wrow"><div><b class="num">${r.s.hit[1]}/${r.s.real[1]}</b><small>draws found</small></div><div><b class="num">${r.bestRun.len}</b><small>best streak</small></div><div><b class="num">${r.mae.toFixed(1)}</b><small>table places off</small></div></div>
-    <div class="wline">${hit ? `<b>Boldest hit:</b> ${esc(m(hit))}, ${OUTNAME[OUT[hit.pick]]} at ${pct(hit.conf)}<br>` : ""}${miss ? `<b>Biggest miss:</b> ${esc(m(miss))}, real result had ${pct(miss.pAct)}<br>` : ""}${easy ? `<b>Easiest to read:</b> ${esc(easy.t)} (${pct(easy.a)})<br>` : ""}<b>Exact scores:</b> ${r.exactHits.length} of ${r.n}${r.boldest[0] ? `, boldest ${esc(m(r.boldest[0]))}` : ""}</div>
+  const r = RECAP, rc = r.race, n = r.n, homeBase = r.s.real[2] / n;
+  const T = (x) => (TEAM[x] || [x.slice(0, 3)])[0];
+  return `<div><div class="wk">Season Wrapped · ${esc(state.season)}</div><div class="wsub" style="margin-top:4px">${esc(currentProfile().name)} style${r.complete ? "" : ", so far"}</div></div>
+    <div><div class="wbig num">${(r.acc * 100).toFixed(0)}<small>%</small></div><div class="wsub">of ${n} results called right. Always-Home: ${(homeBase * 100).toFixed(0)}%. Bookmaker favourite: ${(r.bm * 100).toFixed(0)}%.</div></div>
+    <div class="wrow"><div><b class="num">${rc.top4}/4</b><small>top four found</small></div><div><b class="num">${rc.rel}/3</b><small>relegated found</small></div><div><b class="num">${r.s.hit[1]}/${r.s.real[1]}</b><small>draws found</small></div></div>
+    <div class="wline"><b>Champion:</b> ${esc(rc.champReal.team)}${rc.champOk ? " (model agreed)" : `, model had ${esc(rc.champModel.team)}`}<br><b>Table error:</b> ${r.mae.toFixed(1)} places per club on average<br><b>Exact scores:</b> ${r.exactHits.length} of ${n} (always 1-1: ${r.s.one})</div>
     <div class="wfoot">A Random Forest and goal model that never saw these matches</div>`;
 }
 
@@ -1923,21 +1935,21 @@ const story = { i: 0, slides: [], timer: null, paused: false, opener: null };
 const STORY_MS = 6500;
 
 function storySlides() {
-  const r = RECAP, n = r.n, m = (x) => `${chip(x.home)}<span class="num">${x.hg}-${x.ag}</span>${chip(x.away)}`;
-  const hit = r.hits[0], miss = r.misses[0], ex = r.boldest[0];
-  const ahead = r.gap >= 0;
+  const r = RECAP, n = r.n, rc = r.race, s = r.s, m = (x) => `${chip(x.home)}<span class="num">${x.hg}-${x.ag}</span>${chip(x.away)}`;
+  const hit = r.hits[0], miss = r.misses[0];
+  const homeBase = s.real[2] / n, ahead = r.gap >= 0, beatHome = r.acc > homeBase;
+  const names = (a) => a.map(esc).join(", ");
   const slides = [
-    { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} style`, d: `A model that never saw these matches replayed <b>${n}</b> of them. Here is how it did, where it shone, and where it got burned. Tap or press the arrow keys to move.` },
-    { bg: ["#1D2F8C", "#080F33"], k: "Your headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: "of results called right", d: `<b>${r.s.c}</b> of ${n} matches. A model that knew nothing but the league-wide rates would get about ${(Math.max(r.s.real[0], r.s.real[1], r.s.real[2]) / n * 100).toFixed(0)}%.` },
-    { bg: ahead ? ["#0B5B3F", "#03160F"] : ["#7A1F45", "#26060F"], k: "Against the bookmaker", big: `${ahead ? "+" : "-"}${Math.abs(r.gap * 100).toFixed(1)}`, h: ahead ? "points ahead of the bookmaker's favourite" : "points behind the bookmaker's favourite", d: `Picking Bet365's favourite every time lands <b>${pct(r.bm, 1)}</b>. Always backing the home side lands ${pct(C.homeShare, 1)}.` },
-    { bg: ["#3A4A63", "#0F1622"], k: "Draws spotted", big: `${r.s.hit[1]}<small>/${r.s.real[1]}</small>`, h: "draws found", d: `Draws are the result pre-match data says least. The model called <b>${r.s.calls[1]}</b> in total.` },
+    { bg: ["#0E4A36", "#03130E"], k: "Season Wrapped", big: state.season.replace("-", "<small>/</small>"), h: `${currentProfile().name} style`, d: `A model that never saw these matches replayed <b>${n}</b> of them using only information from before kickoff. Here is the honest scorecard.` },
+    { bg: ["#1D2F8C", "#080F33"], k: "The headline", big: `${(r.acc * 100).toFixed(0)}<small>%</small>`, h: `of ${n} results called right`, d: `Always picking the home side: <b>${pct(homeBase, 1)}</b>. ${beatHome ? `That is <b>${((r.acc - homeBase) * 100).toFixed(1)} points better</b> than the lazy guess.` : `This style does <b>not</b> beat that lazy guess on overall accuracy, because it spends calls on draws.`}` },
+    { bg: ahead ? ["#0B5B3F", "#03160F"] : ["#7A1F45", "#26060F"], k: "Against the bookmaker", big: `${ahead ? "+" : "-"}${Math.abs(r.gap * 100).toFixed(1)}`, h: ahead ? "points ahead of the bookmaker's favourite" : "points behind the bookmaker's favourite", d: `Picking Bet365's favourite every time lands <b>${pct(r.bm, 1)}</b>. The market knows lineups and injuries; the model does not.` },
+    { bg: ["#6B5700", "#221C00"], k: "The title race", big: rc.champOk ? "&#10003;" : "&#10007;", h: rc.champOk ? `${esc(rc.champReal.team)}: champion, and the model's pick too` : `${esc(rc.champReal.team)} won it; the model's table had ${esc(rc.champModel.team)} on top`, d: `<div class="sl-chips">${chip(rc.champReal.team)}${rc.champOk ? "" : chip(rc.champModel.team)}</div><br>${r.complete ? "Final table" : "Table so far"}: ${rc.champReal.pts} pts. The model table gave the leader ${rc.champModel.exp.toFixed(0)} expected points.` },
+    { bg: ["#0F6A5A", "#031C18"], k: "Top four and the drop", big: `${rc.top4}<small>/4</small>`, h: `top-four clubs found, and ${rc.rel}/3 relegated`, d: `Real top four: <b>${names(rc.realT4)}</b>.<br>Model's top four: ${names(rc.modelT4)}.<br><br>Real bottom three: <b>${names(rc.realRel)}</b>.<br>Model's: ${names(rc.modelRel)}.` },
+    { bg: ["#3A4A63", "#0F1622"], k: "Home, draw, away", big: `${s.hit[2]}<small>/${s.real[2]}</small>`, h: "home wins found", d: `Away wins: <b>${s.hit[0]}/${s.real[0]}</b>. Draws: <b>${s.hit[1]}/${s.real[1]}</b>. Draws are the hardest result to see coming from pre-match data.` },
   ];
-  if (hit) slides.push({ bg: ["#8A4B00", "#2B1500"], k: "Moment of glory", big: `${pct(hit.conf)}`, h: `${OUTNAME[OUT[hit.pick]]} win, and it was`, d: `<div class="sl-chips">${m(hit)}</div><br>${shortDate(hit.date)}. The model was <b>${pct(hit.conf)}</b> sure, and it came in.` });
-  if (miss) slides.push({ bg: ["#7A1A2E", "#240610"], k: "Shocker of the season", big: `${pct(miss.pAct)}`, h: "chance given to what really happened", d: `<div class="sl-chips">${m(miss)}</div><br>${shortDate(miss.date)}. The model backed <b>${OUTNAME[OUT[miss.pick]]}</b> at ${pct(miss.conf)} and got burned.` });
-  slides.push({ bg: ["#0F6A5A", "#031C18"], k: "Streaks", big: `${r.bestRun.len}`, h: "right in a row at the best", d: `From ${r.bestRun.a ? shortDate(r.bestRun.a.date) : ""} to ${r.bestRun.b ? shortDate(r.bestRun.b.date) : ""}. The worst run was <b>${r.worstRun.len}</b> wrong in a row.` });
-  slides.push({ bg: ["#4E2A94", "#190E38"], k: "Sniper scores", big: `${r.exactHits.length}<small>/${n}</small>`, h: "scorelines named exactly", d: `Guessing 1-1 every time would hit ${r.s.one}. ${ex ? `The boldest hit: <b>${esc(ex.home)} ${ex.hg}-${ex.ag} ${esc(ex.away)}</b>.` : ""} Exact scores stay a long shot in football.` });
-  if (r.easiest[0]) slides.push({ bg: ["#1B5877", "#08202C"], k: "Teacher's pets and troublemakers", big: "", h: `${esc(r.easiest[0].t)} <span style="opacity:.6">was a book. ${esc(r.hardest[0].t)} was a riddle.</span>`, d: `${esc(r.easiest[0].t)}: <b>${pct(r.easiest[0].a)}</b> of its matches called right. ${esc(r.hardest[0].t)}: just <b>${pct(r.hardest[0].a)}</b>.` });
-  slides.push({ bg: ["#6B5700", "#221C00"], k: "Table verdict", big: r.mae.toFixed(1), h: "places off per club on average", d: `${r.exact} club${r.exact === 1 ? "" : "s"} placed exactly. Biggest blind spot: <b>${esc(r.over.team)}</b> finished ${Math.max(0, r.over.diff)} places above where the model had them.` });
+  if (hit) slides.push({ bg: ["#8A4B00", "#2B1500"], k: "Best call", big: `${pct(hit.conf)}`, h: `${OUTNAME[OUT[hit.pick]]} win, and it came in`, d: `<div class="sl-chips">${m(hit)}</div><br>${shortDate(hit.date)}.` });
+  if (miss) slides.push({ bg: ["#7A1A2E", "#240610"], k: "Biggest miss", big: `${pct(miss.pAct)}`, h: "chance given to what really happened", d: `<div class="sl-chips">${m(miss)}</div><br>${shortDate(miss.date)}. The model backed <b>${OUTNAME[OUT[miss.pick]]}</b> at ${pct(miss.conf)}.` });
+  slides.push({ bg: ["#4E2A94", "#190E38"], k: "Exact scores", big: `${r.exactHits.length}<small>/${n}</small>`, h: "scorelines named exactly", d: `Guessing 1-1 every time hits <b>${s.one}</b>${s.one > r.exactHits.length ? ", more than the model does. Exact scores are a long shot, and a fixed guess is hard to beat." : "."}` });
   slides.push({ bg: ["#0E4A36", "#03130E"], k: "Share it", big: "", h: "", d: `<div class="wcard" id="wcard2">${cardHTML()}</div><div class="btnrow" style="justify-content:center;margin-top:14px"><button class="btn" id="stCopy" type="button">Copy summary</button><button class="btn ghost" id="stSave" type="button">Save as image</button></div><div class="fineprint" id="stStatus" style="text-align:center;color:rgba(255,255,255,.7)"></div>`, last: true });
   return slides;
 }

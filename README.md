@@ -8,7 +8,7 @@
 >
 > **What this is.** A machine-learning model that predicts Premier League results (Home win / Draw / Away win) using only information known before kickoff, tested on matches it never trained on (2024-25 and 2025-26, 760 matches). It started as one season of CSVs and grew into 12 seasons, ~50 features, five tree models, a Poisson goal model, two tuned "playing styles" (Balanced and Max Accuracy, plus the untouched Pure Model), two kinds of season simulation, and an interactive page. The aim: a model that is **balanced**, with Home and Away recall near 60% and Draw 30-40%, instead of one that only ever calls Home wins.
 >
-> **Where it stands (Nov 2026).** On the 760 held-out matches: the goal model gets **50.5%**, our blend of goal model and forest **50.4%** (log loss 1.0096), the bookmaker market's average closing odds **52.5%**, and the opt-in hybrid that stacks our blend with those odds **52.9%** (log loss 0.9908; stacking gains almost nothing over the odds alone). A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling. Styles on our own data: Balanced **Home 50 / Draw 36 / Away 45**, Max Accuracy **Home 75 / Away 60 / Draw 0** (accuracy 50.5%); the hybrid's Balanced is 47 / 44 / 41. **Home 70 / Away 60 / Draw 40 together is not reachable** (see the ninth pass: at Home 70% you can have Draw 41% with Away 10%, or Away 63% with Draw 0%). Everything is on GitHub and reproducible from a fresh clone.
+> **Where it stands (Nov 2026).** On the 760 held-out matches: our blend gets **50.9%** (log loss 1.0058), the bookmaker market's average closing odds **52.5%**, and the opt-in hybrid that stacks our blend with those odds **53.0%**. A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling. Styles: Balanced (calls a draw only when nearly as likely as the top result) **Home 75 / Draw 3 / Away 57**, Max Accuracy **Home 76 / Away 60 / Draw 0** (51.2%). The balance dial runs between those two and only changes results over the last part of its travel. **Home 70 / Away 60 / Draw 40 together is not reachable** (see the ninth pass). Everything is on GitHub and reproducible from a fresh clone.
 >
 > **The commands that matter.**
 >
@@ -18,7 +18,7 @@
 > ./refresh.sh --check         # also run the live-flow proof (11_check_live_flow.py, +5 min)
 > ```
 >
-> Then republish `site/season_wrapped.html` (ask Claude to "republish the page"). The built page and the club badges are git-ignored: on a fresh clone run `python3 src/13_fetch_crests.py` once, then `python3 src/08_build_wrapped.py`. Live page: https://claude.ai/artifact/MDgzUP3phkTSLBR4WN29q4 (private).
+> Then republish `site/season_wrapped.html` (ask Claude to "republish the page"). The built page and the club badges are git-ignored: on a fresh clone run `python3 src/13_fetch_crests.py` once, then `python3 src/08_build_wrapped.py`. Live page: https://claude.ai/artifact/3qauornydFP8suFbmjzTa1 (private).
 >
 > **Pipeline order** (from the project root): `01_load_data` -> `02_load_features` -> `03_train_model` -> `05_predict_scoreline` -> `10_tune_blend_profiles` -> `09_validate_simulation` -> `12_blind_rest_of_season` -> `08_build_wrapped`. `04` is a quick model comparison, `06` and `07` are season-table simulations (07 shares its engine with 12 through `blind_engine.py`), `11` proves the live season follows along correctly. `refresh.sh` runs the chain for you.
 >
@@ -511,6 +511,13 @@ Direction suggested by the owner: compare each club's actual lineup with its bes
 **Balanced redefined (same day, at the owner's request): no artificial draw boost.** Balanced used to multiply the draw odds by 1.6 to 1.8 so draws got found. It now picks the most likely result and calls a Draw only when it is almost as likely as the top one (draw odds times a small factor beat the top odds); the factor is the largest one that keeps out-of-fold accuracy within one point of the plain top pick (`logical_balanced` in `src/10_tune_blend_profiles.py`). Held-out result: **Home 75 / Draw 3 / Away 57, accuracy 50.4%** on our model (hybrid: 81 / 5 / 53, 52.1%), almost the same as Max Accuracy (76 / 0 / 60, 51.2%), because the model rarely has a draw close to the top outcome. That is the honest consequence of calling draws logically. The earlier draw-boosting Balanced (Home 49 / Draw 36 / Away 47, accuracy 44.9%) is in the git history if wanted back; the balance dial now runs between "never call draws" and this logical Balanced.
 
 **Programme look is now the main design** (the owner chose it over the dark broadcast look). `python3 src/08_build_wrapped.py` builds it by default and it is published at https://claude.ai/artifact/3qauornydFP8suFbmjzTa1; the older dark look is still available with `LOOK=broadcast`. The balance dial is now a compact three-stop control (Max Accuracy, Mix, Balanced), since only a few settings give different results.
+
+### November 14, 2026 (thirteenth pass): refresh and two page fixes
+
+- `./refresh.sh` found no new 2026-27 results (100 matches, latest 2026-11-08); numbers unchanged.
+- **Balance dial:** from Max Accuracy to 70% of the way to Balanced the draw factor never calls a draw, so most of its travel did nothing (76/0/60 throughout). It now maps onto the 0.7 to 1.0 part of the blend, with five stops. The honest limit stands: without a draw boost the stops only span 76/0/60 to 75/3/57.
+- **Form Guide chart:** the bookmaker and always-Home percentages moved from on-chart labels (which collided with the line's end label) into the legend.
+- **Matchday slider glitch (fixed):** in a narrow window or split screen, "Matchday 10 / 10" is wider than "Matchday 9 / 10", so the label grew and re-wrapped the whole control row, resizing the slider under the cursor (row height 130 to 176 px at a 360 px container, 79 of the widths swept). The label now has a fixed width, and the same sweep shows no change between matchdays 9 and 10.
 
 ### Ideas still on the table
 

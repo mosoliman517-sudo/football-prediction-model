@@ -104,7 +104,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 .tbtn.play { width: 52px; height: 52px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .tbtn svg { width: 18px; height: 18px; fill: currentColor; }
 .scrub { flex: 1 1 220px; min-width: 160px; accent-color: var(--accent); }
-.roundlabel { min-width: 118px; font-family: var(--mono); font-weight: 700; }
+.roundlabel { flex: none; width: 18ch; white-space: nowrap; font-family: var(--mono); font-weight: 700; } /* fixed width so the label growing from "9 / 10" to "10 / 10" cannot re-wrap the row under the slider */
 select { background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
 .link { background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 600; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
 .notice { font-size: 13px; color: var(--muted); background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
@@ -760,7 +760,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <div class="group" style="flex:1 1 420px">
         <span class="label">Playing style <i class="hint">how bold the model is about draws</i></span>
         <div class="profiles" id="profiles" role="group" aria-label="Playing style"></div>
-        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy · Mix · Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="50" value="50" list="mixTicks" aria-label="Balance between Max Accuracy and Balanced"><datalist id="mixTicks"><option value="0"></option><option value="50"></option><option value="100"></option></datalist><div class="mixread" id="mixRead"></div></div>
+        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy · Mix · Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="25" value="50" list="mixTicks" aria-label="Balance between Max Accuracy and Balanced"><datalist id="mixTicks"><option value="0"></option><option value="25"></option><option value="50"></option><option value="75"></option><option value="100"></option></datalist><div class="mixread" id="mixRead"></div></div>
       </div>
     </div>
     <details class="adv"><summary>More options: prediction engine</summary>
@@ -1116,8 +1116,8 @@ function renderChart() {
     if (r === 1 || r % 5 === 0) g += `<text x="${x(r)}" y="${H - 10}" text-anchor="middle">${r}</text>`;
   }
   const bm = C.S.bookmaker, hs = C.homeShare;
-  g += `<line class="ref" style="stroke:var(--draw)" x1="${L}" x2="${Rr}" y1="${y(bm)}" y2="${y(bm)}"/><text x="${Rr}" y="${y(bm) - 6}" text-anchor="end">Bookmaker favourite ${pct(bm)}</text>`;
-  g += `<line class="ref" style="stroke:var(--home);opacity:.7" x1="${L}" x2="${Rr}" y1="${y(hs)}" y2="${y(hs) + 0}"/><text x="${Rr}" y="${y(hs) + 15}" text-anchor="end">Always pick Home ${pct(hs)}</text>`;
+  g += `<line class="ref" style="stroke:var(--draw)" x1="${L}" x2="${Rr}" y1="${y(bm)}" y2="${y(bm)}"/>`;
+  g += `<line class="ref" style="stroke:var(--home);opacity:.7" x1="${L}" x2="${Rr}" y1="${y(hs)}" y2="${y(hs)}"/>`;
   const pts = [];
   for (let r = 1; r <= state.round; r++) {
     const k = Math.min(C.ms.length, r * 10);
@@ -1131,7 +1131,7 @@ function renderChart() {
     g += `<circle class="dot" cx="${last[0]}" cy="${last[1]}" r="5"/><text class="endlabel" x="${Math.min(last[0], Rr - 14)}" y="${last[1] - 11}" text-anchor="middle">${pct(last[2])}</text>`;
   }
   $("#chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by matchday against two reference lines">${g}</svg>`;
-  $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This style, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home</span>`;
+  $("#legend").innerHTML = `<span><i style="--c:var(--accent)"></i>This style, cumulative</span><span><i class="dash" style="--c:var(--draw)"></i>Bookmaker's favourite ${pct(bm)}</span><span><i class="dash" style="--c:var(--home)"></i>Always pick Home ${pct(hs)}</span>`;
 }
 
 function renderFeed(animate) {
@@ -1396,9 +1396,10 @@ function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
 function liveMatches() { return DATA.seasons[LAB.season].matches; }
 const MIX = { t: 0.5 };
 // A style between Max Accuracy (t = 0) and Balanced (t = 1): each decision factor is a geometric blend of the two tuned ones.
+// The dial maps onto the 0.7 to 1.0 part of that blend: below 0.7 the draw factor is too low to ever call a draw, so the first 70% of the travel changed nothing.
 function mixProfile() {
   const A = DATA.profiles.find((p) => p.id === "accuracy"), B = DATA.profiles.find((p) => p.id === "balanced");
-  const g = (a, b) => Math.pow(a, 1 - MIX.t) * Math.pow(b, MIX.t), blend = (x, y) => ({ h: g(x.h, y.h), d: g(x.d, y.d), a: g(x.a, y.a) });
+  const tt = 0.7 + 0.3 * MIX.t, g = (a, b) => Math.pow(a, 1 - tt) * Math.pow(b, tt), blend = (x, y) => ({ h: g(x.h, y.h), d: g(x.d, y.d), a: g(x.a, y.a) });
   return { id: "mix", name: "Your mix", desc: "A blend of Max Accuracy and Balanced, set with the dial.", f: blend(A.f, B.f), fb: blend(A.fb, B.fb), fh: blend(A.fh, B.fh) };
 }
 function currentProfile() { return state.profile === "mix" ? mixProfile() : DATA.profiles.find((p) => p.id === state.profile); }

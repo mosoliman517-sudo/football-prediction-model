@@ -231,7 +231,8 @@ blind = json.load(open(BLIND_JSON))
 blind["backtest"] = json.load(open(BLIND_BACKTEST_JSON))
 data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history,
         "crests": crests, "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]},
-        "spread": json.load(open("02_processed_data/spread_calibration.json"))}
+        "spread": json.load(open("02_processed_data/spread_calibration.json")),
+        "scorers": json.load(open("02_processed_data/scorers.json"))}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

@@ -26,3 +26,4 @@ site/_preview.html
 02_processed_data/candidate_signals.csv
 site/_*.html
 .claude/
+site/season_wrapped_programme.html

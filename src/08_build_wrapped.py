@@ -217,6 +217,7 @@ def minify_svg(svg):
     return re.sub(r">\s+<", "><", svg).strip()
 
 
+TEAM_SLUGS = sorted(set(pd.read_csv("02_processed_data/E0_features.csv")["HomeTeam"]) | set(pd.read_csv("02_processed_data/E0_grid_model.csv")["HomeTeam"]))
 crests = {}
 crest_index = "site/crests/index.json"
 if os.path.exists(crest_index):
@@ -225,6 +226,18 @@ if os.path.exists(crest_index):
         if only and club not in only:
             continue
         crests[club] = minify_svg(open(f"site/crests/{fname}", encoding="utf-8").read())
+# A badge you supply yourself (e.g. site/crests/coventry.png or .svg) is used for any club the fetch script could not get.
+import base64
+for fname in sorted(os.listdir("site/crests")) if os.path.isdir("site/crests") else []:
+    stem, ext = os.path.splitext(fname)
+    club = next((c for c in TEAM_SLUGS if re.sub(r"[^a-z0-9]+", "-", c.lower()).strip("-") == stem), None)
+    if club and (not os.environ.get("CRESTS_ONLY") or club in os.environ["CRESTS_ONLY"].split(",")) and club not in crests and ext.lower() in (".png", ".jpg", ".jpeg", ".webp", ".svg"):
+        raw = open(f"site/crests/{fname}", "rb").read()
+        if ext.lower() == ".svg":
+            crests[club] = minify_svg(raw.decode("utf-8"))
+        else:
+            mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}[ext.lower()]
+            crests[club] = "data:" + mime + ";base64," + base64.b64encode(raw).decode()
 print(f"Crests embedded: {len(crests)}" + ("" if crests else " (none found; clubs show as text chips. Run 13_fetch_crests.py)"))
 
 blind = json.load(open(BLIND_JSON))
@@ -253,7 +266,9 @@ if os.environ.get("PREVIEW_LEAN"):    # testing aid: the preview pane cannot ope
     data["history"] = {**history, "matches": [m for m in history["matches"] if m[0] >= cut],
                        "elo": {k: [e for e in v if e[0] >= cut] or v[-1:] for k, v in history["elo"].items()}}
     data["scorers"] = {sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in data["scorers"].items() if sn >= "2025-26"}
-template = open(TEMPLATE).read()
+template = open(TEMPLATE).read().replace("__LOOK__", os.environ.get("LOOK", "broadcast"))
+if os.environ.get("LOOK") == "programme":
+    template = template.replace("<title>Beat the Model</title>", "<title>Beat the Model Programme</title>", 1)
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 open(OUTPUT, "w").write(html)

@@ -1,4 +1,8 @@
-## Football Match Prediction Model
+## Beat the Model
+
+*A Premier League prediction project and game, built by moisback22.* (Earlier notes below call the page "Season Wrapped"; that is now the name of its season-recap feature.)
+
+### Football Match Prediction Model
 
 > **Resuming after a break? Read this box first.**
 >
@@ -463,6 +467,13 @@ Findings:
 - **Swapping the production Elo columns for a single-rating Elo improves the real model** (out-of-fold on the training seasons): margin Elo changes log loss by -0.0056 for the logistic regression (t -3.2) and -0.0026 for the forest (t -1.7); asymmetric margin -0.0047 and -0.0036; classic -0.0042 and -0.0020. Adding them alongside the old columns also helps a little (margin -0.0025 and -0.0024). These are small gains: they are real but not transformative.
 - **How the formats treat a 5-0 win for a strong club over a weak one** (rating points, strong / weak): classic +2.6 / -2.6 (an expected win moves little); dual-track +4.8 / -4.8; margin +28 / -28 (it measures the win against the *expected margin*, so a 1-0 win by a heavy favourite costs it 12 points); adaptive-K +2.2 / -2.0; asymmetric margin +22.7 / -14.2.
 - **Not adopted yet.** The production pipeline still uses the dual-track Elo. The evidence favours replacing it with a single-rating margin or classic Elo (about 0.003-0.006 log loss on the model); that means re-running steps 01 to 12 and rebuilding the page, so it was left as a decision.
+
+### November 14, 2026 (eighth pass): renamed, credited, polished, and a redesign experiment
+
+- **The project is now called Beat the Model** (chosen in a poll; the games tab became **Play** so the name is not used twice), credited to **moisback22** under the title, in the footer, in the artifact description and here. "Wrapped" is now just the season-recap feature.
+- **Visual fixes everywhere:** matchday form is the same red/green/grey squircle strip used on the rest of the page instead of "WWWDL" text; the match list in Beat the Model shows both clubs' badges (and wider rows so names are not cut); Higher or Lower badges and text chips sit in a fixed slot so cards line up; the hard-mode checkbox is aligned; goal labels on the pitch no longer print on top of each other.
+- **Redesign experiment, built alongside the current look** (`LOOK=programme python3 src/08_build_wrapped.py` writes a matchday-programme version; the default build is unchanged): cream paper with mowing stripes, a pitch-green masthead and card headings, chunky condensed type, hard offset shadows, scoreboard-style tiles, a gold welcome card, with a dark variant. Long copy is cut: every explanatory paragraph and fine print is marked `.long` and is hidden in this look, and the game intros have a one-line `.short` version shown instead. The programme version is published as a separate artifact so the two can be compared; the owner decides which direction wins.
+- **Coventry's badge is still missing** because the Premier League badge host refuses that one file (HTTP 403) and was not worked around. `08_build_wrapped.py` now accepts a badge you supply: save an image as `site/crests/coventry.png` (or `.svg`, `.jpg`, `.webp`) and rebuild.
 
 ### Ideas still on the table
 

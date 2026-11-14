@@ -1,4 +1,4 @@
-<title>Season Wrapped</title>
+<title>Beat the Model</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -197,11 +197,11 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .bt-filters select, .bt-score input { background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; color: var(--fg); }
 .bt-score input { width: 64px; text-align: center; font: 700 18px var(--mono); }
 .bt-score { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.hardtoggle { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
-.bt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px; max-height: 360px; overflow: auto; padding: 2px; }
+.bt-filters label.hardtoggle, .hardtoggle { display: flex; flex-direction: row; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); flex-basis: 100%; }
+.hardtoggle input { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.bt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 6px; max-height: 360px; overflow: auto; padding: 2px; }
 .bt-fix { display: flex; gap: 10px; align-items: center; text-align: left; background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; cursor: pointer; min-width: 0; }
 .bt-fix:hover { border-color: var(--accent); } .bt-fix.done { opacity: .75; }
-.bt-fix span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .btrecord { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
 .ctx { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 10px; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .ctxside { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -229,9 +229,20 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .holpair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
 .holcard { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 12px; background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; font-size: 16px; }
 .holcard .crest { width: 64px; height: 64px; } .holcard .chip { min-width: 64px; height: 38px; font-size: 15px; }
+.holbadge { height: 72px; display: grid; place-items: center; } .holcard { justify-content: flex-start; min-height: 200px; }
 .holcard:hover:not(:disabled) { border-color: var(--accent); } .holcard.ans { border-color: var(--ok); } .holcard.wrong { border-color: var(--bad); }
 .holv { font: 800 30px var(--display); color: var(--muted); }
 @media (max-width: 560px) { .ctx { grid-template-columns: 1fr; } .ctxvs { display: none; } .vrow { grid-template-columns: 1fr 1fr 60px; } .vrow span:nth-child(3), .vrow span:nth-child(4) { grid-column: auto; } .holpair { grid-template-columns: 1fr; } .holpair .ctxvs { display: block; } }
+.short { display: none; }
+.byline { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.bt-fix .fx { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+.bt-fix .fx b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; min-width: 0; }
+.bt-fix .fx i { color: var(--muted); font-style: normal; font-size: 12px; }
+.bt-fix .crest { width: 22px; height: 22px; } .bt-fix .chip { min-width: 30px; height: 20px; font-size: 10px; }
+.mdctx { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; flex-basis: 100%; font-size: 12.5px; color: var(--muted); }
+.mdctx .side { display: inline-flex; align-items: center; gap: 6px; }
+.mdctx .side b { color: var(--fg); }
+.formstrip i { border-radius: 7px; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
@@ -618,6 +629,74 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
 .btn.ghost { background: var(--surface); box-shadow: none; }
 .seg button[aria-pressed="true"], .pcard[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--accent) inset, 0 8px 24px -14px var(--accent); }
 .pcard b { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+
+/* ================= Matchday programme look (build with LOOK=programme) =================
+   Cream paper, pitch-green headers, chunky condensed type, hard offset shadows like a printed
+   programme. Long explanatory copy (.long, notes, how-to-read) is dropped and the .short copy is shown. */
+:root[data-look="programme"] { --pitch: #0B6B3E; --cream: #F6F0DE; --display: "Big Shoulders Display", "Arial Narrow", system-ui, sans-serif; }
+:root[data-look="programme"]:not([data-theme="dark"]) {
+  --bg: #F1EAD8; --surface: #FFFCF2; --surface2: #EFE7D0; --line: #12241B; --fg: #12241B; --muted: #55645A;
+  --accent: #FFC21A; --accent-ink: #12241B; --home: #E4572E; --draw: #6B7A89; --away: #1B88CC; --ok: #0C9A5A; --bad: #D6283F; --shadow: #12241B; color-scheme: light;
+}
+:root[data-look="programme"][data-theme="dark"] {
+  --bg: #06241A; --surface: #0B3324; --surface2: #0F4230; --line: #3A8A63; --fg: #F6F0DE; --muted: #A9C4B3;
+  --accent: #FFC21A; --accent-ink: #12241B; --home: #FF8A5B; --draw: #9AA7B8; --away: #4CC9F0; --ok: #3DDC97; --bad: #FF5D73; --shadow: #021810; color-scheme: dark;
+}
+:root[data-look="programme"] body { background-image: repeating-linear-gradient(90deg, rgba(11, 107, 62, 0.07) 0 90px, transparent 90px 180px); }
+:root[data-look="programme"] .long, :root[data-look="programme"] .note, :root[data-look="programme"] .about, :root[data-look="programme"] .wl-how,
+:root[data-look="programme"] .bardesc, :root[data-look="programme"] .hint, :root[data-look="programme"] .wl-full > p { display: none !important; }
+:root[data-look="programme"] .short { display: inline; }
+:root[data-look="programme"] .mast { background: var(--pitch); color: var(--cream); border: 3px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 6px 6px 0 var(--shadow);
+  background-image: radial-gradient(circle at 94% 10%, rgba(255, 255, 255, 0.1) 0 64px, transparent 65px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 70px, transparent 70px 140px); }
+:root[data-look="programme"] .wordmark h1 { color: var(--cream); font-size: clamp(48px, 10vw, 104px); }
+:root[data-look="programme"] .wordmark h1 em { color: var(--accent); }
+:root[data-look="programme"] .byline { color: var(--accent); font-size: 13px; }
+:root[data-look="programme"] .mast-sub { color: #DCEADF; font-size: 17px; font-weight: 500; }
+:root[data-look="programme"] .iconbtn { border: 2px solid var(--cream); color: var(--cream); background: transparent; }
+:root[data-look="programme"] .ticker { border-color: rgba(246, 240, 222, 0.35); color: var(--cream); }
+:root[data-look="programme"] .card { background: var(--surface); border: 2px solid var(--line); border-radius: 16px; box-shadow: 5px 5px 0 var(--shadow); }
+:root[data-look="programme"] .cardhead h2 { font-family: var(--display); font-weight: 900; font-size: 26px; text-transform: uppercase; letter-spacing: 0.03em;
+  background: var(--pitch); color: var(--cream); padding: 2px 12px 3px; border-radius: 8px; transform: rotate(-1deg); display: inline-block; }
+:root[data-look="programme"] .jump button { border: 2px solid var(--line); background: var(--surface); color: var(--fg); font-family: var(--display); font-weight: 800; font-size: 17px;
+  letter-spacing: 0.05em; text-transform: uppercase; border-radius: 10px; box-shadow: 3px 3px 0 var(--shadow); }
+:root[data-look="programme"] .jump button[aria-selected="true"] { background: var(--pitch); color: var(--cream); box-shadow: none; transform: translate(3px, 3px); border-color: var(--line); }
+:root[data-look="programme"] .btn { border: 2px solid var(--line); background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); font-family: var(--display);
+  font-weight: 900; font-size: 18px; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 10px; }
+:root[data-look="programme"] .btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); filter: none; }
+:root[data-look="programme"] .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+:root[data-look="programme"] .btn.ghost { background: var(--surface); color: var(--fg); border-color: var(--line); }
+:root[data-look="programme"] .seg { background: var(--surface2); border: 2px solid var(--line); border-radius: 12px; }
+:root[data-look="programme"] .seg button { font-weight: 700; color: var(--fg); }
+:root[data-look="programme"] .seg button[aria-pressed="true"] { background: var(--pitch); color: var(--cream); }
+:root[data-look="programme"] .hero.sb { background: var(--pitch); color: var(--cream); border: 3px solid var(--line); box-shadow: 6px 6px 0 var(--shadow); }
+:root[data-look="programme"] .hero.sb .label, :root[data-look="programme"] .hero.sb .sub, :root[data-look="programme"] .hero.sb .bigacc small { color: #CFE3D5; }
+:root[data-look="programme"] .sb-ring .trk { stroke: rgba(246, 240, 222, 0.2); }
+:root[data-look="programme"] .tile { background: var(--pitch-deep, #064A2A); color: var(--cream); border: 2px solid var(--line); border-radius: 12px; backdrop-filter: none; }
+:root[data-look="programme"] .tile b { color: var(--accent); font-weight: 900; }
+:root[data-look="programme"] .tile small { color: #CFE3D5; }
+:root[data-look="programme"] .tile.up b { color: #7CF0B2; } :root[data-look="programme"] .tile.down b { color: #FF9AA8; }
+:root[data-look="programme"] .sub-card, :root[data-look="programme"] .ctx, :root[data-look="programme"] .theatre, :root[data-look="programme"] .mdrow, :root[data-look="programme"] .tbrow,
+:root[data-look="programme"] .bt-fix, :root[data-look="programme"] .upcard, :root[data-look="programme"] .holcard, :root[data-look="programme"] .pcard, :root[data-look="programme"] .wl-card { border: 2px solid var(--line); border-radius: 12px; }
+:root[data-look="programme"] .upcard:hover:not(:disabled), :root[data-look="programme"] .holcard:hover:not(:disabled), :root[data-look="programme"] .bt-fix:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shadow); }
+:root[data-look="programme"] .welcome .wl-full { background: var(--accent); color: var(--accent-ink); border: 3px solid var(--line); box-shadow: 5px 5px 0 var(--shadow); }
+:root[data-look="programme"] .welcome .wl-full h2 { font-family: var(--display); font-weight: 900; font-size: 38px; text-transform: uppercase; }
+:root[data-look="programme"] .welcome .wl-card { background: var(--surface); color: var(--fg); }
+:root[data-look="programme"] .simscore, :root[data-look="programme"] .mt-score .big { font-family: var(--display); }
+:root[data-look="programme"] .foot-note { color: var(--muted); }
+
+:root[data-look="programme"] .ticker { background: rgba(4, 52, 30, 0.75); border: 2px solid rgba(246, 240, 222, 0.35); border-radius: 12px; }
+:root[data-look="programme"] .ticker-track { color: var(--cream); }
+:root[data-look="programme"] .iconbtn { white-space: nowrap; padding-inline: 14px; }
+:root[data-look="programme"] .wl-kicker { color: var(--accent-ink); opacity: 0.75; }
+
+:root[data-look="programme"] .hero.sb .rrow .v, :root[data-look="programme"] .hero.sb .rrow .v b, :root[data-look="programme"] .hero.sb .rrow .label { color: var(--cream); }
+:root[data-look="programme"] .hero.sb .rrow .track { background: rgba(246, 240, 222, 0.22); }
+
+:root[data-look="programme"] .mt-score small { color: var(--pitch); font-weight: 800; }
+:root[data-look="programme"][data-theme="dark"] .mt-score small { color: var(--accent); }
+
+.wordmark > div { min-width: 0; } .wordmark h1 { overflow-wrap: anywhere; } .mast-top { flex-wrap: wrap; }
+@media (max-width: 520px) { :root[data-look="programme"] .mast { padding: 16px; } :root[data-look="programme"] .wordmark h1 { font-size: clamp(40px, 13vw, 64px); } }
 </style>
 
 <div class="wrap">
@@ -625,17 +704,17 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <div class="mast-top">
       <div class="wordmark">
         <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M32 13 42 20 38 32 26 32 22 20Z" fill="var(--accent)"/><path d="M26 32 18 38 21 49M38 32 46 38 43 49M32 13 32 6M22 20 12 18M42 20 52 18M21 49 32 56 43 49" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/></svg>
-        <h1>Season <em>Wrapped</em></h1>
+        <div><h1>Beat the <em>Model</em></h1><div class="byline">Built by moisback22</div></div>
       </div>
       <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark theme"></button>
     </div>
-    <p class="mast-sub">Replay a Premier League season with a Random Forest and goal model that have never seen a single one of these matches, see where they were right and where they got burned, then simulate any 2026-27 match, project the rest of the season, and look up any club.</p>
+    <p class="mast-sub"><span class="long">Play against a Random Forest and goal model that have never seen these Premier League matches: predict hidden results, spot upsets, guess whole tables, or replay a season and see where the model got burned.</span><span class="short">Predict real Premier League matches against a model that has never seen them.</span></p>
     <div class="ticker" aria-label="Latest 2026-27 results"><div class="ticker-track" id="ticker"></div></div>
   </header>
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
     <button type="button" role="tab" data-tab="replay">Matchday</button>
-    <button type="button" role="tab" data-tab="lab">Beat the Model</button>
+    <button type="button" role="tab" data-tab="lab">Play</button>
     <button type="button" role="tab" data-tab="rest">Title Race</button>
     <button type="button" role="tab" data-tab="teams">Club Files</button>
     <button type="button" role="tab" data-tab="h2h">Derby Days</button>
@@ -651,7 +730,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one matchday at a time, then check its work against what really happened. Pick a starting point:</p>
       <div class="wl-grid">
         <button type="button" class="wl-card" data-start="watch"><b>Watch a season</b><span>Press play and see every call, right or wrong, as the table builds.</span></button>
-        <button type="button" class="wl-card" data-start="predict"><b>Beat the model</b><span>Guess a real match without seeing the result, then see who got it right.</span></button>
+        <button type="button" class="wl-card" data-start="predict"><b>Play the games</b><span>Guess a real match without seeing the result, then see who got it right.</span></button>
         <button type="button" class="wl-card" data-start="title"><b>Who wins the title?</b><span>Thousands of simulated seasons for the rest of 2026-27.</span></button>
         <button type="button" class="wl-card" data-start="story"><b>Play my Wrapped</b><span>A full-screen story of how the model did, ready to share.</span></button>
       </div>
@@ -820,7 +899,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     </ul>
   </section>
   <footer class="foot-note">
-    <span>Season Wrapped. Club badges are the property of their clubs and the Premier League, shown only to identify each club.</span>
+    <span>Beat the Model, built by moisback22. Club badges are the property of their clubs and the Premier League, shown only to identify each club.</span>
     <span>Data: football-data.co.uk, Understat, Transfermarkt (Kaggle). Source and write-up on GitHub: mosoliman517-sudo/football-prediction-model.</span>
   </footer>
 </div>
@@ -835,6 +914,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
 </div>
 
 <script>
+document.documentElement.dataset.look = "__LOOK__";
 const DATA = /*__DATA__*/null;
 
 const OUT = ["A", "D", "H"];
@@ -864,7 +944,7 @@ const TEAM = {
 // short in-browser image URL at load and reused everywhere a club is named. A club
 // without a badge (or a build made without them) falls back to a plain text chip.
 const CREST_URL = {};
-for (const [club, svg] of Object.entries(DATA.crests || {})) CREST_URL[club] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+for (const [club, svg] of Object.entries(DATA.crests || {})) CREST_URL[club] = svg.startsWith("data:") ? svg : "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 function crest(name) {
   const url = CREST_URL[name];
   if (url) return `<img class="crest" src="${url}" alt="${esc(name)} badge" decoding="async">`;
@@ -1000,7 +1080,7 @@ function renderStats() {
   ].map(([v, l, c]) => `<div class="tile ${c}"><b class="num">${v}</b><small>${l}</small></div>`).join("");
   const homeBase = n ? s.real[2] / n : 0;
   $("#accSub").innerHTML = n
-    ? (n >= 30 ? `For scale: always picking Home gets <b>${pct(homeBase, 1)}</b>, the bookmaker's favourite <b>${pct(C.S.bookmaker, 1)}</b>. ${acc <= homeBase + 0.01 ? "This style trades overall accuracy for calling draws, so it lands about level with always-Home. Switch to Max Accuracy to see the best overall score." : ""}` : "Early matchdays are noisy, give it a few weeks.")
+    ? (n >= 30 ? `For scale: always picking Home gets <b>${pct(homeBase, 1)}</b>, the bookmaker's favourite <b>${pct(C.S.bookmaker, 1)}</b>. ${acc <= homeBase + 0.01 ? '<span class="long">This style trades overall accuracy for calling draws, so it lands about level with always-Home. Switch to Max Accuracy to see the best overall score.</span>' : ""}` : "Early matchdays are noisy, give it a few weeks.")
     : "Press play to start the season.";
   $("#recalls").innerHTML = [2, 1, 0].map((j) => {
     const o = OUT[j], real = s.real[j], hit = s.hit[j];
@@ -1533,7 +1613,7 @@ function theatreHTML(m) {
   return `<div class="mt-board"><div class="mt-team">${chip(m.home)}<b>${esc(m.home)}</b></div><div class="mt-score"><span class="big num" id="thScore">0 - 0</span><small id="thClock">Kick-off</small></div><div class="mt-team right"><b>${esc(m.away)}</b>${chip(m.away)}</div></div>
     <div class="mt-poss" aria-hidden="true"><i id="thPH" style="background:var(--home)"></i><i id="thPA" style="background:var(--away)"></i></div>
     <div class="mt-stats" id="thStats"></div>
-    ${pitch}<div class="fineprint">${esc(m.home)} attacks to the right, ${esc(m.away)} to the left. Filled dot: goal. Ring: saved. Cross: wide. Grey: blocked. Positions are illustrative.</div>
+    ${pitch}<div class="fineprint long">${esc(m.home)} attacks to the right, ${esc(m.away)} to the left. Filled dot: goal. Ring: saved. Cross: wide. Grey: blocked. Positions are illustrative.</div>
     <div class="btnrow mt-ctrl"><button class="btn ghost" id="thPause" type="button">Pause</button><button class="btn ghost" id="thSpeed" type="button">Speed 1x</button><button class="btn ghost" id="thSkip" type="button">Skip to full time</button></div>
     <ol class="mt-feed" id="thFeed"></ol><div id="thAfter"></div>`;
 }
@@ -1541,7 +1621,7 @@ const STAT_NAMES = [["Shots", 0], ["On target", 2], ["Corners", 4], ["Fouls", 6]
 function statsNote() {
   const V = DATA.statsval; if (!V) return "";
   const f = (n) => { const a = V[`${n}_home`], b = V[`${n}_away`]; return `${((a.mae_model + b.mae_model) / 2).toFixed(1)} against ${((a.mae_baseline + b.mae_baseline) / 2).toFixed(1)}`; };
-  return `<span class="fineprint">How good are these numbers? Each is the model's forecast from pre-match information, tested on 760 matches it never saw. Average miss per team, against always guessing the league average: shots ${f("shots")}, on target ${f("sot")}, corners ${f("corners")}. Fouls (${f("fouls")}) and yellow cards (${f("yellows")}) barely depend on team quality, so they stay close to the league average. The simulated match draws its counts around these forecasts, but one match is one random draw. Possession is not shown: none of our data records it. Shot positions and the split between wide and blocked shots are illustrative.</span>`;
+  return `<span class="fineprint long">How good are these numbers? Each is the model's forecast from pre-match information, tested on 760 matches it never saw. Average miss per team, against always guessing the league average: shots ${f("shots")}, on target ${f("sot")}, corners ${f("corners")}. Fouls (${f("fouls")}) and yellow cards (${f("yellows")}) barely depend on team quality, so they stay close to the league average. The simulated match draws its counts around these forecasts, but one match is one random draw. Possession is not shown: none of our data records it. Shot positions and the split between wide and blocked shots are illustrative.</span>`;
 };
 const expLine = (exp) => STAT_NAMES.map(([n, i]) => `${n.toLowerCase()} ${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}`).join(", ");
 function statsCard(it) {
@@ -1572,9 +1652,10 @@ function paintTheatre() {
   const shn = st.H.shots + st.A.shots, ph = shn ? (st.H.shots / shn) * 100 : 50; $("#thPH").style.width = ph + "%"; $("#thPA").style.width = (100 - ph) + "%";
   $("#thStats").innerHTML = [["Share of shots", `${Math.round(ph)}%`, `${Math.round(100 - ph)}%`], ["Shots", st.H.shots, st.A.shots], ["On target", st.H.sot, st.A.sot], ["Corners", st.H.corners, st.A.corners], ["Fouls", st.H.fouls, st.A.fouls], ["Yellow cards", st.H.cards, st.A.cards]]
     .map(([l, a, b]) => `<span class="num">${a}</span><span class="label">${l}</span><span class="num">${b}</span>`).join("");
+  const gn = { H: 0, A: 0 };
   $("#thDots").innerHTML = vis.filter((e) => e.x != null).map((e) => {
     const c = e.sd === "H" ? "var(--home)" : "var(--away)";
-    if (e.type === "goal") return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="1.8" fill="${c}" stroke="#fff" stroke-width=".5"/><text x="${(e.x + (e.sd === "H" ? -2.6 : 2.6)).toFixed(1)}" y="${(e.y - 2.4).toFixed(1)}" font-size="3.1" font-weight="700" fill="#fff" text-anchor="${e.sd === "H" ? "end" : "start"}">${esc(e.who)}</text>`;
+    if (e.type === "goal") { const k = gn[e.sd]++, ly = Math.max(5, Math.min(66, e.y - 2.4 - 3.6 * k)); return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="1.8" fill="${c}" stroke="#fff" stroke-width=".5"/><text x="${(e.x + (e.sd === "H" ? -2.6 : 2.6)).toFixed(1)}" y="${ly.toFixed(1)}" font-size="3.1" font-weight="700" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width=".6" paint-order="stroke" text-anchor="${e.sd === "H" ? "end" : "start"}">${esc(e.who)}</text>`; }
     if (e.type === "save") return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="1.2" fill="none" stroke="${c}" stroke-width=".6"/>`;
     if (e.type === "off") return `<path d="M${(e.x - 1).toFixed(1)} ${(e.y - 1).toFixed(1)}l2 2m0 -2l-2 2" stroke="${c}" stroke-width=".5" fill="none"/>`;
     return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r=".8" fill="rgba(255,255,255,.45)"/>`;
@@ -1720,7 +1801,7 @@ function renderRecord() {
   if (st.upsetRounds) tiles.push([`${st.upsetRight}/${st.upsetRounds}`, `Spot the Upset (best streak ${st.upsetBest})`]);
   if (st.holRounds) tiles.push([`${st.holBest}`, "Higher or Lower: best streak"]);
   box.innerHTML = tiles.length ? `<h3 style="font-size:17px">Your record</h3><div class="tally">${tiles.map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("")}</div>
-    <span class="fineprint">${saved.mode === "cloud" ? "Stored privately for you." : "Stored in this browser only."} Locked results can't be replayed, so the record stays honest.</span>` : "";
+    <span class="fineprint long">${saved.mode === "cloud" ? "Stored privately for you." : "Stored in this browser only."} Locked results can't be replayed, so the record stays honest.</span>` : "";
   $("#btRecord").textContent = ms.length ? `${ms.length} match${ms.length === 1 ? "" : "es"} played against the model` : "";
 }
 
@@ -1742,15 +1823,15 @@ function renderMatchGame() {
   if (BT.cur) return renderMatchPlay();
   const clubs = [...new Set(poolSeasons().flatMap((s) => DATA.seasons[s].matches.flatMap((m) => [m[1], m[2]])))].sort();
   const cand = btCandidates(), fresh = cand.filter((r) => !saved.items[matchKeyBT(r)]);
-  $("#btBody").innerHTML = `<p class="intro">Pick a real match the model has never seen, without seeing the result. You lock in a guess, the model's own prediction is played out minute by minute, and then reality is revealed. Who got it right?</p>
+  $("#btBody").innerHTML = `<p class="intro"><span class="long">Pick a real match the model has never seen, without seeing the result. You lock in a guess, the model's own prediction is played out minute by minute, and then reality is revealed. Who got it right?</span><span class="short">Pick a real match, lock your guess, watch the model's prediction play out, see who got it right.</span></p>
     <div class="bt-filters">
       <label><span class="label">Season</span><select id="btSeason">${[["all", "All three"], ...poolSeasons().map((s) => [s, s])].map(([v, t]) => `<option value="${v}" ${BT.season === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
       <label><span class="label">Club</span><select id="btClub"><option value="">Any club</option>${clubs.map((c) => `<option ${BT.club === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
       <button class="btn" id="btRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
       ${hardToggle()}
     </div>
-    <div class="fineprint">${fresh.length} of ${cand.length} matches in this filter still unplayed by you. Only matches from 2024-25 on are offered: the model trained on everything before, so it would remember those results.</div>
-    <div class="bt-list">${cand.slice(0, 120).map((r) => { const it = saved.items[matchKeyBT(r)]; return `<button type="button" class="bt-fix ${it ? "done" : ""}" data-fix="${r.season}|${r.i}"><span class="num">${shortDate(r.m[0])}</span><span>${esc(r.m[1])} v ${esc(r.m[2])}</span>${it ? `<span class="status ${it.pick === it.res ? "hit" : "miss"}">${it.pick === it.res ? "RIGHT" : "WRONG"}</span>` : ""}</button>`; }).join("")}${cand.length > 120 ? `<div class="fineprint">Showing the first 120. Narrow it with a club or a season.</div>` : ""}</div>`;
+    <div class="fineprint"><span class="short">${fresh.length} matches left to play.</span><span class="long">${fresh.length} of ${cand.length} matches in this filter still unplayed by you. Only matches from 2024-25 on are offered: the model trained on everything before, so it would remember those results.</span></div>
+    <div class="bt-list">${cand.slice(0, 120).map((r) => { const it = saved.items[matchKeyBT(r)]; return `<button type="button" class="bt-fix ${it ? "done" : ""}" data-fix="${r.season}|${r.i}"><span class="num">${shortDate(r.m[0])}</span><span class="fx">${chip(r.m[1])}<b>${esc(r.m[1])}</b><i>v</i><b>${esc(r.m[2])}</b>${chip(r.m[2])}</span>${it ? `<span class="status ${it.pick === it.res ? "hit" : "miss"}">${it.pick === it.res ? "RIGHT" : "WRONG"}</span>` : ""}</button>`; }).join("")}${cand.length > 120 ? `<div class="fineprint">Showing the first 120. Narrow it with a club or a season.</div>` : ""}</div>`;
 }
 function openFixture(season, i) { BT.cur = { season, i, m: DATA.seasons[season].matches[i] }; BT.pick = null; BT.score = [null, null]; renderBeat(); }
 function renderMatchPlay() {
@@ -1764,7 +1845,7 @@ function renderMatchPlay() {
     <div class="bt-score"><span class="label">Exact score <i class="hint">optional, +2 points if right</i></span>
       <input id="btH" type="number" min="0" max="9" inputmode="numeric" value="${sc[0] ?? ""}" aria-label="Home goals"> <b>-</b> <input id="btA" type="number" min="0" max="9" inputmode="numeric" value="${sc[1] ?? ""}" aria-label="Away goals"></div>
     <div class="btnrow"><button class="btn" id="btLock" type="button" ${BT.pick ? "" : "disabled"}>Lock in my prediction</button>${hardToggle()}</div>
-    <span class="fineprint">Once locked, it can't be changed. The model's prediction is then played out and the real result is revealed.</span></div>`;
+    <span class="fineprint long">Once locked, it can't be changed. The model's prediction is then played out and the real result is revealed.</span></div>`;
 }
 function lockMatch() {
   const rec = BT.cur, m = rec.m, key = matchKeyBT(rec);
@@ -1791,12 +1872,12 @@ function verdictHTML(it) {
     <h3 class="${verdict[1]}" style="font-size:22px">${verdict[0]}</h3>
     <div class="vtable"><div class="vrow head"><span></span><span>Prediction</span><span>Result</span><span>Score</span><span>Points</span></div>
       ${row("You", it.pick, it.score, yp)}${row(`Model${it.hard ? " (hard)" : ""}`, it.mpick, it.mscore, mp)}</div>
-    <span class="fineprint">You and the model are scored the same way: 1 point for the result, +2 for the exact score. The model's prediction is the score it named, the same one that was played out above.</span>
-    <div class="labgrid"><div class="sub-card"><h3>The model's odds before kickoff</h3>${bigOdds(it.probs, res)}<span class="fineprint">The outlined box is what really happened.</span></div>
-    <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.mscore)}<span class="fineprint">Green ring: real score. Dashed ring: the model's prediction.</span></div>
+    <span class="fineprint long">You and the model are scored the same way: 1 point for the result, +2 for the exact score. The model's prediction is the score it named, the same one that was played out above.</span>
+    <div class="labgrid"><div class="sub-card"><h3>The model's odds before kickoff</h3>${bigOdds(it.probs, res)}<span class="fineprint long">The outlined box is what really happened.</span></div>
+    <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.mscore)}<span class="fineprint long">Green ring: real score. Dashed ring: the model's prediction.</span></div>
     <div class="sub-card"><h3>What the result was worth in Elo</h3><div class="stk head"><span>Club</span><span>Change</span><span></span></div>
       <div class="stk"><span>${esc(it.home)}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span></span></div><div class="stk"><span>${esc(it.away)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span><span></span></div>
-      <span class="fineprint">Same rule as the model uses, including the real shots on target (a quarter of the score).</span></div></div>
+      <span class="fineprint long">Same rule as the model uses, including the real shots on target (a quarter of the score).</span></div></div>
     ${statsCard(it)}
     <div class="btnrow"><button class="btn" id="btNext" type="button">Another match</button></div></div>`;
 }
@@ -1809,7 +1890,7 @@ function renderMdGame() {
   if (!BT.md) {
     const s = BT.season === "all" ? "2025-26" : BT.season;
     const done = new Set(btItems("bt_md_").map((x) => x.k));
-    $("#btBody").innerHTML = `<p class="intro">Predict a whole matchday: ten real fixtures, results hidden. One point for every result you get right, against the model's calls. Locked once you submit.</p>
+    $("#btBody").innerHTML = `<p class="intro"><span class="long">Predict a whole matchday: ten real fixtures, results hidden. One point for every result you get right, against the model's calls. Locked once you submit.</span><span class="short">Ten fixtures, one point per result. You against the model.</span></p>
       <div class="bt-filters"><label><span class="label">Season</span><select id="mdSeason">${poolSeasons().map((x) => `<option ${x === s ? "selected" : ""}>${x}</option>`).join("")}</select></label>
       <label><span class="label">Matchday</span><select id="mdNum">${Array.from({ length: MDN(s) }, (_, i) => `<option value="${i + 1}">${i + 1}${done.has(mdKey(s, i + 1)) ? " ✓" : ""}</option>`).join("")}</select></label>
       <button class="btn" id="mdGo" type="button">Open this matchday</button><button class="btn ghost" id="mdRandom" type="button">Surprise me</button>${hardToggle()}</div>`;
@@ -1819,7 +1900,7 @@ function renderMdGame() {
   const rows = ms.map((m, k) => {
     const c = matchCtx(m), pk = done ? done.picks[k] : BT.md.picks[k], real = m[5];
     const reveal = done ? `<span class="num vscore">${m[3]}-${m[4]}</span><span class="${pk === real ? "up" : "down"}">${pk === real ? "✓" : "✗"}</span><span class="${done.model[k] === real ? "up" : "down"}">model: ${OUTNAME[done.model[k]]} ${done.model[k] === real ? "✓" : "✗"}</span>` : "";
-    return `<div class="mdrow"><div class="mdteams">${chip(m[1])}<b>${esc(m[1])}</b> v <b>${esc(m[2])}</b>${chip(m[2])}<span class="fineprint">Elo ${c.h.elo} v ${c.a.elo} · form ${c.h.form.join("") || "-"} v ${c.a.form.join("") || "-"}</span></div>
+    return `<div class="mdrow"><div class="mdteams">${chip(m[1])}<b>${esc(m[1])}</b> v <b>${esc(m[2])}</b>${chip(m[2])}<div class="mdctx"><span class="side">Elo <b class="num">${c.h.elo}</b>${formChips(c.h.form)}</span><span>v</span><span class="side">Elo <b class="num">${c.a.elo}</b>${formChips(c.a.form)}</span></div></div>
       <div class="seg mdseg" data-k="${k}">${[["H", "Home"], ["D", "Draw"], ["A", "Away"]].map(([v, t]) => `<button type="button" data-v="${v}" ${done ? "disabled" : ""} aria-pressed="${pk === v}">${t}</button>`).join("")}</div>${reveal}</div>`;
   }).join("");
   const all = BT.md.picks.filter(Boolean).length === 10;
@@ -1858,7 +1939,7 @@ function renderUpsetGame() {
       <span class="fineprint">${shortDate(m[0])}</span><span class="upm">${chip(m[1])}<b>${esc(m[1])}</b><span class="num vscore">${m[3]}-${m[4]}</span><b>${esc(m[2])}</b>${chip(m[2])}</span>
       ${reveal ? `<span class="fineprint">The model gave this result <b>${pct(u.ps[k])}</b> (Home ${pct(odds[2])}, Draw ${pct(odds[1])}, Away ${pct(odds[0])})${k === u.ans ? " · <b>the biggest upset</b>" : ""}</span>` : ""}</button>`;
   }).join("");
-  $("#btBody").innerHTML = `<p class="intro">Five real results from matches the model had never seen. Before kickoff it gave every outcome a probability. <b>Which of these results did the model think was least likely?</b></p>
+  $("#btBody").innerHTML = `<p class="intro"><span class="long">Five real results from matches the model had never seen. Before kickoff it gave every outcome a probability. <b>Which of these results did the model think was least likely?</b></span><span class="short">Five real results. <b>Which one did the model think was least likely?</b></span></p>
     <div class="uplist">${cards}</div>
     ${u.chosen != null ? `<div class="btnrow"><b class="${u.chosen === u.ans ? "up" : "down"}">${u.chosen === u.ans ? "Right!" : "Not this time."} Streak: ${BT.upStreak}</b><button class="btn" id="upNext" type="button">Next round</button></div>` : `<span class="fineprint">Streak: ${BT.upStreak} · best ever: ${st.upsetBest} · ${st.upsetRight}/${st.upsetRounds} rounds right</span>`}`;
 }
@@ -1876,7 +1957,7 @@ function renderTableGame() {
   if (!BT.tab) {
     const years = []; for (let y = 2015; y <= 2025; y++) years.push(y);
     const done = new Set(btItems("bt_tab_").map((x) => x.k));
-    $("#btBody").innerHTML = `<p class="intro">Predict a whole season's final table before it starts. You start from last season's table and move clubs up or down. The model's guess is simply its Elo ratings at the start of the season. Whoever is closer, wins. A fair warning: over the last 11 seasons, repeating last season's table was off by 3.3 places per club and the Elo ranking by 3.7, so the simple baseline is hard to beat.</p>
+    $("#btBody").innerHTML = `<p class="intro"><span class="long">Predict a whole season's final table before it starts. You start from last season's table and move clubs up or down. The model's guess is simply its Elo ratings at the start of the season. Whoever is closer, wins. A fair warning: over the last 11 seasons, repeating last season's table was off by 3.3 places per club and the Elo ranking by 3.7, so the simple baseline is hard to beat.</span><span class="short">Reorder last season's table into the final one. Closest to the real table wins.</span></p>
       <div class="bt-filters"><label><span class="label">Season</span><select id="tbSeason">${years.map((y) => `<option value="${y}">${seasonLabel(y)}${done.has(tabKey(y)) ? " ✓" : ""}</option>`).join("")}</select></label>
       <button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div>`;
     return;
@@ -1943,7 +2024,7 @@ function renderHolGame() {
   if (!BT.hol) BT.hol = newHol();
   const q = BT.hol, st = btStats(), side = (r, k) => {
     const rev = q.chosen != null, club = HIST.clubs[r.ci];
-    return `<button type="button" class="holcard ${rev ? (r === q.win ? "ans" : r === q.chosen ? "wrong" : "") : ""}" data-hol="${k}" ${rev ? "disabled" : ""}>${chip(club)}<b>${esc(club)}</b>${rev ? `<span class="num holv">${r[q.key]}</span>` : `<span class="holv">?</span>`}</button>`;
+    return `<button type="button" class="holcard ${rev ? (r === q.win ? "ans" : r === q.chosen ? "wrong" : "") : ""}" data-hol="${k}" ${rev ? "disabled" : ""}><span class="holbadge">${chip(club)}</span><b>${esc(club)}</b>${rev ? `<span class="num holv">${r[q.key]}</span>` : `<span class="holv">?</span>`}</button>`;
   };
   $("#btBody").innerHTML = `<p class="intro">Which club ${esc(q.text)} in <b>${seasonLabel(q.y)}</b>? Keep your streak going.</p>
     <div class="holpair">${side(q.a, "a")}<span class="ctxvs">or</span>${side(q.b, "b")}</div>

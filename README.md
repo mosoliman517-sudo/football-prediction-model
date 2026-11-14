@@ -494,6 +494,10 @@ Asked to try every available source of extra accuracy and keep what helps (all o
 
 **End-of-day recheck.** `./refresh.sh` ran end to end on the new Elo; `src/11_check_live_flow.py` passed all 8 checks (no look-ahead, ratings follow every result, Elo rises after every win, the forecast starts from post-match ratings, grid logic equals pipeline logic); pyflakes is clean; the built page passes a browser run of every season / engine / style combination, the story mode and all five games with no errors.
 
+### November 14, 2026 (tenth pass): real starting lineups, tested (`src/24_test_real_lineups.py`)
+
+The Fantasy archive records who actually started each match from 2022-23 on, so a better lineup test than the earlier minutes proxy was possible: price-weighted value of the starting XI against the club's usual XI, how many starters are new, and how many regular starters are missing. On 1,263 matches (2022-23 to 2026-05), on top of the compact core features, trained on 2022-24 and scored on 2024-26: the random forest improved (XI value gap -0.0061, t -2.1; all lineup features -0.0052) but the logistic regression did not (+0.0042, t +0.6); out-of-fold over all four seasons the forest gained -0.0073 (t -2.4) and the logistic regression +0.0014 (t +0.2). **Not adopted:** the two models disagree, and four seasons is too little data to separate a small real effect from noise. Lineups and injuries are mostly priced into the bookmaker odds already, which is why the market-informed hybrid (52.9%) is the way they reach the predictions today. Revisit once the daily Fantasy snapshots (`src/22_snapshot_fpl.py`) have built a real injury history.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

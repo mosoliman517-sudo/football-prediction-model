@@ -26,7 +26,6 @@ site/_preview.html
 02_processed_data/candidate_signals.csv
 site/_*.html
 .claude/
-site/season_wrapped_programme.html
 
 # Daily Fantasy API snapshots (our own injury/team-news history; see src/22_snapshot_fpl.py)
 01_data_snapshots/

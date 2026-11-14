@@ -264,9 +264,9 @@ if os.environ.get("PREVIEW_LEAN"):    # testing aid: the preview pane cannot ope
     data["history"] = {**history, "matches": [m for m in history["matches"] if m[0] >= cut],
                        "elo": {k: [e for e in v if e[0] >= cut] or v[-1:] for k, v in history["elo"].items()}}
     data["scorers"] = {sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in data["scorers"].items() if sn >= "2025-26"}
-template = open(TEMPLATE).read().replace("__LOOK__", os.environ.get("LOOK", "broadcast"))
-if os.environ.get("LOOK") == "programme":
-    template = template.replace("<title>Beat the Model</title>", "<title>Beat the Model Programme</title>", 1)
+template = open(TEMPLATE).read().replace("__LOOK__", os.environ.get("LOOK", "programme"))
+if os.environ.get("LOOK") == "broadcast":      # the older dark look is still available: LOOK=broadcast python3 src/08_build_wrapped.py
+    template = template.replace("<title>Beat the Model</title>", "<title>Beat the Model Dark</title>", 1)
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 open(OUTPUT, "w").write(html)

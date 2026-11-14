@@ -243,10 +243,10 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .mdctx .side { display: inline-flex; align-items: center; gap: 6px; }
 .mdctx .side b { color: var(--fg); }
 .formstrip i { border-radius: 7px; }
-.mixbox { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); margin-top: 8px; }
+.mixbox { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; max-width: 300px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); margin-top: 8px; }
 .mixbox[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .mixhead { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-.mixbox input[type="range"] { width: 100%; accent-color: var(--accent); }
+.mixbox input[type="range"] { width: 100%; max-width: 220px; accent-color: var(--accent); }
 .mixread { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -760,7 +760,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <div class="group" style="flex:1 1 420px">
         <span class="label">Playing style <i class="hint">how bold the model is about draws</i></span>
         <div class="profiles" id="profiles" role="group" aria-label="Playing style"></div>
-        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy &larr; &rarr; Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="5" value="50" aria-label="Balance between Max Accuracy and Balanced"><div class="mixread" id="mixRead"></div></div>
+        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy · Mix · Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="50" value="50" list="mixTicks" aria-label="Balance between Max Accuracy and Balanced"><datalist id="mixTicks"><option value="0"></option><option value="50"></option><option value="100"></option></datalist><div class="mixread" id="mixRead"></div></div>
       </div>
     </div>
     <details class="adv"><summary>More options: prediction engine</summary>

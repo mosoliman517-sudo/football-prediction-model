@@ -441,6 +441,29 @@ How the minute-by-minute match uses them: the final score is still the one locke
 - **Real scorer names for past seasons.** `src/16_build_scorers.py` now builds a squad per season and club (2024-25, 2025-26, 2026-27) from the Fantasy Premier League archive (players with at least 180 minutes for the club that season, weighted by that season's goals and expected goals; assists likewise), with short display names (Saka, Palmer, M.Salah). The "Wolves striker" placeholders are gone; a check over 60 simulated matches found 109 goals, all credited to real players.
 - **The model's prediction and the simulated match are now the same thing.** Before, a separate random draw produced a "played-out match" that could disagree with the model's call (a Draw 1-1 call next to a 1-0 simulation). Now the model's call and its named score (the most likely score that fits the call) *are* the match that is played out minute by minute, and the verdict compares you with that single prediction. In a check of 60 matches the played-out score matched the call in every case. Replays of earlier locked matches use the model's named score too.
 
+### November 14, 2026 (seventh pass): which Elo format actually works? (`src/18_test_elo_formats.py`)
+
+Question: should a result move the two clubs by mirrored amounts (the production Elo is zero-sum), or should each club's rating move by its own surprise, so a favourite gains little for an expected win while the beaten side loses more? Seven formats were walked through every match in date order, tuned on the training seasons only, turned into Home/Draw/Away probabilities with a small logistic regression fitted on the training seasons, and scored by log loss on the held-out 760 matches (lower is better). Then the promising ones were added to, and swapped into, the model's 65 features.
+
+| Format | Held-out log loss | Accuracy |
+|---|---|---|
+| No ratings (league rates) | 1.0837 | 41.7% |
+| **Production Elo** (dual-track home/away ratings, calibrated expectation, shots on target) | 1.0201 | 49.6% |
+| Dual-track, plain | 1.0196 | 49.9% |
+| **Classic single-rating Elo** | **1.0107** | 49.5% |
+| **Margin Elo** (expected goal difference, zero-sum) | **1.0107** | 49.9% |
+| **Adaptive-K** (each club's K grows with its recent surprises) | **1.0103** | 49.3% |
+| Asymmetric margin (gain rate differs from loss rate) | 1.0163 | 49.6% |
+| Attack/defence ratings (goal-based) | 1.0151 | 50.0% |
+| Asymmetric attack/defence | 1.0114 | 50.0% |
+
+Findings:
+- **The asymmetry idea does not help.** In a sweep of gain rate against loss rate, training log loss is lowest along the diagonal (equal rates) and rises steeply when losses are punished harder than gains are rewarded (gain 5, loss 30: 1.0272, against 0.9589 symmetric). The best asymmetric setting (gain 8, loss 5, so the *opposite* direction) is only 0.0016 better in training and **worse on the held-out matches** (1.0163 against 1.0107 for symmetric margin Elo). Asymmetric attack/defence behaves the same.
+- **The production dual-track design is the weak part.** Single-rating formats beat it by about 0.009 log loss on the held-out matches (paired over the 760: classic t = -2.1, margin -1.9, adaptive-K -2.3). Separate home and away pools spread the information over thinner samples.
+- **Swapping the production Elo columns for a single-rating Elo improves the real model** (out-of-fold on the training seasons): margin Elo changes log loss by -0.0056 for the logistic regression (t -3.2) and -0.0026 for the forest (t -1.7); asymmetric margin -0.0047 and -0.0036; classic -0.0042 and -0.0020. Adding them alongside the old columns also helps a little (margin -0.0025 and -0.0024). These are small gains: they are real but not transformative.
+- **How the formats treat a 5-0 win for a strong club over a weak one** (rating points, strong / weak): classic +2.6 / -2.6 (an expected win moves little); dual-track +4.8 / -4.8; margin +28 / -28 (it measures the win against the *expected margin*, so a 1-0 win by a heavy favourite costs it 12 points); adaptive-K +2.2 / -2.0; asymmetric margin +22.7 / -14.2.
+- **Not adopted yet.** The production pipeline still uses the dual-track Elo. The evidence favours replacing it with a single-rating margin or classic Elo (about 0.003-0.006 log loss on the model); that means re-running steps 01 to 12 and rebuilding the page, so it was left as a decision.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

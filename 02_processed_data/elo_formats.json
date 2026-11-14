@@ -1,0 +1,275 @@
+{
+ "formats": [
+  {
+   "format": "production Elo",
+   "train": 0.9743,
+   "heldout": 1.0201,
+   "accuracy": 0.4961
+  },
+  {
+   "format": "classic",
+   "train": 0.9603,
+   "heldout": 1.0107,
+   "accuracy": 0.4947,
+   "params": {
+    "K": 15,
+    "HA": 40,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "dual-track",
+   "train": 0.9695,
+   "heldout": 1.0196,
+   "accuracy": 0.4987,
+   "params": {
+    "K": 20,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "margin",
+   "train": 0.9592,
+   "heldout": 1.0107,
+   "accuracy": 0.4987,
+   "params": {
+    "K": 10,
+    "D": 300,
+    "HG": 0.4,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "asymmetric (loss > gain)",
+   "train": 0.9573,
+   "heldout": 1.0163,
+   "accuracy": 0.4961,
+   "params": {
+    "k_up": 8,
+    "k_down": 5,
+    "D": 300,
+    "HG": 0.4,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "adaptive-K",
+   "train": 0.9608,
+   "heldout": 1.0103,
+   "accuracy": 0.4934,
+   "params": {
+    "K": 15,
+    "HA": 60,
+    "gamma": 0.5,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "attack/defence",
+   "train": 0.9576,
+   "heldout": 1.0151,
+   "accuracy": 0.5,
+   "params": {
+    "eta": 0.02,
+    "REV": 0.2
+   }
+  },
+  {
+   "format": "asym. attack/defence",
+   "train": 0.9595,
+   "heldout": 1.0114,
+   "accuracy": 0.5,
+   "params": {
+    "eta": 0.04,
+    "k_down": 0.03,
+    "REV": 0.33
+   }
+  }
+ ],
+ "scenarios": [
+  {
+   "format": "classic",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +2.6 / -2.6",
+    "1-0: +1.3 / -1.3",
+    "0-1: -13.7 / +13.7"
+   ]
+  },
+  {
+   "format": "dual-track",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +4.8 / -4.8",
+    "1-0: +2.4 / -2.4",
+    "0-1: -17.6 / +17.6"
+   ]
+  },
+  {
+   "format": "margin",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +28.0 / -28.0",
+    "1-0: -12.0 / +12.0",
+    "0-1: -32.0 / +32.0"
+   ]
+  },
+  {
+   "format": "asymmetric (loss > gain)",
+   "pair": "Man City v Burnley",
+   "moves": [
+    "5-0: +22.7 / -14.2",
+    "1-0: -5.8 / +9.3",
+    "0-1: -15.8 / +25.3"
+   ]
+  },
+  {
+   "format": "adaptive-K",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +2.2 / -2.0",
+    "1-0: +1.1 / -1.0",
+    "0-1: -12.9 / +11.7"
+   ]
+  },
+  {
+   "format": "attack/defence",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +4.0 / -4.0",
+    "1-0: +0.8 / -0.8",
+    "0-1: -3.4 / +3.4"
+   ]
+  },
+  {
+   "format": "asym. attack/defence",
+   "pair": "Arsenal v Burnley",
+   "moves": [
+    "5-0: +7.5 / -5.6",
+    "1-0: +2.1 / -0.5",
+    "0-1: -5.8 / +7.7"
+   ]
+  }
+ ],
+ "added_to_model": [
+  {
+   "format": "asymmetric (loss > gain)",
+   "lr": -0.00138,
+   "lr_t": -1.27,
+   "rf": -0.00352,
+   "rf_t": -3.01
+  },
+  {
+   "format": "adaptive-K",
+   "lr": -0.00102,
+   "lr_t": -1.29,
+   "rf": -0.00113,
+   "rf_t": -1.05
+  },
+  {
+   "format": "attack/defence",
+   "lr": 0.00295,
+   "lr_t": 1.81,
+   "rf": -0.00266,
+   "rf_t": -2.3
+  },
+  {
+   "format": "asym. attack/defence",
+   "lr": -0.00042,
+   "lr_t": -0.28,
+   "rf": -0.00346,
+   "rf_t": -3.02
+  },
+  {
+   "format": "margin",
+   "lr": -0.00252,
+   "lr_t": -1.89,
+   "rf": -0.00241,
+   "rf_t": -2.12
+  }
+ ],
+ "replacing_production_elo": [
+  {
+   "format": "classic",
+   "lr": -0.00418,
+   "lr_t": -3.07,
+   "rf": -0.002,
+   "rf_t": -1.33
+  },
+  {
+   "format": "margin",
+   "lr": -0.00557,
+   "lr_t": -3.24,
+   "rf": -0.00257,
+   "rf_t": -1.66
+  },
+  {
+   "format": "asymmetric (loss > gain)",
+   "lr": -0.00466,
+   "lr_t": -2.83,
+   "rf": -0.00362,
+   "rf_t": -2.19
+  },
+  {
+   "format": "adaptive-K",
+   "lr": -0.0042,
+   "lr_t": -3.13,
+   "rf": -0.00229,
+   "rf_t": -1.52
+  }
+ ],
+ "asymmetry_surface": {
+  "3/3": 0.9625,
+  "3/5": 0.9738,
+  "3/8": 0.9923,
+  "3/12": 1.0087,
+  "3/20": 1.0246,
+  "3/30": 1.0335,
+  "5/3": 0.9584,
+  "5/5": 0.9599,
+  "5/8": 0.9718,
+  "5/12": 0.9902,
+  "5/20": 1.0134,
+  "5/30": 1.0272,
+  "8/3": 0.9609,
+  "8/5": 0.9573,
+  "8/8": 0.9589,
+  "8/12": 0.9707,
+  "8/20": 0.9975,
+  "8/30": 1.0175,
+  "12/3": 0.966,
+  "12/5": 0.9615,
+  "12/8": 0.9577,
+  "12/12": 0.9598,
+  "12/20": 0.9801,
+  "12/30": 1.0045,
+  "20/3": 0.9746,
+  "20/5": 0.971,
+  "20/8": 0.9664,
+  "20/12": 0.9623,
+  "20/20": 0.9642,
+  "20/30": 0.9827
+ },
+ "heldout_vs_production": {
+  "classic": [
+   -0.0094,
+   -2.14
+  ],
+  "margin": [
+   -0.0095,
+   -1.9
+  ],
+  "asymmetric (loss > gain)": [
+   -0.0038,
+   -0.55
+  ],
+  "adaptive-K": [
+   -0.0099,
+   -2.3
+  ],
+  "attack/defence": [
+   -0.005,
+   -0.83
+  ]
+ }
+}

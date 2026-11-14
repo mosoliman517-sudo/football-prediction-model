@@ -18,3 +18,10 @@ football_model.pkl
 site/crests/
 site/season_wrapped.html
 site/_preview.html
+
+# Experiment data (re-downloadable): Fantasy Premier League archive and Open-Meteo weather,
+# plus the candidate-signal table the tests build. See src/14_test_new_signals.py.
+01_data_fpl/
+01_data_weather/
+02_processed_data/candidate_signals.csv
+site/_*.html

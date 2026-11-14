@@ -680,7 +680,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   <section class="card" data-views="replay" aria-label="League table, real against model">
     <div class="cardhead"><h2>League table: reality vs model</h2><span class="label">Tap a club to follow it across both</span></div>
     <div class="twin" id="table"></div>
-    <p class="note">Left: the real table. Right: the table the model's expected points would give, where each match adds 3 x P(win) + P(draw) for each side. The arrow shows how far a club sits from the same club in the other table (green: the club is doing better than the model expected).</p>
+    <p class="note">Left: the real table. Right: the table the model's expected points would give, where each match adds 3 x P(win) + P(draw) for each side, stretched by a factor learned from how far apart real clubs finished in past seasons (without it, blended odds squeeze the table: leaders get too few points, the bottom clubs too many). The arrow shows how far a club sits from the same club in the other table (green: the club is doing better than the model expected).</p>
   </section>
 
   <section class="card lab" id="lab" data-views="lab" aria-label="2026-27 match lab">
@@ -849,7 +849,7 @@ function computeSeason(key) {
     return {
       i, date: m[0], home: m[1], away: m[2], hg: m[3], ag: m[4], res: m[5], adj, pick, act,
       ok: pick === act, conf: adj[pick], pAct: adj[act],
-      hExp: 3 * adj[2] + adj[1], aExp: 3 * adj[0] + adj[1],
+      hExp: 3 * spreadOdds(adj)[2] + spreadOdds(adj)[1], aExp: 3 * spreadOdds(adj)[0] + spreadOdds(adj)[1],
       ps: bestScoreFor(m, pick)[0], psp: bestScoreFor(m, pick)[1],
       hPts: m[5] === "H" ? 3 : m[5] === "D" ? 1 : 0, aPts: m[5] === "A" ? 3 : m[5] === "D" ? 1 : 0,
     };
@@ -1319,6 +1319,22 @@ function bestScoreFor(m, pick) {
   return m._bs[pick];
 }
 
+/* Table-level spread correction (15_calibrate_spread.py). Blended odds are well calibrated match by
+   match but squeeze the TABLE: leaders get too few expected points, the bottom clubs too many. A small
+   recalibration plus a spread factor, both learned on the training seasons' out-of-fold odds, undoes
+   that. It is applied only where odds are summed into points (expected-points tables, the
+   frozen-state season projection), never to a single match's odds or to the calls. */
+function spreadOdds(o) {
+  const S = DATA.spread;
+  if (!S) return o;
+  const sm = (z) => { const m = Math.max(...z), e = z.map((v) => Math.exp(v - m)), t = e[0] + e[1] + e[2]; return e.map((v) => v / t); };
+  const lp = o.map((v) => Math.log(Math.max(v, 1e-6)));
+  const x = [lp[2] - lp[0], lp[1] - (lp[2] + lp[0]) / 2];
+  const q = sm(S.coef.map((w, k) => w[0] * x[0] + w[1] * x[1] + S.intercept[k]));
+  const lq = q.map((v) => Math.log(Math.max(v, 1e-9))), d = lq[2] - lq[0];
+  return sm([lq[0] - (S.stretch - 1) * d / 2, lq[1], lq[2] + (S.stretch - 1) * d / 2]);
+}
+
 function blendFrom(probs, lam) {
   const g = gridSummary(scoreGrid(lam[0], lam[1]));
   const o = [(probs[0] + g.A) / 2, (probs[1] + g.D) / 2, (probs[2] + g.H) / 2];
@@ -1727,7 +1743,7 @@ function simulateRest(N) {
   const fixtures = [];
   Object.entries(LAB.grid).forEach(([key, g]) => {
     if (playedKeys.has(key)) return;
-    const [h, a] = key.split("|"), odds = blendFrom([g[0], g[1], g[2]], [g[3], g[4]]), grid = scoreGrid(g[3], g[4]);
+    const [h, a] = key.split("|"), odds = spreadOdds(blendFrom([g[0], g[1], g[2]], [g[3], g[4]])), grid = scoreGrid(g[3], g[4]);
     const cls = [[], [], []], cum = [[], [], []];                       // A, D, H cells with running totals
     grid.forEach((row, i) => row.forEach((v, j) => { const c = i > j ? 2 : i === j ? 1 : 0; const tot = (cum[c].length ? cum[c][cum[c].length - 1] : 0) + v; cls[c].push([i, j]); cum[c].push(tot); }));
     fixtures.push({ h: ix[h], a: ix[a], odds, cls, cum });

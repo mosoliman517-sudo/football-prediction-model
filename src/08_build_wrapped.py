@@ -230,7 +230,8 @@ print(f"Crests embedded: {len(crests)}" + ("" if crests else " (none found; club
 blind = json.load(open(BLIND_JSON))
 blind["backtest"] = json.load(open(BLIND_BACKTEST_JSON))
 data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history,
-        "crests": crests, "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]}}
+        "crests": crests, "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]},
+        "spread": json.load(open("02_processed_data/spread_calibration.json"))}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

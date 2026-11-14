@@ -33,6 +33,7 @@ step "2/8 Model files + fixtures"; python3 src/02_load_features.py
 step "3/8 Train models (slow)";  python3 src/03_train_model.py | grep -A8 "Final comparison"
 step "4/8 Goal model";           python3 src/05_predict_scoreline.py 2>&1 | grep -E "Derived Win|Saved"
 step "5/8 Blend + hybrid profiles";       python3 src/10_tune_blend_profiles.py | grep -v Warn
+echo "  (table-spread correction)";           python3 src/15_calibrate_spread.py 2>&1 | grep -E "chosen|log loss|Saved"
 step "6/8 Validation";           python3 src/09_validate_simulation.py 2>&1 | grep -E "Blend of both|REST-OF-SEASON|inside the simulated"
 step "7/8 Blind rest of season"; python3 src/12_blind_rest_of_season.py --backtest 2>&1 | grep -E "Arsenal|backtest|coverage|position_mae"
 [[ -f site/crests/index.json ]] || { step "Fetching club badges (first run only)"; python3 src/13_fetch_crests.py; }

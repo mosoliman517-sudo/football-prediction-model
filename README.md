@@ -391,6 +391,28 @@ Rerun before the final push: `11_check_live_flow.py` passed all 8 checks (no loo
 - **Real and model league tables side by side** in one full-width card (no clicking between "Real order" and "Model order"); tap a club to highlight it in both. The arrow shows how far a club sits from its own position in the other table.
 - **Honest baselines:** on the 760 held-out matches, always picking Home is right 41.7% of the time, so the **Balanced style (42.5%) is barely better than that**; its job is to find draws, not to maximise accuracy. Max Accuracy (50.1%) is clearly better and is now the page's default style. The scoreboard states the always-Home and bookmaker numbers next to the accuracy. **Exact scores:** always guessing 1-1 hits 12.1%, the model's calls about 9.5-10.9%; the goal model's single most likely score hits 11.7%, which is not meaningfully different from 1-1. No tested change has beaten the fixed guess on exact scores.
 
+### November 14, 2026 (second pass): new signals tested, and the table squeeze fixed
+
+**Eleven candidate signals tested, none added.** `src/14_test_new_signals.py` adds each signal alone to the current 65 features and compares out-of-fold log loss on the training seasons with two different models (a logistic regression and a random forest), match by match, so noise shows up as a standard error. The held-out 760 were not touched because nothing passed. Data added for the test: manager changes from the Transfermarkt file already in the project, referees from the football-data columns, derbies, distance travelled, days since an international break, title / top-four / relegation gaps ("stakes"), match-day weather (Open-Meteo archive, `src/14a_fetch_weather.py`), the Fantasy Premier League archive (minutes per player per matchday, 2020-21 onward; `01_data_fpl/`) to build a "how much of the usual team is missing" lineup proxy, and each club's points per game over its last 38 matches. Results (change in log loss, negative = better):
+
+| Signal | Logistic reg. | Random forest | Verdict |
+|---|---|---|---|
+| Manager: changes in last 2 years | +0.0014 | +0.0010 | hurts |
+| Manager: changed in last 70 days | +0.0033 (t 2.6) | +0.0017 (t 2.2) | hurts |
+| Manager: interim spell recently | +0.0026 | +0.0012 | hurts |
+| Manager: all four | +0.0088 (t 4.2) | +0.0004 | hurts |
+| Referee record | -0.0010 | -0.0003 | no clear effect |
+| Derby / travel distance | +0.0001 / +0.0005 | +0.0006 / +0.0006 | no effect |
+| Days since international break | +0.0048 (t 3.8) | +0.0011 | hurts |
+| Stakes (title / top four / drop gaps) | +0.0091 (t 3.5) | +0.0005 | hurts |
+| Weather | +0.0014 | +0.0011 | no effect |
+| Long-run points / goal difference (38 matches) | -0.0011 | -0.0006 | no clear effect |
+| Lineup: missing minutes / value / count / goalkeeper | -0.0008 to +0.0033 | -0.0014 to +0.0004 | no clear effect |
+
+Reading it honestly: the sacked-manager idea does not add anything because the "new manager" signal already feeds Elo (`ManagerBoostGap`), and the other signals overlap with Elo and form. The lineup proxy only covers about 1,500 training matches and uses minutes played, a crude stand-in for real injury and team-sheet data; a stronger source (live injury flags) could behave differently, but this archive does not support it. Nothing was added to the model.
+
+**Fixing the squeezed table (`src/15_calibrate_spread.py`).** The blended odds were calibrated per match but compressed the table: out-of-fold on the training seasons, the top three got about 10 fewer expected points than they earned and the bottom three about 10 too many; the model's spread of team points was 12.9 against 18.6 real, and real points rose 1.34 for every expected point. Held-out 2024-26 looked the same (spread 12.2 against 17.0). The fix is two small steps learned on the training seasons only: a recalibration of the blended odds and a spread factor of 1.3 on the Home-vs-Away log-odds (chosen to minimise the points error per team-season). Result: top three off by about 2 points (was 10), model spread 17.4 against 18.6 real; on the held-out seasons the model's spread is 16.6 against 17.0 and mean absolute points error falls from 7.3 to 7.0, with the bottom three still about 6 points too generous. The correction **costs honesty at single-match level** (held-out log loss 1.0143 to 1.0308: it makes individual odds overconfident), so it is applied only where odds are summed into points (the expected-points table, team pages, the frozen-state rest-of-season projection) and **never to a single match's odds or the calls**. The blind rest-of-season simulation has its own ratings and is unchanged.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

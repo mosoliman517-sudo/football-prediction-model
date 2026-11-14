@@ -1,0 +1,142 @@
+{
+ "general": [
+  {
+   "signal": "Manager: changes in last 2 years",
+   "lr": 0.00142,
+   "lr_t": 1.11,
+   "rf": 0.00098,
+   "rf_t": 1.21,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Manager: changed in last 70 days",
+   "lr": 0.00327,
+   "lr_t": 2.64,
+   "rf": 0.00169,
+   "rf_t": 2.16,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Manager: interim spell recently",
+   "lr": 0.00262,
+   "lr_t": 1.65,
+   "rf": 0.00119,
+   "rf_t": 1.53,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Manager: tenure (tested before)",
+   "lr": 0.00296,
+   "lr_t": 2.43,
+   "rf": 0.00151,
+   "rf_t": 1.78,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Manager: all four",
+   "lr": 0.00885,
+   "lr_t": 4.19,
+   "rf": 0.00041,
+   "rf_t": 0.46,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Referee record",
+   "lr": -0.00096,
+   "lr_t": -0.97,
+   "rf": -0.00031,
+   "rf_t": -0.34,
+   "verdict": "no clear effect"
+  },
+  {
+   "signal": "Derby",
+   "lr": 7e-05,
+   "lr_t": 0.13,
+   "rf": 0.00058,
+   "rf_t": 0.71,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Travel distance",
+   "lr": 0.00054,
+   "lr_t": 1.05,
+   "rf": 0.00063,
+   "rf_t": 0.73,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Days since international break",
+   "lr": 0.00484,
+   "lr_t": 3.75,
+   "rf": 0.00115,
+   "rf_t": 1.39,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Stakes (title / top four / drop gaps)",
+   "lr": 0.00914,
+   "lr_t": 3.49,
+   "rf": 0.0005,
+   "rf_t": 0.41,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Weather",
+   "lr": 0.00142,
+   "lr_t": 0.99,
+   "rf": 0.00114,
+   "rf_t": 1.33,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Long-run points and goal difference (last 38 matches)",
+   "lr": -0.00106,
+   "lr_t": -0.66,
+   "rf": -0.00063,
+   "rf_t": -0.56,
+   "verdict": "no clear effect"
+  }
+ ],
+ "lineup": [
+  {
+   "signal": "Lineup: share of usual minutes missing",
+   "lr": 0.00015,
+   "lr_t": 0.04,
+   "rf": -0.00135,
+   "rf_t": -0.84,
+   "verdict": "no clear effect"
+  },
+  {
+   "signal": "Lineup: value of missing regulars",
+   "lr": 0.00076,
+   "lr_t": 0.21,
+   "rf": 0.00042,
+   "rf_t": 0.26,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Lineup: number of regulars out",
+   "lr": -0.00075,
+   "lr_t": -0.24,
+   "rf": 7e-05,
+   "rf_t": 0.05,
+   "verdict": "no clear effect"
+  },
+  {
+   "signal": "Lineup: goalkeeper missing",
+   "lr": 0.00327,
+   "lr_t": 1.69,
+   "rf": 0.00019,
+   "rf_t": 0.14,
+   "verdict": "hurts"
+  },
+  {
+   "signal": "Lineup: all four",
+   "lr": 0.00372,
+   "lr_t": 0.82,
+   "rf": 0.00144,
+   "rf_t": 0.66,
+   "verdict": "hurts"
+  }
+ ]
+}

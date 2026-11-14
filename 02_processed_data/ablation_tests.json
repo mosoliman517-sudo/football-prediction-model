@@ -1,0 +1,238 @@
+{
+ "drop": [
+  {
+   "group": "Form: points last 5 (overall)",
+   "lr": 8e-05,
+   "lr_t": 0.13,
+   "rf": -0.0001,
+   "rf_t": -0.12,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Form: points last 5 at home/away",
+   "lr": 0.0005,
+   "lr_t": 1.19,
+   "rf": -0.00114,
+   "rf_t": -1.4,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Form: win rate at home/away",
+   "lr": 0.00334,
+   "lr_t": 3.34,
+   "rf": -0.00038,
+   "rf_t": -0.46,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Goals scored/conceded last 5",
+   "lr": 0.00378,
+   "lr_t": 2.69,
+   "rf": 0.0,
+   "rf_t": 0.0,
+   "verdict": "USEFUL"
+  },
+  {
+   "group": "Shots and shots on target last 5",
+   "lr": 0.00269,
+   "lr_t": 1.2,
+   "rf": -0.00317,
+   "rf_t": -2.36,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Rest days",
+   "lr": 0.01582,
+   "lr_t": 2.36,
+   "rf": -0.00128,
+   "rf_t": -1.49,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Head to head",
+   "lr": 0.00376,
+   "lr_t": 1.68,
+   "rf": -0.00011,
+   "rf_t": -0.13,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Second-half goal patterns",
+   "lr": 0.00183,
+   "lr_t": 1.3,
+   "rf": 0.00062,
+   "rf_t": 0.74,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Elo: home/away track",
+   "lr": 0.00055,
+   "lr_t": 3.78,
+   "rf": 0.00028,
+   "rf_t": 0.29,
+   "verdict": "USEFUL"
+  },
+  {
+   "group": "Elo: overall track",
+   "lr": 0.00055,
+   "lr_t": 3.78,
+   "rf": 0.00028,
+   "rf_t": 0.29,
+   "verdict": "USEFUL"
+  },
+  {
+   "group": "Elo: expected-goals track",
+   "lr": -0.00185,
+   "lr_t": -1.87,
+   "rf": -0.00188,
+   "rf_t": -1.71,
+   "verdict": "REMOVE?"
+  },
+  {
+   "group": "Squad market value",
+   "lr": 0.0047,
+   "lr_t": 1.51,
+   "rf": 0.00012,
+   "rf_t": 0.11,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Table position and points gap",
+   "lr": 0.00285,
+   "lr_t": 3.46,
+   "rf": -8e-05,
+   "rf_t": -0.09,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Kickoff day and time",
+   "lr": 0.00022,
+   "lr_t": 0.41,
+   "rf": -0.00034,
+   "rf_t": -0.42,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Midweek European football",
+   "lr": 0.00081,
+   "lr_t": 1.19,
+   "rf": 0.0,
+   "rf_t": 0.0,
+   "verdict": "neutral"
+  },
+  {
+   "group": "Manager experience",
+   "lr": 0.00593,
+   "lr_t": 2.86,
+   "rf": 0.00017,
+   "rf_t": 0.18,
+   "verdict": "USEFUL"
+  },
+  {
+   "group": "Recent average placement",
+   "lr": -0.00167,
+   "lr_t": -1.13,
+   "rf": -3e-05,
+   "rf_t": -0.03,
+   "verdict": "REMOVE?"
+  }
+ ],
+ "add": [
+  {
+   "group": "Form: 3-match points per game",
+   "lr": 0.00134,
+   "lr_t": 1.78,
+   "rf": -0.00126,
+   "rf_t": -1.52,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Form: 10-match points per game",
+   "lr": 0.00115,
+   "lr_t": 2.23,
+   "rf": 6e-05,
+   "rf_t": 0.07,
+   "verdict": "hurts"
+  },
+  {
+   "group": "Form: 20-match points per game",
+   "lr": 0.00139,
+   "lr_t": 1.68,
+   "rf": -0.00049,
+   "rf_t": -0.58,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Form: exponentially weighted points",
+   "lr": -6e-05,
+   "lr_t": -0.15,
+   "rf": -0.00086,
+   "rf_t": -1.01,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Form: goal difference last 5",
+   "lr": 0.00038,
+   "lr_t": 1.3,
+   "rf": -0.00096,
+   "rf_t": -1.14,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Form: opponent-adjusted (result vs Elo expectation, last 10)",
+   "lr": 0.00101,
+   "lr_t": 1.43,
+   "rf": -0.00092,
+   "rf_t": -0.97,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Attack quality: shot-on-target share and goals per shot (last 10)",
+   "lr": 0.00306,
+   "lr_t": 3.07,
+   "rf": 0.00039,
+   "rf_t": 0.41,
+   "verdict": "hurts"
+  },
+  {
+   "group": "Streaks: wins in a row and unbeaten run",
+   "lr": 0.00482,
+   "lr_t": 3.78,
+   "rf": -0.00023,
+   "rf_t": -0.26,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Time in season (matches played)",
+   "lr": 0.005,
+   "lr_t": 2.21,
+   "rf": -0.0008,
+   "rf_t": -0.91,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Newly promoted club flag",
+   "lr": 0.00196,
+   "lr_t": 1.33,
+   "rf": 0.00064,
+   "rf_t": 0.77,
+   "verdict": "hurts"
+  },
+  {
+   "group": "Absolute gaps (Elo, overall Elo, table): closeness for draws",
+   "lr": 0.00265,
+   "lr_t": 1.19,
+   "rf": -0.00011,
+   "rf_t": -0.12,
+   "verdict": "no clear effect"
+  },
+  {
+   "group": "Log squad-value ratio (home over away)",
+   "lr": -0.00303,
+   "lr_t": -1.94,
+   "rf": -0.00089,
+   "rf_t": -0.78,
+   "verdict": "no clear effect"
+  }
+ ]
+}

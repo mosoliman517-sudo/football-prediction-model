@@ -1,12 +1,12 @@
 {
   "Balanced": {
     "home": 1.0,
-    "away": 1.15,
+    "away": 1.0,
     "draw": 1.4000000000000004
   },
   "Max Accuracy": {
     "home": 1.0,
     "away": 1.0,
-    "draw": 0.4
+    "draw": 0.6000000000000001
   }
 }

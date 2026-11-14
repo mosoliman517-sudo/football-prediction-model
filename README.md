@@ -8,7 +8,7 @@
 >
 > **What this is.** A machine-learning model that predicts Premier League results (Home win / Draw / Away win) using only information known before kickoff, tested on matches it never trained on (2024-25 and 2025-26, 760 matches). It started as one season of CSVs and grew into 12 seasons, ~50 features, five tree models, a Poisson goal model, two tuned "playing styles" (Balanced and Max Accuracy, plus the untouched Pure Model), two kinds of season simulation, and an interactive page. The aim: a model that is **balanced**, with Home and Away recall near 60% and Draw 30-40%, instead of one that only ever calls Home wins.
 >
-> **Where it stands (Nov 2026).** On the 760 held-out matches: our blend gets **50.9%** (log loss 1.0058), the bookmaker market's average closing odds **52.5%**, and the opt-in hybrid that stacks our blend with those odds **53.0%**. A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling. Styles: Balanced (calls a draw only when nearly as likely as the top result) **Home 75 / Draw 3 / Away 57**, Max Accuracy **Home 76 / Away 60 / Draw 0** (51.2%). The balance dial runs between those two and only changes results over the last part of its travel. **Home 70 / Away 60 / Draw 40 together is not reachable** (see the ninth pass). Everything is on GitHub and reproducible from a fresh clone.
+> **Where it stands (Nov 2026).** On the 760 held-out matches: our blend gets **50.8%** (log loss 1.0055), the bookmaker market's average closing odds **52.5%**, and the opt-in hybrid that stacks our blend with those odds **52.6%** with Max Accuracy. A plain "always Home" is 41.7%. The gap to the market is information (lineups, injuries, news), not modelling; a drop-one and add-one feature test (fourteenth pass) found the feature set at a plateau. **Two final playing styles:** **Balanced** (Home, Draw and Away found as equally often as possible) **Home 49 / Draw 38 / Away 46**, accuracy 45.0%; **Max Accuracy** **Home 76 / Draw 0 / Away 59**, accuracy 50.8%. **Home 70 / Away 60 / Draw 40 together is not reachable.** Everything is on GitHub and reproducible from a fresh clone.
 >
 > **The commands that matter.**
 >
@@ -518,6 +518,34 @@ Direction suggested by the owner: compare each club's actual lineup with its bes
 - **Balance dial:** from Max Accuracy to 70% of the way to Balanced the draw factor never calls a draw, so most of its travel did nothing (76/0/60 throughout). It now maps onto the 0.7 to 1.0 part of the blend, with five stops. The honest limit stands: without a draw boost the stops only span 76/0/60 to 75/3/57.
 - **Form Guide chart:** the bookmaker and always-Home percentages moved from on-chart labels (which collided with the line's end label) into the legend.
 - **Matchday slider glitch (fixed):** in a narrow window or split screen, "Matchday 10 / 10" is wider than "Matchday 9 / 10", so the label grew and re-wrapped the whole control row, resizing the slider under the cursor (row height 130 to 176 px at a 360 px container, 79 of the widths swept). The label now has a fixed width, and the same sweep shows no change between matchdays 9 and 10.
+
+### November 14, 2026 (fourteenth pass): drop-one and add-one feature tests (`src/27_ablation_and_additions.py`)
+
+Same rules as `14`: out-of-fold on the 3,800 training matches (4 chronological folds), a logistic regression and a forest must agree. Baseline log loss: LR 1.0064, RF 0.9717.
+
+- **Drop-one (16 groups of the 47 current features): almost nothing is clearly pulling its weight or clearly misleading.** Only goals scored/conceded and manager experience passed as useful by the rule (LR t 2.7 and 2.9, forest about 0). The two models often disagree: dropping shots, rest days or form at home/away helps the forest (shots: t -2.4) but hurts the logistic regression, so none of those is a clean removal. The forest barely notices most groups.
+- **Candidates for removal:** the expected-goals Elo difference column (both models slightly better without it, -0.0019, t -1.9 and -1.7) and recent average placement (LR -0.0017, forest 0.0000).
+- **Found along the way: the "home/away" Elo columns and the "overall" Elo columns are exact duplicates** under the classic Elo format (correlation 1.0, identical values), so six of the 47 columns carry no extra information. Their "useful" verdict in the drop test is a regularisation artifact, not information.
+- **Add-one (14 new signals from existing results): none passed.** Form windows of 3, 10 and 20 matches, exponentially weighted form, opponent-adjusted form, goal-difference form, shot-on-target share and goals per shot, streaks, time in season, a promoted-club flag and absolute gaps for draws all gave no clear gain or made the logistic regression worse. The closest was a log squad-value ratio (LR -0.0030, t -1.9; forest -0.0009, t -0.8), which is not enough.
+- **Held-out check (the one allowed): dropping the xG Elo column and recent placement and adding the log value ratio** gave LR log loss 1.0207 to 1.0169 (accuracy 50.0% to 49.2%) but forest 1.0119 to 1.0170 (51.1% to 50.0%). The models disagree, so **nothing is adopted** and the held-out set is now spent for this question.
+- Takeaway: the current feature set is near a plateau for these data. More gain needs new information (lineups, injuries, news), as the market gap already suggested.
+
+### November 14, 2026 (fifteenth pass): trimmed repeats, two final styles
+
+- **Trimmed:** the three "overall Elo" columns (exact copies of the home/away Elo under the classic format) and 14 all-empty columns (match xG, closing odds) are out of the model files and feature lists; the unused overall-Elo code in the simulator and fixture grid is gone. The fixture grid used to compute "overall Elo" as an average that did not match training; that mismatch is gone too. Blend accuracy 50.9% to 50.8%, log loss 1.0058 to 1.0055 (no real change, as expected).
+- **Two final styles, no dial.** Balanced is the equal-recall style again (the largest minimum of Home, Draw and Away recall on out-of-fold data): **Home 49 / Draw 38 / Away 46** at 45.0% accuracy (hybrid 50 / 41 / 43). Max Accuracy: **76 / 0 / 59**, 50.8% (hybrid 83 / 0 / 55, 52.6%). The "logical Balanced" and the balance dial were removed.
+
+### November 14, 2026 (sixteenth pass): the page becomes a game
+
+Chosen by poll: front door with three choices, hide the history tabs, make it more fun, do not publish publicly yet.
+
+- **Home view** with one headline and three doors (Play the game, Watch a season, Who wins the title?), plus a link to the shareable Wrapped story. Tabs are now Home, Play, Matchday, Title Race, Season Review, with **More** holding Club Files, Derby Days and Fact Check (hidden, not removed). The prediction-engine switches stay behind "More options".
+- **Streaks:** a strip above the games shows the current and best run of correct Match Challenge calls, you against the model, and daily-5 days in a row.
+- **Daily 5:** five matches picked from the date alone (a seeded draw over 2024-25 onward), so everyone gets the same five each day; plays through the normal Match Challenge flow, shows your score against the model and a copyable result.
+- **Sound and confetti:** short synthesised tones on lock-in and results, confetti when you beat the model on a match; a Sound on/off toggle, and confetti is skipped under reduced-motion.
+- **Leaderboard (opt-in):** each person can join to publish only their totals (points ahead of the model, right/played, best streak); everyone who can open the page can read the board, and each person can write only their own row (`leaderboard/{self}`). Names come from the viewer's profile lookup. It only fills once the page is shared with others.
+- **Matchday label fix** and **chart label fix** from earlier today are in the same build.
+- Not done on purpose: public publishing (the badges are trademarked; see the standing rule on `site/crests/`).
 
 ### Ideas still on the table
 

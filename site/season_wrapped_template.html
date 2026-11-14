@@ -243,11 +243,6 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .mdctx .side { display: inline-flex; align-items: center; gap: 6px; }
 .mdctx .side b { color: var(--fg); }
 .formstrip i { border-radius: 7px; }
-.mixbox { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; max-width: 300px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); margin-top: 8px; }
-.mixbox[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.mixhead { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-.mixbox input[type="range"] { width: 100%; max-width: 220px; accent-color: var(--accent); }
-.mixread { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
@@ -317,6 +312,9 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .jump { display: flex; gap: 6px; flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: 8px 0; margin-block: -8px; }
 @media (max-width: 900px) { .jump { position: static; margin-block: 0; padding: 0; } }
 .jump button { background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.more-group:not([hidden]) { display: contents; }
+@media (max-width: 600px) { .wl-grid { grid-template-columns: 1fr; } }
+#moreBtn[aria-expanded="true"] { color: var(--fg); border-color: var(--muted); }
 .jump button:hover { color: var(--fg); border-color: var(--muted); }
 .jump button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .race { position: relative; }
@@ -450,11 +448,6 @@ tr.drop td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
 .labpick .picker { margin-top: 2px; }
 .welcome { position: relative; border-radius: 24px; padding: 0; }
 .wl-full { position: relative; overflow: hidden; border-radius: 24px; padding: 28px clamp(18px, 4vw, 34px) 24px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); background: radial-gradient(700px 300px at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), linear-gradient(160deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface) 60%); }
-.welcome.collapsed .wl-full { display: none; }
-.wl-mini { display: none; background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 2px 0; }
-.welcome.collapsed .wl-mini { display: inline-block; }
-.wl-x { position: absolute; right: 12px; top: 8px; background: none; border: 0; color: var(--muted); font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 10px; }
-.wl-x:hover { color: var(--fg); }
 .wl-kicker { font: 700 12px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
 .wl-full h2 { font-size: clamp(34px, 6vw, 60px); font-weight: 900; text-transform: uppercase; line-height: 0.92; margin-bottom: 12px; }
 .wl-full p { margin: 0 0 18px; max-width: 62ch; color: var(--muted); font-size: 15px; }
@@ -635,6 +628,25 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
 .seg button[aria-pressed="true"], .pcard[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--accent) inset, 0 8px 24px -14px var(--accent); }
 .pcard b { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
 
+
+/* fun layer: streak strip, daily 5, confetti, leaderboard */
+.btstrip { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; margin-bottom: 12px; }
+.btstrip div { background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 96px; }
+.btstrip b { display: block; font-family: var(--display); font-size: 24px; line-height: 1.05; }
+.btstrip small { color: var(--muted); font-size: 11.5px; }
+.daily { border: 1px solid var(--accent); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--surface2)); }
+.daily h3 { font-size: 20px; font-weight: 800; text-transform: uppercase; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.daily .dlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 6px; }
+.daily .dres { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-weight: 700; }
+.daily pre { margin: 0; white-space: pre-wrap; font: 500 12.5px var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; user-select: all; }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 90; overflow: hidden; }
+.confetti i { position: absolute; top: -14px; width: 8px; height: 13px; background: var(--c); border-radius: 2px; animation: cfall var(--d) cubic-bezier(.3,.6,.5,1) forwards; }
+@keyframes cfall { to { transform: translate(var(--x), 108vh) rotate(var(--r)); } }
+.board { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.board .lbrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; }
+.board .lbrow.me { border-color: var(--accent); }
+.board .lbrow .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
 /* ================= Matchday programme look (build with LOOK=programme) =================
    Cream paper, pitch-green headers, chunky condensed type, hard offset shadows like a printed
    programme. Long explanatory copy (.long, notes, how-to-read) is dropped and the .short copy is shown. */
@@ -718,27 +730,30 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   </header>
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
-    <button type="button" role="tab" data-tab="replay">Matchday</button>
+    <button type="button" role="tab" data-tab="home">Home</button>
     <button type="button" role="tab" data-tab="lab">Play</button>
+    <button type="button" role="tab" data-tab="replay">Matchday</button>
     <button type="button" role="tab" data-tab="rest">Title Race</button>
-    <button type="button" role="tab" data-tab="teams">Club Files</button>
-    <button type="button" role="tab" data-tab="h2h">Derby Days</button>
     <button type="button" role="tab" data-tab="recap">Season Review</button>
-    <button type="button" role="tab" data-tab="checks">Fact Check</button>
+    <button type="button" id="moreBtn" aria-expanded="false" aria-controls="moreGroup">More</button>
+    <span class="more-group" id="moreGroup" hidden>
+      <button type="button" role="tab" data-tab="teams">Club Files</button>
+      <button type="button" role="tab" data-tab="h2h">Derby Days</button>
+      <button type="button" role="tab" data-tab="checks">Fact Check</button>
+    </span>
   </nav>
 
-  <section class="welcome" id="welcome" data-views="replay" aria-label="Start here">
+  <section class="welcome" id="welcome" data-views="home" aria-label="Start here">
     <div class="wl-full">
-      <button class="wl-x" id="welcomeX" type="button" aria-label="Hide this introduction">&times;</button>
-      <div class="wl-kicker">New here? Start here</div>
-      <h2>Can a computer predict football?</h2>
-      <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one matchday at a time, then check its work against what really happened. Pick a starting point:</p>
+      <div class="wl-kicker">Beat the Model</div>
+      <h2>Can you out-predict a computer?</h2>
+      <p>The model has <b>never seen a single one of these Premier League matches</b>. Call a result yourself, then see who was right. Pick a way in:</p>
       <div class="wl-grid">
+        <button type="button" class="wl-card" data-start="predict"><b>Play the game</b><span>Guess a real match without seeing the result, then see who got it right.</span></button>
         <button type="button" class="wl-card" data-start="watch"><b>Watch a season</b><span>Press play and see every call, right or wrong, as the table builds.</span></button>
-        <button type="button" class="wl-card" data-start="predict"><b>Play the games</b><span>Guess a real match without seeing the result, then see who got it right.</span></button>
         <button type="button" class="wl-card" data-start="title"><b>Who wins the title?</b><span>Thousands of simulated seasons for the rest of 2026-27.</span></button>
-        <button type="button" class="wl-card" data-start="story"><b>Play my Wrapped</b><span>A full-screen story of how the model did, ready to share.</span></button>
       </div>
+      <div class="btnrow"><button type="button" class="link" data-start="story">Play my Wrapped: a shareable story of how the model did</button></div>
       <details class="wl-how"><summary>How to read this in 20 seconds</summary>
         <ul>
           <li><b>A call</b> is the result the model picks for a match: Home win, Draw or Away win. A green tick means it was right.</li>
@@ -748,7 +763,6 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
         </ul>
       </details>
     </div>
-    <button class="wl-mini" id="welcomeOpen" type="button">Show the introduction</button>
   </section>
 
   <section class="card deck" id="deck" data-views="replay teams recap checks" aria-label="Replay controls">
@@ -760,7 +774,6 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <div class="group" style="flex:1 1 420px">
         <span class="label">Playing style <i class="hint">how bold the model is about draws</i></span>
         <div class="profiles" id="profiles" role="group" aria-label="Playing style"></div>
-        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy · Mix · Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="25" value="50" list="mixTicks" aria-label="Balance between Max Accuracy and Balanced"><datalist id="mixTicks"><option value="0"></option><option value="25"></option><option value="50"></option><option value="75"></option><option value="100"></option></datalist><div class="mixread" id="mixRead"></div></div>
       </div>
     </div>
     <details class="adv"><summary>More options: prediction engine</summary>
@@ -831,12 +844,15 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
   </section>
 
   <section class="card lab" id="lab" data-views="lab" aria-label="Beat the Model">
-    <div class="cardhead"><h2>Beat the Model</h2><span class="label" id="btRecord"></span></div>
+    <div class="cardhead"><h2>Beat the Model</h2><span class="label" id="btRecord"></span><button class="link" id="sndBtn" type="button" aria-pressed="true">Sound: on</button></div>
+    <div class="btstrip" id="btStrip" hidden></div>
+    <div id="btDaily"></div>
     <div class="seg" id="btSeg" role="group" aria-label="Choose a game"></div>
     <div id="btBody"></div>
     <div class="theatre" id="theatre" hidden></div>
     <div id="btVerdict"></div>
     <div id="btRecordBox" class="btrecord"></div>
+    <div id="btBoard"></div>
   </section>
 
   <section class="card" id="rest" data-views="rest" aria-label="Rest of the season">
@@ -897,7 +913,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <ul>
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
       <li><b>Percentages are honest odds; the playing style only picks the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A playing style decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
-      <li><b>Playing styles are decision rules, not different models.</b> <b>Balanced</b> picks the most likely result and calls a Draw only when it is almost as likely as the top one. <b>Max Accuracy</b> suppresses Draw, which gives the most results right. The three coloured numbers on each card are the share of real Home wins, Draws and Away wins that style found on the 760 held-out matches. The decision can be made from our blended model (the default, tuned in step 10 of the pipeline), from the Random Forest alone, or from the model plus bookmaker odds.</li>
+      <li><b>Playing styles are decision rules, not different models.</b> <b>Balanced</b> is tuned so Home wins, Draws and Away wins are each found about as often as possible, which costs some overall accuracy. <b>Max Accuracy</b> ignores balance and suppresses Draw, which gives the most results right. The three coloured numbers on each card are the share of real Home wins, Draws and Away wins that style found on the 760 held-out matches. The decision can be made from our blended model (the default, tuned in step 10 of the pipeline), from the Random Forest alone, or from the model plus bookmaker odds.</li>
       <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with the bookmaker market's average closing odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
       <li><b>Two kinds of simulation, kept apart on purpose.</b> Replays and next-matchday forecasts are always built from real past results only. The blind rest-of-season simulation is the one place predicted results feed predictions: after each simulated match, Elo, form and the table update with the simulated result.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
@@ -1036,7 +1052,7 @@ function buildTable(n, ms = C.ms) {
 
 /* ---------- replay rendering ---------- */
 
-function benchOf(p) { if (p.id === "mix") return mixBench(); return state.base === "hybrid" ? p.benchH : state.base === "blend" ? p.benchB : p.bench; }
+function benchOf(p) { return state.base === "hybrid" ? p.benchH : state.base === "blend" ? p.benchB : p.bench; }
 
 function renderControls() {
   $("#seasonSeg").innerHTML = Object.keys(DATA.seasons).map((k) => {
@@ -1053,10 +1069,6 @@ function renderControls() {
         <i style="--c:var(--home)">${pct(benchOf(p).H)}</i><i style="--c:var(--draw)">${pct(benchOf(p).D)}</i><i style="--c:var(--away)">${pct(benchOf(p).A)}</i>
       </span>
     </button>`).join("");
-  const mb = mixBench();
-  $("#mixRange").value = Math.round(MIX.t * 100);
-  $("#mixBox").setAttribute("aria-pressed", String(state.profile === "mix"));
-  $("#mixRead").innerHTML = `<span class="mini num"><i style="--c:var(--home)">${pct(mb.H)}</i><i style="--c:var(--draw)">${pct(mb.D)}</i><i style="--c:var(--away)">${pct(mb.A)}</i></span><span class="fineprint">Home, Draw and Away wins found on the 760 held-out matches, ${pct(mb.acc, 1)} of results right overall.</span>`;
 }
 
 function renderTransport() {
@@ -1305,12 +1317,14 @@ function renderRecap() {
 
 /* ---------- playback + wiring ---------- */
 
-const VIEWS = ["replay", "lab", "rest", "teams", "h2h", "recap", "checks"];
+const VIEWS = ["home", "lab", "replay", "rest", "teams", "h2h", "recap", "checks"];
+const MORE_VIEWS = ["teams", "h2h", "checks"];
 function showView(v) {
-  if (!VIEWS.includes(v)) v = "replay";
+  if (!VIEWS.includes(v)) v = "home";
   state.view = v;
   document.querySelectorAll("[data-views]").forEach((el) => { el.hidden = !el.dataset.views.split(" ").includes(v); });
   document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === v)));
+  if (MORE_VIEWS.includes(v)) { $("#moreGroup").hidden = false; $("#moreBtn").setAttribute("aria-expanded", "true"); }
   if (v !== "replay" && state.playing) { stopPlay(); renderTransport(); }
   window.scrollTo(0, 0);
 }
@@ -1394,25 +1408,7 @@ const LOCAL_KEY = "wrapped-saved-calls";
 function teamCode(n) { const t = TEAM[n]; return t ? t[0] : n.replace(/[^A-Za-z0-9]/g, "").slice(0, 6).toUpperCase(); }
 function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
 function liveMatches() { return DATA.seasons[LAB.season].matches; }
-const MIX = { t: 0.5 };
-// A style between Max Accuracy (t = 0) and Balanced (t = 1): each decision factor is a geometric blend of the two tuned ones.
-// The dial maps onto the 0.7 to 1.0 part of that blend: below 0.7 the draw factor is too low to ever call a draw, so the first 70% of the travel changed nothing.
-function mixProfile() {
-  const A = DATA.profiles.find((p) => p.id === "accuracy"), B = DATA.profiles.find((p) => p.id === "balanced");
-  const tt = 0.7 + 0.3 * MIX.t, g = (a, b) => Math.pow(a, 1 - tt) * Math.pow(b, tt), blend = (x, y) => ({ h: g(x.h, y.h), d: g(x.d, y.d), a: g(x.a, y.a) });
-  return { id: "mix", name: "Your mix", desc: "A blend of Max Accuracy and Balanced, set with the dial.", f: blend(A.f, B.f), fb: blend(A.fb, B.fb), fh: blend(A.fh, B.fh) };
-}
-function currentProfile() { return state.profile === "mix" ? mixProfile() : DATA.profiles.find((p) => p.id === state.profile); }
-// What the current dial setting would have scored on the 760 held-out matches (2024-25 and 2025-26), from the engine chosen above.
-function mixBench() {
-  const P = mixProfile(), real = [0, 0, 0], hit = [0, 0, 0];
-  ["2024-25", "2025-26"].forEach((k) => (DATA.seasons[k] ? DATA.seasons[k].matches : []).forEach((m) => {
-    const d = decide(m, P), pick = d.indexOf(Math.max(d[0], d[1], d[2])), act = OUT.indexOf(m[5]);
-    real[act]++; if (pick === act) hit[act]++;
-  }));
-  const n = real[0] + real[1] + real[2];
-  return { H: hit[2] / real[2], D: hit[1] / real[1], A: hit[0] / real[0], acc: (hit[0] + hit[1] + hit[2]) / n };
-}
+function currentProfile() { return DATA.profiles.find((p) => p.id === state.profile); }
 function adjustProbs(probs, lam) {
   const f = baseFactors(currentProfile()), b = state.base === "blend" ? blendFrom(probs, lam) : probs;
   const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h];
@@ -1545,6 +1541,7 @@ async function initStore() {
     const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
     const uid = user ? await user.id() : null;
     if (!db || !uid) return;
+    initBoard(db, user, uid);
     saved.coll = db.collection("data/users/" + uid);
     saved.mode = "cloud";
     saved.coll.onSnapshot((snap) => {
@@ -1823,6 +1820,7 @@ function renderRecord() {
   if (st.holRounds) tiles.push([`${st.holBest}`, "Higher or Lower: best streak"]);
   box.innerHTML = tiles.length ? `<h3 style="font-size:17px">Your record</h3><div class="tally">${tiles.map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("")}</div>
     <span class="fineprint long">${saved.mode === "cloud" ? "Stored privately for you." : "Stored in this browser only."} Locked results can't be replayed, so the record stays honest.</span>` : "";
+  renderStrip();
   $("#btRecord").textContent = ms.length ? `${ms.length} match${ms.length === 1 ? "" : "es"} played against the model` : "";
 }
 
@@ -1831,7 +1829,7 @@ function renderBeat() {
   $("#btSeg").innerHTML = BTGAMES.map(([k, t]) => `<button type="button" data-game="${k}" aria-pressed="${k === BT.game}">${t}</button>`).join("");
   stopTheatre(); theatre.done = null; $("#theatre").hidden = true; $("#btVerdict").innerHTML = "";
   ({ match: renderMatchGame, matchday: renderMdGame, upset: renderUpsetGame, table: renderTableGame, hol: renderHolGame })[BT.game]();
-  renderRecord();
+  renderRecord(); renderDaily(); paintSound();
 }
 const hardToggle = () => `<label class="hardtoggle"><input type="checkbox" id="btHard" ${BT.hard ? "checked" : ""}> Hard mode: the model plays its Max Accuracy style (about 50% of results right)</label>`;
 
@@ -1875,11 +1873,11 @@ function lockMatch() {
   const sim = call.score;                       // the model's prediction is what gets played out, so they can never disagree
   const item = { game: "match", season: rec.season, date: m[0], home: m[1], away: m[2], hard: BT.hard, pick: BT.pick, score, mpick: call.pick, mscore: call.score,
     sim, seed, lam: [m[9], m[10]], probs: call.odds.map((v) => +v.toFixed(4)), real: [m[3], m[4]], res: m[5], quiet: true, savedAt: new Date().toISOString() };
-  lockIn(key, item);
+  lockIn(key, item); FX.lock();
   BT.busy = true;
   const box = $("#btBody"); box.querySelectorAll("button,input").forEach((x) => { if (x.id !== "btBack") x.disabled = true; });
   $("#btVerdict").innerHTML = `<div class="sub-card" style="margin-top:12px"><h3>Locked in. Here is the model's prediction, played out...</h3><span class="fineprint">Reality stays hidden until full time.</span></div>`;
-  theatre.done = () => { BT.busy = false; $("#btVerdict").innerHTML = verdictHTML(item); renderRecord(); };
+  theatre.done = () => { BT.busy = false; $("#btVerdict").innerHTML = verdictHTML(item); renderRecord(); celebrateMatch(item); lbPublish(); renderBoard(); };
   startTheatre(item);
 }
 function verdictHTML(it) {
@@ -1968,6 +1966,7 @@ function answerUpset(k) {
   const u = BT.up; if (u.chosen != null) return; u.chosen = k;
   const ok = k === u.ans; BT.upStreak = ok ? BT.upStreak + 1 : 0;
   bumpStats((s) => { s.upsetRounds = (s.upsetRounds || 0) + 1; if (ok) s.upsetRight = (s.upsetRight || 0) + 1; s.upsetBest = Math.max(s.upsetBest || 0, BT.upStreak); });
+  ok ? FX.right() : FX.wrong();
   renderUpsetGame();
 }
 
@@ -2055,6 +2054,7 @@ function answerHol(k) {
   const q = BT.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b;
   const ok = q.chosen === q.win; BT.holStreak = ok ? BT.holStreak + 1 : 0;
   bumpStats((s) => { s.holRounds = (s.holRounds || 0) + 1; s.holBest = Math.max(s.holBest || 0, BT.holStreak); });
+  ok ? FX.right() : FX.wrong();
   renderHolGame();
 }
 
@@ -2097,6 +2097,137 @@ $("#lab").addEventListener("input", (e) => {
     $("#btLock").disabled = !BT.pick;
   }
 });
+
+/* ---------- fun layer: streaks, daily 5, sound, confetti, leaderboard ---------- */
+const SND_KEY = "wrapped-sound";
+let sndOn = true;
+try { sndOn = localStorage.getItem(SND_KEY) !== "0"; } catch (e) { /* storage unavailable */ }
+let audioCtx = null;
+function tone(freqs, dur = 0.11, type = "sine", vol = 0.05) {
+  if (!sndOn) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audioCtx.currentTime;
+    freqs.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + i * dur);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + i * dur + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + (i + 1) * dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0 + i * dur); o.stop(t0 + (i + 1) * dur + 0.03);
+    });
+  } catch (e) { /* audio unavailable */ }
+}
+const FX = { lock: () => tone([440], 0.09), right: () => tone([523, 659, 784]), wrong: () => tone([220, 185], 0.16, "triangle"), win: () => tone([523, 659, 784, 1047], 0.1) };
+function confetti() {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = document.createElement("div"); box.className = "confetti"; box.setAttribute("aria-hidden", "true");
+  const cols = ["--accent", "--home", "--draw", "--away", "--ok"];
+  for (let i = 0; i < 34; i++) {
+    const e = document.createElement("i");
+    e.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;--c:var(${cols[i % cols.length]});--x:${((Math.random() - 0.5) * 220).toFixed(0)}px;--r:${(Math.random() * 720 - 360).toFixed(0)}deg;--d:${(1.1 + Math.random() * 0.9).toFixed(2)}s`;
+    box.appendChild(e);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 2400);
+}
+function paintSound() { const b = $("#sndBtn"); if (b) { b.textContent = `Sound: ${sndOn ? "on" : "off"}`; b.setAttribute("aria-pressed", String(sndOn)); } }
+function celebrateMatch(it) {
+  const yp = ptsFor(it.pick, it.score, it.real[0], it.real[1]), mp = ptsFor(it.mpick, it.mscore, it.real[0], it.real[1]);
+  if (yp > mp) { FX.win(); confetti(); } else if (it.pick === it.res) FX.right(); else FX.wrong();
+}
+
+function matchStreaks() {
+  const ms = btItems("bt_m_").sort((a, b) => ((a.savedAt || "") < (b.savedAt || "") ? -1 : 1));
+  let cur = 0, best = 0;
+  ms.forEach((x) => { if (x.pick === x.res) { cur++; best = Math.max(best, cur); } else cur = 0; });
+  return { cur, best, n: ms.length };
+}
+function renderStrip() {
+  const el = $("#btStrip"); if (!el) return;
+  const ms = btItems("bt_m_");
+  if (!ms.length) { el.hidden = true; return; }
+  const st = matchStreaks(); let right = 0, mr = 0;
+  ms.forEach((x) => { if (x.pick === x.res) right++; if (x.mpick === x.res) mr++; });
+  el.hidden = false;
+  el.innerHTML = [[`${st.cur}`, "right in a row"], [`${st.best}`, "best streak"], [`${right} v ${mr}`, `you v the model, of ${ms.length}`], [`${dailyDayStreak()}`, "daily 5 days in a row"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
+}
+
+const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
+function dailyFixtures(key) {
+  const all = poolSeasons().flatMap((season) => DATA.seasons[season].matches.map((m, i) => ({ m, season, i })));
+  const r = mulberry(hashStr("daily-" + key)), seen = new Set(), out = [];
+  while (out.length < 5) { const c = all[Math.floor(r() * all.length)], id = c.season + "|" + c.i; if (!seen.has(id)) { seen.add(id); out.push(c); } }
+  return out;
+}
+function dailyState(key) { const f = dailyFixtures(key), items = f.map((r) => saved.items[matchKeyBT(r)]); return { f, items, n: items.filter(Boolean).length }; }
+function dailyDayStreak() {
+  let s = 0; const now = Date.now();
+  for (let k = 0; k < 60; k++) { const n = dailyState(dayKey(new Date(now - k * 864e5))).n; if (n === 5) s++; else if (k > 0) break; }
+  return s;
+}
+function dailyShareText(key, st) {
+  const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  return `Beat the Model, Daily 5, ${key}\nMe ${you}/5, the model ${mod}/5\n${st.items.map((x) => (x.pick === x.res ? "✅" : "❌")).join("")} (me)\n${st.items.map((x) => (x.mpick === x.res ? "✅" : "❌")).join("")} (model)`;
+}
+function renderDaily() {
+  const el = $("#btDaily"); if (!el) return;
+  if (BT.game !== "match" || BT.cur) { el.innerHTML = ""; return; }
+  const key = dayKey(), st = dailyState(key);
+  const rows = st.f.map((r, k) => { const it = st.items[k]; return `<button type="button" class="bt-fix ${it ? "done" : ""}" data-fix="${r.season}|${r.i}"><span class="num">${k + 1}</span><span class="fx">${chip(r.m[1])}<b>${esc(r.m[1])}</b><i>v</i><b>${esc(r.m[2])}</b>${chip(r.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : ""}</button>`; }).join("");
+  let result = "";
+  if (st.n === 5) {
+    const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+    result = `<div class="dres"><span>You ${you}/5, the model ${mod}/5: ${you > mod ? "you beat it" : you === mod ? "a tie" : "the model wins today"}</span><button class="btn" id="dailyShare" type="button">Copy my result</button></div><pre id="dailyText" hidden></pre>`;
+  }
+  el.innerHTML = `<div class="daily"><h3>Daily 5 <span class="label">${key} · same five matches for everyone · ${st.n}/5 played</span></h3><div class="dlist">${rows}</div>${result}</div>`;
+}
+async function shareDaily() {
+  const st = dailyState(dayKey()), text = dailyShareText(dayKey(), st), pre = $("#dailyText");
+  try { await navigator.clipboard.writeText(text); $("#dailyShare").textContent = "Copied"; }
+  catch (e) { pre.textContent = text; pre.hidden = false; const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+}
+
+/* leaderboard: opt-in, one small row per person (totals only; names are looked up for whoever views it) */
+const LB = { coll: null, uid: null, user: null, rows: [], failed: false };
+function myTotals() {
+  const ms = btItems("bt_m_"); let you = 0, mod = 0, right = 0;
+  ms.forEach((x) => { you += ptsFor(x.pick, x.score, x.real[0], x.real[1]); mod += ptsFor(x.mpick, x.mscore, x.real[0], x.real[1]); if (x.pick === x.res) right++; });
+  return { played: ms.length, you, mod, right, edge: you - mod, best: matchStreaks().best, daily: dailyDayStreak() };
+}
+const lbJoined = () => !!LB.uid && LB.rows.some((r) => r.id === LB.uid);
+async function lbPublish() {
+  if (!LB.coll || !lbJoined()) return;
+  try { await LB.coll.doc(LB.uid).set({ ...myTotals(), updatedAt: new Date().toISOString() }); } catch (e) { /* rules may forbid: board stays read-only */ }
+}
+async function renderBoard() {
+  const el = $("#btBoard"); if (!el) return;
+  if (!LB.coll || LB.failed) { el.innerHTML = ""; return; }
+  const rows = [...LB.rows].sort((a, b) => b.edge - a.edge || b.right - a.right).slice(0, 10);
+  let names = {};
+  try { if (LB.user && typeof LB.user.profiles === "function") names = await LB.user.profiles(rows.map((r) => r.id)); } catch (e) { /* names stay generic */ }
+  const me = lbJoined();
+  el.innerHTML = `<div class="board"><h3 style="font-size:17px">Leaderboard</h3>
+    <span class="fineprint">Ranked by points ahead of the model in Match Challenge. Joining is optional; only your totals and display name are shown, never your picks.</span>
+    ${rows.length ? rows.map((r, i) => `<div class="lbrow ${r.id === LB.uid ? "me" : ""}"><b class="num">${i + 1}</b><span class="nm">${esc((names[r.id] && names[r.id].name) || "Someone")}${r.id === LB.uid ? " (you)" : ""}</span><span class="num">${r.edge >= 0 ? "+" : ""}${r.edge} pts · ${r.right}/${r.played} right</span></div>`).join("") : `<div class="fineprint">No one is on the board yet.</div>`}
+    <div class="btnrow"><button class="btn ${me ? "ghost" : ""}" id="lbToggle" type="button" ${me || myTotals().played ? "" : "disabled"}>${me ? "Leave the leaderboard" : "Join the leaderboard"}</button>${!me && !myTotals().played ? `<span class="fineprint">Play a match first.</span>` : ""}</div></div>`;
+}
+async function toggleBoard() {
+  if (!LB.coll) return;
+  try { if (lbJoined()) await LB.coll.doc(LB.uid).delete(); else await LB.coll.doc(LB.uid).set({ ...myTotals(), updatedAt: new Date().toISOString() }); } catch (e) { LB.failed = true; renderBoard(); }
+}
+function initBoard(db, user, uid) {
+  if (!db || !uid) return;
+  LB.coll = db.collection("leaderboard"); LB.uid = uid; LB.user = user;
+  LB.coll.onSnapshot((snap) => { LB.rows = snap.docs.filter((d) => d.exists).map((d) => ({ id: d.id, ...d.data() })); renderBoard(); }, () => { LB.failed = true; renderBoard(); });
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "sndBtn") { sndOn = !sndOn; try { localStorage.setItem(SND_KEY, sndOn ? "1" : "0"); } catch (x) { /* storage unavailable */ } paintSound(); if (sndOn) FX.right(); }
+  else if (b.id === "dailyShare") shareDaily();
+  else if (b.id === "lbToggle") toggleBoard();
+});
+
 function initBeat() { BT.season = poolSeasons().includes("2025-26") ? "2025-26" : poolSeasons()[0]; renderBeat(); }
 
 /* ---------- sanity checks ---------- */
@@ -2569,16 +2700,9 @@ function initPicker(selector, clubs) {
   paint();
 }
 document.addEventListener("click", (e) => { if (!e.target.closest(".picker")) closePickers(); });
-$("#mixRange").addEventListener("input", (e) => { MIX.t = +e.target.value / 100; state.profile = "mix"; refreshAll(false); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePickers(); });
 
 /* ---------- welcome + quick starts ---------- */
-const WELCOME_KEY = "wrapped-welcome-hidden";
-function welcomeHidden() { try { return localStorage.getItem(WELCOME_KEY) === "1"; } catch (e) { return false; } }
-function setWelcome(hidden) {
-  try { localStorage.setItem(WELCOME_KEY, hidden ? "1" : "0"); } catch (e) { /* storage unavailable */ }
-  $("#welcome").classList.toggle("collapsed", hidden);
-}
 function quickStart(which) {
   if (which === "watch") { state.season = DATA.seasons["2025-26"] ? "2025-26" : state.season; refreshAll(true); state.round = 0; renderReplay(false); goTo("replay"); play(); }
   else if (which === "predict") goTo("lab");
@@ -2592,8 +2716,8 @@ function initExtras() {
   $("#teamSel").innerHTML = opts; $("#h2hA").innerHTML = opts; $("#h2hB").innerHTML = opts;
   $("#teamSel").value = "Arsenal"; $("#h2hA").value = "Arsenal"; $("#h2hB").value = "Tottenham";
   initPicker("#teamSel", HIST.clubs); initPicker("#h2hA", HIST.clubs); initPicker("#h2hB", HIST.clubs);
-  setWelcome(welcomeHidden());
-  $("#welcome").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.start) quickStart(b.dataset.start); else if (b.id === "welcomeX") setWelcome(true); else if (b.id === "welcomeOpen") setWelcome(false); });
+  $("#welcome").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b && b.dataset.start) quickStart(b.dataset.start); });
+  $("#moreBtn").addEventListener("click", () => { const g = $("#moreGroup"); g.hidden = !g.hidden; $("#moreBtn").setAttribute("aria-expanded", String(!g.hidden)); });
   $("#teamSel").addEventListener("change", renderTeam);
   $("#h2hA").addEventListener("change", renderH2H); $("#h2hB").addEventListener("change", renderH2H);
   $("#restRun").addEventListener("click", () => { restData = null; renderRest(); });

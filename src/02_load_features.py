@@ -5,6 +5,13 @@ from features.fixture_grid import build_fixture_grid
 # Information that would not be known before kickoff (or that only
 # helps through Elo's calibration, not as a raw classifier feature)
 COLUMNS_TO_DROP = [
+    # exact copies of HomeElo / AwayElo / EloDifference under the classic Elo format
+    "HomeTeamOverallElo",
+    "AwayTeamOverallElo",
+    "OverallEloDifference",
+    # columns the football-data files leave empty for these seasons (match xG, closing odds)
+    "HxG", "AxG", "PPH", "PPD", "PPA", "SKBH", "SKBD", "SKBA",
+    "PPCH", "PPCD", "PPCA", "SKBCH", "SKBCD", "SKBCA",
     "FTHG",
     "FTAG",
     "HTHG",

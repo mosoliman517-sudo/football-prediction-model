@@ -44,7 +44,6 @@ FEATURE_COLUMNS = [
     "HomeAvgSecondHalfGoalsScoredLast5", "HomeAvgSecondHalfGoalsConcededLast5",
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
-    "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
@@ -70,7 +69,6 @@ FEATURE_COLUMNS = [
     "HomeAvgSecondHalfGoalsScoredLast5", "HomeAvgSecondHalfGoalsConcededLast5",
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
-    "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
@@ -339,8 +337,6 @@ def make_simulator(train, fixtures, real_n=0):
 
             home_rating = home_elo.get(home, INITIAL_ELO)
             away_rating = away_elo.get(away, INITIAL_ELO)
-            home_overall_elo = (home_elo.get(home, INITIAL_ELO) + away_elo.get(home, INITIAL_ELO)) / 2
-            away_overall_elo = (home_elo.get(away, INITIAL_ELO) + away_elo.get(away, INITIAL_ELO)) / 2
 
             key = matchup_key(home, away)
             past = h2h_history.get(key, [])
@@ -391,9 +387,6 @@ def make_simulator(train, fixtures, real_n=0):
                 "HomeElo": home_rating,
                 "AwayElo": away_rating,
                 "EloDifference": home_rating - away_rating,
-                "HomeTeamOverallElo": home_overall_elo,
-                "AwayTeamOverallElo": away_overall_elo,
-                "OverallEloDifference": home_overall_elo - away_overall_elo,
                 "HomeSquadValueEur": team_squad_value.get(home, 0.0),
                 "AwaySquadValueEur": team_squad_value.get(away, 0.0),
                 "HomeTablePosition": table_position(home),

@@ -1,9 +1,9 @@
 {
- "coverage_80": 0.675,
- "title_prob_of_real_champion": 0.446,
- "brier_top4": 0.069,
+ "coverage_80": 0.725,
+ "title_prob_of_real_champion": 0.45,
+ "brier_top4": 0.068,
  "brier_top4_base_rate": 0.16,
- "brier_relegation": 0.051,
+ "brier_relegation": 0.053,
  "brier_relegation_base_rate": 0.128,
  "position_mae_projection": 2.5,
  "position_mae_current_table": 2.6,

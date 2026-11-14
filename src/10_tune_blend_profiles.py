@@ -1,5 +1,5 @@
 """
-Tunes the three decision profiles on the BLENDED odds (an even average of the
+Tunes the two decision profiles (Balanced: Home, Draw and Away recall as equal as possible; Max Accuracy) on the BLENDED odds (an even average of the
 Random Forest and the Poisson goal model) instead of on the Random Forest
 alone. Same discipline as 03: thresholds are chosen on out-of-fold training
 data only (3 chronological folds), the held-out 760 matches are used once,
@@ -109,26 +109,10 @@ def search(objective, home_f, away_f, draw_f):
     return best_f
 
 
-def logical_balanced(oofs, ys, max_loss=0.01):
-    """
-    Balanced = "call logically": pick the most likely result, except call a Draw when it is almost as likely as
-    the top one (draw odds x d beat the top odds). Home and Away get no factor at all. d is the largest boost that
-    keeps out-of-fold accuracy within `max_loss` of the plain top pick, so draws are called only in genuinely
-    tight matches and never just to even the numbers out.
-    """
-    plain = np.mean([np.mean(np.argmax(P, 1) == y) for P, y in zip(oofs, ys)])
-    best_d = 1.0
-    for d in np.arange(1.0, 1.81, 0.02):
-        acc_d = np.mean([np.mean(np.argmax(P * np.array([1.0, d, 1.0]), 1) == y) for P, y in zip(oofs, ys)])
-        if acc_d >= plain - max_loss:
-            best_d = d
-    return 1.0, 1.0, float(best_d)
-
-
 result = {}
 print("Profiles tuned on the blended odds (held-out 760 matches, used once):")
 for name, objective in OBJECTIVES.items():
-    h, a, d = logical_balanced(oof_blend, oof_y) if name == "balanced" else search(objective, *GRIDS[name])
+    h, a, d = search(objective, *GRIDS[name])
     r = recalls(np.argmax(test_blend * np.array([a, d, h]), 1), test_y)
     result[name] = {"home": round(float(h), 3), "away": round(float(a), 3), "draw": round(float(d), 3),
                     "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}
@@ -196,7 +180,7 @@ print("\nMarket-informed hybrid (blend + market-average closing odds), held-out 
 print(f"  log loss {hybrid['test']['log_loss']} (market alone {hybrid['test']['market_log_loss']}, blend alone {hybrid['test']['blend_log_loss']}), "
       f"accuracy {hybrid['test']['accuracy']:.1%} (market alone {hybrid['test']['market_accuracy']:.1%}, blend alone {hybrid['test']['blend_accuracy']:.1%})")
 for name, objective in OBJECTIVES.items():
-    h, a, d = logical_balanced(hybrid_oof, oof_y_h) if name == "balanced" else search_on(objective, GRIDS[name], hybrid_oof)
+    h, a, d = search_on(objective, GRIDS[name], hybrid_oof)
     r = recalls(np.argmax(hybrid_test * np.array([a, d, h]), 1), test_y)
     hybrid["profiles"][name] = {"home": round(float(h), 3), "away": round(float(a), 3), "draw": round(float(d), 3),
                                 "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}

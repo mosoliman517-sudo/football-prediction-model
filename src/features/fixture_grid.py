@@ -146,14 +146,10 @@ def build_fixture_grid(history, live, model_columns):
             row = {c: None for c in model_columns}
             row.update(home_state[home])
             row.update(away_state[away])
-            h_overall = (home_elo[home] + away_elo[home]) / 2
-            a_overall = (home_elo[away] + away_elo[away]) / 2
             row.update({
                 "Div": "E0", "Date": placeholder_date, "HomeTeam": home, "AwayTeam": away,
                 "HomeElo": home_elo[home], "AwayElo": away_elo[away],
                 "EloDifference": home_elo[home] - away_elo[away],
-                "HomeTeamOverallElo": h_overall, "AwayTeamOverallElo": a_overall,
-                "OverallEloDifference": h_overall - a_overall,
                 "EloXGDifference": xg_elo.get(home, 1500.0) - xg_elo.get(away, 1500.0),
                 "HomeSquadValueEur": hr["HomeSquadValueEur"],
                 "AwaySquadValueEur": ar["AwaySquadValueEur"],

@@ -49,7 +49,7 @@ RAW_FILES = {
 CLASSES = ["A", "D", "H"]
 
 PROFILE_META = {
-    "Balanced": ("balanced", "Balanced", "Picks the most likely result and calls a Draw only when it is almost as likely as the top one. No artificial draw boost."),
+    "Balanced": ("balanced", "Balanced", "Tuned so Home, Draw and Away results are each found about equally often. Gives up some overall accuracy to do it."),
     "Max Accuracy": ("accuracy", "Max Accuracy", "Tuned to get the most results right overall. Almost never calls a draw."),
 }
 

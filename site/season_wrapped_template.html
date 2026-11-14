@@ -1476,40 +1476,52 @@ function pickBy(r, list, wi, skip) {
   for (const x of pool) { u -= x[wi]; if (u <= 0) return x; }
   return pool[pool.length - 1];
 }
-function genMatch(home, away, lam, score, seed, generic = false) {
+const LEAGUE_AVG = [13.8, 11.7, 4.7, 4.1, 5.4, 4.7, 10.7, 11.1, 1.8, 2.1];   // shots, on target, corners, fouls, yellows: home, away
+const seedOf = (item) => (item.seed != null ? item.seed : hashStr(matchKey(item.home, item.away) + item.sim.join("-")));
+const expFor = (item) => { const m = DATA.mstats && DATA.mstats[`${item.date}|${item.home}|${item.away}`]; return m ? m[0] : LEAGUE_AVG; };
+function poissonR(r, mean) { const L = Math.exp(-mean); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; }
+function genMatch(home, away, lam, score, seed, generic = false, exp = LEAGUE_AVG) {
   const r = mulberry(seed);
-  const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2;
-  const disp = (t) => (t <= 45 ? `${t}` : t <= 45 + s1 ? `45+${t - 45}` : t <= 90 + s1 ? `${t - s1}` : `90+${t - 90 - s1}`);
-  const minute = () => { for (;;) { const t = 1 + Math.floor(r() * T); if (r() < 0.55 + 0.45 * t / T) return t; } };
+  const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2, L1 = 45 + s1;
+  const FH = (DATA.statsval && DATA.statsval.first_half_goal_share) || 0.447;      // measured: share of goals scored in the first half
+  const disp = (t) => (t <= 45 ? `${t}` : t <= L1 ? `45+${t - 45}` : t <= 90 + s1 ? `${t - s1}` : `90+${t - 90 - s1}`);
+  const minute = (firstShare = 0.5) => {
+    const first = r() < firstShare, lo = first ? 1 : L1 + 1, hi = first ? L1 : T;
+    for (;;) { const t = lo + Math.floor(r() * (hi - lo + 1)); if (r() < 0.8 + 0.4 * (t - lo) / (hi - lo + 1)) return t; }   // slightly more late in each half
+  };
   const spot = (sd, goal) => {
     const d = goal ? 5 + 11 * Math.pow(r(), 1.5) : 7 + 24 * Math.pow(r(), 1.2), spread = Math.min(26, 6 + d * 0.5);
     return [sd === "H" ? 105 - d : d, 34 + (r() * 2 - 1) * spread * (goal ? 0.7 : 1)];
   };
   const ev = [];
-  [["H", home, score[0], lam[0]], ["A", away, score[1], lam[1]]].forEach(([sd, club, g, l]) => {
+  [["H", home, score[0], lam[0], 0], ["A", away, score[1], lam[1], 1]].forEach(([sd, club, g, l, k]) => {
     const squad = generic ? [] : (DATA.scorers && DATA.scorers[club]) || [];
     const anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
+    const xSh = exp[k], xSot = exp[2 + k], xCor = exp[4 + k], xFoul = exp[6 + k], xYel = exp[8 + k];
     for (let i = 0; i < g; i++) {
       const sc = pickBy(r, squad, 2), as = r() < 0.72 && sc ? pickBy(r, squad, 3, sc[0]) : null, [x, y] = spot(sd, true);
-      ev.push({ t: minute(), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null });
+      ev.push({ t: minute(FH), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null });
     }
-    const extra = Math.max(2, Math.round(3 + 3.2 * l + (r() * 5 - 2)));
-    for (let i = 0; i < extra; i++) {
-      const u = r(), sh = pickBy(r, squad.map((q) => [q[0], q[1], q[1] === "GK" ? 0.01 : q[2] + 0.4]), 2), [x, y] = spot(sd, false);
-      ev.push({ t: minute(), sd, type: u < 0.4 ? "save" : u < 0.82 ? "off" : "block", x, y, who: sh ? sh[0] : anon() });
-    }
+    // shots on target = the goals plus the saved ones; the model's expected on-target count minus its expected goals is the expected saves.
+    const saves = poissonR(r, Math.max(0.3, xSot - l)), others = poissonR(r, Math.max(1, xSh - xSot));
+    const shooter = () => pickBy(r, squad.map((q) => [q[0], q[1], q[1] === "GK" ? 0.01 : q[2] + 0.4]), 2);
+    for (let i = 0; i < saves; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: "save", x, y, who: sh ? sh[0] : anon() }); }
+    for (let i = 0; i < others; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: r() < 0.6 ? "off" : "block", x, y, who: sh ? sh[0] : anon() }); }
+    for (let i = poissonR(r, xCor); i > 0; i--) ev.push({ t: minute(), sd, type: "corner" });
+    for (let i = poissonR(r, xFoul); i > 0; i--) ev.push({ t: minute(), sd, type: "foul" });
+    for (let i = poissonR(r, xYel); i > 0; i--) { const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${club} player`; ev.push({ t: minute(0.42), sd, type: "card", who: pl }); }
   });
-  let cards = 0; for (let i = 0; i < 6; i++) if (r() < 0.33) cards++;
-  for (let i = 0; i < cards; i++) {
-    const sd = r() < 0.5 ? "H" : "A", squad = generic ? [] : (DATA.scorers && DATA.scorers[sd === "H" ? home : away]) || [];
-    const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${sd === "H" ? home : away} player`;
-    ev.push({ t: minute(), sd, type: "card", who: pl });
-  }
-  ev.push({ t: 45 + s1, type: "ht" }, { t: T, type: "ft" });
+  ev.push({ t: L1, type: "ht" }, { t: T, type: "ft" });
   ev.sort((a, b) => a.t - b.t || (a.type === "goal" ? -1 : 1));
-  const p0 = 50 + 8 * (lam[0] - lam[1]) / (lam[0] + lam[1] + 0.5), a1 = 3 + r() * 4, a2 = 2 + r() * 3, f1 = r() * 6, f2 = r() * 6;
-  const poss = (t) => Math.max(30, Math.min(70, p0 + a1 * Math.sin(t / 7 + f1) + a2 * Math.sin(t / 17 + f2)));
-  return { home, away, score, T, s1, disp, ev, poss };
+  const tot = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], idx = { H: 0, A: 1 };
+  ev.forEach((e) => {
+    const k = idx[e.sd];
+    if (k == null) return;
+    if (e.type === "goal") { tot[k]++; tot[2 + k]++; } else if (e.type === "save") { tot[k]++; tot[2 + k]++; }
+    else if (e.type === "off" || e.type === "block") tot[k]++;
+    else if (e.type === "corner") tot[4 + k]++; else if (e.type === "foul") tot[6 + k]++; else if (e.type === "card") tot[8 + k]++;
+  });
+  return { home, away, score, T, s1, disp, ev, totals: tot, exp };
 }
 
 const theatre = { timer: null, m: null, t: 0, speed: 1, paused: false, lock: null, done: null };
@@ -1523,21 +1535,40 @@ function theatreHTML(m) {
     <div class="btnrow mt-ctrl"><button class="btn ghost" id="thPause" type="button">Pause</button><button class="btn ghost" id="thSpeed" type="button">Speed 1x</button><button class="btn ghost" id="thSkip" type="button">Skip to full time</button></div>
     <ol class="mt-feed" id="thFeed"></ol><div id="thAfter"></div>`;
 }
+const STAT_NAMES = [["Shots", 0], ["On target", 2], ["Corners", 4], ["Fouls", 6], ["Yellow cards", 8]];
+function statsNote() {
+  const V = DATA.statsval; if (!V) return "";
+  const f = (n) => { const a = V[`${n}_home`], b = V[`${n}_away`]; return `${((a.mae_model + b.mae_model) / 2).toFixed(1)} against ${((a.mae_baseline + b.mae_baseline) / 2).toFixed(1)}`; };
+  return `<span class="fineprint">How good are these numbers? Each is the model's forecast from pre-match information, tested on 760 matches it never saw. Average miss per team, against always guessing the league average: shots ${f("shots")}, on target ${f("sot")}, corners ${f("corners")}. Fouls (${f("fouls")}) and yellow cards (${f("yellows")}) barely depend on team quality, so they stay close to the league average. The simulated match draws its counts around these forecasts, but one match is one random draw. Possession is not shown: none of our data records it. Shot positions and the split between wide and blocked shots are illustrative.</span>`;
+};
+const expLine = (exp) => STAT_NAMES.map(([n, i]) => `${n.toLowerCase()} ${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}`).join(", ");
+function statsCard(it) {
+  const rec = DATA.mstats && DATA.mstats[`${it.date}|${it.home}|${it.away}`]; if (!rec) return "";
+  const [exp, real] = rec, tot = genMatch(it.home, it.away, it.lam, it.sim, seedOf(it), !!it.generic, exp).totals;
+  const cell = (v) => (v == null ? "-" : v);
+  return `<div class="sub-card" style="grid-column:1/-1"><h3>Match statistics: real, the model's forecast, the simulated match</h3>
+    <div class="vtable"><div class="vrow head" style="grid-template-columns:1.2fr 1fr 1fr 1fr"><span></span><span>Real</span><span>Model forecast</span><span>Simulated</span></div>
+    ${STAT_NAMES.map(([n, i]) => `<div class="vrow" style="grid-template-columns:1.2fr 1fr 1fr 1fr"><b>${n}</b><span class="num">${cell(real[i])}-${cell(real[i + 1])}</span><span class="num">${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}</span><span class="num">${tot[i]}-${tot[i + 1]}</span></div>`).join("")}</div>
+    ${statsNote()}</div>`;
+}
+
 function paintTheatre() {
   const m = theatre.m; if (!m) return;
   const t = theatre.t, vis = m.ev.filter((e) => e.t <= t), score = [0, 0];
-  const st = { H: { shots: 0, sot: 0, cards: 0 }, A: { shots: 0, sot: 0, cards: 0 } };
+  const st = { H: { shots: 0, sot: 0, cards: 0, corners: 0, fouls: 0 }, A: { shots: 0, sot: 0, cards: 0, corners: 0, fouls: 0 } };
   vis.forEach((e) => {
     if (e.type === "goal") { score[e.sd === "H" ? 0 : 1]++; st[e.sd].shots++; st[e.sd].sot++; }
     else if (e.type === "save") { st[e.sd].shots++; st[e.sd].sot++; }
     else if (e.type === "off" || e.type === "block") st[e.sd].shots++;
+    else if (e.type === "corner") st[e.sd].corners++;
+    else if (e.type === "foul") st[e.sd].fouls++;
     else if (e.type === "card") st[e.sd].cards++;
   });
   $("#thScore").textContent = `${score[0]} - ${score[1]}`;
   const mn = Math.floor(t);
   $("#thClock").textContent = t >= m.T ? "Full time" : mn === 0 ? "Kick-off" : mn === 45 + m.s1 ? "Half-time" : `${m.disp(Math.max(1, mn))}'`;
-  const ph = m.poss(t); $("#thPH").style.width = ph + "%"; $("#thPA").style.width = (100 - ph) + "%";
-  $("#thStats").innerHTML = [["Possession", `${Math.round(ph)}%`, `${Math.round(100 - ph)}%`], ["Shots", st.H.shots, st.A.shots], ["On target", st.H.sot, st.A.sot], ["Yellow cards", st.H.cards, st.A.cards]]
+  const shn = st.H.shots + st.A.shots, ph = shn ? (st.H.shots / shn) * 100 : 50; $("#thPH").style.width = ph + "%"; $("#thPA").style.width = (100 - ph) + "%";
+  $("#thStats").innerHTML = [["Share of shots", `${Math.round(ph)}%`, `${Math.round(100 - ph)}%`], ["Shots", st.H.shots, st.A.shots], ["On target", st.H.sot, st.A.sot], ["Corners", st.H.corners, st.A.corners], ["Fouls", st.H.fouls, st.A.fouls], ["Yellow cards", st.H.cards, st.A.cards]]
     .map(([l, a, b]) => `<span class="num">${a}</span><span class="label">${l}</span><span class="num">${b}</span>`).join("");
   $("#thDots").innerHTML = vis.filter((e) => e.x != null).map((e) => {
     const c = e.sd === "H" ? "var(--home)" : "var(--away)";
@@ -1548,7 +1579,7 @@ function paintTheatre() {
   }).join("");
   let hg = 0, ag = 0;
   const lines = [];
-  vis.forEach((e) => {
+  for (const e of vis) {
     const when = e.type === "ht" ? "HT" : e.type === "ft" ? "FT" : m.disp(e.t) + "'";
     const club = e.sd === "H" ? m.home : m.away;
     let txt = "", cls = e.type;
@@ -1557,10 +1588,12 @@ function paintTheatre() {
     else if (e.type === "off") txt = `${esc(e.who)} (${esc(club)}) shoots wide`;
     else if (e.type === "block") txt = `${esc(e.who)} (${esc(club)}) has a shot blocked`;
     else if (e.type === "card") txt = `Yellow card: ${esc(e.who)} (${esc(club)})`;
+    else if (e.type === "corner") txt = `Corner to ${esc(club)}`;
+    else if (e.type === "foul") continue;
     else if (e.type === "ht") txt = `Half-time: ${hg}-${ag}`;
     else if (e.type === "ft") txt = `Full time: ${m.home} ${hg}-${ag} ${m.away}`;
     lines.push(`<li class="${cls}"><span class="num">${when}</span><span>${txt}</span></li>`);
-  });
+  }
   $("#thFeed").innerHTML = lines.reverse().join("");
 }
 function finishTheatre() {
@@ -1568,19 +1601,19 @@ function finishTheatre() {
   const m = theatre.m, lock = theatre.lock; if (!m) return;
   theatre.t = m.T; paintTheatre();
   const sot = { H: 0, A: 0 }; m.ev.forEach((e) => { if (e.type === "goal" || e.type === "save") sot[e.sd]++; });
-  if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's simulation: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b></div>`;
+  if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's simulation: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
   else {
     const E = lock.probs[2] / (lock.probs[2] + lock.probs[0]), d = eloDelta(E, m.score[0], m.score[1], sot.H, sot.A);
     $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}. Locked in as your prediction.</b>
-    <span>Elo after this result (shots on target ${sot.H}-${sot.A} counted): ${esc(m.home)} ${fmtElo(d)}, ${esc(m.away)} ${fmtElo(-d)}.</span></div>`;
+    <span>Elo after this result (shots on target ${sot.H}-${sot.A} counted): ${esc(m.home)} ${fmtElo(d)}, ${esc(m.away)} ${fmtElo(-d)}.</span><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
   }
   $("#thPause").hidden = true; $("#thSpeed").hidden = true; $("#thSkip").hidden = true;
   if (theatre.done) { const f = theatre.done; theatre.done = null; f(); }
 }
 function startTheatre(item) {
   stopTheatre();
-  const seed = item.seed != null ? item.seed : hashStr(matchKey(item.home, item.away) + item.sim.join("-"));
-  theatre.m = genMatch(item.home, item.away, item.lam, item.sim, seed, !!item.generic);
+  const seed = seedOf(item);
+  theatre.m = genMatch(item.home, item.away, item.lam, item.sim, seed, !!item.generic, expFor(item));
   theatre.lock = item; theatre.t = 0; theatre.speed = 1; theatre.paused = false;
   const box = $("#theatre"); box.innerHTML = theatreHTML(theatre.m); box.hidden = false;
   paintTheatre();
@@ -1748,7 +1781,7 @@ function lockMatch() {
 function verdictHTML(it) {
   const [hg, ag] = it.real, res = it.res, so = outcomeOf(it.sim[0], it.sim[1]);
   const yp = ptsFor(it.pick, it.score, hg, ag), mp = ptsFor(it.mpick, it.mscore, hg, ag), sp = ptsFor(so, it.sim, hg, ag);
-  const E = it.probs[2] / (it.probs[2] + it.probs[0]), d = eloDelta(E, hg, ag);
+  const E = it.probs[2] / (it.probs[2] + it.probs[0]), rs = DATA.mstats && DATA.mstats[`${it.date}|${it.home}|${it.away}`], d = rs && rs[1][2] != null ? eloDelta(E, hg, ag, rs[1][2], rs[1][3]) : eloDelta(E, hg, ag);
   const verdict = yp > mp ? ["You beat the model!", "up"] : yp < mp ? ["The model wins this one.", "down"] : ["Level with the model.", ""];
   const row = (who, pickR, score, pts) => `<div class="vrow"><b>${who}</b><span>${OUTNAME[pickR]}${score ? ` <span class="num">${score[0]}-${score[1]}</span>` : ""}</span><span class="${pickR === res ? "up" : "down"}">${pickR === res ? "Result right" : "Result wrong"}</span><span>${score ? (score[0] === hg && score[1] === ag ? '<span class="up">Exact ★</span>' : "Not exact") : '<span class="fineprint">no score</span>'}</span><b class="num">${pts} pt${pts === 1 ? "" : "s"}</b></div>`;
   const g = scoreGrid(it.lam[0], it.lam[1]);
@@ -1761,7 +1794,8 @@ function verdictHTML(it) {
     <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.sim)}<span class="fineprint">Green ring: real score. Dashed ring: the model's played-out match.</span></div>
     <div class="sub-card"><h3>What the result was worth in Elo</h3><div class="stk head"><span>Club</span><span>Change</span><span></span></div>
       <div class="stk"><span>${esc(it.home)}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span></span></div><div class="stk"><span>${esc(it.away)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span><span></span></div>
-      <span class="fineprint">Same rule as the model uses (shots on target aren't in this view, so they are counted as even).</span></div></div>
+      <span class="fineprint">Same rule as the model uses, including the real shots on target (a quarter of the score).</span></div></div>
+    ${statsCard(it)}
     <div class="btnrow"><button class="btn" id="btNext" type="button">Another match</button></div></div>`;
 }
 

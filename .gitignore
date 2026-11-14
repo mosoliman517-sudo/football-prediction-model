@@ -25,3 +25,4 @@ site/_preview.html
 01_data_weather/
 02_processed_data/candidate_signals.csv
 site/_*.html
+.claude/

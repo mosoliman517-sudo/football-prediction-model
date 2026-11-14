@@ -1,0 +1,233 @@
+{
+ "shots_home": {
+  "real_mean": 13.796,
+  "model_mean": 13.897,
+  "mae_model": 3.684,
+  "mae_baseline": 4.126,
+  "dev_model": 1.602,
+  "dev_baseline": 2.025,
+  "corr": 0.459,
+  "calibration": {
+   "low": [
+    10.78,
+    10.86
+   ],
+   "mid": [
+    13.66,
+    13.75
+   ],
+   "high": [
+    17.26,
+    16.79
+   ]
+  }
+ },
+ "shots_away": {
+  "real_mean": 11.662,
+  "model_mean": 11.647,
+  "mae_model": 3.506,
+  "mae_baseline": 3.905,
+  "dev_model": 1.71,
+  "dev_baseline": 2.156,
+  "corr": 0.458,
+  "calibration": {
+   "low": [
+    9.01,
+    9.28
+   ],
+   "mid": [
+    11.34,
+    11.6
+   ],
+   "high": [
+    14.6,
+    14.12
+   ]
+  }
+ },
+ "sot_home": {
+  "real_mean": 4.668,
+  "model_mean": 4.854,
+  "mae_model": 1.83,
+  "mae_baseline": 1.903,
+  "dev_model": 1.18,
+  "dev_baseline": 1.275,
+  "corr": 0.318,
+  "calibration": {
+   "low": [
+    3.69,
+    3.78
+   ],
+   "mid": [
+    4.71,
+    4.6
+   ],
+   "high": [
+    6.17,
+    5.63
+   ]
+  }
+ },
+ "sot_away": {
+  "real_mean": 4.068,
+  "model_mean": 4.125,
+  "mae_model": 1.654,
+  "mae_baseline": 1.709,
+  "dev_model": 1.163,
+  "dev_baseline": 1.298,
+  "corr": 0.342,
+  "calibration": {
+   "low": [
+    3.12,
+    3.32
+   ],
+   "mid": [
+    3.99,
+    3.97
+   ],
+   "high": [
+    5.27,
+    4.92
+   ]
+  }
+ },
+ "corners_home": {
+  "real_mean": 5.411,
+  "model_mean": 5.647,
+  "mae_model": 2.22,
+  "mae_baseline": 2.433,
+  "dev_model": 1.487,
+  "dev_baseline": 1.73,
+  "corr": 0.37,
+  "calibration": {
+   "low": [
+    4.46,
+    4.17
+   ],
+   "mid": [
+    5.57,
+    5.49
+   ],
+   "high": [
+    6.91,
+    6.57
+   ]
+  }
+ },
+ "corners_away": {
+  "real_mean": 4.737,
+  "model_mean": 4.677,
+  "mae_model": 2.145,
+  "mae_baseline": 2.267,
+  "dev_model": 1.593,
+  "dev_baseline": 1.787,
+  "corr": 0.336,
+  "calibration": {
+   "low": [
+    3.73,
+    3.71
+   ],
+   "mid": [
+    4.6,
+    4.88
+   ],
+   "high": [
+    5.71,
+    5.62
+   ]
+  }
+ },
+ "fouls_home": {
+  "real_mean": 10.721,
+  "model_mean": 10.667,
+  "mae_model": 2.72,
+  "mae_baseline": 2.725,
+  "dev_model": 1.12,
+  "dev_baseline": 1.124,
+  "corr": 0.097,
+  "calibration": {
+   "low": [
+    9.97,
+    10.15
+   ],
+   "mid": [
+    10.66,
+    10.78
+   ],
+   "high": [
+    11.37,
+    11.23
+   ]
+  }
+ },
+ "fouls_away": {
+  "real_mean": 11.133,
+  "model_mean": 10.712,
+  "mae_model": 2.805,
+  "mae_baseline": 2.794,
+  "dev_model": 1.126,
+  "dev_baseline": 1.115,
+  "corr": 0.109,
+  "calibration": {
+   "low": [
+    9.95,
+    10.66
+   ],
+   "mid": [
+    10.71,
+    10.97
+   ],
+   "high": [
+    11.48,
+    11.77
+   ]
+  }
+ },
+ "yellows_home": {
+  "real_mean": 1.786,
+  "model_mean": 1.654,
+  "mae_model": 1.052,
+  "mae_baseline": 1.071,
+  "dev_model": 1.139,
+  "dev_baseline": 1.153,
+  "corr": 0.098,
+  "calibration": {
+   "low": [
+    1.43,
+    1.59
+   ],
+   "mid": [
+    1.64,
+    1.86
+   ],
+   "high": [
+    1.9,
+    1.91
+   ]
+  }
+ },
+ "yellows_away": {
+  "real_mean": 2.113,
+  "model_mean": 1.862,
+  "mae_model": 1.084,
+  "mae_baseline": 1.115,
+  "dev_model": 1.07,
+  "dev_baseline": 1.106,
+  "corr": 0.119,
+  "calibration": {
+   "low": [
+    1.69,
+    1.93
+   ],
+   "mid": [
+    1.86,
+    2.07
+   ],
+   "high": [
+    2.04,
+    2.34
+   ]
+  }
+ },
+ "first_half_goal_share": 0.4474
+}

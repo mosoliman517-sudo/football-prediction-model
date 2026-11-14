@@ -229,10 +229,30 @@ print(f"Crests embedded: {len(crests)}" + ("" if crests else " (none found; club
 
 blind = json.load(open(BLIND_JSON))
 blind["backtest"] = json.load(open(BLIND_BACKTEST_JSON))
+# ---- expected (and, for played matches, real) shots / on target / corners / fouls / yellows ----
+ms_df = pd.read_csv("02_processed_data/match_stats.csv")
+ms_df["Date"] = pd.to_datetime(ms_df["Date"], format="mixed").dt.strftime("%Y-%m-%d")
+STAT_ORDER = ["shots", "sot", "corners", "fouls", "yellows"]
+mstats = {}
+for row in ms_df.to_dict("records"):
+    exp = [round(float(row[f"X_{n}_{s}"]), 2) for n in STAT_ORDER for s in ("home", "away")]
+    real = [None if pd.isna(row[f"R_{n}_{s}"]) else int(row[f"R_{n}_{s}"]) for n in STAT_ORDER for s in ("home", "away")]
+    mstats[f"{row['Date']}|{row['HomeTeam']}|{row['AwayTeam']}"] = [exp, real]
+statsval = json.load(open("02_processed_data/match_stats_validation.json"))
+
 data = {"profiles": profiles, "seasons": seasons, "lab": lab, "validation": validation, "history": history,
         "crests": crests, "blind": blind, "hybrid": {"coef": hybrid["coef"], "intercept": hybrid["intercept"], "test": hybrid["test"]},
         "spread": json.load(open("02_processed_data/spread_calibration.json")),
-        "scorers": json.load(open("02_processed_data/scorers.json"))}
+        "scorers": json.load(open("02_processed_data/scorers.json")),
+        "mstats": mstats, "statsval": statsval}
+if os.environ.get("PREVIEW_LEAN"):    # testing aid: the preview pane cannot open files over ~500 KB, so drop the oldest season
+    for k in [k for k in data["seasons"] if k < "2025-26"]:
+        del data["seasons"][k]
+    data["mstats"] = {k: [[round(x, 1) for x in v[0]], v[1]] for k, v in mstats.items() if k >= "2025-08"}
+    cut = (pd.Timestamp("2023-08-01") - epoch).days                       # keep the last three seasons of history
+    data["history"] = {**history, "matches": [m for m in history["matches"] if m[0] >= cut],
+                       "elo": {k: [e for e in v if e[0] >= cut] or v[-1:] for k, v in history["elo"].items()}}
+    data["scorers"] = {c: sorted(pl, key=lambda q: -q[2])[:9] for c, pl in data["scorers"].items()}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

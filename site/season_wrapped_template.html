@@ -243,6 +243,11 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .mdctx .side { display: inline-flex; align-items: center; gap: 6px; }
 .mdctx .side b { color: var(--fg); }
 .formstrip i { border-radius: 7px; }
+.mixbox { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); margin-top: 8px; }
+.mixbox[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mixhead { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.mixbox input[type="range"] { width: 100%; accent-color: var(--accent); }
+.mixread { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
@@ -755,6 +760,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <div class="group" style="flex:1 1 420px">
         <span class="label">Playing style <i class="hint">how bold the model is about draws</i></span>
         <div class="profiles" id="profiles" role="group" aria-label="Playing style"></div>
+        <div class="mixbox" id="mixBox"><div class="mixhead"><b>Balance dial</b><span class="label">Max Accuracy &larr; &rarr; Balanced</span></div><input type="range" id="mixRange" min="0" max="100" step="5" value="50" aria-label="Balance between Max Accuracy and Balanced"><div class="mixread" id="mixRead"></div></div>
       </div>
     </div>
     <details class="adv"><summary>More options: prediction engine</summary>
@@ -974,7 +980,7 @@ function compute() { return computeSeason(state.season); }
 
 function computeSeason(key) {
   const S = DATA.seasons[key];
-  const P = DATA.profiles.find((p) => p.id === state.profile);
+  const P = currentProfile();
   const ms = S.matches.map((m, i) => {
     // The profile only decides the CALL (its tuned decision rule on the
     // Random Forest's probabilities). Every percentage shown is the honest
@@ -1030,7 +1036,7 @@ function buildTable(n, ms = C.ms) {
 
 /* ---------- replay rendering ---------- */
 
-function benchOf(p) { return state.base === "hybrid" ? p.benchH : state.base === "blend" ? p.benchB : p.bench; }
+function benchOf(p) { if (p.id === "mix") return mixBench(); return state.base === "hybrid" ? p.benchH : state.base === "blend" ? p.benchB : p.bench; }
 
 function renderControls() {
   $("#seasonSeg").innerHTML = Object.keys(DATA.seasons).map((k) => {
@@ -1047,6 +1053,10 @@ function renderControls() {
         <i style="--c:var(--home)">${pct(benchOf(p).H)}</i><i style="--c:var(--draw)">${pct(benchOf(p).D)}</i><i style="--c:var(--away)">${pct(benchOf(p).A)}</i>
       </span>
     </button>`).join("");
+  const mb = mixBench();
+  $("#mixRange").value = Math.round(MIX.t * 100);
+  $("#mixBox").setAttribute("aria-pressed", String(state.profile === "mix"));
+  $("#mixRead").innerHTML = `<span class="mini num"><i style="--c:var(--home)">${pct(mb.H)}</i><i style="--c:var(--draw)">${pct(mb.D)}</i><i style="--c:var(--away)">${pct(mb.A)}</i></span><span class="fineprint">Home, Draw and Away wins found on the 760 held-out matches, ${pct(mb.acc, 1)} of results right overall.</span>`;
 }
 
 function renderTransport() {
@@ -1384,7 +1394,24 @@ const LOCAL_KEY = "wrapped-saved-calls";
 function teamCode(n) { const t = TEAM[n]; return t ? t[0] : n.replace(/[^A-Za-z0-9]/g, "").slice(0, 6).toUpperCase(); }
 function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
 function liveMatches() { return DATA.seasons[LAB.season].matches; }
-function currentProfile() { return DATA.profiles.find((p) => p.id === state.profile); }
+const MIX = { t: 0.5 };
+// A style between Max Accuracy (t = 0) and Balanced (t = 1): each decision factor is a geometric blend of the two tuned ones.
+function mixProfile() {
+  const A = DATA.profiles.find((p) => p.id === "accuracy"), B = DATA.profiles.find((p) => p.id === "balanced");
+  const g = (a, b) => Math.pow(a, 1 - MIX.t) * Math.pow(b, MIX.t), blend = (x, y) => ({ h: g(x.h, y.h), d: g(x.d, y.d), a: g(x.a, y.a) });
+  return { id: "mix", name: "Your mix", desc: "A blend of Max Accuracy and Balanced, set with the dial.", f: blend(A.f, B.f), fb: blend(A.fb, B.fb), fh: blend(A.fh, B.fh) };
+}
+function currentProfile() { return state.profile === "mix" ? mixProfile() : DATA.profiles.find((p) => p.id === state.profile); }
+// What the current dial setting would have scored on the 760 held-out matches (2024-25 and 2025-26), from the engine chosen above.
+function mixBench() {
+  const P = mixProfile(), real = [0, 0, 0], hit = [0, 0, 0];
+  ["2024-25", "2025-26"].forEach((k) => (DATA.seasons[k] ? DATA.seasons[k].matches : []).forEach((m) => {
+    const d = decide(m, P), pick = d.indexOf(Math.max(d[0], d[1], d[2])), act = OUT.indexOf(m[5]);
+    real[act]++; if (pick === act) hit[act]++;
+  }));
+  const n = real[0] + real[1] + real[2];
+  return { H: hit[2] / real[2], D: hit[1] / real[1], A: hit[0] / real[0], acc: (hit[0] + hit[1] + hit[2]) / n };
+}
 function adjustProbs(probs, lam) {
   const f = baseFactors(currentProfile()), b = state.base === "blend" ? blendFrom(probs, lam) : probs;
   const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h];
@@ -2541,6 +2568,7 @@ function initPicker(selector, clubs) {
   paint();
 }
 document.addEventListener("click", (e) => { if (!e.target.closest(".picker")) closePickers(); });
+$("#mixRange").addEventListener("input", (e) => { MIX.t = +e.target.value / 100; state.profile = "mix"; refreshAll(false); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePickers(); });
 
 /* ---------- welcome + quick starts ---------- */

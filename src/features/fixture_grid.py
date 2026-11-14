@@ -125,6 +125,7 @@ def build_fixture_grid(history, live, model_columns):
     table = _current_table(live)
     elo = json.load(open(ELO_STATE_PATH))
     home_elo, away_elo = elo["home"], elo["away"]
+    xg_elo = elo.get("xg", {})
 
     latest_home = {t: history[history["HomeTeam"] == t].iloc[-1] for t in teams if (history["HomeTeam"] == t).any()}
     latest_away = {t: history[history["AwayTeam"] == t].iloc[-1] for t in teams if (history["AwayTeam"] == t).any()}
@@ -153,6 +154,7 @@ def build_fixture_grid(history, live, model_columns):
                 "EloDifference": home_elo[home] - away_elo[away],
                 "HomeTeamOverallElo": h_overall, "AwayTeamOverallElo": a_overall,
                 "OverallEloDifference": h_overall - a_overall,
+                "EloXGDifference": xg_elo.get(home, 1500.0) - xg_elo.get(away, 1500.0),
                 "HomeSquadValueEur": hr["HomeSquadValueEur"],
                 "AwaySquadValueEur": ar["AwaySquadValueEur"],
                 # experience counts matches BEFORE a row's match; one more has been played since

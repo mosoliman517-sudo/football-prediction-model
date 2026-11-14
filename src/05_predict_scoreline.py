@@ -46,7 +46,7 @@ FEATURE_COLUMNS = [
     "HomeAvgSecondHalfGoalsScoredLast5", "HomeAvgSecondHalfGoalsConcededLast5",
     "AwayAvgSecondHalfGoalsScoredLast5", "AwayAvgSecondHalfGoalsConcededLast5",
     "HomeElo", "AwayElo", "EloDifference",
-    "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference",
+    "HomeTeamOverallElo", "AwayTeamOverallElo", "OverallEloDifference", "EloXGDifference",
     "HomeSquadValueEur", "AwaySquadValueEur",
     "HomeTablePosition", "AwayTablePosition", "TablePointsGap",
     "DayOfWeek", "IsWeekend", "KickoffHour",
@@ -376,6 +376,7 @@ def predict_fixture(home_team, away_team, df):
         "OverallEloDifference": (
             home_row["HomeTeamOverallElo"] - away_row["AwayTeamOverallElo"]
         ),
+        "EloXGDifference": 0.0,   # no live xG rating for an arbitrary hypothetical fixture in this demo
         "HomeSquadValueEur": home_row["HomeSquadValueEur"],
         "AwaySquadValueEur": away_row["AwaySquadValueEur"],
         "HomeTablePosition": home_row["HomeTablePosition"],

@@ -492,10 +492,38 @@ def _run_classic_pass(df):
     return home_col, away_col, {"home": dict(rating), "away": dict(rating)}
 
 
+def _run_xg_pass(df, K=10, D=300, HG=0.4, REV=0.2):
+    """
+    A second, goal-margin rating where the "margin" is the match's EXPECTED-goals difference (a steadier measure of
+    who played better than the scoreline), falling back to the real goal difference when xG is missing (e.g. the live
+    season before Understat data is available). change = K x (margin - expected margin), where the expected margin
+    comes from the rating gap plus a home-goal edge. Tested in src/26_accuracy_ideas.py: adding it improved both the
+    logistic regression and the forest out-of-fold.
+    """
+    rating, season, diff = {}, None, []
+    for i in range(len(df)):
+        s = get_season(df.loc[i, "Date"])
+        if season is not None and s != season:
+            for t in rating:
+                rating[t] += REV * (1500.0 - rating[t])
+        season = s
+        h, a = df.loc[i, "HomeTeam"], df.loc[i, "AwayTeam"]
+        rh, ra = rating.setdefault(h, 1500.0), rating.setdefault(a, 1500.0)
+        diff.append(rh - ra)
+        xh, xa = df.loc[i, "HomeXG"], df.loc[i, "AwayXG"]
+        margin = (xh - xa) if pd.notna(xh) and pd.notna(xa) else (df.loc[i, "FTHG"] - df.loc[i, "FTAG"])
+        change = K * (margin - ((rh - ra) / D + HG))
+        rating[h], rating[a] = rh + change, ra - change
+    return diff, dict(rating)
+
+
 def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
 
     if ELO_FORMAT == "classic":
         home_col, away_col, final_state = _run_classic_pass(df)
+        xg_diff, xg_state = _run_xg_pass(df)
+        final_state["xg"] = xg_state
+        df["EloXGDifference"] = xg_diff
         df.attrs["final_elo"] = final_state
         df["HomeElo"], df["AwayElo"] = home_col, away_col
         df["EloDifference"] = [h - a for h, a in zip(home_col, away_col)]

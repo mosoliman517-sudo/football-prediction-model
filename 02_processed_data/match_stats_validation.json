@@ -1,70 +1,70 @@
 {
  "shots_home": {
   "real_mean": 13.796,
-  "model_mean": 13.896,
-  "mae_model": 3.67,
+  "model_mean": 13.892,
+  "mae_model": 3.657,
   "mae_baseline": 4.126,
-  "dev_model": 1.595,
+  "dev_model": 1.594,
   "dev_baseline": 2.025,
-  "corr": 0.459,
+  "corr": 0.462,
   "calibration": {
    "low": [
-    10.79,
-    11.01
+    10.73,
+    11.02
    ],
    "mid": [
-    13.65,
-    13.75
+    13.66,
+    13.8
    ],
    "high": [
-    17.27,
-    16.64
+    17.3,
+    16.57
    ]
   }
  },
  "shots_away": {
   "real_mean": 11.662,
-  "model_mean": 11.627,
-  "mae_model": 3.485,
+  "model_mean": 11.63,
+  "mae_model": 3.501,
   "mae_baseline": 3.905,
-  "dev_model": 1.69,
+  "dev_model": 1.699,
   "dev_baseline": 2.156,
-  "corr": 0.472,
+  "corr": 0.468,
   "calibration": {
    "low": [
-    8.97,
-    9.38
+    8.94,
+    9.42
    ],
    "mid": [
     11.35,
-    11.45
+    11.47
    ],
    "high": [
-    14.57,
-    14.17
+    14.61,
+    14.1
    ]
   }
  },
  "sot_home": {
   "real_mean": 4.668,
-  "model_mean": 4.85,
-  "mae_model": 1.83,
+  "model_mean": 4.849,
+  "mae_model": 1.829,
   "mae_baseline": 1.903,
-  "dev_model": 1.178,
+  "dev_model": 1.176,
   "dev_baseline": 1.275,
-  "corr": 0.319,
+  "corr": 0.32,
   "calibration": {
    "low": [
-    3.68,
-    3.8
+    3.66,
+    3.75
    ],
    "mid": [
-    4.69,
-    4.59
+    4.7,
+    4.65
    ],
    "high": [
-    6.18,
-    5.62
+    6.19,
+    5.6
    ]
   }
  },
@@ -73,97 +73,97 @@
   "model_mean": 4.116,
   "mae_model": 1.646,
   "mae_baseline": 1.709,
-  "dev_model": 1.152,
+  "dev_model": 1.151,
   "dev_baseline": 1.298,
-  "corr": 0.355,
+  "corr": 0.357,
   "calibration": {
    "low": [
-    3.11,
-    3.32
+    3.09,
+    3.31
    ],
    "mid": [
     3.99,
-    3.97
+    3.94
    ],
    "high": [
-    5.26,
-    4.92
+    5.27,
+    4.95
    ]
   }
  },
  "corners_home": {
   "real_mean": 5.411,
-  "model_mean": 5.648,
-  "mae_model": 2.221,
+  "model_mean": 5.647,
+  "mae_model": 2.223,
   "mae_baseline": 2.433,
-  "dev_model": 1.485,
+  "dev_model": 1.487,
   "dev_baseline": 1.73,
-  "corr": 0.37,
+  "corr": 0.367,
   "calibration": {
    "low": [
-    4.44,
-    4.15
+    4.42,
+    4.19
    ],
    "mid": [
     5.58,
-    5.44
+    5.4
    ],
    "high": [
-    6.93,
-    6.65
+    6.95,
+    6.64
    ]
   }
  },
  "corners_away": {
   "real_mean": 4.737,
-  "model_mean": 4.672,
-  "mae_model": 2.14,
+  "model_mean": 4.673,
+  "mae_model": 2.142,
   "mae_baseline": 2.267,
-  "dev_model": 1.587,
+  "dev_model": 1.589,
   "dev_baseline": 1.787,
-  "corr": 0.343,
+  "corr": 0.342,
   "calibration": {
    "low": [
-    3.7,
-    3.78
+    3.68,
+    3.7
    ],
    "mid": [
     4.6,
-    4.76
+    4.82
    ],
    "high": [
-    5.72,
-    5.68
+    5.74,
+    5.7
    ]
   }
  },
  "fouls_home": {
   "real_mean": 10.721,
-  "model_mean": 10.681,
-  "mae_model": 2.711,
+  "model_mean": 10.68,
+  "mae_model": 2.709,
   "mae_baseline": 2.725,
-  "dev_model": 1.112,
+  "dev_model": 1.11,
   "dev_baseline": 1.124,
-  "corr": 0.117,
+  "corr": 0.12,
   "calibration": {
    "low": [
-    9.97,
-    10.12
+    9.98,
+    10.06
    ],
    "mid": [
-    10.66,
-    10.63
+    10.67,
+    10.74
    ],
    "high": [
-    11.41,
-    11.42
+    11.4,
+    11.37
    ]
   }
  },
  "fouls_away": {
   "real_mean": 11.133,
-  "model_mean": 10.723,
-  "mae_model": 2.799,
+  "model_mean": 10.724,
+  "mae_model": 2.795,
   "mae_baseline": 2.794,
   "dev_model": 1.125,
   "dev_baseline": 1.115,
@@ -171,22 +171,22 @@
   "calibration": {
    "low": [
     9.97,
-    10.74
+    10.63
    ],
    "mid": [
-    10.73,
-    10.92
+    10.74,
+    11.17
    ],
    "high": [
-    11.48,
-    11.74
+    11.47,
+    11.59
    ]
   }
  },
  "yellows_home": {
   "real_mean": 1.786,
   "model_mean": 1.655,
-  "mae_model": 1.05,
+  "mae_model": 1.051,
   "mae_baseline": 1.071,
   "dev_model": 1.136,
   "dev_baseline": 1.153,
@@ -194,15 +194,15 @@
   "calibration": {
    "low": [
     1.43,
-    1.6
+    1.62
    ],
    "mid": [
     1.64,
-    1.84
+    1.81
    ],
    "high": [
     1.9,
-    1.92
+    1.93
    ]
   }
  },

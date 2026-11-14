@@ -15,7 +15,7 @@ Everything on the page comes from files the pipeline already wrote:
   - 02_processed_data/validation.json    (09_validate_simulation.py: how well
     the odds and simulations match what really happened)
   - real scores from E0_features.csv / E0_live_features.csv
-  - Bet365 pre-match odds from the raw season files, used ONLY as a
+  - market-average closing odds (and Bet365's favourite as a yardstick) from the raw season files, used ONLY as a
     reference line to compare the model against, never as a feature
 
 Run from the project root, after 03_train_model.py:
@@ -49,7 +49,6 @@ RAW_FILES = {
 CLASSES = ["A", "D", "H"]
 
 PROFILE_META = {
-    "Raw model": ("raw", "Pure Model", "The model's single best guess for every match, with no tuning."),
     "Balanced": ("balanced", "Balanced", "Tuned to find Home, Draw and Away results about equally often. Gives up some overall accuracy to call draws."),
     "Max Accuracy": ("accuracy", "Max Accuracy", "Tuned to get the most results right overall. Almost never calls a draw."),
 }
@@ -83,8 +82,7 @@ df["Season"] = df["Date"].apply(season_label)
 
 # ---- profiles -------------------------------------------------------
 factors = json.load(open(PROFILES_JSON))
-profiles = [{"id": "raw", "name": PROFILE_META["Raw model"][1], "desc": PROFILE_META["Raw model"][2],
-             "f": {"h": 1.0, "d": 1.0, "a": 1.0}}]
+profiles = []
 for key, f in factors.items():
     pid, name, desc = PROFILE_META[key]
     profiles.append({"id": pid, "name": name, "desc": desc,
@@ -142,12 +140,12 @@ for label, g in df.groupby("Season"):
     }
     print(label, len(g), "matches, bookmaker favourite", f"{bookmaker[label]:.1%}")
 
-# ---- Bet365 pre-match odds per match (margin removed), for the market-informed hybrid ----
+# ---- market-average closing odds per match (margin removed), for the market-informed hybrid ----
 import glob
-raw_odds = pd.concat([pd.read_csv(f, usecols=lambda c: c in ["Date", "HomeTeam", "AwayTeam", "B365H", "B365D", "B365A"])
+raw_odds = pd.concat([pd.read_csv(f, usecols=lambda c: c in ["Date", "HomeTeam", "AwayTeam", "AvgCA", "AvgCD", "AvgCH"])
                       for f in glob.glob("01_data/*.csv")]).dropna()
 raw_odds["Date"] = pd.to_datetime(raw_odds["Date"], format="mixed", dayfirst=True).dt.strftime("%Y-%m-%d")
-inv = 1 / raw_odds[["B365A", "B365D", "B365H"]].values
+inv = 1 / raw_odds[["AvgCA", "AvgCD", "AvgCH"]].values
 mk = inv / inv.sum(1, keepdims=True)
 raw_odds[["MA", "MD", "MH"]] = mk
 market_lookup = raw_odds.drop_duplicates(["Date", "HomeTeam", "AwayTeam"]).set_index(["Date", "HomeTeam", "AwayTeam"])[["MA", "MD", "MH"]]

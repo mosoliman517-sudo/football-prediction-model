@@ -6,7 +6,7 @@ data only (3 chronological folds), the held-out 760 matches are used once,
 for reporting.
 
 It also builds the opt-in MARKET-INFORMED HYBRID: a logistic-regression stack of
-our blend and Bet365's pre-match odds (margin removed), trained on out-of-fold
+our blend and the market-average closing odds (margin removed), trained on out-of-fold
 training data only, with its own profiles. The odds are real pre-match
 information but they carry what the market knows (lineups, injuries, news), so
 the hybrid is labelled as market-informed and is not the default.
@@ -118,9 +118,6 @@ for name, objective in OBJECTIVES.items():
                     "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}
     print(f"  {name:<9} home={h:.2f} away={a:.2f} draw={d:.2f} -> Home {r[0]:.0%} Draw {r[1]:.0%} Away {r[2]:.0%} accuracy {r[3]:.1%}")
 
-raw = recalls(test_blend.argmax(1), test_y)
-result["raw"] = {"home": 1.0, "away": 1.0, "draw": 1.0,
-                 "bench": {"H": round(raw[0], 4), "D": round(raw[1], 4), "A": round(raw[2], 4), "acc": round(raw[3], 4)}}
 json.dump(result, open("02_processed_data/blend_profiles.json", "w"), indent=2)
 print("Saved blend_profiles.json")
 
@@ -128,15 +125,16 @@ print("Saved blend_profiles.json")
 # =====================================================================
 # Market-informed hybrid (opt-in)
 # =====================================================================
-odds = pd.concat([pd.read_csv(f, usecols=lambda c: c in ["Date", "HomeTeam", "AwayTeam", "B365H", "B365D", "B365A"])
-                  for f in glob.glob("01_data/*.csv")]).dropna()
+ODDS = ["AvgCA", "AvgCD", "AvgCH"]          # market average closing odds (about 30 bookmakers), order A, D, H
+odds = pd.concat([pd.read_csv(f, usecols=lambda c: c in ["Date", "HomeTeam", "AwayTeam"] + ODDS) for f in glob.glob("01_data/*.csv")])
 odds["Date"] = pd.to_datetime(odds["Date"], format="mixed", dayfirst=True)
 odds = odds.drop_duplicates(["Date", "HomeTeam", "AwayTeam"])
 merged = feat[["Date", "HomeTeam", "AwayTeam"]].merge(odds, on=["Date", "HomeTeam", "AwayTeam"], how="left")
-assert len(merged) == len(feat) and merged["B365H"].notna().all(), "Bet365 odds missing for some matches"
-raw_inv = 1 / merged[["B365A", "B365D", "B365H"]].values              # order A, D, H
+assert len(merged) == len(feat)
+raw_inv = 1 / merged[ODDS].values                                  # NaN where the season has no closing odds (before 2019-20)
 market = raw_inv / raw_inv.sum(1, keepdims=True)
 market_tr, market_te = market[: len(tr)], market[len(tr):]
+assert not np.isnan(market_te).any(), "closing odds missing for held-out matches"
 
 
 def logp(p):
@@ -144,10 +142,15 @@ def logp(p):
 
 
 oof_idx_all = np.concatenate(oof_idx)
-X_oof = np.hstack([logp(np.vstack(oof_blend)), logp(market_tr[oof_idx_all])])
-y_oof = np.concatenate(oof_y)
-stacker = LogisticRegression(C=1.0, max_iter=2000).fit(X_oof, y_oof)
-hybrid_oof = np.split(stacker.predict_proba(X_oof), np.cumsum([len(b) for b in oof_blend])[:-1])
+ok = ~np.isnan(market_tr[oof_idx_all]).any(1)                      # out-of-fold rows that have closing odds
+X_all = np.hstack([logp(np.vstack(oof_blend)), logp(np.nan_to_num(market_tr[oof_idx_all], nan=1 / 3))])
+y_all = np.concatenate(oof_y)
+stacker = LogisticRegression(C=1.0, max_iter=2000).fit(X_all[ok], y_all[ok])
+bounds = np.cumsum([len(b) for b in oof_blend])[:-1]
+hybrid_oof, oof_y_h = [], []
+for P_f, y_f, ok_f in zip(np.split(stacker.predict_proba(X_all), bounds), np.split(y_all, bounds), np.split(ok, bounds)):
+    if ok_f.sum():
+        hybrid_oof.append(P_f[ok_f]); oof_y_h.append(y_f[ok_f])
 hybrid_test = stacker.predict_proba(np.hstack([logp(test_blend), logp(market_te)]))
 
 
@@ -167,13 +170,13 @@ def search_on(objective, grid, oofs):
     for h in grid[0]:
         for a in grid[1]:
             for d in grid[2]:
-                score = np.mean([objective(recalls(np.argmax(P * np.array([a, d, h]), 1), y)) for P, y in zip(oofs, oof_y)])
+                score = np.mean([objective(recalls(np.argmax(P * np.array([a, d, h]), 1), y)) for P, y in zip(oofs, oof_y_h)])
                 if score > best:
                     best, best_f = score, (h, a, d)
     return best_f
 
 
-print("\nMarket-informed hybrid (blend + Bet365 odds), held-out 760 matches:")
+print("\nMarket-informed hybrid (blend + market-average closing odds), held-out 760 matches:")
 print(f"  log loss {hybrid['test']['log_loss']} (market alone {hybrid['test']['market_log_loss']}, blend alone {hybrid['test']['blend_log_loss']}), "
       f"accuracy {hybrid['test']['accuracy']:.1%} (market alone {hybrid['test']['market_accuracy']:.1%}, blend alone {hybrid['test']['blend_accuracy']:.1%})")
 for name, objective in OBJECTIVES.items():
@@ -182,7 +185,5 @@ for name, objective in OBJECTIVES.items():
     hybrid["profiles"][name] = {"home": round(float(h), 3), "away": round(float(a), 3), "draw": round(float(d), 3),
                                 "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}
     print(f"  {name:<9} home={h:.2f} away={a:.2f} draw={d:.2f} -> Home {r[0]:.0%} Draw {r[1]:.0%} Away {r[2]:.0%} accuracy {r[3]:.1%}")
-raw_h = recalls(hybrid_test.argmax(1), test_y)
-hybrid["profiles"]["raw"] = {"home": 1.0, "away": 1.0, "draw": 1.0, "bench": {"H": round(raw_h[0], 4), "D": round(raw_h[1], 4), "A": round(raw_h[2], 4), "acc": round(raw_h[3], 4)}}
 json.dump(hybrid, open("02_processed_data/hybrid.json", "w"), indent=2)
 print("Saved hybrid.json")

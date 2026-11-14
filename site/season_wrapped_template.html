@@ -891,8 +891,8 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <ul>
       <li><b>The model never saw these matches.</b> It trained on 2014-15 to 2023-24 and is replaying seasons after that. Every number here is real out-of-sample output.</li>
       <li><b>Percentages are honest odds; the playing style only picks the call.</b> The odds are an even blend of the Random Forest and the Poisson goal model, which beat both parts on log loss and match the real Home/Draw/Away rates. A playing style decides which outcome gets called, so a Draw call can sit next to a 30% Draw chance, on purpose.</li>
-      <li><b>Playing styles are decision rules, not different models.</b> <b>Pure Model</b> picks the single most probable result. <b>Balanced</b> boosts Draw so draws actually get called, which costs some overall accuracy. <b>Max Accuracy</b> suppresses Draw, which gives the most results right. The three coloured numbers on each card are the share of real Home wins, Draws and Away wins that style found on the 760 held-out matches. The decision can be made from our blended model (the default, tuned in step 10 of the pipeline), from the Random Forest alone, or from the model plus bookmaker odds.</li>
-      <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with Bet365's pre-match odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
+      <li><b>Playing styles are decision rules, not different models.</b> <b>Balanced</b> boosts Draw so draws actually get called, which costs some overall accuracy. <b>Max Accuracy</b> suppresses Draw, which gives the most results right. The three coloured numbers on each card are the share of real Home wins, Draws and Away wins that style found on the 760 held-out matches. The decision can be made from our blended model (the default, tuned in step 10 of the pipeline), from the Random Forest alone, or from the model plus bookmaker odds.</li>
+      <li><b>The bookmaker line is a yardstick, not an input,</b> except in the one opt-in mode that says so. "Model + bookmaker odds" stacks our blend with the bookmaker market's average closing odds, which is real information but carries what the market knows (lineups, injuries, news), so it is labelled market-informed. Everything else never sees an odd.</li>
       <li><b>Two kinds of simulation, kept apart on purpose.</b> Replays and next-matchday forecasts are always built from real past results only. The blind rest-of-season simulation is the one place predicted results feed predictions: after each simulated match, Elo, form and the table update with the simulated result.</li>
       <li><b>The match lab forecasts unplayed games from each team's latest state.</b> It reads form and Elo from each club's most recent match, the real current table for position and points, and head-to-head history. Kickoff time, rest days and European fixtures are unknown for a game that hasn't been scheduled in the data, so they take neutral values. Saved calls are kept in your own private storage for this page.</li>
       <li><b>Data:</b> match results and shots from football-data.co.uk, expected goals from Understat, squad values, transfers and managers from a Kaggle copy of Transfermarkt. Matchdays are every 10 matches in date order.</li>
@@ -1058,7 +1058,7 @@ function renderTransport() {
   play.setAttribute("aria-label", state.playing ? "Pause" : "Play");
   const n = $("#notice"), notes = [];
   if (C.S.live) notes.push("2026-27 is still in progress, so this is a live look. The model never trained on it, but its expected-goals, manager and European-fixture inputs stop at the end of last season, so expect it to be a little rougher than on the finished seasons.");
-  if (state.base === "hybrid") notes.push("Model + bookmaker odds stacks our blend with Bet365's pre-match odds. That is real pre-match information, but it carries what the market knows (lineups, injuries, news), so it is market-informed, not the model alone. It only applies to matches whose odds exist; an unplayed match with no odds falls back to the blend.");
+  if (state.base === "hybrid") notes.push("Model + bookmaker odds stacks our blend with the bookmaker market's average closing odds. That is real pre-match information, but it carries what the market knows (lineups, injuries, news), so it is market-informed, not the model alone. It only applies to matches whose odds exist; an unplayed match with no odds falls back to the blend.");
   n.hidden = !notes.length;
   n.innerHTML = notes.map((t) => `<p style="margin:0 0 4px">${esc(t)}</p>`).join("");
 }
@@ -1419,7 +1419,7 @@ function decide(m, P) {
 }
 
 // Market-informed hybrid: a logistic-regression stack of our blend and
-// Bet365's pre-match odds, fitted on out-of-fold training data (10_tune_blend_profiles.py).
+// the market-average closing odds, fitted on out-of-fold training data (10_tune_blend_profiles.py).
 function hybridFrom(blend, mkt) {
   const x = [...blend, ...mkt].map((v) => Math.log(Math.max(v, 1e-6))), H = DATA.hybrid;
   const z = H.coef.map((row, i) => row.reduce((a, w, j) => a + w * x[j], H.intercept[i]));
@@ -1528,15 +1528,14 @@ async function initStore() {
   } catch (e) { /* stay on browser storage */ }
 }
 
-/* ---------- Elo: what a result is worth (same rule as features/elo.py) ---------- */
-const ELO_K = 20, ELO_PERF = 0.25;
+/* ---------- Elo: what a result is worth (same rule as features/elo.py: one rating per club) ---------- */
+const ELO_K = 15, ELO_HA = 40;
 const marginMult = (d) => { d = Math.abs(d); return d <= 1 ? 1 : d === 2 ? 1.5 : (11 + d) / 8; };
-// E = the home side's expected score (its win chance among decisive results). Shots on target, when
-// known, are 25% of the "actual" score; unknown means an even split.
-function eloDelta(E, hg, ag, sotH = null, sotA = null) {
-  const res = hg > ag ? 1 : hg < ag ? 0 : 0.5;
-  const perf = sotH != null && sotH + sotA > 0 ? sotH / (sotH + sotA) : 0.5;
-  return ELO_K * marginMult(hg - ag) * ((1 - ELO_PERF) * res + ELO_PERF * perf - E);
+// Change in the home club's rating (the away club's change is the opposite): K x margin multiplier x (result - expected),
+// where expected comes from the rating gap plus a fixed home edge.
+function eloDelta(rH, rA, hg, ag) {
+  const E = 1 / (1 + Math.pow(10, -(rH - rA + ELO_HA) / 400)), res = hg > ag ? 1 : hg < ag ? 0 : 0.5;
+  return ELO_K * marginMult(hg - ag) * (res - E);
 }
 const fmtElo = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)}`;
 
@@ -1683,13 +1682,7 @@ function finishTheatre() {
   clearInterval(theatre.timer); theatre.timer = null;
   const m = theatre.m, lock = theatre.lock; if (!m) return;
   theatre.t = m.T; paintTheatre();
-  const sot = { H: 0, A: 0 }; m.ev.forEach((e) => { if (e.type === "goal" || e.type === "save") sot[e.sd]++; });
   if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's prediction: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
-  else {
-    const E = lock.probs[2] / (lock.probs[2] + lock.probs[0]), d = eloDelta(E, m.score[0], m.score[1], sot.H, sot.A);
-    $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}. Locked in as your prediction.</b>
-    <span>Elo after this result (shots on target ${sot.H}-${sot.A} counted): ${esc(m.home)} ${fmtElo(d)}, ${esc(m.away)} ${fmtElo(-d)}.</span><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
-  }
   $("#thPause").hidden = true; $("#thSpeed").hidden = true; $("#thSkip").hidden = true;
   if (theatre.done) { const f = theatre.done; theatre.done = null; f(); }
 }
@@ -1864,7 +1857,7 @@ function lockMatch() {
 function verdictHTML(it) {
   const [hg, ag] = it.real, res = it.res;
   const yp = ptsFor(it.pick, it.score, hg, ag), mp = ptsFor(it.mpick, it.mscore, hg, ag);
-  const E = it.probs[2] / (it.probs[2] + it.probs[0]), rs = DATA.mstats && DATA.mstats[`${it.date}|${it.home}|${it.away}`], d = rs && rs[1][2] != null ? eloDelta(E, hg, ag, rs[1][2], rs[1][3]) : eloDelta(E, hg, ag);
+  const day = dayOf(it.date), rH = eloAt(clubIx[it.home], day), rA = eloAt(clubIx[it.away], day), d = eloDelta(rH, rA, hg, ag);
   const verdict = yp > mp ? ["You beat the model!", "up"] : yp < mp ? ["The model wins this one.", "down"] : ["Level with the model.", ""];
   const row = (who, pickR, score, pts) => `<div class="vrow"><b>${who}</b><span>${OUTNAME[pickR]}${score ? ` <span class="num">${score[0]}-${score[1]}</span>` : ""}</span><span class="${pickR === res ? "up" : "down"}">${pickR === res ? "Result right" : "Result wrong"}</span><span>${score ? (score[0] === hg && score[1] === ag ? '<span class="up">Exact ★</span>' : "Not exact") : '<span class="fineprint">no score</span>'}</span><b class="num">${pts} pt${pts === 1 ? "" : "s"}</b></div>`;
   const g = scoreGrid(it.lam[0], it.lam[1]);
@@ -1877,7 +1870,7 @@ function verdictHTML(it) {
     <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.mscore)}<span class="fineprint long">Green ring: real score. Dashed ring: the model's prediction.</span></div>
     <div class="sub-card"><h3>What the result was worth in Elo</h3><div class="stk head"><span>Club</span><span>Change</span><span></span></div>
       <div class="stk"><span>${esc(it.home)}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span></span></div><div class="stk"><span>${esc(it.away)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span><span></span></div>
-      <span class="fineprint long">Same rule as the model uses, including the real shots on target (a quarter of the score).</span></div></div>
+      <span class="fineprint long">The same rule that updates every rating: one rating per club, so one side's gain is the other's loss.</span></div></div>
     ${statsCard(it)}
     <div class="btnrow"><button class="btn" id="btNext" type="button">Another match</button></div></div>`;
 }
@@ -2089,7 +2082,7 @@ function renderSanity() {
 
   // 1. single match table
   const HY = DATA.hybrid.test;
-  const oddsRows = names.map((n) => [n, mp[n].log_loss, mp[n].accuracy]).concat([["Bet365's own odds (the market)", HY.market_log_loss, HY.market_accuracy], ["Our blend + Bet365 (hybrid, opt-in)", HY.log_loss, HY.accuracy]]);
+  const oddsRows = names.map((n) => [n, mp[n].log_loss, mp[n].accuracy]).concat([["The bookmaker market's own odds", HY.market_log_loss, HY.market_accuracy], ["Our blend + Bet365 (hybrid, opt-in)", HY.log_loss, HY.accuracy]]);
   const bestAll = Math.min(...oddsRows.map((r) => r[1]));
   const tbl = `<div class="kv"><span class="h">Odds from</span><span class="h">Log loss</span><span class="h">Right</span>` +
     oddsRows.map(([n, ll, ac]) => `<span>${esc(n)}</span><span class="r ${ll === bestAll ? "best" : ""}">${ll.toFixed(3)}</span><span class="r">${pct(ac, 1)}</span>`).join("") + `</div>`;

@@ -3,7 +3,7 @@ import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
 
-from config import TRAIN_TEST_SPLIT_DATE
+from config import TRAIN_TEST_SPLIT_DATE, ELO_FORMAT, CLASSIC_ELO
 
 
 BASE_K = 20              # rating points moved for a normal 1-goal result
@@ -466,7 +466,43 @@ def _run_elo_pass(df, expectation_model=None):
     )
 
 
+def _run_classic_pass(df):
+    """
+    One rating per club (no separate home and away pools), updated after every match:
+    change = K x margin multiplier x (result - expected), where expected comes from the rating gap
+    plus a fixed home edge. Whatever one side gains the other loses. Ratings drift 20% of the way
+    back to 1500 every summer. Tuned and tested in src/18_test_elo_formats.py.
+    """
+    K, HA, REV = CLASSIC_ELO["K"], CLASSIC_ELO["HA"], CLASSIC_ELO["REV"]
+    rating, season, home_col, away_col = {}, None, [], []
+    for i in range(len(df)):
+        s = get_season(df.loc[i, "Date"])
+        if season is not None and s != season:
+            for t in rating:
+                rating[t] += REV * (INITIAL_ELO - rating[t])
+        season = s
+        h, a = df.loc[i, "HomeTeam"], df.loc[i, "AwayTeam"]
+        rh, ra = rating.setdefault(h, INITIAL_ELO), rating.setdefault(a, INITIAL_ELO)
+        home_col.append(rh); away_col.append(ra)
+        gh, ga = df.loc[i, "FTHG"], df.loc[i, "FTAG"]
+        expected = expected_score(rh + HA, ra)
+        result = 1.0 if gh > ga else 0.5 if gh == ga else 0.0
+        change = K * margin_multiplier(gh - ga) * (result - expected)
+        rating[h], rating[a] = rh + change, ra - change
+    return home_col, away_col, {"home": dict(rating), "away": dict(rating)}
+
+
 def add_elo_features(df, train_cutoff=TRAIN_TEST_SPLIT_DATE):
+
+    if ELO_FORMAT == "classic":
+        home_col, away_col, final_state = _run_classic_pass(df)
+        df.attrs["final_elo"] = final_state
+        df["HomeElo"], df["AwayElo"] = home_col, away_col
+        df["EloDifference"] = [h - a for h, a in zip(home_col, away_col)]
+        df["HomeTeamOverallElo"], df["AwayTeamOverallElo"] = home_col, away_col      # one rating: overall = the rating
+        df["OverallEloDifference"] = df["EloDifference"]
+        return df
+
 
     # ---------------------------------------------------------------
     # Pass 1: pure Elo, no signal blending. This exists purely as a

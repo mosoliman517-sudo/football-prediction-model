@@ -576,10 +576,9 @@ def even_objective(y_true, y_pred):
     return min(home_recall, away_recall, draw_recall)
 
 
-# Two tuned profiles, each an explicit, different goal (plus the untouched
-# "Pure Model" the page adds itself). A third, "Target 60/60/40", was
-# removed at the owner's request: it aimed at 60/60/40 recall, never got
-# near it, and was confusing next to the other two.
+# Two tuned profiles, each an explicit, different goal. "Target 60/60/40" and
+# the untuned "Pure Model" (the single most probable result, almost the same
+# as Max Accuracy) were both removed at the owner's request.
 PROFILES = {
     "Balanced": (even_objective, {}),
     "Max Accuracy": (accuracy_objective, {}),

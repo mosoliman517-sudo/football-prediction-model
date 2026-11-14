@@ -21,7 +21,6 @@ import numpy as np
 import pandas as pd
 
 from features.manager_tenure import _manager_timeline
-from features.team_names import TEAM_NAME_MAP
 
 KEY = ["Date", "HomeTeam", "AwayTeam"]
 
@@ -221,7 +220,6 @@ def lineup_signals(base, folder="01_data_fpl"):
         for fx, dt in fixtures.items():
             rows = g[g["fixture"] == fx]
             if len(done) >= 3:
-                tot = sum(prior_min.values())
                 reg = {e: m for e, m in prior_min.items() if m >= 0.5 * 90 * len(done)}
                 played = set(rows.loc[rows["minutes"] > 0, "element"])
                 val = rows.set_index("element")["value"].to_dict()

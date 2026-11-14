@@ -1,0 +1,55 @@
+{
+ "blend alone": {
+  "log_loss": 1.0143,
+  "accuracy": 0.4987
+ },
+ "Bet365 opening (current hybrid)": {
+  "coverage": 1.0,
+  "market_log_loss": 0.9947,
+  "log_loss": 0.997,
+  "accuracy": 0.5211,
+  "market_accuracy": 0.5158
+ },
+ "Pinnacle opening": {
+  "coverage": 0.776,
+  "market_log_loss": 0.9769,
+  "log_loss": 0.9821,
+  "accuracy": 0.5339,
+  "market_accuracy": 0.5356
+ },
+ "Pinnacle closing": {
+  "coverage": 0.776,
+  "market_log_loss": 0.9739,
+  "log_loss": 0.9787,
+  "accuracy": 0.5424,
+  "market_accuracy": 0.539
+ },
+ "Bet365 closing": {
+  "coverage": 1.0,
+  "market_log_loss": 0.9904,
+  "log_loss": 0.992,
+  "accuracy": 0.5237,
+  "market_accuracy": 0.5224
+ },
+ "Market average closing": {
+  "coverage": 1.0,
+  "market_log_loss": 0.9893,
+  "log_loss": 0.9912,
+  "accuracy": 0.5289,
+  "market_accuracy": 0.525
+ },
+ "Market average opening": {
+  "coverage": 1.0,
+  "market_log_loss": 0.9929,
+  "log_loss": 0.9947,
+  "accuracy": 0.5171,
+  "market_accuracy": 0.5184
+ },
+ "Market maximum closing": {
+  "coverage": 1.0,
+  "market_log_loss": 0.989,
+  "log_loss": 0.9907,
+  "accuracy": 0.5303,
+  "market_accuracy": 0.525
+ }
+}

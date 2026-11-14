@@ -27,3 +27,10 @@ site/_preview.html
 site/_*.html
 .claude/
 site/season_wrapped_programme.html
+
+# Daily Fantasy API snapshots (our own injury/team-news history; see src/22_snapshot_fpl.py)
+01_data_snapshots/
+01_data_old/
+
+# Rebuildable cache of out-of-fold odds (src/oof_blend.py)
+02_processed_data/oof_blend.npz

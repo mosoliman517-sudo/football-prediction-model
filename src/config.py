@@ -24,3 +24,9 @@ LIVE_SEASON_START = "2026-08-01"   # 2026-27 onward is kept in its own files
                                     # stays comparable run to run while the
                                     # live season grows week by week. The
                                     # model never trains on any of it.
+
+
+ELO_FORMAT = "classic"    # "classic": ONE rating per club, K=15, +40 home edge, 20% reversion each summer, margin multiplier.
+                           # Won the 18_test_elo_formats experiment against the older "dual" format (separate home and away
+                           # ratings plus a calibrated expectation model), which is still in features/elo.py.
+CLASSIC_ELO = {"K": 15, "HA": 40, "REV": 0.2}

@@ -252,7 +252,7 @@ if os.environ.get("PREVIEW_LEAN"):    # testing aid: the preview pane cannot ope
     cut = (pd.Timestamp("2023-08-01") - epoch).days                       # keep the last three seasons of history
     data["history"] = {**history, "matches": [m for m in history["matches"] if m[0] >= cut],
                        "elo": {k: [e for e in v if e[0] >= cut] or v[-1:] for k, v in history["elo"].items()}}
-    data["scorers"] = {c: sorted(pl, key=lambda q: -q[2])[:9] for c, pl in data["scorers"].items()}
+    data["scorers"] = {sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in data["scorers"].items() if sn >= "2025-26"}
 template = open(TEMPLATE).read()
 assert "/*__DATA__*/null" in template
 html = template.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

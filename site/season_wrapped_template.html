@@ -1477,10 +1477,12 @@ function pickBy(r, list, wi, skip) {
   return pool[pool.length - 1];
 }
 const LEAGUE_AVG = [13.8, 11.7, 4.7, 4.1, 5.4, 4.7, 10.7, 11.1, 1.8, 2.1];   // shots, on target, corners, fouls, yellows: home, away
+const simOf = (item) => item.mscore || item.sim;      // the model's predicted score IS the simulated match
 const seedOf = (item) => (item.seed != null ? item.seed : hashStr(matchKey(item.home, item.away) + item.sim.join("-")));
+const squadOf = (season, club) => (DATA.scorers && DATA.scorers[season] && DATA.scorers[season][club]) || [];
 const expFor = (item) => { const m = DATA.mstats && DATA.mstats[`${item.date}|${item.home}|${item.away}`]; return m ? m[0] : LEAGUE_AVG; };
 function poissonR(r, mean) { const L = Math.exp(-mean); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; }
-function genMatch(home, away, lam, score, seed, generic = false, exp = LEAGUE_AVG) {
+function genMatch(home, away, lam, score, seed, season = null, exp = LEAGUE_AVG) {
   const r = mulberry(seed);
   const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2, L1 = 45 + s1;
   const FH = (DATA.statsval && DATA.statsval.first_half_goal_share) || 0.447;      // measured: share of goals scored in the first half
@@ -1495,7 +1497,7 @@ function genMatch(home, away, lam, score, seed, generic = false, exp = LEAGUE_AV
   };
   const ev = [];
   [["H", home, score[0], lam[0], 0], ["A", away, score[1], lam[1], 1]].forEach(([sd, club, g, l, k]) => {
-    const squad = generic ? [] : (DATA.scorers && DATA.scorers[club]) || [];
+    const squad = squadOf(season, club);
     const anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
     const xSh = exp[k], xSot = exp[2 + k], xCor = exp[4 + k], xFoul = exp[6 + k], xYel = exp[8 + k];
     for (let i = 0; i < g; i++) {
@@ -1544,10 +1546,10 @@ function statsNote() {
 const expLine = (exp) => STAT_NAMES.map(([n, i]) => `${n.toLowerCase()} ${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}`).join(", ");
 function statsCard(it) {
   const rec = DATA.mstats && DATA.mstats[`${it.date}|${it.home}|${it.away}`]; if (!rec) return "";
-  const [exp, real] = rec, tot = genMatch(it.home, it.away, it.lam, it.sim, seedOf(it), !!it.generic, exp).totals;
+  const [exp, real] = rec, tot = genMatch(it.home, it.away, it.lam, simOf(it), seedOf(it), it.season, exp).totals;
   const cell = (v) => (v == null ? "-" : v);
-  return `<div class="sub-card" style="grid-column:1/-1"><h3>Match statistics: real, the model's forecast, the simulated match</h3>
-    <div class="vtable"><div class="vrow head" style="grid-template-columns:1.2fr 1fr 1fr 1fr"><span></span><span>Real</span><span>Model forecast</span><span>Simulated</span></div>
+  return `<div class="sub-card" style="grid-column:1/-1"><h3>Match statistics: real, the model's forecast, the prediction played out</h3>
+    <div class="vtable"><div class="vrow head" style="grid-template-columns:1.2fr 1fr 1fr 1fr"><span></span><span>Real</span><span>Model forecast</span><span>Prediction played out</span></div>
     ${STAT_NAMES.map(([n, i]) => `<div class="vrow" style="grid-template-columns:1.2fr 1fr 1fr 1fr"><b>${n}</b><span class="num">${cell(real[i])}-${cell(real[i + 1])}</span><span class="num">${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}</span><span class="num">${tot[i]}-${tot[i + 1]}</span></div>`).join("")}</div>
     ${statsNote()}</div>`;
 }
@@ -1601,7 +1603,7 @@ function finishTheatre() {
   const m = theatre.m, lock = theatre.lock; if (!m) return;
   theatre.t = m.T; paintTheatre();
   const sot = { H: 0, A: 0 }; m.ev.forEach((e) => { if (e.type === "goal" || e.type === "save") sot[e.sd]++; });
-  if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's simulation: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
+  if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's prediction: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b><span class="fineprint">The model's forecast for the match: ${expLine(m.exp)} (home-away).</span></div>`;
   else {
     const E = lock.probs[2] / (lock.probs[2] + lock.probs[0]), d = eloDelta(E, m.score[0], m.score[1], sot.H, sot.A);
     $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}. Locked in as your prediction.</b>
@@ -1613,7 +1615,7 @@ function finishTheatre() {
 function startTheatre(item) {
   stopTheatre();
   const seed = seedOf(item);
-  theatre.m = genMatch(item.home, item.away, item.lam, item.sim, seed, !!item.generic, expFor(item));
+  theatre.m = genMatch(item.home, item.away, item.lam, simOf(item), seed, item.season, expFor(item));
   theatre.lock = item; theatre.t = 0; theatre.speed = 1; theatre.paused = false;
   const box = $("#theatre"); box.innerHTML = theatreHTML(theatre.m); box.hidden = false;
   paintTheatre();
@@ -1740,7 +1742,7 @@ function renderMatchGame() {
   if (BT.cur) return renderMatchPlay();
   const clubs = [...new Set(poolSeasons().flatMap((s) => DATA.seasons[s].matches.flatMap((m) => [m[1], m[2]])))].sort();
   const cand = btCandidates(), fresh = cand.filter((r) => !saved.items[matchKeyBT(r)]);
-  $("#btBody").innerHTML = `<p class="intro">Pick a real match the model has never seen, without seeing the result. You lock in a guess, the model plays the match out, and then reality is revealed. Who got it right?</p>
+  $("#btBody").innerHTML = `<p class="intro">Pick a real match the model has never seen, without seeing the result. You lock in a guess, the model's own prediction is played out minute by minute, and then reality is revealed. Who got it right?</p>
     <div class="bt-filters">
       <label><span class="label">Season</span><select id="btSeason">${[["all", "All three"], ...poolSeasons().map((s) => [s, s])].map(([v, t]) => `<option value="${v}" ${BT.season === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
       <label><span class="label">Club</span><select id="btClub"><option value="">Any club</option>${clubs.map((c) => `<option ${BT.club === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
@@ -1762,25 +1764,25 @@ function renderMatchPlay() {
     <div class="bt-score"><span class="label">Exact score <i class="hint">optional, +2 points if right</i></span>
       <input id="btH" type="number" min="0" max="9" inputmode="numeric" value="${sc[0] ?? ""}" aria-label="Home goals"> <b>-</b> <input id="btA" type="number" min="0" max="9" inputmode="numeric" value="${sc[1] ?? ""}" aria-label="Away goals"></div>
     <div class="btnrow"><button class="btn" id="btLock" type="button" ${BT.pick ? "" : "disabled"}>Lock in my prediction</button>${hardToggle()}</div>
-    <span class="fineprint">Once locked, it can't be changed. The model then plays the match out and the real result is revealed.</span></div>`;
+    <span class="fineprint">Once locked, it can't be changed. The model's prediction is then played out and the real result is revealed.</span></div>`;
 }
 function lockMatch() {
   const rec = BT.cur, m = rec.m, key = matchKeyBT(rec);
   if (saved.items[key] || !BT.pick || BT.busy) return;
   const sc = BT.score, score = sc[0] != null && sc[1] != null ? [+sc[0], +sc[1]] : null, call = modelCall(m, BT.hard), seed = rnd32();
-  const sim = sampleScoreR(scoreGrid(m[9], m[10]), mulberry((seed ^ 0x9E3779B9) >>> 0));
+  const sim = call.score;                       // the model's prediction is what gets played out, so they can never disagree
   const item = { game: "match", season: rec.season, date: m[0], home: m[1], away: m[2], hard: BT.hard, pick: BT.pick, score, mpick: call.pick, mscore: call.score,
-    sim, seed, lam: [m[9], m[10]], probs: call.odds.map((v) => +v.toFixed(4)), real: [m[3], m[4]], res: m[5], generic: rec.season !== LAB.season, quiet: true, savedAt: new Date().toISOString() };
+    sim, seed, lam: [m[9], m[10]], probs: call.odds.map((v) => +v.toFixed(4)), real: [m[3], m[4]], res: m[5], quiet: true, savedAt: new Date().toISOString() };
   lockIn(key, item);
   BT.busy = true;
   const box = $("#btBody"); box.querySelectorAll("button,input").forEach((x) => { if (x.id !== "btBack") x.disabled = true; });
-  $("#btVerdict").innerHTML = `<div class="sub-card" style="margin-top:12px"><h3>Locked in. The model is playing the match out...</h3><span class="fineprint">Reality stays hidden until full time.</span></div>`;
+  $("#btVerdict").innerHTML = `<div class="sub-card" style="margin-top:12px"><h3>Locked in. Here is the model's prediction, played out...</h3><span class="fineprint">Reality stays hidden until full time.</span></div>`;
   theatre.done = () => { BT.busy = false; $("#btVerdict").innerHTML = verdictHTML(item); renderRecord(); };
   startTheatre(item);
 }
 function verdictHTML(it) {
-  const [hg, ag] = it.real, res = it.res, so = outcomeOf(it.sim[0], it.sim[1]);
-  const yp = ptsFor(it.pick, it.score, hg, ag), mp = ptsFor(it.mpick, it.mscore, hg, ag), sp = ptsFor(so, it.sim, hg, ag);
+  const [hg, ag] = it.real, res = it.res;
+  const yp = ptsFor(it.pick, it.score, hg, ag), mp = ptsFor(it.mpick, it.mscore, hg, ag);
   const E = it.probs[2] / (it.probs[2] + it.probs[0]), rs = DATA.mstats && DATA.mstats[`${it.date}|${it.home}|${it.away}`], d = rs && rs[1][2] != null ? eloDelta(E, hg, ag, rs[1][2], rs[1][3]) : eloDelta(E, hg, ag);
   const verdict = yp > mp ? ["You beat the model!", "up"] : yp < mp ? ["The model wins this one.", "down"] : ["Level with the model.", ""];
   const row = (who, pickR, score, pts) => `<div class="vrow"><b>${who}</b><span>${OUTNAME[pickR]}${score ? ` <span class="num">${score[0]}-${score[1]}</span>` : ""}</span><span class="${pickR === res ? "up" : "down"}">${pickR === res ? "Result right" : "Result wrong"}</span><span>${score ? (score[0] === hg && score[1] === ag ? '<span class="up">Exact ★</span>' : "Not exact") : '<span class="fineprint">no score</span>'}</span><b class="num">${pts} pt${pts === 1 ? "" : "s"}</b></div>`;
@@ -1788,10 +1790,10 @@ function verdictHTML(it) {
   return `<div class="sub-card verdict"><div class="banner played"><span class="tag">Full time</span><span class="res">${chip(it.home)} ${esc(it.home)} <span class="num">${hg}-${ag}</span> ${esc(it.away)} ${chip(it.away)}</span><span class="fineprint">${OUTNAME[res]} · ${shortDate(it.date)}</span></div>
     <h3 class="${verdict[1]}" style="font-size:22px">${verdict[0]}</h3>
     <div class="vtable"><div class="vrow head"><span></span><span>Prediction</span><span>Result</span><span>Score</span><span>Points</span></div>
-      ${row("You", it.pick, it.score, yp)}${row(`Model${it.hard ? " (hard)" : ""}`, it.mpick, it.mscore, mp)}${row("Model's played-out match", so, it.sim, sp)}</div>
-    <span class="fineprint">You and the model's call are scored the same way: 1 point for the result, +2 for the exact score. The played-out match is one random draw from the model's odds, shown for fun.</span>
+      ${row("You", it.pick, it.score, yp)}${row(`Model${it.hard ? " (hard)" : ""}`, it.mpick, it.mscore, mp)}</div>
+    <span class="fineprint">You and the model are scored the same way: 1 point for the result, +2 for the exact score. The model's prediction is the score it named, the same one that was played out above.</span>
     <div class="labgrid"><div class="sub-card"><h3>The model's odds before kickoff</h3>${bigOdds(it.probs, res)}<span class="fineprint">The outlined box is what really happened.</span></div>
-    <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.sim)}<span class="fineprint">Green ring: real score. Dashed ring: the model's played-out match.</span></div>
+    <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.mscore)}<span class="fineprint">Green ring: real score. Dashed ring: the model's prediction.</span></div>
     <div class="sub-card"><h3>What the result was worth in Elo</h3><div class="stk head"><span>Club</span><span>Change</span><span></span></div>
       <div class="stk"><span>${esc(it.home)}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span></span></div><div class="stk"><span>${esc(it.away)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span><span></span></div>
       <span class="fineprint">Same rule as the model uses, including the real shots on target (a quarter of the score).</span></div></div>

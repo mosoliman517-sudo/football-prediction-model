@@ -547,6 +547,10 @@ Chosen by poll: front door with three choices, hide the history tabs, make it mo
 - **Matchday label fix** and **chart label fix** from earlier today are in the same build.
 - Not done on purpose: public publishing (the badges are trademarked; see the standing rule on `site/crests/`).
 
+### November 14, 2026 (seventeenth pass): the played-out match fits its forecast, statistics included
+
+The minute-by-minute match used to draw shots, corners, fouls and cards at random around the model's forecast, so the totals on screen could drift from the forecast shown beside them. The played-out totals are now the forecast rounded (only the minutes, players and shot positions are still drawn from the seed). Two physical limits can move a total: shots on target cannot be fewer than the goals, and shots cannot be fewer than shots on target. Checked on all 860 matches with a stored forecast: every played-out total equals the rounded forecast (largest gap 0.5), the goals on the pitch always equal the predicted score, no limit ever had to bind, and there are no impossible lines. A hypothetical fixture with no stored statistics forecast uses the league average with shots and shots on target scaled by the square root of each side's expected goals against the league average, so a predicted 3-0 gets about 17 shots to 9 rather than identical numbers for every game.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

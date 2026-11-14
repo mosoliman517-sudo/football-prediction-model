@@ -1584,8 +1584,13 @@ const LEAGUE_AVG = [13.8, 11.7, 4.7, 4.1, 5.4, 4.7, 10.7, 11.1, 1.8, 2.1];   // 
 const simOf = (item) => item.mscore || item.sim;      // the model's predicted score IS the simulated match
 const seedOf = (item) => (item.seed != null ? item.seed : hashStr(matchKey(item.home, item.away) + item.sim.join("-")));
 const squadOf = (season, club) => (DATA.scorers && DATA.scorers[season] && DATA.scorers[season][club]) || [];
-const expFor = (item) => { const m = DATA.mstats && DATA.mstats[`${item.date}|${item.home}|${item.away}`]; return m ? m[0] : LEAGUE_AVG; };
-function poissonR(r, mean) { const L = Math.exp(-mean); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; }
+// A match with no stored statistics forecast (a hypothetical fixture) uses the league average, with shots and shots on target scaled by the
+// square root of each side's expected goals against the league's average, so the stats still follow the model's goal forecast.
+const expFor = (item) => {
+  const m = DATA.mstats && DATA.mstats[`${item.date}|${item.home}|${item.away}`]; if (m) return m[0];
+  const [lh, la] = item.lam || [1.5, 1.2], fh = Math.sqrt(Math.max(0.3, lh) / 1.5), fa = Math.sqrt(Math.max(0.3, la) / 1.2);
+  return LEAGUE_AVG.map((v, i) => (i === 0 || i === 2 ? v * fh : i === 1 || i === 3 ? v * fa : v));
+};
 function genMatch(home, away, lam, score, seed, season = null, exp = LEAGUE_AVG) {
   const r = mulberry(seed);
   const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2, L1 = 45 + s1;
@@ -1600,7 +1605,7 @@ function genMatch(home, away, lam, score, seed, season = null, exp = LEAGUE_AVG)
     return [sd === "H" ? 105 - d : d, 34 + (r() * 2 - 1) * spread * (goal ? 0.7 : 1)];
   };
   const ev = [];
-  [["H", home, score[0], lam[0], 0], ["A", away, score[1], lam[1], 1]].forEach(([sd, club, g, l, k]) => {
+  [["H", home, score[0], 0], ["A", away, score[1], 1]].forEach(([sd, club, g, k]) => {
     const squad = squadOf(season, club);
     const anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
     const xSh = exp[k], xSot = exp[2 + k], xCor = exp[4 + k], xFoul = exp[6 + k], xYel = exp[8 + k];
@@ -1608,14 +1613,16 @@ function genMatch(home, away, lam, score, seed, season = null, exp = LEAGUE_AVG)
       const sc = pickBy(r, squad, 2), as = r() < 0.72 && sc ? pickBy(r, squad, 3, sc[0]) : null, [x, y] = spot(sd, true);
       ev.push({ t: minute(FH), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null });
     }
-    // shots on target = the goals plus the saved ones; the model's expected on-target count minus its expected goals is the expected saves.
-    const saves = poissonR(r, Math.max(0.3, xSot - l)), others = poissonR(r, Math.max(1, xSh - xSot));
+    // The played-out totals ARE the model's forecast, rounded, so the match fits its own forecast. Only two physical limits
+    // can move a total: shots on target cannot be fewer than the goals scored, and shots cannot be fewer than shots on target.
+    const nSot = Math.max(g, Math.round(xSot)), nShots = Math.max(nSot, Math.round(xSh));
+    const saves = nSot - g, others = nShots - nSot;
     const shooter = () => pickBy(r, squad.map((q) => [q[0], q[1], q[1] === "GK" ? 0.01 : q[2] + 0.4]), 2);
     for (let i = 0; i < saves; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: "save", x, y, who: sh ? sh[0] : anon() }); }
     for (let i = 0; i < others; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: r() < 0.6 ? "off" : "block", x, y, who: sh ? sh[0] : anon() }); }
-    for (let i = poissonR(r, xCor); i > 0; i--) ev.push({ t: minute(), sd, type: "corner" });
-    for (let i = poissonR(r, xFoul); i > 0; i--) ev.push({ t: minute(), sd, type: "foul" });
-    for (let i = poissonR(r, xYel); i > 0; i--) { const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${club} player`; ev.push({ t: minute(0.42), sd, type: "card", who: pl }); }
+    for (let i = Math.round(xCor); i > 0; i--) ev.push({ t: minute(), sd, type: "corner" });
+    for (let i = Math.round(xFoul); i > 0; i--) ev.push({ t: minute(), sd, type: "foul" });
+    for (let i = Math.round(xYel); i > 0; i--) { const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${club} player`; ev.push({ t: minute(0.42), sd, type: "card", who: pl }); }
   });
   ev.push({ t: L1, type: "ht" }, { t: T, type: "ft" });
   ev.sort((a, b) => a.t - b.t || (a.type === "goal" ? -1 : 1));

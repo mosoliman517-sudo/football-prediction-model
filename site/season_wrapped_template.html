@@ -192,6 +192,46 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .mt-feed li.ht, .mt-feed li.ft { color: var(--muted); font-weight: 600; }
 .mt-lock { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--ok); border-radius: 10px; padding: 10px 12px; }
 @media (max-width: 560px) { .mt-score .big { font-size: 30px; } .mt-team b { font-size: 13px; } }
+.bt-filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.bt-filters label { display: flex; flex-direction: column; gap: 4px; }
+.bt-filters select, .bt-score input { background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; color: var(--fg); }
+.bt-score input { width: 64px; text-align: center; font: 700 18px var(--mono); }
+.bt-score { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.hardtoggle { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.bt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px; max-height: 360px; overflow: auto; padding: 2px; }
+.bt-fix { display: flex; gap: 10px; align-items: center; text-align: left; background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; cursor: pointer; min-width: 0; }
+.bt-fix:hover { border-color: var(--accent); } .bt-fix.done { opacity: .75; }
+.bt-fix span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.btrecord { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+.ctx { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 10px; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.ctxside { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ctxname { display: flex; gap: 8px; align-items: center; font-size: 16px; }
+.ctxrow { display: flex; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; }
+.ctxvs { font: 800 20px var(--display); color: var(--muted); text-align: center; }
+.formstrip { display: inline-flex; gap: 3px; } .formstrip i { font: 700 11px var(--mono); width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-style: normal; color: #fff; }
+.formstrip i.fW { background: var(--ok); } .formstrip i.fD { background: var(--draw); } .formstrip i.fL { background: var(--bad); }
+.vtable { display: flex; flex-direction: column; } .vrow { display: grid; grid-template-columns: 1.6fr 1.3fr 1fr 1fr 60px; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); align-items: center; font-size: 13px; } .vrow.head { border-top: 0; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.verdict { margin-top: 12px; } .vscore { font-weight: 800; }
+.mdlist { display: flex; flex-direction: column; gap: 6px; }
+.mdrow { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 8px 10px; background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; }
+.mdteams { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; } .mdteams .fineprint { flex-basis: 100%; }
+.mdseg button { padding: 6px 10px; } .mdrow > span { font-size: 13px; }
+.uplist { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.upcard { display: flex; flex-direction: column; gap: 8px; text-align: left; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; cursor: pointer; }
+.upcard:hover:not(:disabled) { border-color: var(--accent); } .upcard.ans { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; } .upcard.wrong { border-color: var(--bad); }
+.upm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tblist { display: flex; flex-direction: column; gap: 4px; }
+.tbrow { display: flex; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 6px 10px; }
+.tbrow .tbn { width: 26px; text-align: right; color: var(--muted); } .tbrow b { flex: 1; min-width: 0; } .tbbtns { display: flex; gap: 4px; margin-left: auto; }
+.tbrow .fineprint { white-space: nowrap; } .tbres b { flex: 1; }
+.xbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; width: 32px; height: 28px; cursor: pointer; color: var(--fg); }
+.xbtn:disabled { opacity: .3; cursor: default; }
+.holpair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+.holcard { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 12px; background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; font-size: 16px; }
+.holcard .crest { width: 64px; height: 64px; } .holcard .chip { min-width: 64px; height: 38px; font-size: 15px; }
+.holcard:hover:not(:disabled) { border-color: var(--accent); } .holcard.ans { border-color: var(--ok); } .holcard.wrong { border-color: var(--bad); }
+.holv { font: 800 30px var(--display); color: var(--muted); }
+@media (max-width: 560px) { .ctx { grid-template-columns: 1fr; } .ctxvs { display: none; } .vrow { grid-template-columns: 1fr 1fr 60px; } .vrow span:nth-child(3), .vrow span:nth-child(4) { grid-column: auto; } .holpair { grid-template-columns: 1fr; } .holpair .ctxvs { display: block; } }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: right; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px 8px; white-space: nowrap; }
@@ -595,7 +635,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
 
   <nav class="jump tabs" role="tablist" aria-label="Sections">
     <button type="button" role="tab" data-tab="replay">Matchday</button>
-    <button type="button" role="tab" data-tab="lab">Prediction Desk</button>
+    <button type="button" role="tab" data-tab="lab">Beat the Model</button>
     <button type="button" role="tab" data-tab="rest">Title Race</button>
     <button type="button" role="tab" data-tab="teams">Club Files</button>
     <button type="button" role="tab" data-tab="h2h">Derby Days</button>
@@ -611,7 +651,7 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
       <p>This model has <b>never seen a single one of these matches</b>. Watch it call a whole Premier League season one matchday at a time, then check its work against what really happened. Pick a starting point:</p>
       <div class="wl-grid">
         <button type="button" class="wl-card" data-start="watch"><b>Watch a season</b><span>Press play and see every call, right or wrong, as the table builds.</span></button>
-        <button type="button" class="wl-card" data-start="predict"><b>Open the Prediction Desk</b><span>Pick any two clubs, see the odds, simulate the score and save your call.</span></button>
+        <button type="button" class="wl-card" data-start="predict"><b>Beat the model</b><span>Guess a real match without seeing the result, then see who got it right.</span></button>
         <button type="button" class="wl-card" data-start="title"><b>Who wins the title?</b><span>Thousands of simulated seasons for the rest of 2026-27.</span></button>
         <button type="button" class="wl-card" data-start="story"><b>Play my Wrapped</b><span>A full-screen story of how the model did, ready to share.</span></button>
       </div>
@@ -705,18 +745,13 @@ h1, h2, h3 { font-family: var(--display); letter-spacing: 0.01em; }
     <p class="note">Left: the real table. Right: the table the model's expected points would give, where each match adds 3 x P(win) + P(draw) for each side, stretched by a factor learned from how far apart real clubs finished in past seasons (without it, blended odds squeeze the table: leaders get too few points, the bottom clubs too many). The arrow shows how far a club sits from the same club in the other table (green: the club is doing better than the model expected).</p>
   </section>
 
-  <section class="card lab" id="lab" data-views="lab" aria-label="2026-27 match lab">
-    <div class="cardhead"><h2>2026-27 match lab</h2><span class="label" id="labAsof"></span></div>
-    <p class="intro">Pick any two clubs. You see the model's call (Balanced style), every possible score and what each result would be worth in Elo. Then kick off the match: it plays out once, minute by minute, and the result is locked in as your prediction. When the real result is in the data, it is scored under My saved calls.</p>
-    <div class="labpick">
-      <label><span class="label">Home</span><select id="labHome"></select></label>
-      <button class="btn ghost" id="labSwap" type="button" aria-label="Swap home and away">Swap</button>
-      <label><span class="label">Away</span><select id="labAway"></select></label>
-    </div>
-    <div class="recent" id="labRecent"></div>
-    <div id="labOut"></div>
+  <section class="card lab" id="lab" data-views="lab" aria-label="Beat the Model">
+    <div class="cardhead"><h2>Beat the Model</h2><span class="label" id="btRecord"></span></div>
+    <div class="seg" id="btSeg" role="group" aria-label="Choose a game"></div>
+    <div id="btBody"></div>
     <div class="theatre" id="theatre" hidden></div>
-    <div class="saved" id="labSaved"></div>
+    <div id="btVerdict"></div>
+    <div id="btRecordBox" class="btrecord"></div>
   </section>
 
   <section class="card" id="rest" data-views="rest" aria-label="Rest of the season">
@@ -1216,7 +1251,6 @@ function refreshAll(resetRound) {
   if (resetRound) state.round = Math.min(C.R, 12);
   state.round = Math.min(state.round, C.R);
   renderControls(); renderReplay(false); renderRecap();
-  if (typeof renderLab === "function" && lab.home) { renderLab(); renderSaved(); }
   if (typeof renderTeam === "function" && typeof teamReady !== "undefined" && teamReady) renderTeam();
   if (typeof renderSanity === "function" && DATA.validation) { $("#simNote").textContent = `Samples every match of the selected season (${state.season}) from the honest odds, then compares the simulated points range for each team with its real total. Change the season at the top first.`; $("#seasonSimOut").innerHTML = ""; $("#seasonSimStatus").textContent = ""; }
 }
@@ -1264,7 +1298,6 @@ try {
 /* ---------- match lab ---------- */
 
 const LAB = DATA.lab;
-const lab = { home: null, away: null };
 const saved = { mode: "local", coll: null, items: {} };
 const LOCAL_KEY = "wrapped-saved-calls";
 
@@ -1272,14 +1305,6 @@ function teamCode(n) { const t = TEAM[n]; return t ? t[0] : n.replace(/[^A-Za-z0
 function matchKey(h, a) { return `m_${teamCode(h)}_${teamCode(a)}`; }
 function liveMatches() { return DATA.seasons[LAB.season].matches; }
 function currentProfile() { return DATA.profiles.find((p) => p.id === state.profile); }
-// The Prediction Desk is fixed: Balanced style on our blended model (no season or engine choice).
-const LABP = DATA.profiles.find((p) => p.id === "balanced");
-function labOdds(q) { return blendFrom(q.probs, q.lam); }
-function labDecision(q) {
-  const b = blendFrom(q.probs, q.lam), f = LABP.fb;
-  const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h], sum = adj[0] + adj[1] + adj[2];
-  return adj.map((v) => v / sum);
-}
 function adjustProbs(probs, lam) {
   const f = baseFactors(currentProfile()), b = state.base === "blend" ? blendFrom(probs, lam) : probs;
   const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h];
@@ -1398,113 +1423,6 @@ function probRows(adj, realOutcome) {
   }).join("");
 }
 
-function renderLab() {
-  if (!lab.home) return;
-  const q = lookup(lab.home, lab.away);
-  const dec = labDecision(q);
-  const pick = dec.indexOf(Math.max(dec[0], dec[1], dec[2]));
-  const adj = labOdds(q);          // honest odds shown on screen
-  const P = LABP;
-  const g = scoreGrid(q.lam[0], q.lam[1]);
-  const sm = gridSummary(g);
-  const key = matchKey(lab.home, lab.away);
-  const mine = saved.items[key];
-  const lock = mine && mine.sim ? mine : null;
-  const sim = lock ? { h: lock.sim[0], a: lock.sim[1] } : null;
-
-  let banner;
-  if (q.played) {
-    banner = `<div class="banner played"><span class="tag">Played</span><span class="res">${chip(lab.home)} ${esc(lab.home)} <span class="num">${q.hg}-${q.ag}</span> ${esc(lab.away)} ${chip(lab.away)}</span><span class="fineprint">${shortDate(q.date)}</span></div>`;
-  } else {
-    banner = `<div class="banner upcoming"><span class="tag">Not played yet</span><span class="res">${chip(lab.home)} ${esc(lab.home)} v ${esc(lab.away)} ${chip(lab.away)}</span><span class="fineprint">Forecast from each team's latest state</span></div>`;
-  }
-
-  const cs = sm.list.find((x) => outcomeOf(x[0], x[1]) === OUT[pick]);
-  const callScore = `<div class="verdictline">Score named: <span class="num">${cs[0]}-${cs[1]}</span> <span class="fineprint">(${pct(cs[2], 1)} chance)</span>${q.played ? (cs[0] === q.hg && cs[1] === q.ag ? ` <span class="up">★ exact</span>` : ` <span class="fineprint">real ${q.hg}-${q.ag}</span>`) : ""}</div>`;
-  const callCard = `<div class="sub-card"><h3>The model's call</h3>
-    <div class="bigpick"><span class="pill" style="--c:${OUTCSS[OUT[pick]]}">${OUTNAME[OUT[pick]]} ${pct(adj[pick])}</span>
-    ${q.played ? `<span class="verdictline ${OUT[pick] === q.res ? "up" : "down"}">${OUT[pick] === q.res ? "Right" : "Wrong"}: it ended ${OUTNAME[q.res]}</span>` : ""}</div>
-    ${callScore}
-    ${bigOdds(adj, q.played ? q.res : null)}
-    <span class="fineprint">The Balanced style picks the call: it is tuned to find Home, Draw and Away results about equally often. The percentages are honest odds, an even blend of the Random Forest and the goal model${q.played ? ", from the exact pre-match features" : ""}.</span></div>`;
-
-  let realRank = "";
-  if (q.played) {
-    const idx = sm.list.findIndex((x) => x[0] === q.hg && x[1] === q.ag);
-    realRank = idx >= 0 ? `The real ${q.hg}-${q.ag} had a ${pct(sm.list[idx][2], 1)} chance, ${idx === 0 ? "the single most likely score" : `the ${idx + 1}${ordinal(idx + 1)} most likely of ${g.length * g[0].length}`}.` : `The real ${q.hg}-${q.ag} was outside the modelled range.`;
-  }
-  const scoreCard = `<div class="sub-card"><h3>Every possible score</h3>
-    ${scoreHeat(g, q.played ? [q.hg, q.ag] : null, sim ? [sim.h, sim.a] : null)}
-    <span class="fineprint">Expected goals ${q.lam[0].toFixed(2)} to ${q.lam[1].toFixed(2)}. Brighter means more likely; numbers show chances of 3% or more. The goal model alone says Home ${pct(sm.H)}, Draw ${pct(sm.D)}, Away ${pct(sm.A)}.${q.played ? " Green ring: the real score." : ""}${sim ? " Dashed ring: your locked-in simulation." : ""}</span>
-    ${realRank ? `<span class="verdictline">${realRank}</span>` : ""}</div>`;
-
-  let simCard;
-  const approx = !q.played ? `<span class="fineprint">This forecast skips kickoff time, rest days and European games, which aren't known yet. On the ${liveMatches().length} matches already played it picked the same result as the exact version ${Math.round(LAB.agree * 100)}% of the time.</span>` : "";
-  if (sim) {
-    const so = outcomeOf(sim.h, sim.a);
-    let cmp = "";
-    if (q.played) cmp = sim.h === q.hg && sim.a === q.ag ? `<span class="verdictline up">Exact score. The real match ended ${q.hg}-${q.ag}.</span>`
-      : so === q.res ? `<span class="verdictline up">Right result (${OUTNAME[so]}), real score ${q.hg}-${q.ag}.</span>`
-      : `<span class="verdictline down">Different result. The real match ended ${q.hg}-${q.ag}.</span>`;
-    simCard = `<div class="sub-card"><h3>Your simulation <span class="lockpill">Locked in</span></h3>
-      <div class="simout"><span class="simscore num">${sim.h}-${sim.a}</span><span class="pill" style="--c:${OUTCSS[so]}">${OUTNAME[so]}</span></div>${cmp}
-      <span class="fineprint">Locked in ${shortDate((lock.savedAt || "").slice(0, 10))}. A match plays out once, so it can't be re-rolled${q.played ? "" : "; it is scored against the real result when that is in the data"}.</span>
-      <div class="btnrow"><button class="btn" id="labSim" type="button">Watch it again</button></div>${approx}</div>`;
-  } else {
-    simCard = `<div class="sub-card"><h3>Play this match</h3>
-      <div class="simout"><span class="simscore num">?-?</span></div>
-      <span class="fineprint">Plays out once, minute by minute, from the model's odds, with scorers and shot positions. Whatever happens is locked in as your prediction for this fixture and cannot be re-rolled.</span>
-      <div class="btnrow"><button class="btn" id="labSim" type="button">Kick off</button></div>${approx}</div>`;
-  }
-  const E = adj[2] / (adj[2] + adj[0]);
-  const stakeRows = [["Home win by 1", 1, 0], ["Home win by 2", 2, 0], ["Home win by 3 or more", 3, 0], ["Draw", 1, 1], ["Away win by 1", 0, 1], ["Away win by 2", 0, 2], ["Away win by 3 or more", 0, 3]];
-  const stakesCard = `<div class="sub-card"><h3>What the result is worth in Elo</h3>
-    <div class="stk head"><span>Result</span><span>${chip(lab.home)}</span><span>${chip(lab.away)}</span></div>
-    ${stakeRows.map(([t, h, a]) => { const d = eloDelta(E, h, a); return `<div class="stk"><span>${t}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span></div>`; }).join("")}
-    <span class="fineprint">The model expects ${esc(lab.home)} to take ${pct(E)} of the points on offer between the two sides, and a result moves each rating by how far it beat that expectation. A win by more goals counts more (2 goals: 1.5 times, 3 or more: (11 + margin) / 8 times) and shots on target make up a quarter of the score, assumed even here. Each club has a home and an away rating and this updates the one in use; the power rankings average both, so they move half as much.</span></div>`;
-
-  $("#labOut").innerHTML = banner + `<div class="labgrid" style="margin-top:14px">${callCard}${simCard}${stakesCard}${scoreCard}</div>`;
-}
-
-function renderSaved() {
-  const items = Object.entries(saved.items).map(([k, v]) => ({ k, ...v })).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""));
-  const box = $("#labSaved");
-  if (!items.length) {
-    box.innerHTML = `<h3 style="font-size:17px">My saved calls</h3><div class="empty">Nothing locked in yet. Pick a match that hasn't been played and kick it off: the result locks in here and is scored once the real result is in the data.</div>`;
-    return;
-  }
-  let resolved = 0, pickOk = 0, simOk = 0, exact = 0, simN = 0;
-  const rows = items.map((it) => {
-    const m = liveMatches().find((x) => x[1] === it.home && x[2] === it.away);
-    let status = `<span class="status pending">PENDING</span>`, detail = "";
-    if (m) {
-      resolved++;
-      const real = m[5], okPick = it.pick === real;
-      if (okPick) pickOk++;
-      let simTxt = "";
-      if (it.sim) {
-        simN++;
-        const so = outcomeOf(it.sim[0], it.sim[1]), ex = it.sim[0] === m[3] && it.sim[1] === m[4];
-        if (so === real) simOk++;
-        if (ex) exact++;
-        simTxt = ` · simulated <b>${it.sim[0]}-${it.sim[1]}</b> ${ex ? "(exact)" : so === real ? "(right result)" : "(wrong result)"}`;
-      }
-      status = `<span class="status ${okPick ? "hit" : "miss"}">${okPick ? "CALL RIGHT" : "CALL WRONG"}</span>`;
-      detail = `Real <b>${m[3]}-${m[4]}</b> on ${shortDate(m[0])} · you had <b>${OUTNAME[it.pick]}</b> ${pct(it.probs[OUT.indexOf(it.pick)])}${simTxt}`;
-    } else {
-      detail = `Called <b>${OUTNAME[it.pick]}</b> ${pct(it.probs[OUT.indexOf(it.pick)])}${it.sim ? ` · simulated <b>${it.sim[0]}-${it.sim[1]}</b>` : ""} · saved ${shortDate((it.savedAt || "").slice(0, 10))}`;
-    }
-    return `<div class="srow ${m ? "done" : ""}"><div class="m">${chip(it.home)}${esc(it.home)} v ${esc(it.away)}${chip(it.away)}</div><div class="d">${detail}</div><div style="display:flex;gap:6px;align-items:center">${status}</div></div>`;
-  }).join("");
-  box.innerHTML = `<h3 style="font-size:17px">My saved calls</h3>
-    <div class="tally"><div><b class="num">${items.length}</b><small>saved</small></div><div><b class="num">${resolved}</b><small>scored</small></div>
-    <div><b class="num">${resolved ? `${pickOk}/${resolved}` : "--"}</b><small>calls right</small></div>
-    <div><b class="num">${simN && resolved ? `${simOk}/${simN}` : "--"}</b><small>simulated results right</small></div>
-    <div><b class="num">${exact}</b><small>exact scores</small></div></div>
-    <div class="saved">${rows}</div>
-    <span class="fineprint">${saved.mode === "cloud" ? "Stored privately for you, so it stays when this page is rebuilt." : "Stored in this browser only."} Results appear after the page is rebuilt with new match data.</span>`;
-}
-
 function loadLocal() {
   try { const raw = localStorage.getItem(LOCAL_KEY); saved.items = raw ? JSON.parse(raw) : {}; } catch (e) { saved.items = {}; }
 }
@@ -1512,17 +1430,8 @@ function persistLocal() {
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify(saved.items)); } catch (e) { /* storage unavailable */ }
 }
 
-async function lockIn(key, body) {
-  saved.items[key] = body;
-  persistLocal(); renderSaved(); renderLab();
-  if (saved.coll) {
-    try { await saved.coll.doc(key).set(body); }
-    catch (e) { saved.mode = "local"; renderSaved(); }
-  }
-}
-
 async function initStore() {
-  loadLocal(); renderSaved(); renderLab();
+  loadLocal(); renderRecord();
   try {
     if (!window.claude || !window.claude.use) return;
     const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
@@ -1534,8 +1443,8 @@ async function initStore() {
       const items = {};
       snap.docs.forEach((d) => { if (d.exists) items[d.id] = d.data(); });
       saved.items = items;
-      renderSaved(); renderLab();
-    }, () => { saved.coll = null; saved.mode = "local"; loadLocal(); renderSaved(); renderLab(); });
+      renderRecord();
+    }, () => { saved.coll = null; saved.mode = "local"; loadLocal(); renderRecord(); });
   } catch (e) { /* stay on browser storage */ }
 }
 
@@ -1567,7 +1476,7 @@ function pickBy(r, list, wi, skip) {
   for (const x of pool) { u -= x[wi]; if (u <= 0) return x; }
   return pool[pool.length - 1];
 }
-function genMatch(home, away, lam, score, seed) {
+function genMatch(home, away, lam, score, seed, generic = false) {
   const r = mulberry(seed);
   const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2;
   const disp = (t) => (t <= 45 ? `${t}` : t <= 45 + s1 ? `45+${t - 45}` : t <= 90 + s1 ? `${t - s1}` : `90+${t - 90 - s1}`);
@@ -1578,21 +1487,22 @@ function genMatch(home, away, lam, score, seed) {
   };
   const ev = [];
   [["H", home, score[0], lam[0]], ["A", away, score[1], lam[1]]].forEach(([sd, club, g, l]) => {
-    const squad = (DATA.scorers && DATA.scorers[club]) || [];
+    const squad = generic ? [] : (DATA.scorers && DATA.scorers[club]) || [];
+    const anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
     for (let i = 0; i < g; i++) {
       const sc = pickBy(r, squad, 2), as = r() < 0.72 && sc ? pickBy(r, squad, 3, sc[0]) : null, [x, y] = spot(sd, true);
-      ev.push({ t: minute(), sd, type: "goal", x, y, who: sc ? sc[0] : club, assist: as ? as[0] : null });
+      ev.push({ t: minute(), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null });
     }
     const extra = Math.max(2, Math.round(3 + 3.2 * l + (r() * 5 - 2)));
     for (let i = 0; i < extra; i++) {
       const u = r(), sh = pickBy(r, squad.map((q) => [q[0], q[1], q[1] === "GK" ? 0.01 : q[2] + 0.4]), 2), [x, y] = spot(sd, false);
-      ev.push({ t: minute(), sd, type: u < 0.4 ? "save" : u < 0.82 ? "off" : "block", x, y, who: sh ? sh[0] : club });
+      ev.push({ t: minute(), sd, type: u < 0.4 ? "save" : u < 0.82 ? "off" : "block", x, y, who: sh ? sh[0] : anon() });
     }
   });
   let cards = 0; for (let i = 0; i < 6; i++) if (r() < 0.33) cards++;
   for (let i = 0; i < cards; i++) {
-    const sd = r() < 0.5 ? "H" : "A", squad = (DATA.scorers && DATA.scorers[sd === "H" ? home : away]) || [];
-    const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : "A player";
+    const sd = r() < 0.5 ? "H" : "A", squad = generic ? [] : (DATA.scorers && DATA.scorers[sd === "H" ? home : away]) || [];
+    const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${sd === "H" ? home : away} player`;
     ev.push({ t: minute(), sd, type: "card", who: pl });
   }
   ev.push({ t: 45 + s1, type: "ht" }, { t: T, type: "ft" });
@@ -1602,7 +1512,7 @@ function genMatch(home, away, lam, score, seed) {
   return { home, away, score, T, s1, disp, ev, poss };
 }
 
-const theatre = { timer: null, m: null, t: 0, speed: 1, paused: false, lock: null };
+const theatre = { timer: null, m: null, t: 0, speed: 1, paused: false, lock: null, done: null };
 function stopTheatre() { clearInterval(theatre.timer); theatre.timer = null; theatre.m = null; }
 function theatreHTML(m) {
   const pitch = `<svg class="mt-pitch" viewBox="-2 -2 109 72" role="img" aria-label="Pitch: where the shots were taken"><g fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".5"><rect x="0" y="0" width="105" height="68"/><path d="M52.5 0V68"/><circle cx="52.5" cy="34" r="9.15"/><rect x="0" y="13.85" width="16.5" height="40.3"/><rect x="88.5" y="13.85" width="16.5" height="40.3"/><rect x="0" y="24.85" width="5.5" height="18.3"/><rect x="99.5" y="24.85" width="5.5" height="18.3"/></g><g fill="rgba(255,255,255,.8)"><rect x="-1.2" y="30.3" width="1.2" height="7.3"/><rect x="105" y="30.3" width="1.2" height="7.3"/></g><g id="thDots"></g></svg>`;
@@ -1658,15 +1568,19 @@ function finishTheatre() {
   const m = theatre.m, lock = theatre.lock; if (!m) return;
   theatre.t = m.T; paintTheatre();
   const sot = { H: 0, A: 0 }; m.ev.forEach((e) => { if (e.type === "goal" || e.type === "save") sot[e.sd]++; });
-  const E = lock.probs[2] / (lock.probs[2] + lock.probs[0]), d = eloDelta(E, m.score[0], m.score[1], sot.H, sot.A);
-  $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}. Locked in as your prediction.</b>
+  if (lock.quiet) $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time in the model's simulation: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}.</b></div>`;
+  else {
+    const E = lock.probs[2] / (lock.probs[2] + lock.probs[0]), d = eloDelta(E, m.score[0], m.score[1], sot.H, sot.A);
+    $("#thAfter").innerHTML = `<div class="mt-lock"><b>Full time: ${esc(m.home)} ${m.score[0]}-${m.score[1]} ${esc(m.away)}. Locked in as your prediction.</b>
     <span>Elo after this result (shots on target ${sot.H}-${sot.A} counted): ${esc(m.home)} ${fmtElo(d)}, ${esc(m.away)} ${fmtElo(-d)}.</span></div>`;
+  }
   $("#thPause").hidden = true; $("#thSpeed").hidden = true; $("#thSkip").hidden = true;
+  if (theatre.done) { const f = theatre.done; theatre.done = null; f(); }
 }
 function startTheatre(item) {
   stopTheatre();
   const seed = item.seed != null ? item.seed : hashStr(matchKey(item.home, item.away) + item.sim.join("-"));
-  theatre.m = genMatch(item.home, item.away, item.lam, item.sim, seed);
+  theatre.m = genMatch(item.home, item.away, item.lam, item.sim, seed, !!item.generic);
   theatre.lock = item; theatre.t = 0; theatre.speed = 1; theatre.paused = false;
   const box = $("#theatre"); box.innerHTML = theatreHTML(theatre.m); box.hidden = false;
   paintTheatre();
@@ -1678,18 +1592,6 @@ function startTheatre(item) {
     if (theatre.t >= theatre.m.T) finishTheatre(); else paintTheatre();
   }, 50);
 }
-function kickOff() {
-  const q = lookup(lab.home, lab.away), key = matchKey(lab.home, lab.away);
-  let item = saved.items[key];
-  if (!item || !item.sim) {       // first and only draw for this fixture: lock it in before anything is shown
-    const [h, a] = sampleScore(scoreGrid(q.lam[0], q.lam[1])), dec = labDecision(q), odds = labOdds(q);
-    item = { ...(item || {}), home: lab.home, away: lab.away, profile: "balanced", probs: odds.map((v) => +v.toFixed(4)),
-      pick: OUT[dec.indexOf(Math.max(dec[0], dec[1], dec[2]))], lam: q.lam, sim: [h, a], seed: (Math.random() * 4294967296) >>> 0,
-      savedAt: new Date().toISOString(), asOf: LAB.asOf };
-    lockIn(key, item);
-  }
-  startTheatre(item);
-}
 $("#theatre").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; }
@@ -1697,40 +1599,367 @@ $("#theatre").addEventListener("click", (e) => {
   else if (b.id === "thSkip") finishTheatre();
 });
 
-function initLab() {
-  const teams = LAB.teams;
-  const opts = teams.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
-  $("#labHome").innerHTML = opts; $("#labAway").innerHTML = opts;
-  const last = liveMatches()[liveMatches().length - 1];
-  lab.home = last[1]; lab.away = last[2];
-  $("#labHome").value = lab.home; $("#labAway").value = lab.away;
-  $("#labAsof").textContent = `Results in the data up to ${shortDate(LAB.asOf)}`;
-  const recent = liveMatches().slice(-6).reverse();
-  $("#labRecent").innerHTML = `<span class="label">Recently played</span>` + recent.map((m) =>
-    `<button type="button" data-lh="${esc(m[1])}" data-la="${esc(m[2])}">${chip(m[1])}<span class="num">${m[3]}-${m[4]}</span>${chip(m[2])}</button>`).join("");
+/* ================= Beat the Model ================= */
+// Pool: every match the model has never seen (2024-25 on, including the live season so far).
+const BT = { game: "match", hard: false, season: "2025-26", club: "", cur: null, pick: null, score: [null, null], md: null, up: null, tab: null, hol: null, holStreak: 0, upStreak: 0, busy: false };
+const BTGAMES = [["match", "Match Challenge"], ["matchday", "Matchday Challenge"], ["upset", "Spot the Upset"], ["table", "Guess the Table"], ["hol", "Higher or Lower"]];
+const rnd32 = () => (Math.random() * 4294967296) >>> 0;
+const pickRandom = (a) => a[Math.floor(Math.random() * a.length)];
+const poolSeasons = () => Object.keys(DATA.seasons).filter((k) => k >= "2024-25");
+const bsum = (a) => a.reduce((x, y) => x + y, 0);
+function sampleScoreR(g, r) { let u = r(), acc = 0; for (let i = 0; i < g.length; i++) for (let j = 0; j < g[i].length; j++) { acc += g[i][j]; if (u <= acc) return [i, j]; } return [0, 0]; }
+
+const seasonCache = {};
+function seasonOfDay(d) { if (seasonCache[d] != null) return seasonCache[d]; const iso = isoOf(d), y = +iso.slice(0, 4); return (seasonCache[d] = +iso.slice(5, 7) >= 8 ? y : y - 1); }
+const seasonLabel = (y) => `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
+const seasonStart = (y) => Math.round(Date.parse(`${y}-08-01T12:00:00Z`) / 86400000 - DAY0);
+function standingsBefore(day, y) {
+  const T = {};
+  HIST.matches.forEach(([d, hi, ai, hg, ag]) => {
+    if (d >= day || seasonOfDay(d) !== y) return;
+    const h = T[hi] || (T[hi] = { ci: hi, p: 0, pts: 0, gf: 0, ga: 0 }), a = T[ai] || (T[ai] = { ci: ai, p: 0, pts: 0, gf: 0, ga: 0 });
+    h.p++; a.p++; h.gf += hg; h.ga += ag; a.gf += ag; a.ga += hg;
+    if (hg > ag) h.pts += 3; else if (hg < ag) a.pts += 3; else { h.pts++; a.pts++; }
+  });
+  const rows = Object.values(T).sort((x, y2) => y2.pts - x.pts || (y2.gf - y2.ga) - (x.gf - x.ga) || y2.gf - x.gf);
+  rows.forEach((r, i) => (r.pos = i + 1));
+  return rows;
 }
-function setLabTeams(h, a) {
-  lab.home = h; lab.away = a; stopTheatre(); $("#theatre").hidden = true;
-  $("#labHome").value = h; $("#labAway").value = a;
-  refreshPickers();
-  renderLab();
+const finalTable = (y) => standingsBefore(seasonStart(y + 1), y);
+
+function formOf(ci, day, n = 5) {
+  const out = [];
+  for (let i = HIST.matches.length - 1; i >= 0 && out.length < n; i--) {
+    const [d, hi, ai, hg, ag] = HIST.matches[i];
+    if (d >= day || (hi !== ci && ai !== ci)) continue;
+    const gf = hi === ci ? hg : ag, ga = hi === ci ? ag : hg;
+    out.push(gf > ga ? "W" : gf < ga ? "L" : "D");
+  }
+  return out.reverse();
+}
+const formChips = (f) => `<span class="formstrip">${f.map((x) => `<i class="f${x}">${x}</i>`).join("") || '<small class="fineprint">no earlier matches</small>'}</span>`;
+function matchCtx(m) {
+  const day = dayOf(m[0]), y = seasonOfDay(day), st = standingsBefore(day, y);
+  const info = (club) => { const ci = clubIx[club], row = st.find((r) => r.ci === ci); return { elo: eloAt(ci, day), form: formOf(ci, day), pos: row ? row.pos : null, pts: row ? row.pts : 0, p: row ? row.p : 0 }; };
+  return { h: info(m[1]), a: info(m[2]), n: st.length };
+}
+const ctxHTML = (m) => {
+  const c = matchCtx(m);
+  const side = (club, x) => `<div class="ctxside"><div class="ctxname">${chip(club)}<b>${esc(club)}</b></div>
+    <div class="ctxrow"><span class="label">Elo</span><b class="num">${x.elo}</b></div>
+    <div class="ctxrow"><span class="label">League</span><b class="num">${x.pos ? ordinal2(x.pos) + " · " + x.pts + " pts" : "no matches yet"}</b></div>
+    <div class="ctxrow"><span class="label">Last 5</span>${formChips(x.form)}</div></div>`;
+  return `<div class="ctx">${side(m[1], c.h)}<div class="ctxvs">v</div>${side(m[2], c.a)}</div>`;
+};
+const ordinal2 = (n) => n + ordinal(n);
+
+function modelCall(m, hard) {
+  const P = DATA.profiles.find((p) => p.id === (hard ? "accuracy" : "balanced")), b = blendFrom([m[6], m[7], m[8]], [m[9], m[10]]), f = P.fb;
+  const adj = [b[0] * f.a, b[1] * f.d, b[2] * f.h], pick = adj.indexOf(Math.max(adj[0], adj[1], adj[2]));
+  return { pick: OUT[pick], odds: b, score: bestScoreFor(m, pick)[0] };
+}
+const ptsFor = (pick, score, hg, ag) => (pick === outcomeOf(hg, ag) ? 1 : 0) + (score && score[0] === hg && score[1] === ag ? 2 : 0);
+const matchKeyBT = (rec) => `bt_m_${rec.season}_${rec.i}`;
+
+/* ---------- storage: the lock ---------- */
+async function lockIn(key, body) {
+  saved.items[key] = body;
+  persistLocal(); renderRecord();
+  if (saved.coll) { try { await saved.coll.doc(key).set(body); } catch (e) { saved.mode = "local"; } }
+}
+const btItems = (prefix) => Object.entries(saved.items).filter(([k]) => k.startsWith(prefix)).map(([k, v]) => ({ k, ...v }));
+const btStats = () => saved.items.bt_stats || { holBest: 0, holRounds: 0, upsetRounds: 0, upsetRight: 0, upsetBest: 0 };
+function bumpStats(fn) { const s = { ...btStats() }; fn(s); lockIn("bt_stats", s); }
+
+function renderRecord() {
+  const box = $("#btRecordBox"); if (!box) return;
+  const ms = btItems("bt_m_"), mds = btItems("bt_md_"), tabs = btItems("bt_tab_"), st = btStats();
+  const tiles = [];
+  if (ms.length) {
+    let you = 0, mod = 0, yr = 0, mr = 0, w = 0, l = 0, t = 0;
+    ms.forEach((x) => { const yp = ptsFor(x.pick, x.score, x.real[0], x.real[1]), mp = ptsFor(x.mpick, x.mscore, x.real[0], x.real[1]); you += yp; mod += mp; if (x.pick === x.res) yr++; if (x.mpick === x.res) mr++; if (yp > mp) w++; else if (yp < mp) l++; else t++; });
+    tiles.push([`${w}-${t}-${l}`, "Match Challenge: your wins-ties-losses against the model"], [`${yr}/${ms.length} vs ${mr}/${ms.length}`, "results right: you vs the model"], [`${you} vs ${mod}`, "points (1 per result, +2 per exact score)"]);
+  }
+  if (mds.length) { const y = bsum(mds.map((x) => x.youPts)), mo = bsum(mds.map((x) => x.modelPts)); tiles.push([`${y} vs ${mo}`, `Matchday Challenge: ${mds.length} matchday${mds.length === 1 ? "" : "s"}, results right`]); }
+  if (tabs.length) tiles.push([`${(bsum(tabs.map((x) => x.youErr)) / tabs.length).toFixed(1)} vs ${(bsum(tabs.map((x) => x.modelErr)) / tabs.length).toFixed(1)}`, "Guess the Table: places off per club, you vs the model"]);
+  if (st.upsetRounds) tiles.push([`${st.upsetRight}/${st.upsetRounds}`, `Spot the Upset (best streak ${st.upsetBest})`]);
+  if (st.holRounds) tiles.push([`${st.holBest}`, "Higher or Lower: best streak"]);
+  box.innerHTML = tiles.length ? `<h3 style="font-size:17px">Your record</h3><div class="tally">${tiles.map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("")}</div>
+    <span class="fineprint">${saved.mode === "cloud" ? "Stored privately for you." : "Stored in this browser only."} Locked results can't be replayed, so the record stays honest.</span>` : "";
+  $("#btRecord").textContent = ms.length ? `${ms.length} match${ms.length === 1 ? "" : "es"} played against the model` : "";
 }
 
-$("#labHome").addEventListener("change", (e) => {
-  let a = lab.away; if (e.target.value === a) a = LAB.teams.find((t) => t !== e.target.value);
-  setLabTeams(e.target.value, a);
-});
-$("#labAway").addEventListener("change", (e) => {
-  let h = lab.home; if (e.target.value === h) h = LAB.teams.find((t) => t !== e.target.value);
-  setLabTeams(h, e.target.value);
-});
+/* ---------- shell ---------- */
+function renderBeat() {
+  $("#btSeg").innerHTML = BTGAMES.map(([k, t]) => `<button type="button" data-game="${k}" aria-pressed="${k === BT.game}">${t}</button>`).join("");
+  stopTheatre(); theatre.done = null; $("#theatre").hidden = true; $("#btVerdict").innerHTML = "";
+  ({ match: renderMatchGame, matchday: renderMdGame, upset: renderUpsetGame, table: renderTableGame, hol: renderHolGame })[BT.game]();
+  renderRecord();
+}
+const hardToggle = () => `<label class="hardtoggle"><input type="checkbox" id="btHard" ${BT.hard ? "checked" : ""}> Hard mode: the model plays its Max Accuracy style (about 50% of results right)</label>`;
+
+/* ---------- Match Challenge ---------- */
+function btCandidates() {
+  return poolSeasons().filter((s) => !BT.season || BT.season === "all" || s === BT.season).flatMap((season) => DATA.seasons[season].matches.map((m, i) => ({ m, season, i })))
+    .filter((r) => !BT.club || r.m[1] === BT.club || r.m[2] === BT.club);
+}
+function renderMatchGame() {
+  if (BT.cur) return renderMatchPlay();
+  const clubs = [...new Set(poolSeasons().flatMap((s) => DATA.seasons[s].matches.flatMap((m) => [m[1], m[2]])))].sort();
+  const cand = btCandidates(), fresh = cand.filter((r) => !saved.items[matchKeyBT(r)]);
+  $("#btBody").innerHTML = `<p class="intro">Pick a real match the model has never seen, without seeing the result. You lock in a guess, the model plays the match out, and then reality is revealed. Who got it right?</p>
+    <div class="bt-filters">
+      <label><span class="label">Season</span><select id="btSeason">${[["all", "All three"], ...poolSeasons().map((s) => [s, s])].map(([v, t]) => `<option value="${v}" ${BT.season === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label><span class="label">Club</span><select id="btClub"><option value="">Any club</option>${clubs.map((c) => `<option ${BT.club === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
+      <button class="btn" id="btRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
+      ${hardToggle()}
+    </div>
+    <div class="fineprint">${fresh.length} of ${cand.length} matches in this filter still unplayed by you. Only matches from 2024-25 on are offered: the model trained on everything before, so it would remember those results.</div>
+    <div class="bt-list">${cand.slice(0, 120).map((r) => { const it = saved.items[matchKeyBT(r)]; return `<button type="button" class="bt-fix ${it ? "done" : ""}" data-fix="${r.season}|${r.i}"><span class="num">${shortDate(r.m[0])}</span><span>${esc(r.m[1])} v ${esc(r.m[2])}</span>${it ? `<span class="status ${it.pick === it.res ? "hit" : "miss"}">${it.pick === it.res ? "RIGHT" : "WRONG"}</span>` : ""}</button>`; }).join("")}${cand.length > 120 ? `<div class="fineprint">Showing the first 120. Narrow it with a club or a season.</div>` : ""}</div>`;
+}
+function openFixture(season, i) { BT.cur = { season, i, m: DATA.seasons[season].matches[i] }; BT.pick = null; BT.score = [null, null]; renderBeat(); }
+function renderMatchPlay() {
+  const rec = BT.cur, m = rec.m, key = matchKeyBT(rec), done = saved.items[key];
+  const head = `<div class="btnrow"><button class="btn ghost" id="btBack" type="button">Choose another match</button><span class="label">${rec.season} · ${shortDate(m[0])}</span></div>${ctxHTML(m)}`;
+  if (done) { $("#btBody").innerHTML = head + `<div class="fineprint">You already played this match, so it is locked.</div>`; $("#btVerdict").innerHTML = verdictHTML(done); return; }
+  const sc = BT.score, impl = sc[0] != null && sc[1] != null ? outcomeOf(sc[0], sc[1]) : null;
+  if (impl) BT.pick = impl;
+  $("#btBody").innerHTML = head + `<div class="sub-card" style="margin-top:12px"><h3>Your prediction</h3>
+    <div class="seg" id="btRes" role="group" aria-label="Your result">${[["H", `${esc(m[1])} win`], ["D", "Draw"], ["A", `${esc(m[2])} win`]].map(([k, t]) => `<button type="button" data-res="${k}" aria-pressed="${BT.pick === k}">${t}</button>`).join("")}</div>
+    <div class="bt-score"><span class="label">Exact score <i class="hint">optional, +2 points if right</i></span>
+      <input id="btH" type="number" min="0" max="9" inputmode="numeric" value="${sc[0] ?? ""}" aria-label="Home goals"> <b>-</b> <input id="btA" type="number" min="0" max="9" inputmode="numeric" value="${sc[1] ?? ""}" aria-label="Away goals"></div>
+    <div class="btnrow"><button class="btn" id="btLock" type="button" ${BT.pick ? "" : "disabled"}>Lock in my prediction</button>${hardToggle()}</div>
+    <span class="fineprint">Once locked, it can't be changed. The model then plays the match out and the real result is revealed.</span></div>`;
+}
+function lockMatch() {
+  const rec = BT.cur, m = rec.m, key = matchKeyBT(rec);
+  if (saved.items[key] || !BT.pick || BT.busy) return;
+  const sc = BT.score, score = sc[0] != null && sc[1] != null ? [+sc[0], +sc[1]] : null, call = modelCall(m, BT.hard), seed = rnd32();
+  const sim = sampleScoreR(scoreGrid(m[9], m[10]), mulberry((seed ^ 0x9E3779B9) >>> 0));
+  const item = { game: "match", season: rec.season, date: m[0], home: m[1], away: m[2], hard: BT.hard, pick: BT.pick, score, mpick: call.pick, mscore: call.score,
+    sim, seed, lam: [m[9], m[10]], probs: call.odds.map((v) => +v.toFixed(4)), real: [m[3], m[4]], res: m[5], generic: rec.season !== LAB.season, quiet: true, savedAt: new Date().toISOString() };
+  lockIn(key, item);
+  BT.busy = true;
+  const box = $("#btBody"); box.querySelectorAll("button,input").forEach((x) => { if (x.id !== "btBack") x.disabled = true; });
+  $("#btVerdict").innerHTML = `<div class="sub-card" style="margin-top:12px"><h3>Locked in. The model is playing the match out...</h3><span class="fineprint">Reality stays hidden until full time.</span></div>`;
+  theatre.done = () => { BT.busy = false; $("#btVerdict").innerHTML = verdictHTML(item); renderRecord(); };
+  startTheatre(item);
+}
+function verdictHTML(it) {
+  const [hg, ag] = it.real, res = it.res, so = outcomeOf(it.sim[0], it.sim[1]);
+  const yp = ptsFor(it.pick, it.score, hg, ag), mp = ptsFor(it.mpick, it.mscore, hg, ag), sp = ptsFor(so, it.sim, hg, ag);
+  const E = it.probs[2] / (it.probs[2] + it.probs[0]), d = eloDelta(E, hg, ag);
+  const verdict = yp > mp ? ["You beat the model!", "up"] : yp < mp ? ["The model wins this one.", "down"] : ["Level with the model.", ""];
+  const row = (who, pickR, score, pts) => `<div class="vrow"><b>${who}</b><span>${OUTNAME[pickR]}${score ? ` <span class="num">${score[0]}-${score[1]}</span>` : ""}</span><span class="${pickR === res ? "up" : "down"}">${pickR === res ? "Result right" : "Result wrong"}</span><span>${score ? (score[0] === hg && score[1] === ag ? '<span class="up">Exact ★</span>' : "Not exact") : '<span class="fineprint">no score</span>'}</span><b class="num">${pts} pt${pts === 1 ? "" : "s"}</b></div>`;
+  const g = scoreGrid(it.lam[0], it.lam[1]);
+  return `<div class="sub-card verdict"><div class="banner played"><span class="tag">Full time</span><span class="res">${chip(it.home)} ${esc(it.home)} <span class="num">${hg}-${ag}</span> ${esc(it.away)} ${chip(it.away)}</span><span class="fineprint">${OUTNAME[res]} · ${shortDate(it.date)}</span></div>
+    <h3 class="${verdict[1]}" style="font-size:22px">${verdict[0]}</h3>
+    <div class="vtable"><div class="vrow head"><span></span><span>Prediction</span><span>Result</span><span>Score</span><span>Points</span></div>
+      ${row("You", it.pick, it.score, yp)}${row(`Model${it.hard ? " (hard)" : ""}`, it.mpick, it.mscore, mp)}${row("Model's played-out match", so, it.sim, sp)}</div>
+    <span class="fineprint">You and the model's call are scored the same way: 1 point for the result, +2 for the exact score. The played-out match is one random draw from the model's odds, shown for fun.</span>
+    <div class="labgrid"><div class="sub-card"><h3>The model's odds before kickoff</h3>${bigOdds(it.probs, res)}<span class="fineprint">The outlined box is what really happened.</span></div>
+    <div class="sub-card"><h3>Every possible score</h3>${scoreHeat(g, [hg, ag], it.sim)}<span class="fineprint">Green ring: real score. Dashed ring: the model's played-out match.</span></div>
+    <div class="sub-card"><h3>What the result was worth in Elo</h3><div class="stk head"><span>Club</span><span>Change</span><span></span></div>
+      <div class="stk"><span>${esc(it.home)}</span><span class="num ${d >= 0 ? "up" : "down"}">${fmtElo(d)}</span><span></span></div><div class="stk"><span>${esc(it.away)}</span><span class="num ${d >= 0 ? "down" : "up"}">${fmtElo(-d)}</span><span></span></div>
+      <span class="fineprint">Same rule as the model uses (shots on target aren't in this view, so they are counted as even).</span></div></div>
+    <div class="btnrow"><button class="btn" id="btNext" type="button">Another match</button></div></div>`;
+}
+
+/* ---------- Matchday Challenge ---------- */
+const MDN = (season) => Math.ceil(DATA.seasons[season].matches.length / 10);
+const mdKey = (season, n) => `bt_md_${season}_${n}`;
+function renderMdGame() {
+  if (BT.md && !BT.md.chosen) BT.md = null;
+  if (!BT.md) {
+    const s = BT.season === "all" ? "2025-26" : BT.season;
+    const done = new Set(btItems("bt_md_").map((x) => x.k));
+    $("#btBody").innerHTML = `<p class="intro">Predict a whole matchday: ten real fixtures, results hidden. One point for every result you get right, against the model's calls. Locked once you submit.</p>
+      <div class="bt-filters"><label><span class="label">Season</span><select id="mdSeason">${poolSeasons().map((x) => `<option ${x === s ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label><span class="label">Matchday</span><select id="mdNum">${Array.from({ length: MDN(s) }, (_, i) => `<option value="${i + 1}">${i + 1}${done.has(mdKey(s, i + 1)) ? " ✓" : ""}</option>`).join("")}</select></label>
+      <button class="btn" id="mdGo" type="button">Open this matchday</button><button class="btn ghost" id="mdRandom" type="button">Surprise me</button>${hardToggle()}</div>`;
+    return;
+  }
+  const { season, n } = BT.md, ms = DATA.seasons[season].matches.slice((n - 1) * 10, n * 10), done = saved.items[mdKey(season, n)];
+  const rows = ms.map((m, k) => {
+    const c = matchCtx(m), pk = done ? done.picks[k] : BT.md.picks[k], real = m[5];
+    const reveal = done ? `<span class="num vscore">${m[3]}-${m[4]}</span><span class="${pk === real ? "up" : "down"}">${pk === real ? "✓" : "✗"}</span><span class="${done.model[k] === real ? "up" : "down"}">model: ${OUTNAME[done.model[k]]} ${done.model[k] === real ? "✓" : "✗"}</span>` : "";
+    return `<div class="mdrow"><div class="mdteams">${chip(m[1])}<b>${esc(m[1])}</b> v <b>${esc(m[2])}</b>${chip(m[2])}<span class="fineprint">Elo ${c.h.elo} v ${c.a.elo} · form ${c.h.form.join("") || "-"} v ${c.a.form.join("") || "-"}</span></div>
+      <div class="seg mdseg" data-k="${k}">${[["H", "Home"], ["D", "Draw"], ["A", "Away"]].map(([v, t]) => `<button type="button" data-v="${v}" ${done ? "disabled" : ""} aria-pressed="${pk === v}">${t}</button>`).join("")}</div>${reveal}</div>`;
+  }).join("");
+  const all = BT.md.picks.filter(Boolean).length === 10;
+  let foot;
+  if (done) {
+    const verdict = done.youPts > done.modelPts ? ["You beat the model!", "up"] : done.youPts < done.modelPts ? ["The model wins this matchday.", "down"] : ["Level with the model.", ""];
+    foot = `<h3 class="${verdict[1]}" style="font-size:22px">${verdict[0]} You ${done.youPts}/10, the model ${done.modelPts}/10</h3><div class="btnrow"><button class="btn" id="mdRandom" type="button">Another matchday</button></div>`;
+  } else foot = `<div class="btnrow"><button class="btn" id="mdLock" type="button" ${all ? "" : "disabled"}>Lock in all ten</button><span class="fineprint">${BT.md.picks.filter(Boolean).length}/10 picked</span></div>`;
+  $("#btBody").innerHTML = `<div class="btnrow"><button class="btn ghost" id="btBack" type="button">Choose another matchday</button><span class="label">${season} · matchday ${n}</span></div><div class="mdlist">${rows}</div>${foot}`;
+}
+function lockMd() {
+  const { season, n } = BT.md, ms = DATA.seasons[season].matches.slice((n - 1) * 10, n * 10), model = ms.map((m) => modelCall(m, BT.hard).pick);
+  const youPts = bsum(ms.map((m, k) => (BT.md.picks[k] === m[5] ? 1 : 0))), modelPts = bsum(ms.map((m, k) => (model[k] === m[5] ? 1 : 0)));
+  lockIn(mdKey(season, n), { game: "matchday", season, n, picks: BT.md.picks, model, youPts, modelPts, hard: BT.hard, savedAt: new Date().toISOString() });
+  renderMdGame();
+}
+
+/* ---------- Spot the Upset ---------- */
+function newUpsetRound() {
+  const pool = poolSeasons().flatMap((season) => DATA.seasons[season].matches.filter((m) => m[5] != null).map((m) => ({ m, season })));
+  for (let tries = 0; tries < 400; tries++) {
+    const pick = [];
+    while (pick.length < 5) { const r = pickRandom(pool); if (!pick.includes(r)) pick.push(r); }
+    const ps = pick.map((r) => { const o = blendFrom([r.m[6], r.m[7], r.m[8]], [r.m[9], r.m[10]]); return o[OUT.indexOf(r.m[5])]; });
+    const sorted = [...ps].sort((a, b) => a - b);
+    if (sorted[0] <= 0.22 && sorted[1] - sorted[0] >= 0.06) return { items: pick, ps, ans: ps.indexOf(sorted[0]), chosen: null };
+  }
+  return null;
+}
+function renderUpsetGame() {
+  if (!BT.up) BT.up = newUpsetRound();
+  const u = BT.up, st = btStats();
+  const cards = u.items.map((r, k) => {
+    const m = r.m, reveal = u.chosen != null, odds = blendFrom([m[6], m[7], m[8]], [m[9], m[10]]), o = OUT.indexOf(m[5]);
+    return `<button type="button" class="upcard ${reveal ? (k === u.ans ? "ans" : k === u.chosen ? "wrong" : "") : ""}" data-up="${k}" ${reveal ? "disabled" : ""}>
+      <span class="fineprint">${shortDate(m[0])}</span><span class="upm">${chip(m[1])}<b>${esc(m[1])}</b><span class="num vscore">${m[3]}-${m[4]}</span><b>${esc(m[2])}</b>${chip(m[2])}</span>
+      ${reveal ? `<span class="fineprint">The model gave this result <b>${pct(u.ps[k])}</b> (Home ${pct(odds[2])}, Draw ${pct(odds[1])}, Away ${pct(odds[0])})${k === u.ans ? " · <b>the biggest upset</b>" : ""}</span>` : ""}</button>`;
+  }).join("");
+  $("#btBody").innerHTML = `<p class="intro">Five real results from matches the model had never seen. Before kickoff it gave every outcome a probability. <b>Which of these results did the model think was least likely?</b></p>
+    <div class="uplist">${cards}</div>
+    ${u.chosen != null ? `<div class="btnrow"><b class="${u.chosen === u.ans ? "up" : "down"}">${u.chosen === u.ans ? "Right!" : "Not this time."} Streak: ${BT.upStreak}</b><button class="btn" id="upNext" type="button">Next round</button></div>` : `<span class="fineprint">Streak: ${BT.upStreak} · best ever: ${st.upsetBest} · ${st.upsetRight}/${st.upsetRounds} rounds right</span>`}`;
+}
+function answerUpset(k) {
+  const u = BT.up; if (u.chosen != null) return; u.chosen = k;
+  const ok = k === u.ans; BT.upStreak = ok ? BT.upStreak + 1 : 0;
+  bumpStats((s) => { s.upsetRounds = (s.upsetRounds || 0) + 1; if (ok) s.upsetRight = (s.upsetRight || 0) + 1; s.upsetBest = Math.max(s.upsetBest || 0, BT.upStreak); });
+  renderUpsetGame();
+}
+
+/* ---------- Guess the Table ---------- */
+const tabKey = (y) => `bt_tab_${y}`;
+function seasonClubs(y) { const s = new Set(); HIST.matches.forEach(([d, hi, ai]) => { if (seasonOfDay(d) === y) { s.add(hi); s.add(ai); } }); return [...s]; }
+function renderTableGame() {
+  if (!BT.tab) {
+    const years = []; for (let y = 2015; y <= 2025; y++) years.push(y);
+    const done = new Set(btItems("bt_tab_").map((x) => x.k));
+    $("#btBody").innerHTML = `<p class="intro">Predict a whole season's final table before it starts. You start from last season's table and move clubs up or down. The model's guess is simply its Elo ratings at the start of the season. Whoever is closer, wins. A fair warning: over the last 11 seasons, repeating last season's table was off by 3.3 places per club and the Elo ranking by 3.7, so the simple baseline is hard to beat.</p>
+      <div class="bt-filters"><label><span class="label">Season</span><select id="tbSeason">${years.map((y) => `<option value="${y}">${seasonLabel(y)}${done.has(tabKey(y)) ? " ✓" : ""}</option>`).join("")}</select></label>
+      <button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div>`;
+    return;
+  }
+  const t = BT.tab, y = t.y, done = saved.items[tabKey(y)];
+  if (done) { $("#btBody").innerHTML = `<div class="btnrow"><button class="btn ghost" id="btBack" type="button">Choose another season</button><span class="label">${seasonLabel(y)}</span></div>${tableVerdict(done)}`; return; }
+  const prev = Object.fromEntries(finalTable(y - 1).map((r) => [r.ci, r.pos]));
+  const rows = t.order.map((ci, i) => `<div class="tbrow"><span class="num tbn">${i + 1}</span>${chip(HIST.clubs[ci])}<b>${esc(HIST.clubs[ci])}</b><span class="fineprint">${prev[ci] ? `last season ${ordinal2(prev[ci])}` : "promoted"}</span>
+    <span class="tbbtns"><button class="xbtn" type="button" data-mv="${i}|-1" aria-label="Move up" ${i === 0 ? "disabled" : ""}>▲</button><button class="xbtn" type="button" data-mv="${i}|1" aria-label="Move down" ${i === t.order.length - 1 ? "disabled" : ""}>▼</button></span></div>`).join("");
+  $("#btBody").innerHTML = `<div class="btnrow"><button class="btn ghost" id="btBack" type="button">Choose another season</button><span class="label">${seasonLabel(y)} · final table</span></div>
+    <div class="tblist">${rows}</div><div class="btnrow"><button class="btn" id="tbLock" type="button">Lock in my table</button><span class="fineprint">Top four and the bottom three are marked on the real table afterwards.</span></div>`;
+}
+function startTable(y) {
+  const prev = Object.fromEntries(finalTable(y - 1).map((r) => [r.ci, r.pos])), clubs = seasonClubs(y);
+  const day0 = seasonStart(y);
+  const order = [...clubs].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || eloAt(b, day0) - eloAt(a, day0));
+  BT.tab = { y, order };
+  renderBeat();
+}
+function tableVerdict(d) {
+  const real = Object.fromEntries(finalTable(d.y).map((r) => [r.ci, r.pos]));
+  const err = (ord) => bsum(ord.map((ci, i) => Math.abs(i + 1 - real[ci]))) / ord.length;
+  const exact = (ord) => ord.filter((ci, i) => i + 1 === real[ci]).length;
+  const rows = finalTable(d.y).map((r) => `<div class="tbrow tbres"><span class="num tbn">${r.pos}</span>${chip(HIST.clubs[r.ci])}<b>${esc(HIST.clubs[r.ci])}</b><span class="num">${r.pts} pts</span>
+    <span>You: <b class="num">${d.you.indexOf(r.ci) + 1}</b></span><span>Model: <b class="num">${d.model.indexOf(r.ci) + 1}</b></span></div>`).join("");
+  const you = err(d.you), mod = err(d.model), base = err(d.last);
+  const v = you < mod ? ["You beat the model!", "up"] : you > mod ? ["The model wins this one.", "down"] : ["Level with the model.", ""];
+  return `<div class="sub-card verdict"><h3 class="${v[1]}" style="font-size:22px">${v[0]}</h3>
+    <div class="tally"><div><b class="num">${you.toFixed(2)}</b><small>You: places off per club (${exact(d.you)} exact)</small></div><div><b class="num">${mod.toFixed(2)}</b><small>Model (start-of-season Elo): places off (${exact(d.model)} exact)</small></div><div><b class="num">${base.toFixed(2)}</b><small>Last season's table repeated (${exact(d.last)} exact)</small></div></div>
+    <div class="tblist">${rows}</div></div>`;
+}
+function lockTable() {
+  const t = BT.tab, y = t.y, day0 = seasonStart(y), prev = Object.fromEntries(finalTable(y - 1).map((r) => [r.ci, r.pos]));
+  const model = [...t.order].sort((a, b) => eloAt(b, day0) - eloAt(a, day0)), last = [...t.order].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || eloAt(b, day0) - eloAt(a, day0));
+  const real = Object.fromEntries(finalTable(y).map((r) => [r.ci, r.pos])), err = (ord) => bsum(ord.map((ci, i) => Math.abs(i + 1 - real[ci]))) / ord.length;
+  lockIn(tabKey(y), { game: "table", y, you: t.order, model, last, youErr: err(t.order), modelErr: err(model), lastErr: err(last), savedAt: new Date().toISOString() });
+  renderBeat();
+}
+
+/* ---------- Higher or Lower ---------- */
+const holCache = {};
+function seasonStats(y) {
+  if (holCache[y]) return holCache[y];
+  const T = {};
+  HIST.matches.forEach(([d, hi, ai, hg, ag]) => {
+    if (seasonOfDay(d) !== y) return;
+    const h = T[hi] || (T[hi] = { ci: hi, pts: 0, gf: 0, ga: 0 }), a = T[ai] || (T[ai] = { ci: ai, pts: 0, gf: 0, ga: 0 });
+    h.gf += hg; h.ga += ag; a.gf += ag; a.ga += hg;
+    if (hg > ag) h.pts += 3; else if (hg < ag) a.pts += 3; else { h.pts++; a.pts++; }
+  });
+  Object.values(T).forEach((r) => (r.gd = r.gf - r.ga));
+  return (holCache[y] = Object.values(T));
+}
+const HOL_Q = [["pts", "finished with more points", 1, 4], ["gf", "scored more goals", 1, 5], ["ga", "conceded fewer goals", -1, 5], ["gd", "had the better goal difference", 1, 7]];
+function newHol() {
+  for (let tries = 0; tries < 200; tries++) {
+    const y = 2014 + Math.floor(Math.random() * 12), rows = seasonStats(y), [key, text, dir, gap] = pickRandom(HOL_Q), a = pickRandom(rows), b = pickRandom(rows);
+    if (a === b || Math.abs(a[key] - b[key]) < gap) continue;
+    return { y, key, text, a, b, win: (dir * (a[key] - b[key]) > 0) ? a : b, chosen: null };
+  }
+  return null;
+}
+function renderHolGame() {
+  if (!BT.hol) BT.hol = newHol();
+  const q = BT.hol, st = btStats(), side = (r, k) => {
+    const rev = q.chosen != null, club = HIST.clubs[r.ci];
+    return `<button type="button" class="holcard ${rev ? (r === q.win ? "ans" : r === q.chosen ? "wrong" : "") : ""}" data-hol="${k}" ${rev ? "disabled" : ""}>${chip(club)}<b>${esc(club)}</b>${rev ? `<span class="num holv">${r[q.key]}</span>` : `<span class="holv">?</span>`}</button>`;
+  };
+  $("#btBody").innerHTML = `<p class="intro">Which club ${esc(q.text)} in <b>${seasonLabel(q.y)}</b>? Keep your streak going.</p>
+    <div class="holpair">${side(q.a, "a")}<span class="ctxvs">or</span>${side(q.b, "b")}</div>
+    ${q.chosen != null ? `<div class="btnrow"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak: ${BT.holStreak}</b><button class="btn" id="holNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<span class="fineprint">Streak: ${BT.holStreak} · best ever: ${st.holBest}</span>`}`;
+}
+function answerHol(k) {
+  const q = BT.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b;
+  const ok = q.chosen === q.win; BT.holStreak = ok ? BT.holStreak + 1 : 0;
+  bumpStats((s) => { s.holRounds = (s.holRounds || 0) + 1; s.holBest = Math.max(s.holBest || 0, BT.holStreak); });
+  renderHolGame();
+}
+
+/* ---------- events ---------- */
 $("#lab").addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
-  if (b.id === "labSwap") setLabTeams(lab.away, lab.home);
-  else if (b.dataset.lh) setLabTeams(b.dataset.lh, b.dataset.la);
-  else if (b.id === "labSim") kickOff();
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.game) { BT.game = d.game; BT.cur = null; BT.md = null; BT.tab = null; renderBeat(); }
+  else if (d.fix) { const [s, i] = d.fix.split("|"); openFixture(s, +i); }
+  else if (b.id === "btRandom") { const cand = btCandidates().filter((r) => !saved.items[matchKeyBT(r)]); if (cand.length) { const r = pickRandom(cand); openFixture(r.season, r.i); } }
+  else if (b.id === "btBack") { BT.cur = null; BT.md = null; BT.tab = null; renderBeat(); }
+  else if (b.id === "btNext") { BT.cur = null; renderBeat(); }
+  else if (d.res) { BT.pick = d.res; const sc = BT.score; if (sc[0] != null && sc[1] != null && outcomeOf(sc[0], sc[1]) !== d.res) BT.score = [null, null]; renderMatchPlay(); }
+  else if (b.id === "btLock") lockMatch();
+  else if (b.id === "mdGo") { BT.md = { season: $("#mdSeason").value, n: +$("#mdNum").value, picks: Array(10).fill(null), chosen: true }; renderMdGame(); }
+  else if (b.id === "mdRandom") { const s = pickRandom(poolSeasons()), done = new Set(btItems("bt_md_").map((x) => x.k)), opts = Array.from({ length: MDN(s) }, (_, i) => i + 1).filter((n) => !done.has(mdKey(s, n))); BT.md = { season: s, n: pickRandom(opts.length ? opts : [1]), picks: Array(10).fill(null), chosen: true }; renderMdGame(); }
+  else if (d.v && b.closest(".mdseg")) { BT.md.picks[+b.closest(".mdseg").dataset.k] = d.v; renderMdGame(); }
+  else if (b.id === "mdLock") lockMd();
+  else if (d.up != null && d.up !== "") answerUpset(+d.up);
+  else if (b.id === "upNext") { BT.up = null; renderUpsetGame(); }
+  else if (b.id === "tbGo") startTable(+$("#tbSeason").value);
+  else if (b.id === "tbRandom") { const done = new Set(btItems("bt_tab_").map((x) => x.k)), ys = []; for (let y = 2015; y <= 2025; y++) if (!done.has(tabKey(y))) ys.push(y); startTable(pickRandom(ys.length ? ys : [2024])); }
+  else if (d.mv) { const [i, dir] = d.mv.split("|").map(Number), o = BT.tab.order, j = i + dir; if (j >= 0 && j < o.length) { [o[i], o[j]] = [o[j], o[i]]; renderTableGame(); } }
+  else if (b.id === "tbLock") lockTable();
+  else if (d.hol) answerHol(d.hol);
+  else if (b.id === "holNext") { BT.hol = null; renderHolGame(); }
 });
+$("#lab").addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "btSeason") { BT.season = t.value; renderMatchGame(); }
+  else if (t.id === "btClub") { BT.club = t.value; renderMatchGame(); }
+  else if (t.id === "btHard") BT.hard = t.checked;
+  else if (t.id === "mdSeason") { BT.season = t.value; BT.md = null; renderMdGame(); }
+});
+$("#lab").addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.id === "btH" || t.id === "btA") {
+    BT.score[t.id === "btH" ? 0 : 1] = t.value === "" ? null : Math.max(0, Math.min(9, +t.value));
+    if (BT.score[0] != null && BT.score[1] != null) { BT.pick = outcomeOf(BT.score[0], BT.score[1]); $("#btRes").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.res === BT.pick)); }
+    $("#btLock").disabled = !BT.pick;
+  }
+});
+function initBeat() { BT.season = poolSeasons().includes("2025-26") ? "2025-26" : poolSeasons()[0]; renderBeat(); }
 
 /* ---------- sanity checks ---------- */
 
@@ -2223,7 +2452,7 @@ function initExtras() {
   const opts = HIST.clubs.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
   $("#teamSel").innerHTML = opts; $("#h2hA").innerHTML = opts; $("#h2hB").innerHTML = opts;
   $("#teamSel").value = "Arsenal"; $("#h2hA").value = "Arsenal"; $("#h2hB").value = "Tottenham";
-  initPicker("#labHome", LAB.teams); initPicker("#labAway", LAB.teams); initPicker("#teamSel", HIST.clubs); initPicker("#h2hA", HIST.clubs); initPicker("#h2hB", HIST.clubs);
+  initPicker("#teamSel", HIST.clubs); initPicker("#h2hA", HIST.clubs); initPicker("#h2hB", HIST.clubs);
   setWelcome(welcomeHidden());
   $("#welcome").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.start) quickStart(b.dataset.start); else if (b.id === "welcomeX") setWelcome(true); else if (b.id === "welcomeOpen") setWelcome(false); });
   $("#teamSel").addEventListener("change", renderTeam);
@@ -2235,10 +2464,10 @@ function initExtras() {
 }
 
 paintThemeBtn();
-initLab();
 refreshAll(true);
 renderSanity();
 initExtras();
+initBeat();
 showView(location.hash.slice(1));
 initStore();
 </script>

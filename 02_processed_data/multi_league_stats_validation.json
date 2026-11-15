@@ -1,0 +1,63 @@
+{
+ "shots_home": {
+  "real_mean": 13.975,
+  "model_mean": 13.808,
+  "mae_model": 3.805,
+  "mae_baseline": 4.278
+ },
+ "shots_away": {
+  "real_mean": 11.354,
+  "model_mean": 11.276,
+  "mae_model": 3.389,
+  "mae_baseline": 3.737
+ },
+ "sot_home": {
+  "real_mean": 4.859,
+  "model_mean": 4.87,
+  "mae_model": 1.862,
+  "mae_baseline": 2.015
+ },
+ "sot_away": {
+  "real_mean": 3.97,
+  "model_mean": 3.998,
+  "mae_model": 1.672,
+  "mae_baseline": 1.791
+ },
+ "corners_home": {
+  "real_mean": 5.384,
+  "model_mean": 5.496,
+  "mae_model": 2.25,
+  "mae_baseline": 2.389
+ },
+ "corners_away": {
+  "real_mean": 4.293,
+  "model_mean": 4.457,
+  "mae_model": 1.967,
+  "mae_baseline": 2.072
+ },
+ "fouls_home": {
+  "real_mean": 11.629,
+  "model_mean": 12.485,
+  "mae_model": 3.054,
+  "mae_baseline": 3.167
+ },
+ "fouls_away": {
+  "real_mean": 12.004,
+  "model_mean": 12.77,
+  "mae_model": 3.181,
+  "mae_baseline": 3.252
+ },
+ "yellows_home": {
+  "real_mean": 1.894,
+  "model_mean": 1.925,
+  "mae_model": 1.064,
+  "mae_baseline": 1.051
+ },
+ "yellows_away": {
+  "real_mean": 2.165,
+  "model_mean": 2.163,
+  "mae_model": 1.123,
+  "mae_baseline": 1.111
+ },
+ "first_half_goal_share": 0.4415
+}

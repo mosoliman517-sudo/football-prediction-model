@@ -234,6 +234,96 @@ table.race td, table.race th { padding: 6px 7px; }
 .foot { color: var(--muted); font-size: 12px; display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
 @media (max-width: 560px) { .stage { grid-template-columns: 1fr; } .vs { display: none; } .badge { width: 56px; height: 56px; font-size: 17px; } .picks { gap: 6px; } .pick { font-size: 14px; padding: 12px 6px; } }
 @media (prefers-reduced-motion: reduce) { .world .orb, .rcard.on, .wash.go, .confetti { animation: none; } .rcard { opacity: 1; transform: none; } .confetti { display: none; } html { scroll-behavior: auto; } }
+
+/* games hub */
+.hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 14px; }
+.gcard { text-align: left; border: 1px solid var(--line); border-radius: 24px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; min-height: 210px; position: relative; overflow: hidden;
+  background: radial-gradient(380px 200px at 90% -10%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%), color-mix(in srgb, var(--surface) 90%, transparent);
+  transition: transform .18s ease, border-color .2s ease, box-shadow .25s ease; animation: rise .55s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); }
+.gcard:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 22px 40px -24px var(--glow); }
+.gcard:active { transform: scale(.985); }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.gfaces { display: flex; }
+.gfaces .badge { margin-left: -10px; border-radius: 50%; animation: bob 3.4s ease-in-out infinite; }
+.gfaces .badge:first-child { margin-left: 0; } .gfaces .badge:nth-child(2) { animation-delay: .5s; } .gfaces .badge:nth-child(3) { animation-delay: 1s; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.gname { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1; }
+.gtag { color: var(--muted); font-size: 14px; flex: 1; }
+.grec { font-size: 12px; color: var(--accent); }
+.badge.md { width: 46px; height: 46px; font-size: 13px; }
+.badge.xl { width: 96px; height: 96px; font-size: 26px; }
+/* match theatre */
+.theatre { margin-top: 14px; background: var(--surface2); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.mt-board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.mt-team { display: flex; align-items: center; gap: 10px; font-weight: 800; min-width: 0; font-family: var(--display); font-size: 20px; }
+.mt-team.right { justify-content: flex-end; text-align: right; }
+.mt-score { text-align: center; }
+.mt-score .big { font-size: clamp(34px, 7vw, 54px); white-space: nowrap; display: inline-block; }
+.mt-score small { display: block; font: 700 12px var(--mono); color: var(--accent); margin-top: 4px; }
+.goalpop { animation: goalpop .7s cubic-bezier(.2, 1.4, .3, 1); }
+@keyframes goalpop { 0% { transform: scale(1); } 30% { transform: scale(1.35); color: var(--accent); text-shadow: 0 0 30px var(--accent); } 100% { transform: scale(1); } }
+.mt-poss { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--line); }
+.mt-poss i { display: block; transition: width .25s linear; }
+.mt-stats { display: grid; grid-template-columns: 1fr auto 1fr; gap: 4px 12px; align-items: center; }
+.mt-stats > .num:nth-child(3n+1) { text-align: left; } .mt-stats > .num:nth-child(3n) { text-align: right; } .mt-stats .label { text-align: center; }
+.mt-pitch { width: 100%; height: auto; border-radius: 12px; background: #1F6B40; }
+.mt-feed { list-style: none; margin: 0; padding: 0; max-height: 250px; overflow: auto; display: flex; flex-direction: column; }
+.mt-feed li { display: grid; grid-template-columns: 54px 1fr; gap: 8px; padding: 6px 4px; border-top: 1px solid var(--line); font-size: 13px; animation: rise .35s ease both; }
+.mt-feed li.goal { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.mt-feed li.ht, .mt-feed li.ft { color: var(--muted); font-weight: 600; }
+.vtable { display: grid; gap: 2px; margin-top: 8px; }
+.vrow { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); font-size: 13.5px; }
+.vrow.head { border-top: 0; color: var(--muted); font: 700 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+/* matchday */
+.mdlist { display: grid; gap: 8px; }
+.mdrow2 { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; }
+.mteam { display: flex; gap: 8px; align-items: center; font-weight: 700; min-width: 0; }
+.mteam.h { justify-content: flex-end; text-align: right; }
+.mpicks { display: flex; gap: 6px; }
+.mp { width: 40px; height: 36px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font: 800 15px var(--mono); transition: transform .12s ease, border-color .15s ease, background .2s ease; }
+.mp:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-2px); }
+.mp[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); transform: scale(1.08); }
+.mres { min-width: 96px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+.mres.land { animation: land .5s cubic-bezier(.2, 1.3, .3, 1); }
+@keyframes land { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+.mark.dim { opacity: .55; }
+.big2 { font-size: 36px !important; }
+@media (max-width: 640px) { .mdrow2 { grid-template-columns: minmax(0, 1fr) auto; } .mdrow2 .mteam.h { justify-content: flex-start; text-align: left; } .mres { grid-column: 1 / -1; justify-content: flex-start; } }
+/* spot the upset */
+.uplist { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; margin-top: 14px; }
+.upc { perspective: 900px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; min-height: 112px; animation: rise .5s ease both; animation-delay: var(--d, 0ms); }
+.upin { position: relative; width: 100%; height: 100%; min-height: 112px; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+.upc.flip .upin { transform: rotateY(180deg); }
+.upfront, .upback { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; padding: 12px 14px; background: var(--surface2); border: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.upback { transform: rotateY(180deg); }
+.upc:not(.flip):hover .upfront { border-color: var(--accent); }
+.upc.ans .upback { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok) inset; } .upc.wrong .upback { border-color: var(--bad); box-shadow: 0 0 0 2px var(--bad) inset; }
+.upm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-weight: 700; }
+.score { background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius: 8px; padding: 2px 8px; }
+.tag { font: 700 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; background: var(--ok); color: #06140D; border-radius: 99px; padding: 3px 10px; align-self: flex-start; }
+/* guess the table */
+.tblist { display: grid; gap: 6px; }
+.tbrow { display: flex; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; cursor: grab; transition: border-color .15s ease, transform .15s ease; }
+.tbrow:hover { border-color: var(--accent); }
+.tbrow.dragging { opacity: .4; }
+.tbrow b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbn { width: 26px; text-align: right; color: var(--muted); }
+.tbbtns { display: flex; gap: 4px; margin-left: auto; }
+.xbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; width: 32px; height: 28px; cursor: pointer; color: var(--ink); }
+.xbtn:disabled { opacity: .3; cursor: default; }
+.tbres { cursor: default; animation: rise .45s ease both; animation-delay: var(--d, 0ms); gap: 12px; }
+.tbres span { white-space: nowrap; }
+/* higher or lower */
+.holpair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; margin-top: 14px; }
+.holc { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; background: var(--surface2); border: 2px solid var(--line); border-radius: 22px; cursor: pointer; font-size: 18px; transition: transform .15s ease, border-color .2s ease, box-shadow .3s ease; }
+.holc:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-4px); }
+.holc.ans { border-color: var(--ok); box-shadow: 0 0 40px -10px var(--ok); transform: scale(1.03); } .holc.wrong { border-color: var(--bad); opacity: .75; }
+.holc .badge { transition: transform .4s ease; } .holc:hover:not([disabled]) .badge { transform: scale(1.08) rotate(-4deg); }
+.holc b { font-family: var(--display); font-size: 22px; text-align: center; }
+.holv { font: 800 40px var(--mono); color: var(--muted); }
+.holc.ans .holv { color: var(--ok); }
+@media (max-width: 560px) { .holpair { grid-template-columns: 1fr; } .holpair .vs { display: block; text-align: center; } .badge.xl { width: 72px; height: 72px; } }
+@media (prefers-reduced-motion: reduce) { .gcard, .gfaces .badge, .upc, .upin, .tbres, .mt-feed li, .goalpop, .mres.land { animation: none; transition: none; } }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -354,6 +444,9 @@ const Snd = (() => {
     win() { run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); }); },
     league(code) { run((t) => { const sc = SCALES[code], r = ROOT[code]; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code], 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
     back() { run((t) => { note(67, t, 0.22, "sine", 0.07); note(60, t + 0.11, 0.3, "sine", 0.07); }); },
+    goal() { run((t) => { noise(t, 0.5, 400, 2600, 0.07, 0.7); [67, 71, 74, 79].forEach((n, i) => note(n, t + 0.05 + i * 0.07, 0.5, "triangle", 0.07)); }); },
+    whistle() { run((t) => { note(88, t, 0.16, "sine", 0.045); note(88.5, t + 0.19, 0.3, "sine", 0.045); }); },
+    flip() { run((t) => noise(t, 0.2, 800, 2400, 0.05, 1.5)); },
   };
 })();
 function paintSound() { $("#sndBtn").textContent = "Sound: " + ["off", "soft", "full"][Snd.level]; }
@@ -392,7 +485,7 @@ const playsOf = (code) => Object.entries(store.items).filter(([k]) => k.startsWi
 const allPlays = () => Object.entries(store.items).filter(([k]) => k.startsWith("p_")).map(([k, v]) => ({ k, ...v }));
 
 /* ---------- data helpers ---------- */
-const S = { code: null, room: "call", style: "accuracy", season: null, cur: null, pick: null, score: [0, 0], useScore: false, busy: false, replay: { round: 12, timer: null } };
+const S = { code: null, room: "play", game: null, md: null, up: null, tab: null, hol: null, upStreak: 0, holStreak: 0, style: "accuracy", season: null, cur: null, pick: null, score: [0, 0], useScore: false, busy: false, replay: { round: 12, timer: null } };
 const lgOf = (c) => LG[c];
 const poolSeasons = (c) => Object.keys(lgOf(c).seasons).sort();
 function allMatches(c) { return poolSeasons(c).flatMap((s) => lgOf(c).seasons[s].matches.map((m, i) => ({ m, season: s, i }))); }
@@ -436,7 +529,7 @@ function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState
 function route(ev) {
   const h = location.hash.slice(1), code = Object.keys(BYSLUG).find((s) => h === s || h.startsWith(s + "-")) ;
   const lg = code ? BYSLUG[code] : null;
-  if (lg) { const room = h.slice(code.length + 1); S.room = ["call", "daily", "race", "replay", "review"].includes(room) ? room : "call"; openLeague(lg, ev); }
+  if (lg) { const room = h.slice(code.length + 1); const GM = ["call", "daily", "matchday", "upset", "table", "hol"]; if (GM.includes(room)) { S.room = "play"; S.game = room; } else { S.room = ["play", "race", "replay", "review"].includes(room) ? room : "play"; S.game = null; } openLeague(lg, ev); }
   else { S.code = null; setTheme(null, ev); $("#lobby").hidden = false; $("#league").hidden = true; stopReplay(); window.scrollTo(0, 0); }
 }
 function openLeague(code, ev) {
@@ -483,10 +576,10 @@ function paintScore() {
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = [["call", "Call it"], ["daily", "Daily 5"], ["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"]];
+  const rooms = [["play", "Play"], ["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); ({ call: renderCall, daily: renderDaily, race: renderRace, replay: renderReplay, review: renderReview })[S.room](); }
+function renderRoom() { stopReplay(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, review: renderReview })[S.room](); }
 
 /* ---------- Call it ---------- */
 function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`] && r.m[0] >= "2023-08-01"); }
@@ -499,7 +592,7 @@ function renderCall() {
   const form = clubMs.slice(-5).map((r) => { const m = r.m, own = m[1] === st.club ? m[3] - m[4] : m[4] - m[3]; return own > 0 ? "W" : own === 0 ? "D" : "L"; });
   const clubFresh = freshPool(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club);
   const starCard = `<div class="starwatch">${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="row" style="gap:8px">${badge(st.club, "sm")}<span class="fine">${esc(st.role)} · ${esc(st.club)}</span></div><div class="fine">The model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
-  $("#room").innerHTML = starCard + `<div class="card"><h2>Call it</h2><p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
+  $("#room").innerHTML = starCard + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
     <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last three seasons and this one. Locked results can't be replayed, so the record stays honest.</p></div>`;
@@ -510,14 +603,14 @@ function renderPlay() {
   const fh = formOf(c, m[1], m[0]), fa = formOf(c, m[2], m[0]);
   const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${season} · ${fmtDate(m[0])}</span></div>
     <div class="stage"><div class="team">${badge(m[1])}<b>${esc(m[1])}</b>${formHTML(fh)}</div><div class="vs">vs</div><div class="team">${badge(m[2])}<b>${esc(m[2])}</b>${formHTML(fa)}</div></div>`;
-  if (done) { $("#room").innerHTML = `<div class="card">${head}<div class="reveal" id="reveal"></div></div>`; showReveal(done, true); return; }
+  if (done) { $("#room").innerHTML = `<div class="card">${head}<div class="theatre" id="theatre" hidden></div><div class="reveal" id="reveal"></div></div>`; showReveal(done, true); return; }
   const mine = S.pick;
   $("#room").innerHTML = `<div class="card">${head}
     <div class="picks" id="picks">${[["H", `${esc(m[1])} win`], ["D", "Draw"], ["A", `${esc(m[2])} win`]].map(([k, t]) => `<button type="button" class="pick" data-pick="${k}" aria-pressed="${mine === k}">${t}<small>your call</small></button>`).join("")}</div>
     <div class="row" style="margin-top:14px"><label class="fine"><input type="checkbox" id="useScore" ${S.useScore ? "checked" : ""}> Also guess the exact score (+2)</label>
       <span class="stepper" ${S.useScore ? "" : "hidden"} id="stepper"><button type="button" data-st="0-" aria-label="Home goals down">−</button><output class="num" id="sH">${S.score[0]}</output><button type="button" data-st="0+" aria-label="Home goals up">+</button><b>:</b><button type="button" data-st="1-" aria-label="Away goals down">−</button><output class="num" id="sA">${S.score[1]}</output><button type="button" data-st="1+" aria-label="Away goals up">+</button></span></div>
     <div class="row" style="margin-top:16px"><button class="btn" id="lockBtn" type="button" ${mine ? "" : "disabled"}>Lock it in</button><span class="fine">Once locked it can't be changed.</span></div>
-    <div class="reveal" id="reveal"></div></div>`;
+    <div class="theatre" id="theatre" hidden></div><div class="reveal" id="reveal"></div></div>`;
 }
 function lockPlay() {
   if (S.busy || !S.pick) return; S.busy = true;
@@ -526,7 +619,7 @@ function lockPlay() {
   const item = { lg: c, season, date: m[0], home: m[1], away: m[2], pick, score, mpick: call.pick, mscore: call.score, probs: call.probs, real: [m[3], m[4]], res: m[5], style: S.style, at: new Date().toISOString() };
   Snd.lock(); lockIn(key, item);
   document.querySelectorAll("#picks .pick, #lockBtn, #useScore, #stepper button").forEach((b) => { b.disabled = true; });
-  showReveal(item, false);
+  startTheatre(c, season, m, call.score, () => showReveal(item, false));
 }
 function showReveal(it, instant) {
   const box = $("#reveal"), mp = it.mpick, mine = it.pick, ok = it.pick === it.res, mok = it.mpick === it.res;
@@ -537,18 +630,21 @@ function showReveal(it, instant) {
     <div class="rcard"><div class="label">Full time</div><div class="big num" id="bigScore">${instant ? `${it.real[0]}-${it.real[1]}` : "0-0"}</div>
       <div class="verdicts" style="margin-top:12px"><div class="vd ${ok ? "ok" : "no"}"><span class="label">You</span><b>${ok ? "Right" : "Wrong"} · ${yp} pt${yp === 1 ? "" : "s"}</b><span class="fine">${OUTNAME[mine]}${it.score ? ` ${it.score[0]}-${it.score[1]}` : ""}</span></div><div class="vd ${mok ? "ok" : "no"}"><span class="label">Model</span><b>${mok ? "Right" : "Wrong"} · ${mpts} pt${mpts === 1 ? "" : "s"}</b><span class="fine">${OUTNAME[mp]} ${it.mscore[0]}-${it.mscore[1]}</span></div></div>
       <div class="row" style="margin-top:12px"><b>${yp > mpts ? "You beat the model on this one." : yp === mpts ? "Level with the model." : "The model took this one."}</b>${S.cur && S.cur.onDone ? "" : '<button class="btn" id="nextBtn" type="button">Next match</button>'}${S.cur && S.cur.onDone ? '<button class="btn" id="dailyNext" type="button">Back to the Daily 5</button>' : ""}</div></div>`;
+  if (S.cur && S.cur.m) box.insertAdjacentHTML("beforeend", statsCard(S.cur.c, S.cur.m) + '<div class="row" style="margin-top:6px"><button class="btn ghost" id="watchBtn" type="button">Watch the model\'s match</button></div>');
   const cards = box.querySelectorAll(".rcard");
   if (instant) { cards.forEach((c) => c.classList.add("on")); box.querySelectorAll(".fill").forEach((f) => { f.style.transition = "none"; f.style.width = f.dataset.w + "%"; }); return; }
   Snd.whoosh();
   step(cards[0], 120, () => requestAnimationFrame(() => box.querySelectorAll(".fill").forEach((f) => { f.style.width = f.dataset.w + "%"; })));
+  if (cards[2]) step(cards[2], 2200);
   step(cards[1], 1300, () => {
     countUp($("#bigScore"), it.real);
     setTimeout(() => { if (yp > mpts) { Snd.win(); confetti(); } else if (ok) Snd.right(); else Snd.wrong(); S.busy = false; lbPublish(); }, 700);
   });
 }
 function countUp(el, real) {
+  if (!el) return;
   const end = real, t0 = performance.now(); const tot = Math.max(end[0], end[1]);
-  (function f(t) { const k = Math.min(1, (t - t0) / 600), h = Math.round(end[0] * k), a = Math.round(end[1] * k); el.textContent = `${h}-${a}`; if (k < 1) requestAnimationFrame(f); })(t0);
+  (function f(t) { const k = Math.min(1, (t - t0) / 600), h = Math.round(end[0] * k), a = Math.round(end[1] * k); if (el.isConnected) el.textContent = `${h}-${a}`; if (k < 1 && el.isConnected) requestAnimationFrame(f); })(t0);
   if (tot > 0) Snd.tick();
 }
 function confetti() {
@@ -574,7 +670,7 @@ function renderDaily() {
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
-  $("#room").innerHTML = `<div class="card"><h2>Daily 5</h2><p class="sub">Five ${esc(lgOf(c).name)} matches picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
@@ -661,6 +757,302 @@ function renderRace() {
     <p class="fine" style="margin-top:10px">These are probabilities from a model that has never seen injuries, transfers or news, and a real title race has more late surprises than a simulation. Ties on points are split by goal difference then goals scored.</p></div>`;
 }
 
+
+/* ================= Match simulation: the model's predicted match, played out minute by minute ================= */
+const LEAGUE_AVG = [13.8, 11.7, 4.7, 4.1, 5.4, 4.7, 10.7, 11.1, 1.8, 2.1];    // shots, on target, corners, fouls, yellows: home then away
+const STAT_NAMES = [["Shots", 0], ["On target", 2], ["Corners", 4], ["Fouls", 6], ["Yellow cards", 8]];
+function pickBy(r, list, wi, skip) {
+  const pool = list.filter((x) => x[0] !== skip), tot = pool.reduce((t, x) => t + x[wi], 0);
+  if (!pool.length || tot <= 0) return null;
+  let u = r() * tot;
+  for (const x of pool) { u -= x[wi]; if (u <= 0) return x; }
+  return pool[pool.length - 1];
+}
+function squadOf(c, season, club) {
+  const L = lgOf(c); let sq = (L.scorers && L.scorers[season] && L.scorers[season][club]) || [];
+  if (L.star.club === club) sq = [[L.star.name, "MID", 7, 7], ...sq];        // the league's star always has a chance of being involved
+  return sq;
+}
+// With no stored statistics forecast the league average is scaled by each side's expected goals, so stats still follow the goal forecast.
+function expFor(m) {
+  if (m[14]) return m[14];
+  const fh = Math.sqrt(Math.max(0.3, m[9]) / 1.5), fa = Math.sqrt(Math.max(0.3, m[10]) / 1.2);
+  return LEAGUE_AVG.map((v, i) => (i === 0 || i === 2 ? v * fh : i === 1 || i === 3 ? v * fa : v));
+}
+// The played-out totals ARE the forecast, rounded; only two physical limits can move a total (shots on target >= goals, shots >= shots on target).
+function genMatch(c, season, home, away, score, seed, exp) {
+  const r = mulberry(seed);
+  const s1 = 1 + Math.floor(r() * 4), s2 = 2 + Math.floor(r() * 5), T = 90 + s1 + s2, L1 = 45 + s1;
+  const FH = (DATA.statsval && DATA.statsval.first_half_goal_share) || 0.44;
+  const disp = (t) => (t <= 45 ? `${t}` : t <= L1 ? `45+${t - 45}` : t <= 90 + s1 ? `${t - s1}` : `90+${t - 90 - s1}`);
+  const minute = (firstShare = 0.5) => { const first = r() < firstShare, lo = first ? 1 : L1 + 1, hi = first ? L1 : T; for (;;) { const t = lo + Math.floor(r() * (hi - lo + 1)); if (r() < 0.8 + 0.4 * (t - lo) / (hi - lo + 1)) return t; } };
+  const spot = (sd, goal) => { const d = goal ? 5 + 11 * Math.pow(r(), 1.5) : 7 + 24 * Math.pow(r(), 1.2), spread = Math.min(26, 6 + d * 0.5); return [sd === "H" ? 105 - d : d, 34 + (r() * 2 - 1) * spread * (goal ? 0.7 : 1)]; };
+  const ev = [];
+  [["H", home, score[0], 0], ["A", away, score[1], 1]].forEach(([sd, club, g, k]) => {
+    const squad = squadOf(c, season, club), anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
+    const xSh = exp[k], xSot = exp[2 + k], xCor = exp[4 + k], xFoul = exp[6 + k], xYel = exp[8 + k];
+    for (let i = 0; i < g; i++) { const sc = pickBy(r, squad, 2), as = r() < 0.72 && sc ? pickBy(r, squad, 3, sc[0]) : null, [x, y] = spot(sd, true); ev.push({ t: minute(FH), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null }); }
+    const nSot = Math.max(g, Math.round(xSot)), nShots = Math.max(nSot, Math.round(xSh)), saves = nSot - g, others = nShots - nSot;
+    const shooter = () => pickBy(r, squad.map((q) => [q[0], q[1], q[1] === "GK" ? 0.01 : q[2] + 0.4]), 2);
+    for (let i = 0; i < saves; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: "save", x, y, who: sh ? sh[0] : anon() }); }
+    for (let i = 0; i < others; i++) { const sh = shooter(), [x, y] = spot(sd, false); ev.push({ t: minute(), sd, type: r() < 0.6 ? "off" : "block", x, y, who: sh ? sh[0] : anon() }); }
+    for (let i = Math.round(xCor); i > 0; i--) ev.push({ t: minute(), sd, type: "corner" });
+    for (let i = Math.round(xFoul); i > 0; i--) ev.push({ t: minute(), sd, type: "foul" });
+    for (let i = Math.round(xYel); i > 0; i--) { const pl = squad.length ? squad[Math.floor(r() * squad.length)][0] : `${club} player`; ev.push({ t: minute(0.42), sd, type: "card", who: pl }); }
+  });
+  ev.push({ t: L1, type: "ht" }, { t: T, type: "ft" });
+  ev.sort((a, b) => a.t - b.t || (a.type === "goal" ? -1 : 1));
+  const tot = Array(10).fill(0), idx = { H: 0, A: 1 };
+  ev.forEach((e) => { const k = idx[e.sd]; if (k == null) return; if (e.type === "goal" || e.type === "save") { tot[k]++; tot[2 + k]++; } else if (e.type === "off" || e.type === "block") tot[k]++; else if (e.type === "corner") tot[4 + k]++; else if (e.type === "foul") tot[6 + k]++; else if (e.type === "card") tot[8 + k]++; });
+  return { home, away, score, T, s1, disp, ev, totals: tot, exp };
+}
+const theatre = { timer: null, m: null, t: 0, speed: 1, paused: false, done: null, last: 0 };
+function stopTheatre() { clearInterval(theatre.timer); theatre.timer = null; theatre.m = null; theatre.done = null; }
+function theatreHTML(m) {
+  const pitch = `<svg class="mt-pitch" viewBox="-2 -2 109 72" role="img" aria-label="Pitch: where the shots were taken"><g fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".5"><rect x="0" y="0" width="105" height="68"/><path d="M52.5 0V68"/><circle cx="52.5" cy="34" r="9.15"/><rect x="0" y="13.85" width="16.5" height="40.3"/><rect x="88.5" y="13.85" width="16.5" height="40.3"/><rect x="0" y="24.85" width="5.5" height="18.3"/><rect x="99.5" y="24.85" width="5.5" height="18.3"/></g><g fill="rgba(255,255,255,.8)"><rect x="-1.2" y="30.3" width="1.2" height="7.3"/><rect x="105" y="30.3" width="1.2" height="7.3"/></g><g id="thDots"></g></svg>`;
+  return `<div class="mt-board"><div class="mt-team">${badge(m.home, "md")}<b>${esc(m.home)}</b></div><div class="mt-score"><span class="big num" id="thScore">0 - 0</span><small id="thClock">Kick-off</small></div><div class="mt-team right"><b>${esc(m.away)}</b>${badge(m.away, "md")}</div></div>
+    <div class="mt-poss" aria-hidden="true"><i id="thPH" style="background:var(--home)"></i><i id="thPA" style="background:var(--away)"></i></div>
+    <div class="mt-stats" id="thStats"></div>${pitch}
+    <div class="fine">${esc(m.home)} attacks to the right, ${esc(m.away)} to the left. Filled dot: goal. Ring: saved. Cross: wide. Grey: blocked. Positions are illustrative; the final score and every statistic come from the model's forecast.</div>
+    <div class="row mt-ctrl" style="margin-top:10px"><button class="btn ghost" id="thPause" type="button">Pause</button><button class="btn ghost" id="thSpeed" type="button">Speed 1x</button><button class="btn ghost" id="thSkip" type="button">Skip to full time</button></div>
+    <ol class="mt-feed" id="thFeed"></ol>`;
+}
+function paintTheatre() {
+  const m = theatre.m; if (!m) return;
+  const t = theatre.t, vis = m.ev.filter((e) => e.t <= t), score = [0, 0];
+  const st = { H: { shots: 0, sot: 0, cards: 0, corners: 0, fouls: 0 }, A: { shots: 0, sot: 0, cards: 0, corners: 0, fouls: 0 } };
+  vis.forEach((e) => {
+    if (e.type === "goal") { score[e.sd === "H" ? 0 : 1]++; st[e.sd].shots++; st[e.sd].sot++; } else if (e.type === "save") { st[e.sd].shots++; st[e.sd].sot++; }
+    else if (e.type === "off" || e.type === "block") st[e.sd].shots++; else if (e.type === "corner") st[e.sd].corners++; else if (e.type === "foul") st[e.sd].fouls++; else if (e.type === "card") st[e.sd].cards++;
+  });
+  const prevGoals = theatre.last; const nowGoals = score[0] + score[1];
+  if (nowGoals > prevGoals) { Snd.goal(); const el = $("#thScore"); if (el) { el.classList.remove("goalpop"); void el.offsetWidth; el.classList.add("goalpop"); } }
+  theatre.last = nowGoals;
+  $("#thScore").textContent = `${score[0]} - ${score[1]}`;
+  const mn = Math.floor(t);
+  $("#thClock").textContent = t >= m.T ? "Full time" : mn === 0 ? "Kick-off" : mn === 45 + m.s1 ? "Half-time" : `${m.disp(Math.max(1, mn))}'`;
+  const shn = st.H.shots + st.A.shots, ph = shn ? (st.H.shots / shn) * 100 : 50; $("#thPH").style.width = ph + "%"; $("#thPA").style.width = (100 - ph) + "%";
+  $("#thStats").innerHTML = [["Share of shots", `${Math.round(ph)}%`, `${Math.round(100 - ph)}%`], ["Shots", st.H.shots, st.A.shots], ["On target", st.H.sot, st.A.sot], ["Corners", st.H.corners, st.A.corners], ["Fouls", st.H.fouls, st.A.fouls], ["Yellow cards", st.H.cards, st.A.cards]]
+    .map(([l, a, b]) => `<span class="num">${a}</span><span class="label">${l}</span><span class="num">${b}</span>`).join("");
+  const gn = { H: 0, A: 0 };
+  $("#thDots").innerHTML = vis.filter((e) => e.x != null).map((e) => {
+    const c = e.sd === "H" ? "var(--home)" : "var(--away)";
+    if (e.type === "goal") { const k = gn[e.sd]++, ly = Math.max(5, Math.min(66, e.y - 2.4 - 3.6 * k)); return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="1.8" fill="${c}" stroke="#fff" stroke-width=".5"/><text x="${(e.x + (e.sd === "H" ? -2.6 : 2.6)).toFixed(1)}" y="${ly.toFixed(1)}" font-size="3.1" font-weight="700" fill="#fff" text-anchor="${e.sd === "H" ? "end" : "start"}">${esc(String(e.who).split(" ").slice(-1)[0])}</text>`; }
+    if (e.type === "save") return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="1.2" fill="none" stroke="${c}" stroke-width=".6"/>`;
+    if (e.type === "off") return `<path d="M${(e.x - 1).toFixed(1)} ${(e.y - 1).toFixed(1)}l2 2m0 -2l-2 2" stroke="${c}" stroke-width=".5" fill="none"/>`;
+    return `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r=".8" fill="rgba(255,255,255,.45)"/>`;
+  }).join("");
+  let hg = 0, ag = 0; const lines = [];
+  for (const e of vis) {
+    const when = e.type === "ht" ? "HT" : e.type === "ft" ? "FT" : m.disp(e.t) + "'", club = e.sd === "H" ? m.home : m.away; let txt = "", cls = e.type;
+    if (e.type === "goal") { if (e.sd === "H") hg++; else ag++; txt = `<b>GOAL!</b> ${esc(e.who)} (${esc(club)})${e.assist ? `, assisted by ${esc(e.assist)}` : ""}. <b>${hg}-${ag}</b>`; }
+    else if (e.type === "save") txt = `${esc(e.who)} (${esc(club)}) shoots, saved`; else if (e.type === "off") txt = `${esc(e.who)} (${esc(club)}) shoots wide`;
+    else if (e.type === "block") txt = `${esc(e.who)} (${esc(club)}) has a shot blocked`; else if (e.type === "card") txt = `Yellow card: ${esc(e.who)} (${esc(club)})`;
+    else if (e.type === "corner") txt = `Corner to ${esc(club)}`; else if (e.type === "foul") continue;
+    else if (e.type === "ht") txt = `Half-time: ${hg}-${ag}`; else if (e.type === "ft") txt = `Full time: ${m.home} ${hg}-${ag} ${m.away}`;
+    lines.push(`<li class="${cls}"><span class="num">${when}</span><span>${txt}</span></li>`);
+  }
+  $("#thFeed").innerHTML = lines.reverse().join("");
+}
+function finishTheatre() {
+  clearInterval(theatre.timer); theatre.timer = null;
+  const m = theatre.m; if (!m) return;
+  theatre.t = m.T; theatre.last = 99; paintTheatre(); Snd.whistle();
+  ["thPause", "thSpeed", "thSkip"].forEach((id) => { const b = $("#" + id); if (b) b.hidden = true; });
+  const f = theatre.done; theatre.done = null; if (f) f();
+}
+function startTheatre(c, season, m, score, onDone) {
+  stopTheatre();
+  const seed = hash(`${m[1]}|${m[2]}|${m[0]}|${score.join("-")}`);
+  theatre.m = genMatch(c, season, m[1], m[2], score, seed, expFor(m)); theatre.t = 0; theatre.speed = 1; theatre.paused = false; theatre.done = onDone; theatre.last = 0;
+  const box = $("#theatre"); box.innerHTML = theatreHTML(theatre.m); box.hidden = false; paintTheatre(); Snd.whistle();
+  box.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "nearest" });
+  if (REDUCED) { finishTheatre(); return; }
+  theatre.timer = setInterval(() => { if (theatre.paused) return; theatre.t += theatre.speed * 0.2; if (theatre.t >= theatre.m.T) finishTheatre(); else paintTheatre(); }, 50);
+}
+function statsCard(c, m) {
+  if (!m[14] || !m[15]) return "";
+  const exp = m[14], real = m[15], cell = (v) => (v == null ? "-" : v);
+  const V = DATA.statsval;
+  const note = V ? `Forecasts come from a model trained only on earlier seasons and tested on 2023-26. Average miss per side against always guessing the league average: shots ${((V.shots_home.mae_model + V.shots_away.mae_model) / 2).toFixed(1)} against ${((V.shots_home.mae_baseline + V.shots_away.mae_baseline) / 2).toFixed(1)}, corners ${((V.corners_home.mae_model + V.corners_away.mae_model) / 2).toFixed(1)} against ${((V.corners_home.mae_baseline + V.corners_away.mae_baseline) / 2).toFixed(1)}. Yellow cards are not forecast better than the average.` : "";
+  return `<div class="rcard" style="margin-top:12px"><div class="label">Match statistics: real, the model's forecast, the prediction played out</div><div class="vtable">
+    <div class="vrow head"><span></span><span>Real</span><span>Model forecast</span><span>Played out</span></div>
+    ${STAT_NAMES.map(([n, i]) => `<div class="vrow"><b>${n}</b><span class="num">${cell(real[i])}-${cell(real[i + 1])}</span><span class="num">${exp[i].toFixed(1)}-${exp[i + 1].toFixed(1)}</span><span class="num">${Math.round(exp[i])}-${Math.round(exp[i + 1])}</span></div>`).join("")}</div><div class="fine" style="margin-top:8px">${note}</div></div>`;
+}
+
+/* ================= The games hub ================= */
+const GAMES = [
+  { id: "call", name: "Call it", tag: "One real match. Lock your call, watch the model's match play out minute by minute, then see what really happened." },
+  { id: "daily", name: "Daily 5", tag: "The same five matches for everyone today. Beat the model and share your result." },
+  { id: "matchday", name: "Matchday", tag: "Call a whole round at once and watch the results land one by one." },
+  { id: "upset", name: "Spot the upset", tag: "Five real results. Which one did the model think was least likely?" },
+  { id: "table", name: "Guess the table", tag: "Rebuild a final table from last season's, then see you against the model." },
+  { id: "hol", name: "Higher or lower", tag: "Two clubs, one number. Keep the streak alive." },
+];
+function recordLine(c, id) {
+  if (id === "call") { const t = totals(playsOf(c)); return t.n ? `${t.you} v ${t.mod} points over ${t.n} matches` : "not played yet"; }
+  if (id === "daily") { const n = dailyDays(c); return n ? `${n} day${n === 1 ? "" : "s"} in a row` : "not played today"; }
+  if (id === "matchday") { const it = Object.entries(store.items).filter(([k]) => k.startsWith(`md_${c}_`)).map(([, v]) => v); return it.length ? `you ${it.reduce((a, x) => a + x.you, 0)} v model ${it.reduce((a, x) => a + x.mod, 0)} right, ${it.length} matchday${it.length === 1 ? "" : "s"}` : "not played yet"; }
+  if (id === "upset") { const u = store.items[`u_${c}`]; return u ? `${u.right}/${u.rounds} right, best streak ${u.best}` : "not played yet"; }
+  if (id === "table") { const it = Object.entries(store.items).filter(([k]) => k.startsWith(`t_${c}_`)).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
+  if (id === "hol") { const h = store.items[`h_${c}`]; return h ? `best streak ${h.best}` : "not played yet"; }
+  return "";
+}
+function renderHub() {
+  const c = S.code, clubs = Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
+  const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
+  $("#room").innerHTML = `<div class="hub">${GAMES.map((g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 70}ms"><div class="gfaces">${pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`).join("")}</div>`;
+}
+const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">All games</button><h2 style="font-size:24px">${title}</h2></div>`;
+function renderPlayRoom() {
+  stopTheatre();
+  if (!S.game) return renderHub();
+  ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol })[S.game]();
+}
+
+/* ---------- Matchday ---------- */
+function mdList(c) {
+  const out = [];
+  poolSeasons(c).forEach((sn) => { const ms = lgOf(c).seasons[sn].matches, per = roundsOf(ms).per; for (let n = 1; n * per <= ms.length; n++) out.push({ season: sn, n, per }); });
+  return out;
+}
+const mdKey = (c, sn, n) => `md_${c}_${sn}_${n}`;
+function renderMatchday() {
+  const c = S.code;
+  if (!S.md) {
+    const free = mdList(c).filter((x) => !store.items[mdKey(c, x.season, x.n)]);
+    $("#room").innerHTML = `<div class="card">${gamesBar("Matchday")}<p class="sub">A whole round of real matches. Pick a result for each, lock them all, and the real scores land one by one against the model's calls.</p>
+      <div class="row" style="margin-top:14px"><button class="btn" id="mdRandom" type="button" ${free.length ? "" : "disabled"}>Random matchday</button>
+      <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
+      <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${poolSeasons(c).length} seasons.</p></div>`;
+    return;
+  }
+  const { season, n, per, picks, locked } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per), done = store.items[mdKey(c, season, n)];
+  const rows = ms.map((m, i) => {
+    const call = modelCall(m), res = done ? done.res[i] : null;
+    return `<div class="mdrow2" data-i="${i}"><div class="mteam h">${esc(m[1])}${badge(m[1], "sm")}</div>
+      <div class="mpicks">${["H", "D", "A"].map((k) => `<button type="button" class="mp" data-mdp="${i}|${k}" aria-pressed="${picks[i] === k}" ${locked || done ? "disabled" : ""}>${k === "H" ? "1" : k === "D" ? "X" : "2"}</button>`).join("")}</div>
+      <div class="mteam">${badge(m[2], "sm")}${esc(m[2])}</div><div class="mres" id="mres${i}">${done ? mdResult(m, picks[i] != null ? picks[i] : done.picks[i], call) : ""}</div></div>`;
+  }).join("");
+  const filled = picks.filter(Boolean).length;
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${season} · matchday ${n}`)}<div class="mdlist">${rows}</div>
+    <div class="row" style="margin-top:14px"><button class="btn" id="mdLock" type="button" ${filled === per && !locked && !done ? "" : "disabled"}>Lock all ${per}</button><span class="fine" id="mdCount">${filled}/${per} picked</span></div><div id="mdSum"></div></div>`;
+  if (done) renderMdSummary(done, true);
+}
+const mdResult = (m, pick, call) => { const ok = pick === m[5], mok = call.pick === m[5]; return `<span class="num score">${m[3]}-${m[4]}</span><span class="mark ${ok ? "y" : "n"}" title="You">${ok ? "✓" : "✗"}</span><span class="mark ${mok ? "y" : "n"} dim" title="Model: ${OUTNAME[call.pick]}">${mok ? "✓" : "✗"}</span>`; };
+function lockMd() {
+  const c = S.code, { season, n, per, picks } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per);
+  S.md.locked = true; Snd.lock();
+  document.querySelectorAll(".mp, #mdLock").forEach((b) => { b.disabled = true; });
+  let you = 0, mod = 0, i = 0; const res = ms.map((m) => m[5]), mp = ms.map((m) => modelCall(m).pick);
+  const step = () => {
+    const m = ms[i], ok = picks[i] === m[5], mok = mp[i] === m[5]; you += ok; mod += mok;
+    const el = $("#mres" + i); if (!el) return;
+    el.innerHTML = mdResult(m, picks[i], { pick: mp[i] }); el.classList.add("land");
+    ok ? Snd.right() : Snd.wrong(); i++;
+    if (i < ms.length) setTimeout(step, REDUCED ? 0 : 650);
+    else setTimeout(() => { const item = { lg: c, season, n, picks, res, mpicks: mp, you, mod, at: new Date().toISOString() }; lockIn(mdKey(c, season, n), item); renderMdSummary(item, false); }, 500);
+  };
+  setTimeout(step, 400);
+}
+function renderMdSummary(it, instant) {
+  const beat = it.you > it.mod, tie = it.you === it.mod;
+  $("#mdSum").innerHTML = `<div class="rcard on" style="margin-top:14px"><div class="label">Full time</div><div class="verdicts" style="margin-top:8px"><div class="vd ${beat || tie ? "ok" : "no"}"><span class="label">You</span><b class="big2 num">${it.you}/${it.picks.length}</b></div><div class="vd ${it.mod >= it.you ? "ok" : "no"}"><span class="label">Model</span><b class="big2 num">${it.mod}/${it.picks.length}</b></div></div>
+    <div class="row" style="margin-top:12px"><b>${beat ? "You beat the model this round." : tie ? "Level with the model." : "The model won this round."}</b><button class="btn" id="mdAgain" type="button">Another matchday</button></div></div>`;
+  if (!instant && beat) { Snd.win(); confetti(); }
+}
+
+/* ---------- Spot the upset ---------- */
+const probOfResult = (m) => ({ A: m[6], D: m[7], H: m[8] }[m[5]]);
+function newUpset(c) {
+  const pool = allMatches(c).filter((r) => r.m[0] >= "2023-08-01");
+  for (let tries = 0; tries < 500; tries++) {
+    const pick = []; while (pick.length < 5) { const r = pool[Math.floor(Math.random() * pool.length)]; if (!pick.includes(r)) pick.push(r); }
+    const ps = pick.map((r) => probOfResult(r.m)), sorted = [...ps].sort((a, b) => a - b);
+    if (sorted[0] <= 0.2 && sorted[1] - sorted[0] >= 0.06) return { items: pick, ps, ans: ps.indexOf(sorted[0]), chosen: null };
+  }
+  return null;
+}
+function renderUpset() {
+  const c = S.code; if (!S.up) S.up = newUpset(c);
+  const u = S.up, st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 };
+  const cards = u.items.map((r, k) => {
+    const m = r.m, rev = u.chosen != null, cls = rev ? (k === u.ans ? "ans" : k === u.chosen ? "wrong" : "") : "";
+    return `<button type="button" class="upc ${rev ? "flip" : ""} ${cls}" data-up="${k}" ${rev ? "disabled" : ""} style="--d:${k * 80}ms"><div class="upin"><div class="upfront"><span class="fine">${fmtDate(m[0])}</span><div class="upm">${badge(m[1], "sm")}<b>${esc(m[1])}</b><span class="num score">${m[3]}-${m[4]}</span><b>${esc(m[2])}</b>${badge(m[2], "sm")}</div></div>
+      <div class="upback"><div class="upm">${badge(m[1], "sm")}<b>${esc(m[1])}</b><span class="num score">${m[3]}-${m[4]}</span><b>${esc(m[2])}</b>${badge(m[2], "sm")}</div><div class="pbar" style="--c:var(--accent)"><span class="label">Model gave it</span><div class="track"><div class="fill" style="width:${(u.ps[k] * 100).toFixed(0)}%"></div></div><span class="num">${pct(u.ps[k])}</span></div>${k === u.ans ? '<span class="tag">the biggest upset</span>' : ""}</div></div></button>`;
+  }).join("");
+  $("#room").innerHTML = `<div class="card">${gamesBar("Spot the upset")}<p class="sub">Five real results from matches the model had never seen. Before kickoff it gave every outcome a probability. <b>Which result did it think was least likely?</b></p><div class="uplist">${cards}</div>
+    ${u.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${u.chosen === u.ans ? "up" : "down"}">${u.chosen === u.ans ? "Right!" : "Not this time."} Streak ${S.upStreak}</b><button class="btn" id="upNext" type="button">Next round</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${S.upStreak} · best ${st.best}</p>`}</div>`;
+}
+function answerUpset(k) {
+  const c = S.code, u = S.up; if (u.chosen != null) return; u.chosen = k; const ok = k === u.ans; S.upStreak = ok ? S.upStreak + 1 : 0;
+  const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) });
+  Snd.flip(); renderUpset(); setTimeout(() => { ok ? (S.upStreak >= 3 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.upStreak >= 3) confetti(); }, 350);
+}
+
+/* ---------- Guess the table ---------- */
+const tabKey = (c, sn) => `t_${c}_${sn}`;
+function tabSeasons(c) { return Object.keys(lgOf(c).tables).sort().filter((s) => s > Object.keys(lgOf(c).tables).sort()[0]); }
+function prevPos(c, sn) { const keys = Object.keys(lgOf(c).tables).sort(), i = keys.indexOf(sn); return i > 0 ? Object.fromEntries(lgOf(c).tables[keys[i - 1]].map((r, j) => [r[0], j + 1])) : {}; }
+function renderTableGame() {
+  const c = S.code, L = lgOf(c);
+  if (!S.tab) {
+    const seasons = tabSeasons(c), done = (sn) => store.items[tabKey(c, sn)];
+    $("#room").innerHTML = `<div class="card">${gamesBar("Guess the table")}<p class="sub">Predict a whole season's final table. You start from last season's table and move clubs up or down; drag a row or use the arrows. The model's table is simply the points it expected from its pre-match probabilities over the whole season. Whoever is closer wins. Fair warning: just repeating last season is a hard baseline to beat.</p>
+      <div class="row" style="margin-top:14px"><select id="tbSeason" aria-label="Season">${seasons.slice().reverse().map((sn) => `<option value="${sn}">${sn}${done(sn) ? " ✓" : ""}</option>`).join("")}</select><button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div></div>`;
+    return;
+  }
+  const { season, order } = S.tab, done = store.items[tabKey(c, season)], prev = prevPos(c, season);
+  if (done) return renderTableVerdict(done);
+  const rows = order.map((t, i) => `<div class="tbrow" draggable="true" data-tb="${i}"><span class="num tbn">${i + 1}</span>${badge(t, "sm")}<b>${esc(t)}</b><span class="fine">${prev[t] ? `last season ${prev[t]}${["th", "st", "nd", "rd"][prev[t] % 10 > 3 || (prev[t] > 10 && prev[t] < 14) ? 0 : prev[t] % 10]}` : "promoted"}</span><span class="tbbtns"><button class="xbtn" type="button" data-mv="${i}|-1" aria-label="Move up" ${i === 0 ? "disabled" : ""}>▲</button><button class="xbtn" type="button" data-mv="${i}|1" aria-label="Move down" ${i === order.length - 1 ? "disabled" : ""}>▼</button></span></div>`).join("");
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${season} · final table`)}<div class="tblist" id="tbList">${rows}</div><div class="row" style="margin-top:14px"><button class="btn" id="tbLock" type="button">Lock in my table</button><span class="fine">Drag rows or use the arrows. Top places and the bottom places are marked after you lock.</span></div></div>`;
+}
+function startTable(sn) {
+  const c = S.code, tab = lgOf(c).tables[sn], prev = prevPos(c, sn), clubs = tab.map((r) => r[0]);
+  const xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
+  S.tab = { season: sn, order: [...clubs].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]) }; renderTableGame();
+}
+function lockTable() {
+  const c = S.code, { season, order } = S.tab, tab = lgOf(c).tables[season], real = Object.fromEntries(tab.map((r, i) => [r[0], i + 1])), prev = prevPos(c, season), xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
+  const model = [...order].sort((a, b) => xp[b] - xp[a]), last = [...order].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]);
+  const err = (o) => o.reduce((a, t, i) => a + Math.abs(i + 1 - real[t]), 0) / o.length;
+  Snd.lock(); lockIn(tabKey(c, season), { lg: c, season, you: order, model, last, youErr: err(order), modErr: err(model), lastErr: err(last), at: new Date().toISOString() }); renderTableGame();
+}
+function renderTableVerdict(d) {
+  const c = S.code, tab = lgOf(c).tables[d.season], N = tab.length, exact = (o) => o.filter((t, i) => tab[i][0] === t).length, beat = d.youErr < d.modErr;
+  const rows = tab.map((r, i) => `<div class="tbrow tbres" style="--d:${i * 40}ms"><span class="num tbn">${i + 1}</span>${badge(r[0], "sm")}<b>${esc(r[0])}</b><span class="num">${r[1]} pts</span><span>You <b class="num">${d.you.indexOf(r[0]) + 1}</b></span><span>Model <b class="num">${d.model.indexOf(r[0]) + 1}</b></span></div>`).join("");
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${d.season} · the real table`)}<div class="rcard on"><h3 style="font-size:24px" class="${beat ? "up" : d.youErr > d.modErr ? "down" : ""}">${beat ? "You beat the model!" : d.youErr > d.modErr ? "The model wins this one." : "Level with the model."}</h3>
+    <div class="tiles"><div class="tile"><b class="num">${d.youErr.toFixed(2)}</b><small>You: places off per club (${exact(d.you)} exact)</small></div><div class="tile"><b class="num">${d.modErr.toFixed(2)}</b><small>Model: places off (${exact(d.model)} exact)</small></div><div class="tile"><b class="num">${d.lastErr.toFixed(2)}</b><small>Just repeating last season: places off (${exact(d.last)} exact)</small></div></div></div>
+    <div class="tblist" style="margin-top:12px">${rows}</div><div class="row" style="margin-top:12px"><button class="btn" id="tbAgain" type="button">Another season</button></div></div>`;
+  if (beat) { Snd.win(); confetti(); } else Snd.tick();
+}
+
+/* ---------- Higher or lower ---------- */
+const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8]];
+function newHol(c) {
+  const tabs = lgOf(c).tables, keys = Object.keys(tabs);
+  for (let tries = 0; tries < 300; tries++) {
+    const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => ({ t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3] })), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
+    const a = rows[Math.floor(Math.random() * rows.length)], b = rows[Math.floor(Math.random() * rows.length)];
+    if (a === b || Math.abs(a[key] - b[key]) < gap) continue;
+    return { sn, key, text, a, b, win: dir * (a[key] - b[key]) > 0 ? a : b, chosen: null };
+  }
+  return null;
+}
+function renderHol() {
+  const c = S.code; if (!S.hol) S.hol = newHol(c);
+  const q = S.hol, best = (store.items[`h_${c}`] || { best: 0 }).best;
+  const side = (r, k) => { const rev = q.chosen != null; return `<button type="button" class="holc ${rev ? (r === q.win ? "ans" : r === q.chosen ? "wrong" : "") : ""}" data-hol="${k}" ${rev ? "disabled" : ""}>${badge(r.t, "xl")}<b>${esc(r.t)}</b><span class="num holv" data-v="${r[q.key]}">${rev ? r[q.key] : "?"}</span></button>`; };
+  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Which club ${esc(q.text)} in <b>${q.sn}</b>?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
+    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${S.holStreak}</b><button class="btn" id="holNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${S.holStreak} · best ${best}</p>`}</div>`;
+  if (q.chosen != null) document.querySelectorAll(".holv").forEach((el) => { const end = +el.dataset.v, t0 = performance.now(); (function f(t) { const k = REDUCED ? 1 : Math.min(1, (t - t0) / 700); el.textContent = Math.round(end * k); if (k < 1) requestAnimationFrame(f); })(t0); });
+}
+function answerHol(k) {
+  const c = S.code, q = S.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b; const ok = q.chosen === q.win; S.holStreak = ok ? S.holStreak + 1 : 0;
+  const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak });
+  Snd.flip(); renderHol(); setTimeout(() => { ok ? (S.holStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.holStreak >= 5 && S.holStreak % 5 === 0) confetti(); }, 500);
+}
+
 /* ---------- Review ---------- */
 function renderReview() {
   const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl);
@@ -701,7 +1093,7 @@ async function initStore() {
     LB.coll = db.collection("leaderboard"); LB.uid = uid; LB.user = user;
     LB.coll.onSnapshot((snap) => { LB.rows = snap.docs.filter((d) => d.exists).map((d) => ({ id: d.id, ...d.data() })); renderBoard(); }, () => { LB.failed = true; renderBoard(); });
     store.coll = db.collection("data/users/" + uid); store.uid = uid; store.mode = "cloud";
-    store.coll.onSnapshot((snap) => { const items = { ...store.items }; snap.docs.forEach((d) => { if (d.exists) items[d.id] = d.data(); }); store.items = items; saveLocal(); paintScore(); if (S.code && S.room === "daily" && !S.cur) renderDaily(); }, () => { store.coll = null; store.mode = "local"; });
+    store.coll.onSnapshot((snap) => { const items = { ...store.items }; snap.docs.forEach((d) => { if (d.exists) items[d.id] = d.data(); }); store.items = items; saveLocal(); paintScore(); if (S.code && S.room === "play" && S.game === "daily" && !S.cur) renderDaily(); }, () => { store.coll = null; store.mode = "local"; });
   } catch (e) { /* stay on browser storage */ }
 }
 
@@ -712,7 +1104,26 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lg) { Snd.tick(); go(SLUG[b.dataset.lg]); route(e); return; }
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
   if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
-  if (b.dataset.room) { Snd.tick(); S.room = b.dataset.room; S.cur = null; renderRooms(); renderRoom(); return; }
+  if (b.dataset.room) { Snd.tick(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
+  if (b.dataset.game) { Snd.tick(); S.game = b.dataset.game; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
+  if (b.id === "gamesBack") { Snd.back(); S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
+  if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
+  if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }
+  if (b.id === "thSkip") { finishTheatre(); return; }
+  if (b.id === "watchBtn") { const { c, season, i, m } = S.cur, it = store.items[`p_${c}_${season}_${i}`], box = $("#theatre"); if (box) { box.hidden = false; startTheatre(c, season, m, it ? it.mscore : modelCall(m).score, null); } return; }
+  if (b.id === "mdRandom") { const free = mdList(S.code).filter((x) => !store.items[mdKey(S.code, x.season, x.n)]); if (free.length) { const x = free[Math.floor(Math.random() * free.length)]; S.md = { ...x, picks: Array(x.per).fill(null), locked: false }; Snd.tick(); renderMatchday(); } return; }
+  if (b.dataset.mdp) { const [i, k] = b.dataset.mdp.split("|"); S.md.picks[+i] = k; Snd.tick(); renderMatchday(); return; }
+  if (b.id === "mdLock") { lockMd(); return; }
+  if (b.id === "mdAgain") { S.md = null; renderMatchday(); return; }
+  if (b.dataset.up != null && b.dataset.up !== "") { answerUpset(+b.dataset.up); return; }
+  if (b.id === "upNext") { S.up = null; Snd.tick(); renderUpset(); return; }
+  if (b.id === "tbGo") { startTable($("#tbSeason").value); Snd.tick(); return; }
+  if (b.id === "tbRandom") { const fresh = tabSeasons(S.code).filter((sn) => !store.items[tabKey(S.code, sn)]), pool = fresh.length ? fresh : tabSeasons(S.code); startTable(pool[Math.floor(Math.random() * pool.length)]); Snd.tick(); return; }
+  if (b.dataset.mv) { const [i, d] = b.dataset.mv.split("|").map(Number), o = S.tab.order, j = i + d; if (j >= 0 && j < o.length) { [o[i], o[j]] = [o[j], o[i]]; Snd.tick(); renderTableGame(); } return; }
+  if (b.id === "tbLock") { lockTable(); return; }
+  if (b.id === "tbAgain") { S.tab = null; renderTableGame(); return; }
+  if (b.dataset.hol) { answerHol(b.dataset.hol); return; }
+  if (b.id === "holNext") { S.hol = null; Snd.tick(); renderHol(); return; }
   if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
   if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
   if (b.dataset.pick) { S.pick = b.dataset.pick; Snd.tick(); renderPlay(); return; }
@@ -734,6 +1145,11 @@ document.addEventListener("change", (e) => {
   else if (t.id === "raceSeasonSel") { S.raceSeason = t.value; renderRace(); }
   else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }
 });
+let dragIx = null;
+document.addEventListener("dragstart", (e) => { const r = e.target.closest && e.target.closest("[data-tb]"); if (r) { dragIx = +r.dataset.tb; e.dataTransfer.effectAllowed = "move"; r.classList.add("dragging"); } });
+document.addEventListener("dragover", (e) => { if (dragIx != null && e.target.closest && e.target.closest("[data-tb]")) e.preventDefault(); });
+document.addEventListener("drop", (e) => { const r = e.target.closest && e.target.closest("[data-tb]"); if (r && dragIx != null && S.tab) { e.preventDefault(); const o = S.tab.order, [x] = o.splice(dragIx, 1); o.splice(+r.dataset.tb, 0, x); dragIx = null; Snd.tick(); renderTableGame(); } });
+document.addEventListener("dragend", () => { dragIx = null; });
 document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });
 addEventListener("hashchange", () => route());
 

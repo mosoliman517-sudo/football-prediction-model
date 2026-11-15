@@ -95,6 +95,31 @@ def webp_uri(path, max_px):
 slug = lambda n: re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")
 race = json.load(open("02_processed_data/title_race.json")) if os.path.exists("02_processed_data/title_race.json") else {}
 summary = json.load(open("02_processed_data/multi_league_summary.json"))
+# match statistics: the model's forecast and the real numbers (shots, on target, corners, fouls, yellows; home then away), joined to each match
+stats = pd.read_csv("02_processed_data/multi_league_stats.csv")
+ST_ORDER = ["HS", "AS", "HST", "AST", "HC", "AC", "HF", "AF", "HY", "AY"]
+stat_lookup = {(r["League"], r["Date"], r["HomeTeam"], r["AwayTeam"]): ([round(float(r[f"e_{c}"]), 1) for c in ST_ORDER], [None if pd.isna(r[f"r_{c}"]) else int(r[f"r_{c}"]) for c in ST_ORDER])
+               for r in stats[stats["Season"] >= KEEP_FROM].to_dict("records")}
+statsval = json.load(open("02_processed_data/multi_league_stats_validation.json"))
+scorers_all = json.load(open("02_processed_data/scorers.json")) if os.path.exists("02_processed_data/scorers.json") else {}
+
+def final_tables(lg):
+    """Final table of every finished season (2017-18 on) with the model's expected points from its pre-match probabilities."""
+    out = {}
+    for sn, g in d[(d["league"] == lg) & (d["season"] < 2026)].groupby("season"):
+        T = {}
+        for r in g.itertuples():
+            for t in (r.home, r.away):
+                T.setdefault(t, [0, 0, 0, 0, 0, 0, 0.0])           # pts, gf, ga, w, d, l, xpts
+            h, a = T[r.home], T[r.away]
+            h[1] += r.hg; h[2] += r.ag; a[1] += r.ag; a[2] += r.hg
+            if r.hg > r.ag: h[0] += 3; h[3] += 1; a[5] += 1
+            elif r.hg < r.ag: a[0] += 3; a[3] += 1; h[5] += 1
+            else: h[0] += 1; a[0] += 1; h[4] += 1; a[4] += 1
+            h[6] += 3 * r.p_h + r.p_d; a[6] += 3 * r.p_a + r.p_d
+        rows = sorted(T.items(), key=lambda kv: (-kv[1][0], -(kv[1][1] - kv[1][2]), -kv[1][1]))
+        out[f"{sn}-{str(sn + 1)[2:]}"] = [[t, v[0], v[1], v[2], v[3], v[4], v[5], round(v[6], 1)] for t, v in rows]
+    return out
 leagues = {}
 for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     seasons = {}
@@ -103,7 +128,8 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
         ms = []
         for r in s.itertuples():
             mk = [r.mk_a, r.mk_d, r.mk_h] if not np.isnan(r.mk_a) else [r.p_a, r.p_d, r.p_h]
-            ms.append([r.date, r.home, r.away, int(r.hg), int(r.ag), r.res, round(r.p_a, 3), round(r.p_d, 3), round(r.p_h, 3), round(r.lam_h, 2), round(r.lam_a, 2), *[round(float(v), 3) for v in mk]])
+            exp, real = stat_lookup.get((lg, r.date, r.home, r.away), (None, None))
+            ms.append([r.date, r.home, r.away, int(r.hg), int(r.ag), r.res, round(r.p_a, 3), round(r.p_d, 3), round(r.p_h, 3), round(r.lam_h, 2), round(r.lam_a, 2), *[round(float(v), 3) for v in mk], exp, real])
         seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms}
     name, country, tag = META[lg]
     star = dict(zip(("name", "club", "role"), STARS[lg]))
@@ -117,11 +143,11 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
         return u
     crests = {c: u for c in clubs if (u := crest(c))}
     print(f"   logo {'yes' if logo else 'no'}, face {'yes' if star['face'] else 'no'}, crests {len(crests)}/{len(clubs)}" + (f"  missing: {[c for c in clubs if c not in crests]}" if len(crests) < len(clubs) else ""))
-    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "seasons": seasons}
+    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "tables": final_tables(lg), "scorers": ({sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in scorers_all.items()} if lg == "E0" else None), "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}
-data = {"leagues": leagues, "profiles": profiles, "summary": sm}
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

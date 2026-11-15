@@ -19,6 +19,7 @@ Machine-learning models that forecast the result of Premier League, Bundesliga, 
 > ./refresh.sh                               # same, after downloading the latest 2026-27 results
 > python3 src/29_multi_league_walkforward.py # five-league walk-forward evaluation; writes per-match predictions (~10 min)
 > python3 src/32_title_race.py               # title / Europe / relegation odds for every league (20,000 simulations each)
+> python3 src/33_match_stats_leagues.py      # shots, on target, corners, fouls and card forecasts for every league (walk-forward)
 > python3 src/31_fetch_assets.py             # league and club badges and star photos into site/logos/ (git-ignored, slow: API throttle)
 > python3 src/30_build_arena.py              # private build: site/arena.html (hosted page, with cloud saving and the leaderboard)
 > python3 src/30_build_arena.py --public     # public build: docs/index.html, the file GitHub Pages serves (official artwork from site/logos/ included)
@@ -27,9 +28,9 @@ Machine-learning models that forecast the result of Premier League, Bundesliga, 
 >
 > **Standing rules.** A new signal or model is kept only if it helps out-of-fold in *both* a logistic regression and a random forest; held-out matches are touched once, at the end. Club badges, league logos and player photos are other people's property. The owner has chosen to show them on the public site as identification only, credited in the footer; the raw files (`site/logos/`, `site/crests/`) and the private page stay git-ignored, and if a rights holder objects, rebuild with `--no-artwork` and push. Do not scrape sources that block scripts, and do not work around refusals.
 >
-> **Known limits, stated plainly.** (1) Understat (xG) blocks scripted requests, so 2026-27 xG form is carried forward. (2) The Kaggle Transfermarkt copy ends in July 2026. (3) The four non-Premier League leagues use results-only features, so they have no xG, squad-value or manager inputs, and no stats forecasts or real goalscorers yet. (4) Title-race odds assume today's form holds and know nothing about injuries or transfers. (5) The Champions League needs a different data source and is not built.
+> **Known limits, stated plainly.** (1) Understat (xG) blocks scripted requests, so 2026-27 xG form is carried forward. (2) The Kaggle Transfermarkt copy ends in July 2026. (3) The four non-Premier League leagues use results-only features, so they have no xG, squad-value or manager inputs, and no real goalscorers: simulated goals in those leagues name the league's star for his club and generic "striker/midfielder" labels otherwise. Yellow cards are not forecast better than the league average. (4) Title-race odds assume today's form holds and know nothing about injuries or transfers. (5) The Champions League needs a different data source and is not built.
 >
-> **Open next steps.** Minute-by-minute simulated matches and the other games (Matchday Challenge, Spot the Upset, Guess the Table, Higher or Lower) for the four newer leagues; a Champions League data source; real lineups from the daily Fantasy snapshots once there are enough of them.
+> **Open next steps.** A Champions League data source; real goalscorers for the four newer leagues (only the Premier League has them); a better yellow-card forecast; real lineups from the daily Fantasy snapshots once there are enough of them.
 
 ### How the project developed
 
@@ -103,6 +104,15 @@ Most of the real progress on this project came from finding things that were wro
 | 15 Nov | The model's expected-points table disappeared when the page was rebuilt around leagues | Noticed by the owner | Restored beside the real table, with "vs model" and "luck" columns; expected points checked to sum exactly in all five leagues |
 
 The progress log that follows has a detailed entry for each phase and remains the authoritative record of every experiment, including the many that were rejected.
+
+#### 15 November 2026: the match simulation and the other games return, for every league
+
+The first arena rebuild had dropped the minute-by-minute match and four of the five games the Premier League page had. They were rebuilt for all five leagues rather than copied across, because they depended on data only the Premier League had.
+
+- **Statistics forecasts for every league (`src/33_match_stats_leagues.py`).** Ten Poisson regressions (shots, shots on target, corners, fouls and yellow cards, home and away) are trained walk-forward on earlier seasons of all five leagues with the compact feature set, then scored on 2023-24 to 2025-26 against "always the training average". Average miss against that baseline: shots 3.8 against 4.3 (home) and 3.4 against 3.7 (away), on target 1.9 against 2.0 and 1.7 against 1.8, corners 2.3 against 2.4 and 2.0 against 2.1, fouls 3.1 against 3.2 and 3.2 against 3.3. **Yellow cards are no better than the average** (1.06 against 1.05 and 1.12 against 1.11), and the page says so. The share of goals scored in the first half (44.1%) is measured from the data and places goal minutes.
+- **The match theatre.** Locking a call in Call it or Daily 5 now plays the model's predicted match minute by minute: score, clock, share of shots, shots, on target, corners, fouls and cards update live on a pitch showing where shots were taken, with a feed of events, pause, 3x and 8x speed, and skip. The played-out totals are the forecast rounded (only two physical limits can move one: shots on target at least the goals, shots at least shots on target), so the match fits its own forecast; a statistics card then shows real against forecast against played out. Goals name real players for the Premier League (Fantasy Premier League data) and the league's star for his club elsewhere.
+- **Matchday, Spot the upset, Guess the table, Higher or lower.** All use the real club badges. Matchday reveals a whole round row by row against the model; Spot the upset flips five result cards to show the model's probability for each; Guess the table lets you drag or nudge clubs from last season's order and compares you with the model's expected-points table and with repeating last season (final tables for 2018-19 onward are shipped for this); Higher or lower compares two clubs on points, goals, wins or goal difference with a count-up reveal and a streak. A games hub groups them under one Play tab. New sound effects (goal, whistle, card flip) were added to the synthesised set.
+- **Problems met.** A scripted sweep of every game in every league found that the Call it and Daily 5 start screens had no way back to the games hub (fixed with an "All games" button), and that delayed reveal animations threw an error if a player left the screen mid-reveal (the animation steps now check the element still exists). The browser pane also stalls any script longer than 45 seconds, so the sweep was run in batches of leagues.
 
 #### 15 November 2026: going public
 

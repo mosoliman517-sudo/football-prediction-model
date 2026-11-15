@@ -52,7 +52,53 @@ This was the largest structural change since the first multi-season pipeline, an
 - **The arena.** A new front end built around leagues: a lobby of five themed worlds, each with its own palette, display typeface, ambient particles and a short synthesised musical motif, and four rooms per league (Call it, Daily 5, Title race, Replay a season with the real table beside the model's expected-points table, and a Review of how the model really did). Sound is generated in the browser, with off, soft and full levels.
 - **Official artwork pipeline.** A fetcher matches every club in the data (138) to a public sports-data API by name, downloads league badges, club badges and star-player cutouts into a git-ignored folder, and the build embeds them as small WebP images. Name matching went wrong in places (a women's team, a Brazilian club and a Colombian club were matched for Mainz, St Pauli and Santander), so every badge was checked by eye on contact sheets and the gaps were filled from two other public sources.
 
-Each phase above also has its own detailed entry in the progress log that follows, which is the authoritative record of every experiment, including the many that were rejected.
+### Problems encountered and how they were solved
+
+Most of the real progress on this project came from finding things that were wrong, not from adding features. This is the consolidated record: what went wrong, how it was found, the cause, the fix and what the fix changed. Every future log entry should keep this shape, including fixes that turned out to change nothing.
+
+**Data and leakage**
+
+| Date | Problem | How it was found | Cause | Fix and effect |
+|---|---|---|---|---|
+| 28 Aug | Betting-odds columns were feeding the model | Audit of the feature list against "known before kickoff" | Raw football-data columns included bookmaker prices, which already contain the result's likelihood | Removed. Accuracy fell to honest levels (the early 57.1% single-season headline was inflated; the stricter test settled near 48%) |
+| 28 Aug | One season was in the data twice and another was missing | A duplicate-detection pass on the season files | The "2015-16" file was byte-for-byte identical to 2017-18, so 2017-18 was silently double-counted in every earlier result | Replaced with the real 2015-16 file and re-ran everything |
+| 2 Sep | A 20-team league produced a 21st-place finish | A sanity check on a new "average placement" feature | The shared `get_season()` treated July as the start of a season, but the COVID-delayed 2019-20 season ran to 26 July 2020, so its last matches were filed into 2020-21 | Fixed at the source (cutoff moved to August), and three more files that had copied the same logic by hand now call the shared function. Measured effect small, kept on principle |
+| 13 Nov | Table position included matches played the same day | Building the live-season forecast | A same-date look-ahead in the walk-forward standings | Standings now use strictly earlier matches only. The old baseline had been flattered slightly (ensemble 49.47% to 48.55%) |
+| 13 Nov | The "last 5 matches" features were really the last 5 away matches (about 20 columns per side) | Building the next-matchday forecast grid | `pd.concat` of home and away games puts home first, so `.tail(5)` took away games. Tested directly: it matched the last five away games in 114 of 114 sampled rows and the true last five in only 20 | Restored chronological order in five feature modules and added a test. Effect roughly neutral (log loss 1.0141 against 1.0154); kept because the features now do what their names say |
+| 14 Nov | Forecasts for unplayed fixtures used a different "overall Elo" from training | The duplicate-column audit below | The fixture-grid code averaged the home and away rating tracks, while training used the single classic rating | Removed the duplicate columns, which removed the mismatch |
+| 14 Nov | Six Elo columns and fourteen others carried no information | A drop-one ablation noticed two Elo groups behaved identically | Under the classic Elo format the "overall" columns equal the home/away ones exactly (correlation 1.0), and the match-xG and closing-odds columns are empty for these seasons | Removed from the model inputs. Accuracy 50.9% to 50.8%, log loss 1.0058 to 1.0055: no real change, as expected |
+| 15 Nov | Forecasting the rest of a season would corrupt itself | Designing the title-race simulation | The feature builder updated Elo and form after every row, so unplayed fixtures with no result would feed each other fake results | The builder now skips the state update when a result is missing; checked that two future fixtures see identical state |
+
+**Evaluation and modelling**
+
+| Date | Problem | Cause | Fix and effect |
+|---|---|---|---|
+| Jul to Sep | A single test season gave an unreliable and optimistic number | One season is small enough that a hot or cold run moves the headline more than the model did | A two-season, 760-match test, then on 15 Nov a rolling-origin walk-forward over nine seasons and 16,111 matches. Premier League accuracy ranged from 48% to 60% between seasons for every method, bookmakers included, which confirmed why single seasons mislead |
+| 13 Nov | A per-model accuracy figure fell 2.5 to 5 points after a correct bug fix | The figure is reported after a Home-penalty and Draw-boost step chosen by internal validation, and that choice is chaotic (one model's chosen penalty moved from 0.95 to 0.60) | Stopped comparing feature sets on that number; compare on log loss and plain accuracy. The fix was not what lowered the figure |
+| Sep | Heavy over-prediction of Home wins | Elo's home and away rating pools carry a structural home-field tilt, so the model needed less evidence to call Home | A probability-threshold correction chosen by multi-fold internal validation, trading raw accuracy for much better Away and Draw recognition, as a deliberate and documented choice |
+| 14 Nov | The "Balanced" style was redefined three times | Calling draws to even out recall costs accuracy, and calling them only when close almost never finds any (Home 75 / Draw 3 / Away 57) | Settled on two final styles: Balanced, tuned so Home, Draw and Away recall are as equal as possible (Premier League 49 / 38 / 46), and Max Accuracy (76 / 0 / 59). Home 70 / Away 60 / Draw 40 together is not reachable on this information |
+| 14 Nov | A balance dial between the two styles did nothing for 70% of its travel | Found while testing it in the browser: the draw factor stayed too low to ever call a draw until nearly the Balanced end | First remapped, then removed when the two-style decision made it redundant |
+| 13 to 15 Nov | Many plausible ideas did not help | Tested against the rule that both models must improve out-of-fold: seven Elo formats, Dixon-Coles, draw models, real lineups, player ratings, 14 new form signals, a drop-one ablation and a "nothing left to play for" signal | Each was rejected or limited with its numbers recorded in the log. Rejections are results too: they show the feature set is near a plateau and the remaining gap to the bookmakers is information the model does not have |
+
+**Data acquisition**
+
+| Date | Problem | Cause | Fix |
+|---|---|---|---|
+| Sep | No expected-goals data for the live season | Understat blocks scripted requests | Not circumvented; 2026-27 xG form is carried forward and listed as a known limit |
+| 13 Nov | One club badge missing (Coventry) | The Premier League badge host returns HTTP 403 for that file | Not worked around; the page shows a text chip and accepts a supplied image |
+| 13 Nov | Badges vanished for most clubs in the viewer | Temporary `blob:` URLs were dropped by the page viewer | Badges are embedded once as `data:` images. The failure could not be reproduced locally, so this is recorded as a fix made on the evidence available |
+| 15 Nov | Logo and photo download failed or matched the wrong club | The free API key used first had been retired (the documented test key is now different); name matching confused Mainz with a women's team, St Pauli with a Brazilian club and Santander with a Colombian one; several clubs returned nothing or a different sport (Nott'm Forest returned a netball team); calls were throttled | Matched by name with manual overrides, filled the gaps from the Premier League's own badge file and a second public crest host, and checked all 138 badges by eye on labelled contact sheets before anything was shown. Artwork is kept out of git because it belongs to others |
+
+**Front end**
+
+| Date | Problem | How it was found and cause | Fix |
+|---|---|---|---|
+| 14 Nov | Moving the matchday slider between 9 and 10 broke the layout in a split-screen window | Reported by the owner. "Matchday 10 / 10" is wider than "Matchday 9 / 10", so the label grew and re-wrapped the control row under the cursor. Reproduced by sweeping the container width (79 of the widths tried differed between the two matchdays; at 360 px the row jumped from 130 to 176 px) | The label has a fixed width; the same sweep then showed no difference |
+| 14 Nov | Chart reference labels collided with the line's end label | Visual check at matchdays 9 and 10 | Percentages moved into the legend |
+| 14 Nov | A simulated match's statistics drifted from the model's own forecast beside them | Totals were random draws around the forecast | Totals are now the rounded forecast, with only two physical limits (shots on target at least the goals, shots at least shots on target). Verified on all 860 matches that have a forecast: every total equals the rounded forecast, goals on the pitch equal the predicted score, no impossible line |
+| 15 Nov | The model's expected-points table disappeared when the page was rebuilt around leagues | Noticed by the owner | Restored beside the real table, with "vs model" and "luck" columns; expected points checked to sum exactly in all five leagues |
+
+The progress log that follows has a detailed entry for each phase and remains the authoritative record of every experiment, including the many that were rejected.
 
 #### How it was built
 

@@ -431,6 +431,11 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
 .mode:hover { border-color: var(--accent); transform: translateY(-3px); } .mode b { font: 800 18px var(--display); } .mode span { color: var(--muted); font-size: 13px; }
 .gmodes { font: 700 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
 .about h3 { font-size: 20px; margin: 18px 0 4px; } .about p, .about li { color: var(--muted); max-width: 70ch; } .about ul { padding-left: 18px; }
+@media (max-width: 560px) {
+  .byline { display: none; } .bar { gap: 6px; } .brand span { white-space: nowrap; } .brand i { flex: none; } .brand { gap: 7px; font-size: 17px; } .brand i { width: 22px; height: 22px; } .pill { padding: 6px 10px; font-size: 12px; white-space: nowrap; } .bar .spacer { flex: 1; min-width: 0; }
+  .scorebox { flex-wrap: nowrap; gap: 6px; } .scorebox div { min-width: 0; flex: 1; padding: 6px 8px; } .scorebox b { font-size: 17px; } .scorebox small { font-size: 10px; }
+  .scope, .rooms { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .scope::-webkit-scrollbar, .rooms::-webkit-scrollbar { display: none; } .chip, .room { flex: none; }
+}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -475,7 +480,7 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:53 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:59 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -740,6 +745,7 @@ function totals(plays) {
 const renderBoardsIfOpen = () => { if (S.room === "boards") renderBoards(); };
 function paintScore() {
   if (!S.code) return;
+  const sb = $("#scorebox"); sb.hidden = !(S.mode === "games" && (!S.game || ["call", "daily", "matchday", "upset", "table", "hol", "challenge"].includes(S.game)) && S.room === "play");
   const pl = playsOf(S.code), t = totals(pl), st = streaks(pl);
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
@@ -747,7 +753,7 @@ function renderRooms() {
   const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboards"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); }
+function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); paintScore(); }
 
 /* ---------- Call it ---------- */
 function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${r.c}_${r.season}_${r.i}`]); }
@@ -1637,7 +1643,7 @@ function newQuiz(game, mode, scope) { Q.s = { game, mode, scope, round: 0, score
 function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
   if (S_.round === 0) { S_.streak = 0; S_.over = false; }
-  S_.round++; S_.r = d.mk(S_.scope); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
+  S_.round++; S_.used = S_.used || new Set(); S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
   S_.total = S_.clues.length * d.clueS + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
 const worth = () => { const S_ = Q.s; return Math.max(100, Math.round(1000 * (1 - S_.elapsed / S_.total))); };
@@ -1727,8 +1733,9 @@ document.addEventListener("keydown", (e) => {
 /* ---------- Where did they finish? ---------- */
 function newFinish(mode) { S.fin = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], streak: 0, over: false, turn: 0, phase: "ask" }; nextFinish(); }
 function nextFinish() {
-  const f = S.fin, lg = rnd(lgs(f.scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), n = tabs[sn].length, pos = Math.floor(Math.random() * n);
-  f.round++; f.turn = 0; f.cur = { lg, sn, n, pos: pos + 1, row: tabs[sn][pos], guess: Math.ceil(n / 2), guesses: [null, null], diffs: [0, 0], pts: [0, 0] }; f.phase = "ask"; renderFinish();
+  const f = S.fin; f.used = f.used || new Set(); let lg, tabs, sn, n, pos;
+  for (let k = 0; k < 40; k++) { lg = rnd(lgs(f.scope)); tabs = lgOf(lg).tables; sn = rnd(Object.keys(tabs)); n = tabs[sn].length; pos = Math.floor(Math.random() * n); if (!f.used.has(tabs[sn][pos][0])) break; }
+  f.used.add(tabs[sn][pos][0]); f.round++; f.turn = 0; f.cur = { lg, sn, n, pos: pos + 1, row: tabs[sn][pos], guess: Math.ceil(n / 2), guesses: [null, null], diffs: [0, 0], pts: [0, 0] }; f.phase = "ask"; renderFinish();
 }
 const ordn = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function renderFinish() {
@@ -1758,12 +1765,14 @@ function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "solo")
 const ordinal2 = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function pvPair(scope) {
   const pool = playerPool(scope, (p) => p.val >= 3e6);
-  for (let t = 0; t < 300; t++) { const a = rnd(pool), b = rnd(pool); if (a.id !== b.id && Math.max(a.val, b.val) / Math.min(a.val, b.val) >= 1.3) return { a, b, win: a.val >= b.val ? "a" : "b", chosen: null }; }
+  const seen = (S.vSeen = S.vSeen || []);
+  for (let t = 0; t < 300; t++) { const a = rnd(pool), b = rnd(pool); if (a.id !== b.id && Math.max(a.val, b.val) / Math.min(a.val, b.val) >= 1.3 && (t > 200 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.vSeen = seen.slice(-60); return { a, b, win: a.val >= b.val ? "a" : "b", chosen: null }; } }
   return null;
 }
 function cvPair(scope) {
   const pool = Object.entries(QZ.clubs).filter(([n, f]) => f.value > 0 && (scope === "ALL" || f.lg === scope) && CREST[n]);
-  for (let t = 0; t < 300; t++) { const [an, af] = rnd(pool), [bn, bf] = rnd(pool); if (an !== bn && Math.max(af.value, bf.value) / Math.min(af.value, bf.value) >= 1.25) return { a: { n: an, f: af }, b: { n: bn, f: bf }, win: af.value >= bf.value ? "a" : "b", chosen: null }; }
+  const seen = (S.vSeen = S.vSeen || []);
+  for (let t = 0; t < 300; t++) { const [an, af] = rnd(pool), [bn, bf] = rnd(pool); if (an !== bn && Math.max(af.value, bf.value) / Math.min(af.value, bf.value) >= 1.25 && (t > 200 || (!seen.includes(an) && !seen.includes(bn)))) { seen.push(an, bn); S.vSeen = seen.slice(-40); return { a: { n: an, f: af }, b: { n: bn, f: bf }, win: af.value >= bf.value ? "a" : "b", chosen: null }; } }
   return null;
 }
 function renderVH(kind) {
@@ -1787,7 +1796,8 @@ function answerVH(kind, k) {
 
 /* ---------- Write your number: one or two players ---------- */
 function numItem(scope) {
-  if (Math.random() < 0.65) { const p = rnd(playerPool(scope, (x) => x.val >= 5e6)); return { type: "p", e: p, actual: p.val }; }
+  const used = (S.numSeen = S.numSeen || []);
+  if (Math.random() < 0.65) { let p; for (let k = 0; k < 30; k++) { p = rnd(playerPool(scope, (x) => x.val >= 5e6)); if (!used.includes(p.id)) break; } used.push(p.id); return { type: "p", e: p, actual: p.val }; }
   const [n, f] = rnd(Object.entries(QZ.clubs).filter(([nm, fc]) => fc.value > 0 && (scope === "ALL" || fc.lg === scope))); return { type: "c", e: { n, f }, actual: f.value };
 }
 function renderValue() { if (S.num) return renderNumber(); if (S.vsolo) { S.vk = S.vk || rnd(["p", "c"]); return renderVH(S.vk); } renderNumber(); }
@@ -2065,7 +2075,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "chCard") { challengeCard(S.code, S.chal.code); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); resetGames(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
-  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
+  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
   if (b.id === "gamesBack") { Snd.back(); resetGames(); S.game = null; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
   if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }
@@ -2134,7 +2144,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "rpPlay") { toggleReplay(); return; }
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
-function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; }
+function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; }
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
 document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; box.innerHTML = suggestions(e.target.value, QZ.players, (x) => x.n).map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join(""); } });
 document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });

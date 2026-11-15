@@ -26,7 +26,8 @@ from PIL import Image
 
 SRC = "02_processed_data/multi_league_matches.csv"
 TEMPLATE = "site/arena_template.html"
-PUBLIC = "--public" in sys.argv         # public build: no third-party artwork (badges, logos, photos), standalone page in docs/ for GitHub Pages
+PUBLIC = "--public" in sys.argv         # public build: a standalone page in docs/ for GitHub Pages
+ARTWORK = "--no-artwork" not in sys.argv   # the official badges, logos and photos from site/logos/ are included unless --no-artwork is given
 OUT = os.environ.get("ARENA_OUT", "docs/index.html" if PUBLIC else "site/arena.html")
 KEEP_FROM = 2023          # seasons shipped to the page: the last three finished (2023-24 on) plus the live one; older seasons are only in the summary table
 META = {
@@ -82,7 +83,7 @@ for name, obj in (("balanced", lambda r: min(r[0], r[1], r[2])), ("accuracy", la
 
 def webp_uri(path, max_px):
     """Official artwork (git-ignored, from src/31_fetch_assets.py) as a small WebP data URI; None if the file is absent."""
-    if PUBLIC or not os.path.exists(path):
+    if not ARTWORK or not os.path.exists(path):
         return None
     im = Image.open(path).convert("RGBA")
     im.thumbnail((max_px, max_px), Image.LANCZOS)
@@ -111,7 +112,7 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     clubs = sorted({m[1] for s_ in seasons.values() for m in s_["matches"]} | {m[2] for s_ in seasons.values() for m in s_["matches"]})
     def crest(c):
         u = webp_uri(f"{LOGO_DIR}/clubs/{lg}/{slug(c)}.png", 96)
-        if u is None and not PUBLIC and lg == "E0" and os.path.exists(f"site/crests/{slug(c)}.svg"):      # the Premier League's own badge files from src/13
+        if u is None and ARTWORK and lg == "E0" and os.path.exists(f"site/crests/{slug(c)}.svg"):      # the Premier League's own badge files from src/13
             u = "data:image/svg+xml;base64," + base64.b64encode(open(f"site/crests/{slug(c)}.svg", "rb").read()).decode()
         return u
     crests = {c: u for c in clubs if (u := crest(c))}
@@ -130,7 +131,14 @@ html = html.replace('<div class="foot">', f'<div class="foot"><span class="num" 
 if PUBLIC:
     old_foot = "<span>League and club badges and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with any league, club or player.</span>"
     assert old_foot in html
-    html = html.replace(old_foot, "<span>Club and league names belong to their owners. The coloured discs and emblems are original drawings, not official crests or logos, and no third-party artwork or photographs are used. This is an independent student project, not affiliated with any league, club or player." + CREDIT + "</span>")
+    if ARTWORK:
+        foot = ("<span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. "
+                "This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, "
+                "please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League." + CREDIT + "</span>")
+    else:
+        foot = ("<span>Club and league names belong to their owners. The coloured discs and emblems are original drawings, not official crests or logos, and no third-party artwork or photographs are used. "
+                "This is an independent student project, not affiliated with any league, club or player." + CREDIT + "</span>")
+    html = html.replace(old_foot, foot)
     html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + html + "</html>"
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
 open(OUT, "w").write(html)

@@ -282,7 +282,10 @@ table.race td, table.race th { padding: 6px 7px; }
 .mpicks { display: flex; gap: 6px; }
 .mp { width: 40px; height: 36px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font: 800 15px var(--mono); transition: transform .12s ease, border-color .15s ease, background .2s ease; }
 .mp:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-2px); }
-.mp[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); transform: scale(1.08); }
+.mp[data-k="H"] { color: var(--home); } .mp[data-k="D"] { color: var(--draw); } .mp[data-k="A"] { color: var(--away); }
+.mp[data-k="H"]:hover:not([disabled]) { border-color: var(--home); } .mp[data-k="D"]:hover:not([disabled]) { border-color: var(--draw); } .mp[data-k="A"]:hover:not([disabled]) { border-color: var(--away); }
+.mp[aria-pressed="true"] { color: #10110f; transform: scale(1.08); }
+.mp[data-k="H"][aria-pressed="true"] { background: var(--home); border-color: var(--home); } .mp[data-k="D"][aria-pressed="true"] { background: var(--draw); border-color: var(--draw); } .mp[data-k="A"][aria-pressed="true"] { background: var(--away); border-color: var(--away); }
 .mres { min-width: 96px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
 .mres.land { animation: land .5s cubic-bezier(.2, 1.3, .3, 1); }
 @keyframes land { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
@@ -381,7 +384,7 @@ input { background: var(--surface2); border: 1px solid var(--line); border-radiu
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 15:57 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:02 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -966,7 +969,7 @@ function renderMatchday() {
   const rows = ms.map((m, i) => {
     const call = modelCall(m), res = done ? done.res[i] : null;
     return `<div class="mdrow2" data-i="${i}"><div class="mteam h">${esc(m[1])}${badge(m[1], "sm")}</div>
-      <div class="mpicks">${["H", "D", "A"].map((k) => `<button type="button" class="mp" data-mdp="${i}|${k}" aria-pressed="${picks[i] === k}" ${locked || done ? "disabled" : ""}>${k === "H" ? "1" : k === "D" ? "X" : "2"}</button>`).join("")}</div>
+      <div class="mpicks">${["H", "D", "A"].map((k) => `<button type="button" class="mp" data-k="${k}" data-mdp="${i}|${k}" aria-pressed="${picks[i] === k}" aria-label="${OUTNAME[k]}" ${locked || done ? "disabled" : ""}>${k}</button>`).join("")}</div>
       <div class="mteam">${badge(m[2], "sm")}${esc(m[2])}</div><div class="mres" id="mres${i}">${done ? mdResult(m, picks[i] != null ? picks[i] : done.picks[i], call) : ""}</div></div>`;
   }).join("");
   const filled = picks.filter(Boolean).length;

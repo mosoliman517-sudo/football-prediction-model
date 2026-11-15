@@ -152,7 +152,16 @@ if os.environ.get("BOARD_URL") and os.environ.get("BOARD_KEY"):
     board = {"url": os.environ["BOARD_URL"].rstrip("/"), "key": os.environ["BOARD_KEY"]}
 elif os.path.exists("site/board_config.json"):
     board = json.load(open("site/board_config.json")); board["url"] = board["url"].rstrip("/")
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board}
+import importlib.util
+_spec = importlib.util.spec_from_file_location("hero35", "src/35_fetch_hero_photos.py"); _h = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_h)
+hero = []
+for nm in _h.NAMES:
+    uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.png", 260)
+    if uri:
+        hero.append({"n": nm, "img": uri})
+quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
+print(f"front page photos: {len(hero)}; quiz players: {len(quiz['players']) if quiz else 0}")
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "quiz": quiz}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

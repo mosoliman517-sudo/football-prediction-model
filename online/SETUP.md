@@ -27,3 +27,7 @@ only its owner can read.
 Honest limits: scores are calculated in the browser, so a determined person can submit invented numbers; the boards are a friendly
 competition, not proof. The rate limit (120 scores a minute per account) only slows abuse. To remove an entry or account, use the
 Supabase dashboard (Table editor, or Authentication > Users).
+
+## Online rooms (two players, two devices)
+
+Online rooms need no extra tables. They use Supabase Realtime *broadcast* on a channel named after the four-letter room code, with the same project URL and anon key as the leaderboards (Realtime is on by default in new projects; check Project Settings, API, Realtime if rooms do not connect). One player hosts and runs the game; the guest only sends clicks and typed text. Without the database, rooms still connect two tabs of the same browser. The Realtime path is written but has not been tested against a live project.

@@ -21,7 +21,7 @@ create table if not exists public.results (
   id bigserial primary key,
   created_at timestamptz not null default now(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  game text not null check (game in ('xp','call','daily','matchday','upset','table','hol','challenge')),
+  game text not null check (game in ('xp','call','daily','matchday','upset','table','hol','challenge','who','career','club','blur','finish','pvalue','cvalue','number','ttt')),
   league text not null check (league in ('all','E0','D1','SP1','I1','F1')),
   score numeric not null check (score between -300 and 1000),
   week int not null,
@@ -72,7 +72,7 @@ create or replace function public.leaderboard(p_game text, p_league text, p_peri
 returns table (nick text, value numeric, plays int)
 language sql stable security definer set search_path = public as $$
   select p.nick,
-         case when r.game in ('upset','hol') then max(r.score) else sum(r.score) end as value,
+         case when r.game in ('upset','hol','pvalue','cvalue') then max(r.score) else sum(r.score) end as value,
          count(*)::int as plays
   from public.results r join public.profiles p on p.user_id = r.user_id
   where r.game = p_game

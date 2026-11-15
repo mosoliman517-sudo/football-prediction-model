@@ -559,6 +559,26 @@ The idea: late in a season a club whose position is effectively decided may rota
 - Six variants, out-of-fold, logistic regression and forest, overall and on late-season matches only (8 or fewer games left, 823 matches). **None passed.** Overall log loss moved by -0.0003 to +0.0029 (all inside the noise); on late-season matches the logistic regression improved slightly (up to -0.0038, t -1.2) while the forest got worse (up to +0.0022), so the two never agree. Baseline LR 1.0058, RF 0.9715.
 - Under the project rule (both models must agree), **nothing is adopted and the held-out 760 matches were not touched.** The effect may be real but small and, more likely, a lineup effect: a rotated side is only visible through who actually plays, which the Fantasy snapshot collector (`22_snapshot_fpl.py`) may eventually measure directly.
 
+### November 15, 2026 (nineteenth pass): the Big 5 leagues, walk-forward (`src/29_multi_league_walkforward.py`)
+
+New data: Bundesliga, La Liga, Serie A and Ligue 1, 2014-15 to 2026-27 from football-data.co.uk (`01_data_leagues/`, 52 files, same format as the Premier League files). Together with the Premier League that is about 19,800 finished matches before the 2026-27 season.
+
+**Evaluation changed from one fixed split to walk-forward.** For each test season from 2017-18 to 2025-26 every league's matches are predicted by a model trained only on earlier seasons; the season then joins the training data for the next one, so every season is both test data and training data. 16,111 test matches. Features are the compact results-only set (`core_features.py`: Elo, form, shots, rest, head to head), the same for every league, so this is a like-for-like comparison. Premier League extras (xG, squad value, managers) have no equivalent in the other leagues.
+
+| League | matches | own model | pooled Big 5 | bookmakers | always Home |
+|---|---|---|---|---|---|
+| Premier League | 3,420 | 53.6% (ll 0.9741) | 53.8% (0.9711) | 54.9% (0.9569) | 44.1% |
+| Bundesliga | 2,754 | 51.2% (0.9958) | 51.3% (0.9909) | 52.6% (0.9769) | 43.7% |
+| La Liga | 3,420 | 52.1% (0.9908) | 52.2% (0.9892) | 53.3% (0.9746) | 45.3% |
+| Serie A | 3,420 | 54.3% (0.9750) | 54.1% (0.9761) | 55.0% (0.9544) | 41.2% |
+| Ligue 1 | 3,097 | 51.2% (1.0049) | 51.4% (1.0030) | 52.2% (0.9850) | 43.3% |
+| **All five** | **16,111** | **52.6% (0.9875)** | **52.6% (0.9855)** | **53.7% (0.9689)** | 43.5% |
+
+- **Training on all five leagues is a small, consistent gain:** log loss better by 0.0021 on average, in 34 of 45 league-seasons (t about -3.4). Accuracy is unchanged. Pooled is the better base for any league that has little history of its own.
+- **The model is about 1.1 accuracy points behind the closing odds across 16,111 matches**, and about 9 points ahead of "always Home". The gap to the market is the same size in every league, which fits the earlier conclusion that it is information (lineups, injuries, news), not modelling.
+- **Season-to-season swings are large** (Premier League accuracy 48% in 2020-21 and 2025-26, 60% in 2018-19, for every method including the bookmakers), so any single season, or the 760-match benchmark, is a noisy yardstick; the walk-forward average over nine seasons is steadier.
+- On the same Premier League matches as the production model (2024-26, 760): compact pooled model 50.9% (log loss 1.0096), production blend 50.8% (1.0055), bookmakers 51.8% (0.9929). The richer Premier League inputs are worth about 0.004 in log loss.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

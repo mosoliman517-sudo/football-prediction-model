@@ -1,0 +1,4 @@
+{
+  "_note": "Corrections for moves that happened after the Transfermarkt snapshot (July 2026). Each key is a player name as in players.csv; 'club_id' is the Transfermarkt club id. Add rows here and re-run src/34_build_quiz_data.py.",
+  "Ferran Torres": {"club_id": 583, "reported_by": "owner, 15 Nov 2026"}
+}

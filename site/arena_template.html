@@ -1,5 +1,6 @@
-<title>Beat the Model</title>
+<title>ballknowledge</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Big+Shoulders+Display:wght@800&family=Fraunces:opsz,wght@9..144,700&family=DM+Serif+Display&family=Syne:wght@800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -404,7 +405,7 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
 @media (max-width: 760px) { .doors { grid-template-columns: 1fr; } .wtile { width: 96px; height: 124px; } }
 @media (prefers-reduced-motion: reduce) { .wrow { animation: none; } }
 
-.hface { border-radius: 50%; overflow: hidden; background: var(--surface2); } .hface img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.hface { border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 30%, var(--surface2)), var(--surface2)); } .hface img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; padding-top: 4%; }
 .qhud { display: flex; gap: 14px 22px; align-items: center; flex-wrap: wrap; margin: 4px 0 10px; } .qscore small { color: var(--muted); font-size: 12px; margin-right: 4px; } .qscore b { font-size: 22px; font-family: var(--display); }
 .meter { height: 10px; border-radius: 99px; background: var(--surface2); overflow: hidden; margin: 8px 0; } .meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--ok)); transition: width .25s linear; }
 .clues { display: grid; gap: 8px; margin: 12px 0; }
@@ -441,13 +442,18 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
 .tcat .badge { width: 34px; height: 34px; } .tcat .emblem { width: 34px; height: 34px; object-fit: contain; }
 .tcell { position: relative; gap: 2px; } .tcell b { position: absolute; top: 4px; left: 8px; font-size: 15px; } .tcell .ppic .pflag { font-size: 15px; right: -6px; bottom: -4px; } .tcell small { font-weight: 700; color: var(--ink); } .tcell.x { background: color-mix(in srgb, #e0334c 12%, var(--surface)); } .tcell.o { background: color-mix(in srgb, #2f6fe0 14%, var(--surface)); }
 .sug .badge { width: 22px; height: 22px; }
+button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-highlight-color: transparent; } html { -webkit-text-size-adjust: 100%; }
+.tclock { font-weight: 700; padding: 4px 10px; border-radius: 99px; background: var(--surface2); border: 1px solid var(--line); } .tclock.low { color: #fff; background: #e0334c; border-color: #e0334c; }
+.diffbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+@media (hover: none) { .buzz small { display: none; } .gcard:hover, .mode:hover, .holc:hover { transform: none; } }
+@media (max-width: 560px) { .chip, .room, .pill, .btn { min-height: 44px; } .hub { grid-template-columns: 1fr; } .modes { grid-template-columns: 1fr; } .card { padding: 14px; } .buzz { padding: 26px 10px; } .holc { padding: 16px 10px; } .gcard { min-height: 0; } }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
 <div class="wash" id="wash" aria-hidden="true"></div>
 <div class="wrap">
   <div class="bar">
-    <button class="brand" id="brand" type="button" aria-label="Back to the front page"><i></i><span>Beat the <b>Model</b></span></button>
+    <button class="brand" id="brand" type="button" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill profilebtn" id="profileBtn" type="button" aria-label="Your profile, rank and achievements"></button>
@@ -459,7 +465,7 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
       <div class="photowall" id="photowall" aria-hidden="true"></div>
       <div class="homeinner">
         <div class="label">Football, predicted and played</div>
-        <h1>Beat the <em>Model</em></h1>
+        <h1>ball<em>knowledge</em></h1>
         <p>Out-call a machine-learning model on real matches, test your ball knowledge, and see what the model thinks will happen. Everything is honest: every forecast comes from a model that never saw the match.</p>
         <div class="doors" id="doors"></div>
         <div class="ribbon" id="ribbon"></div>
@@ -666,7 +672,7 @@ function setTheme(code, ev) {
   wash.classList.remove("go"); void wash.offsetWidth; wash.classList.add("go"); setTimeout(apply, 280);
 }
 function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
-const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value"];
+const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette"];
 function route(ev) {
   const h = location.hash.slice(1);
   stopReplay(); stopTheatre(); resetGames();
@@ -854,7 +860,7 @@ function renderDaily() {
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
-  const text = `Beat the Model · ${lgOf(c).name} Daily 5 · ${key}\nMe ${you}/5, model ${mod}/5\n${st.items.map((x) => (x.pick === x.res ? "🟩" : "🟥")).join("")} me\n${st.items.map((x) => (x.mpick === x.res ? "🟩" : "🟥")).join("")} model`;
+  const text = `ballknowledge · ${lgOf(c).name} Daily 5 · ${key}\nMe ${you}/5, model ${mod}/5\n${st.items.map((x) => (x.pick === x.res ? "🟩" : "🟥")).join("")} me\n${st.items.map((x) => (x.mpick === x.res ? "🟩" : "🟥")).join("")} model`;
   try { await navigator.clipboard.writeText(text); $("#shareBtn").textContent = "Copied"; } catch (e) { const pre = $("#shareTxt"); pre.textContent = text; pre.hidden = false; }
 }
 
@@ -1077,7 +1083,7 @@ function recordLine(c, id) {
   if (id === "upset") { const u = store.items[`u_${c}`]; return u ? `${u.right}/${u.rounds} right, best streak ${u.best}` : "not played yet"; }
   if (id === "table") { const it = Object.entries(store.items).filter(([k]) => (c === "ALL" ? k.startsWith("t_") : k.startsWith(`t_${c}_`))).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
   if (id === "hol") { const h = store.items[`h_${c}`]; return h ? `best streak ${h.best}` : "not played yet"; }
-  if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish") { const b = store.items[`best_${id}_${c}`]; return b ? `best ${b.best}` : "not played yet"; }
+  if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish") { const b = store.items[`best_${id}_${c}_${S.diff}`]; return b ? `best ${b.best} (${S.diff})` : "not played yet"; }
   if (id === "value") { const b = store.items[`v_${c}`]; return b ? `best streak ${b.best}` : "not played yet"; }
   if (id === "challenge") { const n = Object.keys(store.items).filter((k) => k.startsWith("xpc_")).length; return n ? `${n} challenge${n === 1 ? "" : "s"} played` : "not played yet"; }
   return "";
@@ -1089,6 +1095,7 @@ const QUIZ_GAMES = [
   { id: "blur", name: "Badge blur", modes: "Solo streak · 2 players", tag: "A blurry badge that sharpens by the second." },
   { id: "finish", name: "Where did they finish?", modes: "Solo streak · 2 players", tag: "A club, a season, a slider. How close can you get?" },
   { id: "value", name: "Market value", modes: "Solo higher or lower · 2 players", tag: "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.", faces: () => heroFaces(2) },
+  { id: "roulette", name: "Club roulette", modes: "2 players · one device or two", tag: "A club appears. Take turns naming players who played for it. First to blank loses.", faces: () => heroFaces(2) },
   { id: "ttt", name: "Football tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
 ];
 let heroQueue = [];
@@ -1102,7 +1109,7 @@ function renderHub() {
   $("#room").innerHTML = `<h2 class="sec">Predict the match</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`
     + (QUIZ_GAMES.length ? `<h2 class="sec" style="margin-top:28px">Ball knowledge</h2><p class="secsub">Players, clubs, careers and market values ${where}. Clues start hard and get easier; the faster you answer, the more you score.</p><div class="hub">${QUIZ_GAMES.map((g, k) => card(g, k + GAMES.length)).join("")}</div>` : "");
 }
-const modeIntro = (title, blurb, opts) => `<div class="card">${gamesBar(title)}<p class="sub">${blurb}</p><div class="modes">${opts.map((o) => `<button class="mode" id="${o.id}" type="button"><b>${o.t}</b><span>${o.d}</span></button>`).join("")}</div><div id="roomBox"></div></div>`;
+const modeIntro = (title, blurb, opts) => `<div class="card">${gamesBar(title)}<p class="sub">${blurb}</p>${diffBar()}<div class="modes">${opts.map((o) => `<button class="mode" id="${o.id}" type="button"><b>${o.t}</b><span>${o.d}</span></button>`).join("")}</div><div id="roomBox"></div></div>`;
 const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">All games</button><h2 style="font-size:24px">${title}</h2></div>`;
 function renderPlayRoom() {
   stopTheatre();
@@ -1111,7 +1118,7 @@ function renderPlayRoom() {
   if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
   ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol, challenge: renderChallenge,
      finish: renderFinish,
-     value: renderValue, ttt: renderTTT })[S.game]();
+     value: renderValue, ttt: renderTTT, roulette: renderRoulette })[S.game]();
 }
 
 /* ---------- Matchday ---------- */
@@ -1375,7 +1382,7 @@ async function cardCanvas(kind, d) {
   const glow2 = g.createRadialGradient(80, H - 100, 0, 80, H - 100, 600); glow2.addColorStop(0, p.accent + "33"); glow2.addColorStop(1, p.accent + "00"); g.fillStyle = glow2; g.fillRect(0, 0, W, H);
   for (let i = 0; i < 30; i++) { const x = (hash(`s${i}`) % W), y = (hash(`t${i}`) % H), r = 2 + (hash(`u${i}`) % 5); g.fillStyle = (i % 3 ? p.glow : p.accent) + "55"; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill(); }
   const text = (s, x, y, font, color, align = "left") => { g.font = font; g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); };
-  text("BEAT THE MODEL", 70, 100, '700 28px "JetBrains Mono"', p.accent);
+  text("BALLKNOWLEDGE", 70, 100, '700 28px "JetBrains Mono"', p.accent);
   const logo = await loadImg(L.logo); if (logo) { g.save(); rrect(g, W - 190, 52, 120, 120, 28); g.fillStyle = "#ffffffee"; g.fill(); g.clip(); const k = Math.min(100 / logo.width, 100 / logo.height); g.drawImage(logo, W - 130 - (logo.width * k) / 2, 112 - (logo.height * k) / 2, logo.width * k, logo.height * k); g.restore(); } else text(L.name.toUpperCase(), W - 70, 100, '700 28px "JetBrains Mono"', p.muted, "right");
   text(d.title, 70, 250, `800 96px "${dispFont}", sans-serif`, p.ink);
   text(d.big, 70, 520, `800 270px "${dispFont}", sans-serif`, p.accent);
@@ -1391,7 +1398,7 @@ async function cardCanvas(kind, d) {
   if (d.tiles) { const tw = (W - 140 - 40) / 3; d.tiles.forEach(([v, l], k) => { const x = 70 + k * (tw + 20); rrect(g, x, y, tw, 190, 26); g.fillStyle = p.surface + "ee"; g.fill(); text(v, x + 28, y + 100, `800 64px "${dispFont}", sans-serif`, p.ink); text(l, x + 28, y + 150, '500 26px "DM Sans", sans-serif', p.muted); }); y += 220; }
   if (d.line) text(d.line, 70, Math.max(y + 40, 1180), '700 34px "DM Sans", sans-serif', p.ink);
   const pr = prof(); text(`${pr.nick || "Player"} · ${levelOf(pr.xp).name}`, 70, 1290, '700 30px "DM Sans", sans-serif', p.ink);
-  text(location.host ? location.host.replace(/^www\./, "") : "Beat the Model", W - 70, 1290, '500 26px "JetBrains Mono"', p.muted, "right");
+  text(location.host ? location.host.replace(/^www\./, "") : "ballknowledge", W - 70, 1290, '500 26px "JetBrains Mono"', p.muted, "right");
   return cv;
 }
 async function showCard(kind, d) {
@@ -1412,7 +1419,7 @@ async function shareCard() {
 }
 function recordCard() {
   const pl = allPlays(), t = totals(pl), st = streaks(pl), p = prof(), top = Object.entries(p.leagues).sort((a, b) => b[1] - a[1])[0];
-  return showCard("record", { lg: top ? top[0] : S.code, title: "My record", big: `${t.you} v ${t.mod}`, sub: `points against the model over ${t.n} match${t.n === 1 ? "" : "es"}`, tiles: [[String(st.best), "best streak"], [levelOf(p.xp).name, "rank"], [`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"]], line: t.you > t.mod ? "Ahead of the model." : t.you === t.mod ? "Level with the model." : "The model leads, for now.", share: `My Beat the Model record: ${t.you} points to the model's ${t.mod}. Think you can do better?` });
+  return showCard("record", { lg: top ? top[0] : S.code, title: "My record", big: `${t.you} v ${t.mod}`, sub: `points against the model over ${t.n} match${t.n === 1 ? "" : "es"}`, tiles: [[String(st.best), "best streak"], [levelOf(p.xp).name, "rank"], [`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"]], line: t.you > t.mod ? "Ahead of the model." : t.you === t.mod ? "Level with the model." : "The model leads, for now.", share: `My ballknowledge record: ${t.you} points to the model's ${t.mod}. Think you can do better?` });
 }
 
 /* ================= Global leaderboards: one adapter, two backends ================= */
@@ -1482,10 +1489,10 @@ async function challengeBoard(code) {
   const rows = await Board.top("challenge", "all", "all", code); if (!rows || !rows.length || !$("#chBoard")) return;
   $("#chBoard").innerHTML = `<h3 style="font-size:18px;margin:16px 0 6px">Everyone who played this challenge</h3><div class="lb">${rows.slice(0, 10).map((r, i) => `<div class="lbrow"><b class="num">${i + 1}</b><span>${esc(r.nick)}</span><span class="num">${Math.round(Number(r.value))}/5</span></div>`).join("")}</div>`;
 }
-async function copyChallenge(c, code) { const txt = `Beat the Model challenge: five ${lgOf(c).name} matches, same for everyone. Can you beat me? ${chalLink(c, code)}`; try { await navigator.clipboard.writeText(txt); toast("Challenge link copied"); } catch (e) { const pre = $("#chTxt"); if (pre) { pre.textContent = txt; pre.hidden = false; } } }
+async function copyChallenge(c, code) { const txt = `ballknowledge challenge: five ${lgOf(c).name} matches, same for everyone. Can you beat me? ${chalLink(c, code)}`; try { await navigator.clipboard.writeText(txt); toast("Challenge link copied"); } catch (e) { const pre = $("#chTxt"); if (pre) { pre.textContent = txt; pre.hidden = false; } } }
 function challengeCard(c, code) {
   const st = chalState(c, code), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
-  return showCard("challenge", { lg: c, title: `Challenge ${code}`, big: `${you}/5`, sub: `the model got ${mod}/5`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "Beat the model. Your turn to beat me." : "Can you do better?", share: `I scored ${you}/5 on Beat the Model challenge ${code}. Can you beat me? ${chalLink(c, code)}` });
+  return showCard("challenge", { lg: c, title: `Challenge ${code}`, big: `${you}/5`, sub: `the model got ${mod}/5`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "Beat the model. Your turn to beat me." : "Can you do better?", share: `I scored ${you}/5 on ballknowledge challenge ${code}. Can you beat me? ${chalLink(c, code)}` });
 }
 
 function afterPlayHook(it) {
@@ -1496,10 +1503,10 @@ function afterPlayHook(it) {
 }
 function dailyCard() {
   const c = S.code, key = todayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
-  return showCard("daily", { lg: c, title: "Daily 5", big: `${you}/5`, sub: `the model got ${mod}/5 · ${key}`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "I beat the model today." : "Can you beat the model?", share: `Beat the Model, ${lgOf(c).name} Daily 5, ${key}: me ${you}/5, the model ${mod}/5.` });
+  return showCard("daily", { lg: c, title: "Daily 5", big: `${you}/5`, sub: `the model got ${mod}/5 · ${key}`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "I beat the model today." : "Can you beat the model?", share: `ballknowledge, ${lgOf(c).name} Daily 5, ${key}: me ${you}/5, the model ${mod}/5.` });
 }
-const mdCardNow = (it) => showCard("matchday", { lg: it.lg, title: `Matchday ${it.n}`, big: `${it.you}/${it.picks.length}`, sub: `the model got ${it.mod}/${it.picks.length} · ${it.season}`, tiles: [[`${it.you}`, "you"], [`${it.mod}`, "model"], [it.season, "season"]], line: it.you > it.mod ? "I beat the model this round." : it.you === it.mod ? "Level with the model." : "The model won this round.", share: `Beat the Model, ${lgOf(it.lg).name} matchday ${it.n} (${it.season}): me ${it.you}/${it.picks.length}, the model ${it.mod}/${it.picks.length}.` });
-const tableCardNow = (d) => showCard("table", { lg: d.lg, title: "Guess the table", big: d.youErr < d.modErr ? "Beat it" : d.youErr > d.modErr ? "Close" : "Level", sub: `${d.season} · places off per club`, tiles: [[d.youErr.toFixed(2), "me"], [d.modErr.toFixed(2), "the model"], [d.lastErr.toFixed(2), "repeat last year"]], line: d.youErr < d.modErr ? "I out-guessed the model." : "The model edged it.", share: `Beat the Model, ${lgOf(d.lg).name} ${d.season} table: me ${d.youErr.toFixed(2)} places off per club, the model ${d.modErr.toFixed(2)}.` });
+const mdCardNow = (it) => showCard("matchday", { lg: it.lg, title: `Matchday ${it.n}`, big: `${it.you}/${it.picks.length}`, sub: `the model got ${it.mod}/${it.picks.length} · ${it.season}`, tiles: [[`${it.you}`, "you"], [`${it.mod}`, "model"], [it.season, "season"]], line: it.you > it.mod ? "I beat the model this round." : it.you === it.mod ? "Level with the model." : "The model won this round.", share: `ballknowledge, ${lgOf(it.lg).name} matchday ${it.n} (${it.season}): me ${it.you}/${it.picks.length}, the model ${it.mod}/${it.picks.length}.` });
+const tableCardNow = (d) => showCard("table", { lg: d.lg, title: "Guess the table", big: d.youErr < d.modErr ? "Beat it" : d.youErr > d.modErr ? "Close" : "Level", sub: `${d.season} · places off per club`, tiles: [[d.youErr.toFixed(2), "me"], [d.modErr.toFixed(2), "the model"], [d.lastErr.toFixed(2), "repeat last year"]], line: d.youErr < d.modErr ? "I out-guessed the model." : "The model edged it.", share: `ballknowledge, ${lgOf(d.lg).name} ${d.season} table: me ${d.youErr.toFixed(2)} places off per club, the model ${d.modErr.toFixed(2)}.` });
 
 /* ================= Accounts: play as a guest, or sign in so progress is saved online ================= */
 const Account = {
@@ -1587,7 +1594,9 @@ const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; 
 const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 const playerPool = (scope, f) => QZ.players.filter((p) => (scope === "ALL" || LG_OF_COMP[p.comp] === scope) && (!f || f(p)));
 const TM_TO_OURS = (() => { const m = {}; Object.entries(QZ.clubs || {}).forEach(([ours, f]) => { m[qnorm(f.tm)] = ours; }); return m; })();
-const oursOf = (tmName) => TM_TO_OURS[qnorm(tmName)] || null;
+const oursOf = (tmName) => TM_TO_OURS[qnorm(tmName)] || (QZ.alias && QZ.alias[tmName]) || null;
+const oursSet = (p) => p._o || (p._o = new Set([...p.hist, p.club].map(oursOf).filter(Boolean)));
+const playedFor = (p, ours) => oursSet(p).has(ours);
 const clubBadgeFor = (tmName, cls = "sm") => { const o = oursOf(tmName); return o && CREST[o] ? badge(o, cls) : ""; };
 const clubList = (scope) => { const out = []; lgs(scope).forEach((lg) => Object.keys(lgOf(lg).tables || {}).forEach((sn) => (lgOf(lg).tables[sn] || []).forEach((r) => { if (!out.some((x) => x.n === r[0])) out.push({ n: r[0], lg }); }))); return out; };
 const surnameCount = (() => { const m = {}; QZ.players.forEach((p) => { const w = qnorm(p.n.split(" ").slice(-1)[0]); m[w] = (m[w] || 0) + 1; }); return m; })();
@@ -1595,6 +1604,41 @@ function suggestions(q, items, key) {
   const n = qnorm(q); if (n.length < 2) return [];
   const hit = items.filter((x) => qnorm(key(x)).includes(n)); hit.sort((a, b) => (qnorm(key(a)).startsWith(n) ? 0 : 1) - (qnorm(key(b)).startsWith(n) ? 0 : 1) || key(a).length - key(b).length);
   return hit.slice(0, 6);
+}
+/* ---------- difficulty, turn timers ---------- */
+const DIFFS = [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"], ["elite", "Elite ball knowledge"]];
+const DIFFX = { easy: 0.6, medium: 1, hard: 1.4, elite: 2 };
+const DIFFNOTE = { easy: "Famous names, slower clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and big clubs. Scores count 1x.", hard: "Squad players and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Anyone and anything, fast clues, almost no margin. Scores count 2x." };
+const TLIM = { easy: 30, medium: 20, hard: 14, elite: 9 };
+try { S.diff = localStorage.getItem("bk_diff"); } catch (e) { /* storage blocked */ }
+if (!DIFFX[S.diff]) S.diff = "medium";
+const playerOK = (p) => S.diff === "easy" ? (p.val >= 40e6 || p.peak >= 80e6) : S.diff === "medium" ? (p.val >= 12e6 || p.peak >= 45e6) : S.diff === "hard" ? p.val >= 3e6 : true;
+const clubOK = (n) => { const v = (QZ.clubs[n] || {}).value || 0; return S.diff === "easy" ? v >= 4e8 : S.diff === "medium" ? v >= 1.5e8 : S.diff === "hard" ? v > 0 : true; };
+const clueSpeed = () => ({ easy: 1.35, medium: 1, hard: 0.8, elite: 0.6 })[S.diff];
+const finTol = () => ({ easy: 4, medium: 3, hard: 2, elite: 1 })[S.diff];
+const pickWith = (make, ok) => { let x; for (let k = 0; k < 60; k++) { x = make(); if (ok(x)) return x; } return x; };
+const diffBar = () => `<div class="label" style="margin-top:14px">Difficulty</div><div class="diffbar" role="group" aria-label="Difficulty">${DIFFS.map(([k, n]) => `<button type="button" class="chip" data-diff="${k}" aria-pressed="${S.diff === k}">${n}</button>`).join("")}</div><div class="fine" id="diffNote" style="margin-top:6px">${DIFFNOTE[S.diff]}</div>`;
+const Turn = { key: "", left: 0 };
+function turnKey() {
+  if (S.fin && S.fin.mode === "duo" && S.fin.phase === "ask") return `f${S.fin.round}-${S.fin.turn}`;
+  if (S.num && S.num.mode === "duo" && S.num.phase === "guess") return `n${S.num.round}-${S.num.turn}`;
+  if (S.ttt && S.ttt.mode === "duo" && S.ttt.phase === "play") return `t${S.ttt.turn}-${S.ttt.cells.filter((x) => x != null).length}-${S.ttt.sel}`;
+  if (S.rou && S.rou.phase === "play") return `r${S.rou.round}-${S.rou.turn}-${S.rou.used.length}`;
+  return "";
+}
+const turnLimit = () => Math.round(TLIM[S.diff] * (S.ttt ? 1.5 : S.rou ? 0.6 : 1));
+setInterval(() => {
+  const k = turnKey(); if (!k) { Turn.key = ""; return; }
+  if (k !== Turn.key) { Turn.key = k; Turn.left = turnLimit(); } else Turn.left--;
+  if (!$("#tclock")) { const h = $("#room .qhud"); if (h) h.insertAdjacentHTML("beforeend", '<span class="tclock num" id="tclock"></span>'); }
+  const c = $("#tclock"); if (c) { c.textContent = `⏱ ${Math.max(0, Turn.left)}s`; c.classList.toggle("low", Turn.left <= 5); }
+  if (Turn.left <= 0) { Turn.key = ""; Snd.wrong(); toast("Time is up"); expireTurn(); }
+}, 1000);
+function expireTurn() {
+  if (S.fin && S.fin.mode === "duo" && S.fin.phase === "ask") lockFinish();
+  else if (S.num && S.num.mode === "duo" && S.num.phase === "guess") lockNumber(true);
+  else if (S.ttt && S.ttt.mode === "duo" && S.ttt.phase === "play") { S.ttt.msg = "Time is up. Turn lost."; endTurn(); }
+  else if (S.rou && S.rou.phase === "play") rouLose(S.rou.turn, "ran out of time");
 }
 /* ---------- pictures for the ball-knowledge games: flags, positions, faces ---------- */
 const FLAGISO = {"Spain": "ES", "France": "FR", "Germany": "DE", "England": "ENG", "Italy": "IT", "Brazil": "BR", "Argentina": "AR", "Netherlands": "NL", "Portugal": "PT", "Belgium": "BE", "Denmark": "DK", "Morocco": "MA", "Senegal": "SN", "Cote d'Ivoire": "CI", "Sweden": "SE", "Croatia": "HR", "Switzerland": "CH", "United States": "US", "Nigeria": "NG", "Norway": "NO", "Uruguay": "UY", "Austria": "AT", "Serbia": "RS", "Japan": "JP", "Ghana": "GH", "Algeria": "DZ", "Colombia": "CO", "Ireland": "IE", "Türkiye": "TR", "Turkey": "TR", "Cameroon": "CM", "Poland": "PL", "Scotland": "SCT", "Wales": "WLS", "Greece": "GR", "Mali": "ML", "DR Congo": "CD", "Bosnia-Herzegovina": "BA", "Slovakia": "SK", "Georgia": "GE", "Ukraine": "UA", "Kosovo": "XK", "Czech Republic": "CZ", "Canada": "CA", "Chile": "CL", "Slovenia": "SI", "Albania": "AL", "Northern Ireland": "GB", "Korea, South": "KR", "Ecuador": "EC", "Hungary": "HU", "Australia": "AU", "Romania": "RO", "Mexico": "MX", "Iceland": "IS", "Tunisia": "TN", "Guinea": "GN", "Angola": "AO", "Paraguay": "PY", "Burkina Faso": "BF", "Montenegro": "ME", "Finland": "FI", "Egypt": "EG", "Venezuela": "VE", "Israel": "IL", "The Gambia": "GM", "New Zealand": "NZ", "Mauritania": "MR", "Indonesia": "ID", "Russia": "RU", "Jamaica": "JM", "Haiti": "HT", "Gabon": "GA", "North Macedonia": "MK", "Suriname": "SR", "Guinea-Bissau": "GW", "Luxembourg": "LU", "Bulgaria": "BG", "Dominican Republic": "DO", "Central African Republic": "CF", "Togo": "TG", "Benin": "BJ", "Cyprus": "CY", "Panama": "PA", "Zimbabwe": "ZW", "Cape Verde": "CV", "Libya": "LY", "Zambia": "ZM", "Peru": "PE", "Iraq": "IQ", "Niger": "NE", "Comoros": "KM", "Armenia": "AM", "Syria": "SY", "Mozambique": "MZ", "Bangladesh": "BD", "Malta": "MT", "Curacao": "CW", "South Africa": "ZA", "Estonia": "EE", "Honduras": "HN", "Malaysia": "MY", "Jordan": "JO", "Latvia": "LV", "Equatorial Guinea": "GQ", "Saudi Arabia": "SA", "Burundi": "BI", "Guadeloupe": "GP", "Uzbekistan": "UZ", "Lithuania": "LT", "Moldova": "MD", "Sierra Leone": "SL", "Kenya": "KE", "Iran": "IR", "China": "CN", "Costa Rica": "CR", "Bolivia": "BO", "Trinidad and Tobago": "TT", "Congo": "CG", "Uganda": "UG", "Tanzania": "TZ", "Ethiopia": "ET", "Madagascar": "MG", "Namibia": "NA", "Liberia": "LR", "Lebanon": "LB", "Palestine": "PS", "Belarus": "BY", "Azerbaijan": "AZ", "Kazakhstan": "KZ", "Faroe Islands": "FO", "Liechtenstein": "LI", "Martinique": "MQ", "French Guiana": "GF", "Philippines": "PH", "India": "IN", "Thailand": "TH", "Vietnam": "VN"};
@@ -1646,20 +1690,20 @@ const BLUR = [34, 26, 19, 13, 8, 4, 0];
 
 /* ---------- the round engine ---------- */
 const QDEF = {
-  who: { name: "Who am I?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.active && p.val >= 4e6 && p.hist.length >= 2)) }), clues: (r) => playerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
-  career: { name: "Career path", unit: "player", rounds: 5, clueS: 7, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.hist.length >= 3 && p.val >= 3e6)) }), clues: (r) => careerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
-  club: { name: "Name that club", unit: "club", rounds: 5, clueS: 6, mk: (scope) => { const lg = rnd(lgs(scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), pos = Math.floor(Math.random() * tabs[sn].length), row = tabs[sn][pos]; return { e: { n: row[0], lg, season: sn, row, pos: pos + 1 } }; }, clues: (r) => clubClues(r.e), ans: (r) => ({ kind: "club", name: r.e.n }) },
-  blur: { name: "Badge blur", unit: "club", rounds: 6, clueS: 3.2, mk: (scope) => { const names = clubList(scope).filter((c) => CREST[c.n]); return { e: rnd(names) }; }, clues: (r) => BLUR.map((b, i) => ["Blur", i === BLUR.length - 1 ? "Fully sharp" : `Blur ${b}`]), ans: (r) => ({ kind: "club", name: r.e.n }) },
+  who: { name: "Who am I?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.active && p.hist.length >= 2 && playerOK(p))) }), clues: (r) => playerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
+  career: { name: "Career path", unit: "player", rounds: 5, clueS: 7, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.hist.length >= 3 && playerOK(p))) }), clues: (r) => careerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
+  club: { name: "Name that club", unit: "club", rounds: 5, clueS: 6, mk: (scope) => pickWith(() => { const lg = rnd(lgs(scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), pos = Math.floor(Math.random() * tabs[sn].length), row = tabs[sn][pos]; return { e: { n: row[0], lg, season: sn, row, pos: pos + 1 } }; }, (r) => clubOK(r.e.n)), clues: (r) => clubClues(r.e), ans: (r) => ({ kind: "club", name: r.e.n }) },
+  blur: { name: "Badge blur", unit: "club", rounds: 6, clueS: 3.2, mk: (scope) => { const names = clubList(scope).filter((c) => CREST[c.n] && clubOK(c.n)); return { e: rnd(names.length ? names : clubList(scope).filter((c) => CREST[c.n])) }; }, clues: (r) => BLUR.map((b, i) => ["Blur", i === BLUR.length - 1 ? "Fully sharp" : `Blur ${b}`]), ans: (r) => ({ kind: "club", name: r.e.n }) },
 };
 function newQuiz(game, mode, scope) { Q.s = { game, mode, scope, round: 0, scores: mode === "duo" ? [0, 0] : [0], log: [], phase: "intro" }; renderQuiz(); }
 function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
   if (S_.round === 0) { S_.streak = 0; S_.over = false; }
   S_.round++; S_.used = S_.used || new Set(); S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
-  S_.total = S_.clues.length * d.clueS + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
+  S_.cs = d.clueS * clueSpeed(); S_.total = S_.clues.length * S_.cs + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
 const worth = () => { const S_ = Q.s; return Math.max(100, Math.round(1000 * (1 - S_.elapsed / S_.total))); };
-function shownCount() { const S_ = Q.s, d = QDEF[S_.game]; return Math.min(S_.clues.length, 1 + Math.floor(S_.elapsed / d.clueS)); }
+function shownCount() { const S_ = Q.s, d = QDEF[S_.game]; return Math.min(S_.clues.length, 1 + Math.floor(S_.elapsed / S_.cs)); }
 function tickQuiz() {
   const S_ = Q.s; if (!S_ || S_.phase !== "run") return;
   if (!document.getElementById("qMeter")) { stopQuiz(); return; }
@@ -1669,7 +1713,7 @@ function tickQuiz() {
 }
 function buzz(who) {
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || S_.locked[who]) return;
-  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) i.focus();
+  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) { i.value = ""; setTimeout(() => { i.value = ""; i.focus(); }, 0); }
 }
 function submitAnswer(pickId) {
   const S_ = Q.s, d = QDEF[S_.game], a = d.ans(S_.r); if (!S_ || !S_.paused) return;
@@ -1689,8 +1733,8 @@ function endRound(winner) {
 }
 function finishQuiz() {
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores);
-  if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
-  if (S_.mode === "solo") { reward(30 + Math.max(0, Math.round(S_.scores[0] / 100)), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: Math.max(0, S_.scores[0]) }); }
+  if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
+  if (S_.mode === "solo") { const sc = Math.round(Math.max(0, S_.scores[0]) * DIFFX[S.diff]); reward(30 + Math.round(sc / 100), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: sc }); }
   renderQuiz(); if (best > 0) { Snd.win(); confetti(); }
 }
 const answerOf = (S_) => { const d = QDEF[S_.game]; return d.ans(S_.r); };
@@ -1733,27 +1777,27 @@ function renderQuiz() {
 function paintSuggestions() {
   const S_ = Q.s, box = $("#qSug"), q = $("#qIn").value; if (!box) return;
   const isClub = QDEF[S_.game].unit === "club", list = isClub ? suggestions(q, clubList(S_.scope), (x) => x.n) : suggestions(q, QZ.players, (x) => x.n);
-  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}">${clubBadgeFor(x.club, "sm") || ""}<span>${esc(x.n)}</span><small>${flagOf(x.nat)} ${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join("");
+  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join("");
 }
 document.addEventListener("input", (e) => { if (e.target.id === "qIn") paintSuggestions(); });
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT") { if (e.key === "Enter" && e.target.id === "qIn") { e.preventDefault(); submitAnswer(null); } return; }
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || !S_.game) return;
-  if (S_.mode === "solo" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (S_.mode === "duo") { if (e.key.toLowerCase() === "a") buzz(0); else if (e.key.toLowerCase() === "l" && !Net.role) buzz(1); }
+  if (S_.mode === "solo" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (S_.mode === "duo") { const k = e.key.toLowerCase(); if (k === "a") { e.preventDefault(); buzz(0); } else if (k === "l" && !Net.role) { e.preventDefault(); buzz(1); } }
 });
 
 /* ---------- Where did they finish? ---------- */
 function newFinish(mode) { S.fin = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], streak: 0, over: false, turn: 0, phase: "ask" }; nextFinish(); }
 function nextFinish() {
   const f = S.fin; f.used = f.used || new Set(); let lg, tabs, sn, n, pos;
-  for (let k = 0; k < 40; k++) { lg = rnd(lgs(f.scope)); tabs = lgOf(lg).tables; sn = rnd(Object.keys(tabs)); n = tabs[sn].length; pos = Math.floor(Math.random() * n); if (!f.used.has(tabs[sn][pos][0])) break; }
+  for (let k = 0; k < 40; k++) { lg = rnd(lgs(f.scope)); tabs = lgOf(lg).tables; sn = rnd(Object.keys(tabs)); n = tabs[sn].length; pos = Math.floor(Math.random() * n); if (!f.used.has(tabs[sn][pos][0]) && clubOK(tabs[sn][pos][0])) break; }
   f.used.add(tabs[sn][pos][0]); f.round++; f.turn = 0; f.cur = { lg, sn, n, pos: pos + 1, row: tabs[sn][pos], guess: Math.ceil(n / 2), guesses: [null, null], diffs: [0, 0], pts: [0, 0] }; f.phase = "ask"; renderFinish();
 }
 const ordn = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function renderFinish() {
   const f = S.fin;
   if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A club and a season appear. Slide to where you think it finished in the table; the closer you are, the more you score.", [
-    { id: "finStart", t: "Solo streak", d: "Keep going while you are within two places. The first bigger miss ends the run." },
+    { id: "finStart", t: "Solo streak", d: "Keep going while you are within a few places (fewer on harder levels). The first bigger miss ends the run." },
     { id: "finDuo", t: "Two players, one device", d: "Five clubs. You each slide in turn without seeing the other's guess. Closest scores most." },
     { id: "finOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
   const duo = f.mode === "duo", who = ["Player 1", "Player 2"], c = f.cur, r = c.row;
@@ -1761,30 +1805,30 @@ function renderFinish() {
   const ctx = f.phase === "ask" ? `Scored ${r[2]} and conceded ${r[3]}` : `${r[1]} points, ${r[4]} wins, ${r[5]} draws, ${r[6]} defeats`, hud = `<div class="qhud"><span class="label">${duo ? `Round ${f.round} of ${f.rounds}` : `Streak ${f.streak}`}</span>${f.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Points"}</small> <b>${s}</b></span>`).join("")}</div>`;
   let body;
   if (f.phase === "ask") body = `<div class="sliderbox">${duo ? `<b>${who[f.turn]}, your guess</b>` : ""}<div class="num bigpos" id="finVal">${ordn(c.guess)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${c.guess}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Champions</span><span>Bottom</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">${duo && f.turn === 0 && !Net.role ? "Lock it in, pass the device" : "Lock it in"}</button></div>`;
-  else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real table position</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than two places out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next club"}</button></div>`; }
+  else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real table position</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than ${finTol()} place${finTol() === 1 ? "" : "s"} out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next club"}</button></div>`; }
   $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine row" style="gap:6px">${emblem(c.lg, "sm")}${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
 }
 function lockFinish() {
   const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
   if (duo && f.turn === 0) { f.turn = 1; c.guess = Math.ceil(c.n / 2); renderFinish(); return; }
   const n = duo ? 2 : 1; for (let i = 0; i < n; i++) { c.diffs[i] = Math.abs(c.guesses[i] - c.pos); c.pts[i] = Math.max(0, 1000 - 220 * c.diffs[i]); f.scores[i] += c.pts[i]; }
-  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= 2) f.streak++; else f.over = true; }
+  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) f.streak++; else f.over = true; }
   f.phase = "reveal"; best === 0 ? (Snd.win(), confetti()) : best <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
 }
-function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "solo") { const k = `best_finish_${f.scope}`, cur = store.items[k] || { best: 0 }; if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(f.scores[0] / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: f.scores[0] }); } renderFinish(); }
+function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "solo") { const k = `best_finish_${f.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }, sc = Math.round(f.scores[0] * DIFFX[S.diff]); if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(sc / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: sc }); } renderFinish(); }
 
 /* ================= Market value games ================= */
 const ordinal2 = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function pvPair(scope) {
-  const pool = playerPool(scope, (p) => p.val >= 3e6);
+  const pool = playerPool(scope, (p) => p.val >= 3e6 && playerOK(p)), ratio = { easy: 3, medium: 1.8, hard: 1.35, elite: 1.1 }[S.diff];
   const seen = (S.vSeen = S.vSeen || []);
-  for (let t = 0; t < 300; t++) { const a = rnd(pool), b = rnd(pool); if (a.id !== b.id && Math.max(a.val, b.val) / Math.min(a.val, b.val) >= 1.3 && (t > 200 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.vSeen = seen.slice(-60); return { a, b, win: a.val >= b.val ? "a" : "b", chosen: null }; } }
+  for (let t = 0; t < 300; t++) { const a = rnd(pool), b = rnd(pool); if (a.id !== b.id && Math.max(a.val, b.val) / Math.min(a.val, b.val) >= ratio && (t > 200 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.vSeen = seen.slice(-60); return { a, b, win: a.val >= b.val ? "a" : "b", chosen: null }; } }
   return null;
 }
 function cvPair(scope) {
-  const pool = Object.entries(QZ.clubs).filter(([n, f]) => f.value > 0 && (scope === "ALL" || f.lg === scope) && CREST[n]);
+  const pool = Object.entries(QZ.clubs).filter(([n, f]) => f.value > 0 && (scope === "ALL" || f.lg === scope) && CREST[n] && clubOK(n)), ratio = { easy: 2.5, medium: 1.6, hard: 1.3, elite: 1.08 }[S.diff];
   const seen = (S.vSeen = S.vSeen || []);
-  for (let t = 0; t < 300; t++) { const [an, af] = rnd(pool), [bn, bf] = rnd(pool); if (an !== bn && Math.max(af.value, bf.value) / Math.min(af.value, bf.value) >= 1.25 && (t > 200 || (!seen.includes(an) && !seen.includes(bn)))) { seen.push(an, bn); S.vSeen = seen.slice(-40); return { a: { n: an, f: af }, b: { n: bn, f: bf }, win: af.value >= bf.value ? "a" : "b", chosen: null }; } }
+  for (let t = 0; t < 300; t++) { const [an, af] = rnd(pool), [bn, bf] = rnd(pool); if (an !== bn && Math.max(af.value, bf.value) / Math.min(af.value, bf.value) >= ratio && (t > 200 || (!seen.includes(an) && !seen.includes(bn)))) { seen.push(an, bn); S.vSeen = seen.slice(-40); return { a: { n: an, f: af }, b: { n: bn, f: bf }, win: af.value >= bf.value ? "a" : "b", chosen: null }; } }
   return null;
 }
 function renderVH(kind) {
@@ -1809,7 +1853,7 @@ function answerVH(kind, k) {
 /* ---------- Write your number: one or two players ---------- */
 function numItem(scope) {
   const used = (S.numSeen = S.numSeen || []);
-  if (Math.random() < 0.65) { let p; for (let k = 0; k < 30; k++) { p = rnd(playerPool(scope, (x) => x.val >= 5e6)); if (!used.includes(p.id)) break; } used.push(p.id); return { type: "p", e: p, actual: p.val }; }
+  if (Math.random() < 0.65) { let p; for (let k = 0; k < 30; k++) { p = rnd(playerPool(scope, (x) => x.val >= 5e6 && playerOK(x))); if (!used.includes(p.id)) break; } used.push(p.id); return { type: "p", e: p, actual: p.val }; }
   const [n, f] = rnd(Object.entries(QZ.clubs).filter(([nm, fc]) => fc.value > 0 && (scope === "ALL" || fc.lg === scope))); return { type: "c", e: { n, f }, actual: f.value };
 }
 function renderValue() { if (S.num) return renderNumber(); if (S.vsolo) { S.vk = S.vk || rnd(["p", "c"]); return renderVH(S.vk); } renderNumber(); }
@@ -1828,29 +1872,66 @@ function renderNumber() {
   const facts = it.type === "p" ? `<div class="row" style="gap:12px">${playerPic(it.e, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${POSICON[it.e.pos] || ""} ${esc(it.e.sub || it.e.pos)} · ${flagOf(it.e.nat)} ${esc(it.e.nat)} · ${ageOf(it.e)} yrs · ${esc(it.e.club || "")}</div></div></div>` : `<div class="row" style="gap:12px">${badge(it.e.n, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(lgOf(it.e.f.lg).name)} · squad of ${it.e.f.squad} · average age ${it.e.f.age.toFixed(1)}</div><div class="fine">${it.e.f.seats ? "Stadium holds " + it.e.f.seats.toLocaleString() : ""}</div></div></div>`;
   const hud = `<div class="qhud"><span class="label">Round ${g.round} of ${g.rounds}</span>${g.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
   if (g.phase === "reveal") {
-    const rows = g.guesses.slice(0, duo ? 2 : 1).map((v, i) => `<div class="vd ${g.pts[i] === Math.max(...g.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">€${v}m</b><span class="fine">+${g.pts[i]} points</span></div>`).join("");
+    const rows = g.guesses.slice(0, duo ? 2 : 1).map((v, i) => `<div class="vd ${g.pts[i] === Math.max(...g.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${v ? "€" + v + "m" : "no answer"}</b><span class="fine">+${g.pts[i]} points</span></div>`).join("");
     $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}${hud}${facts}<div class="rcard on" style="margin-top:12px"><div class="label">Real market value</div><div class="big num">${euro(it.actual)}</div><div class="verdicts" style="margin-top:10px">${rows}</div></div><div class="row" style="margin-top:12px"><button class="btn" id="${g.round >= g.rounds ? "nmEnd" : "nmNext"}" type="button">${g.round >= g.rounds ? "See the final score" : "Next"}</button></div></div>`; return;
   }
   $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}${hud}${facts}<div class="answerbox" style="margin-top:14px"><div class="row"><b>${duo ? who[g.turn] + ", your guess" : "Your guess"} in millions of euros</b></div><div class="row"><span class="num" style="font-size:22px">€</span><input id="nmIn" inputmode="decimal" autocomplete="off" placeholder="e.g. 45" aria-label="Market value in millions of euros"><span>m</span><button class="btn" id="nmLock" type="button">${duo && g.turn === 0 ? "Lock it in, pass the screen" : "Lock it in"}</button></div>${duo && g.turn === 1 ? '<div class="fine">Player 1 has locked a guess. No peeking.</div>' : ""}</div></div>`;
   const i = $("#nmIn"); if (i) i.focus();
 }
-function lockNumber() {
-  const g = S.num, v = parseFloat(String($("#nmIn").value).replace(",", ".")); if (!(v > 0)) { toast("Type a number above 0"); return; }
+function lockNumber(timeout) {
+  const g = S.num, inp = $("#nmIn"); let v = inp ? parseFloat(String(inp.value).replace(",", ".")) : NaN; if (!(v > 0)) { if (!timeout) { toast("Type a number above 0"); return; } v = null; }
   g.guesses[g.turn] = v; Snd.lock();
   if (g.mode === "duo" && g.turn === 0) { g.turn = 1; renderNumber(); return; }
-  const n = g.mode === "duo" ? 2 : 1; for (let k = 0; k < n; k++) { g.pts[k] = numPts(g.guesses[k] * 1e6, g.item.actual); g.scores[k] += g.pts[k]; }
+  const n = g.mode === "duo" ? 2 : 1; for (let k = 0; k < n; k++) { g.pts[k] = g.guesses[k] ? numPts(g.guesses[k] * 1e6, g.item.actual) : 0; g.scores[k] += g.pts[k]; }
   g.phase = "reveal"; (Math.max(...g.pts) >= 800 ? (Snd.win(), confetti()) : Snd.right()); renderNumber();
 }
 function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "solo") { reward(25, "Write your number", null); } renderNumber(); }
+
+
+/* ================= Club roulette ================= */
+function rouClub() {
+  const cnt = {}; QZ.players.forEach((p) => oursSet(p).forEach((c) => { if (CREST[c] && (S.code === "ALL" || (QZ.clubs[c] || {}).lg === S.code)) cnt[c] = (cnt[c] || 0) + 1; }));
+  const list = Object.entries(cnt).filter(([, n]) => n >= 15).sort((a, b) => b[1] - a[1]), th = Math.ceil(list.length / 3);
+  const slice = S.diff === "easy" ? list.slice(0, th) : S.diff === "medium" ? list.slice(0, 2 * th) : S.diff === "hard" ? list.slice(th) : list.slice(2 * th);
+  return rnd(slice.length ? slice : list)[0];
+}
+function newRoulette() { S.rou = { round: 0, rounds: 3, wins: [0, 0], phase: "play", used: [], names: [], msg: "" }; nextRoulette(); }
+function nextRoulette() { const r = S.rou; r.round++; r.club = rouClub(); r.used = []; r.names = []; r.turn = (r.round - 1) % 2; r.phase = "play"; r.msg = ""; renderRoulette(); }
+function renderRoulette() {
+  const r = S.rou, who = ["Player 1", "Player 2"];
+  if (!r) { $("#room").innerHTML = modeIntro("Club roulette", "A club appears. You take turns naming players who have played for it, no repeats. A wrong name, a repeat or running out of time loses the round. First to win two rounds takes the match.", [
+    { id: "rDuo", t: "Two players, one device", d: "Take turns on the same screen." },
+    { id: "rOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
+  if (r.phase === "done") { const w = r.wins[0] > r.wins[1] ? 0 : 1; $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}<div class="rcard on"><div class="label">Match over</div><div class="verdicts" style="margin-top:8px">${r.wins.map((s, i) => `<div class="vd ${w === i ? "ok" : "no"}"><span class="label">${who[i]}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${who[w]} wins!</b><button class="btn" id="rAgain" type="button">Play again</button></div></div></div>`; return; }
+  const head = `<div class="qhud"><span class="label">Round ${r.round} of ${r.rounds}</span>${r.wins.map((s, i) => `<span class="num qscore"><small>${who[i]}</small> <b>${s}</b></span>`).join("")}</div><div class="row" style="gap:14px;margin:6px 0">${badge(r.club, "xl")}<div><h3 style="font-size:30px">${esc(r.club)}</h3><div class="fine">Players who have played for this club</div></div></div><div class="sugs" style="margin:8px 0">${r.names.map((n) => `<span class="sug">${esc(n)}</span>`).join("") || '<span class="fine">No names yet</span>'}</div>`;
+  if (r.phase === "reveal") { const left = QZ.players.filter((p) => playedFor(p, r.club) && !r.used.includes(p.id)).slice(0, 8).map((p) => p.n); $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="rcard on"><b style="font-size:20px">${who[1 - r.loser]} wins the round</b><div class="fine">${who[r.loser]}: ${esc(r.why)}.</div>${left.length ? `<div class="fine" style="margin-top:6px">Still available: ${esc(left.join(", "))}</div>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "rFinish" : "rNext"}" type="button">${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "See the result" : "Next round"}</button></div></div>`; return; }
+  $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="answerbox"><div class="row"><b>${who[r.turn]}, name a player</b></div><div class="row"><input id="rIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="rGuess" type="button">Play</button></div><div id="rSug" class="sugs"></div>${r.msg ? `<div class="fine">${esc(r.msg)}</div>` : ""}</div></div>`;
+  const i = $("#rIn"); if (i) i.focus();
+}
+function rouSubmit(pickId) {
+  const r = S.rou; let p = null;
+  if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { const typed = $("#rIn").value, s = suggestions(typed, QZ.players, (x) => x.n); p = s.length === 1 || (s[0] && qnorm(s[0].n) === qnorm(typed)) ? s[0] : null; }
+  if (!p) { r.msg = "Pick a player from the suggestions."; renderRoulette(); return; }
+  if (r.used.includes(p.id)) { rouLose(r.turn, `${p.n} was already named`); return; }
+  if (!playedFor(p, r.club)) { rouLose(r.turn, `${p.n} never played for ${r.club}`); return; }
+  r.used.push(p.id); r.names.push(p.n); r.turn = 1 - r.turn; r.msg = ""; Snd.right(); renderRoulette();
+}
+function rouLose(who, why) { const r = S.rou; r.phase = "reveal"; r.loser = who; r.why = why; r.wins[1 - who]++; Snd.wrong(); renderRoulette(); }
 
 /* ================= Football tic-tac-toe ================= */
 const POSNAME = { Goalkeeper: "Goalkeepers", Defender: "Defenders", Midfield: "Midfielders", Attack: "Attackers" };
 const LGLABEL = { E0: "Plays in the Premier League", D1: "Plays in the Bundesliga", SP1: "Plays in La Liga", I1: "Plays in Serie A", F1: "Plays in Ligue 1" };
 function tttCategories(pool, scope) {
   const cats = [], count = (f) => pool.filter(f).length;
-  const clubs = {}, nats = {}; pool.forEach((p) => { new Set(p.hist).forEach((c) => { clubs[c] = (clubs[c] || 0) + 1; }); nats[p.nat] = (nats[p.nat] || 0) + 1; });
+  const clubs = {}, nats = {}; pool.forEach((p) => { oursSet(p).forEach((c) => { clubs[c] = (clubs[c] || 0) + 1; }); nats[p.nat] = (nats[p.nat] || 0) + 1; });
   const minC = scope === "ALL" ? 55 : 22;
-  Object.entries(clubs).filter(([c, n]) => n >= minC && oursOf(c)).forEach(([c]) => cats.push({ id: "club:" + c, fam: "club", label: oursOf(c), club: c, icon: badge(oursOf(c), "md"), test: (p) => p.hist.includes(c) }));
+  Object.entries(clubs).filter(([c, n]) => n >= minC && CREST[c] && (scope === "ALL" || (QZ.clubs[c] || {}).lg === scope || n >= minC * 2)).forEach(([c]) => cats.push({ id: "club:" + c, fam: "club", label: c, club: c, icon: badge(c, "md"), test: (p) => playedFor(p, c) }));
+  const NOTABLE = ["guardiola", "klopp", "ancelotti", "mourinho", "conte", "simeone", "tuchel", "arteta", "xavi", "zidane", "allegri", "pochettino", "emery", "flick", "nagelsmann", "luisenrique", "inzaghi", "tenhag", "slot", "sarri", "spalletti", "kompany", "lopetegui", "dezerbi", "amorim", "postecoglou", "howe", "gasperini", "xabialonso", "mancini", "pioli", "favre", "ranieri", "tedesco", "marcorose", "terzic", "glasner", "kovac"], mc = {};
+  pool.forEach((p) => (p.mg || []).forEach((m) => { mc[m] = (mc[m] || 0) + 1; }));
+  Object.entries(mc).filter(([m, n]) => n >= (scope === "ALL" ? 18 : 9) && NOTABLE.some((k) => qnorm(m).includes(k))).forEach(([m]) => cats.push({ id: "mg:" + m, fam: "mgr", label: `Played under ${m}`, icon: '<span class="cflag">🧑‍🏫</span>', test: (p) => (p.mg || []).includes(m) }));
+  Object.keys(LGLABEL).forEach((lg) => { const f = (p) => (p.ti || []).includes(lg); if (count(f) >= 14) cats.push({ id: "ti:" + lg, fam: "title", label: `Won the ${lgOf(lg).name} (2017 on)`, icon: '<span class="cflag">🏆</span>', test: f }); });
+  const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) cats.push({ id: "ti:any", fam: "title", label: "Won a Big 5 league title", icon: '<span class="cflag">🏆</span>', test: anyT });
+  const jm = (p) => oursSet(p).size >= 5 || p.hist.length >= 7; if (count(jm) >= 25) cats.push({ id: "journey", fam: "stat", label: "Played for 7 or more clubs", icon: '<span class="cflag">🧳</span>', test: (p) => p.hist.length >= 7 });
   Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "🌍"}</span>`, test: (p) => p.nat === n }));
   const fixed = [["age30", "stat", "Aged 30 or over", (p) => ageOf(p) >= 30, "⏳"], ["age23", "stat", "Aged 23 or under", (p) => ageOf(p) <= 23, "🌱"], ["tall", "stat", "190 cm or taller", (p) => p.h >= 190, "📏"], ["left", "stat", "Left-footed", (p) => p.foot === "left", "🦶"], ["val50", "val", "Worth €50m or more", (p) => p.val >= 50e6, "💶"], ["val10", "val", "Worth under €10m", (p) => p.val > 0 && p.val < 10e6, "🪙"], ["caps50", "val", "50 or more caps", (p) => p.caps >= 50, "🧢"]];
   fixed.forEach(([id, fam, label, test, ico]) => { if (count(test) >= 25) cats.push({ id, fam, label, icon: `<span class="cflag">${ico}</span>`, test }); });
@@ -1859,12 +1940,12 @@ function tttCategories(pool, scope) {
   return cats;
 }
 function tttGrid(scope) {
-  const pool = playerPool(scope), cats = tttCategories(pool, scope);
+  const pool = playerPool(scope, playerOK), cats = tttCategories(pool, scope), minCell = { easy: 3, medium: 4, hard: 4, elite: 2 }[S.diff];
   for (let t = 0; t < 600; t++) {
     const pick = shuffle(cats).slice(0, 6), rows = pick.slice(0, 3), cols = pick.slice(3);
     if (new Set(pick.map((c) => c.id)).size < 6 || rows.every((c) => c.fam === rows[0].fam) && rows[0].fam === "pos") continue;
     const sets = rows.map((r) => cols.map((c) => pool.filter((p) => r.test(p) && c.test(p))));
-    if (sets.every((row) => row.every((s) => s.length >= 4))) return { rows, cols, pool, counts: sets.map((row) => row.map((s) => s.length)) };
+    if (sets.every((row) => row.every((s) => s.length >= minCell))) return { rows, cols, pool, counts: sets.map((row) => row.map((s) => s.length)) };
   }
   return null;
 }
@@ -1945,7 +2026,7 @@ const Net = {
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
-      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
+      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
   },
@@ -1961,11 +2042,11 @@ const Net = {
 };
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
-function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
+function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.rou && S.rou.phase === "play") return S.rou.turn === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
 function startOnline() {
   Net.started = true; const g = Net.game;
   if (QDEF[g]) { newQuiz(g, "duo", S.code); Q.s.mode = "duo"; Q.s.scores = [0, 0]; nextRound(); }
-  else if (g === "finish") newFinish("duo"); else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
+  else if (g === "roulette") newRoulette(); else if (g === "finish") newFinish("duo"); else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
   Net.watch(); Net.push(true); toast("Player 2 joined. You are Player 1.");
 }
 function openOnline(game) {
@@ -1980,6 +2061,7 @@ function applyRemote(m) {
   const guestOk = () => {
     if (m.id === "qB1" || m.id === "nmLock" || m.id === "tGuess" || m.id === "qGuess" || m.id === "tCancel") { /* checked below */ }
     if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") { if (m.id === "qB1") return true; if (m.id === "qGuess" || m.da === "sug") return Q.s.buzzed === 1; return false; }
+    if (S.rou) return (m.id === "rGuess" || m.da === "sug") && S.rou.turn === 1 && S.rou.phase === "play";
     if (S.fin && S.fin.mode === "duo") return m.id === "finLock" && S.fin.turn === 1 && S.fin.phase === "ask";
     if (S.num && S.num.mode === "duo") return m.id === "nmLock" ? S.num.turn === 1 && S.num.phase === "guess" : false;
     if (S.ttt && S.ttt.mode === "duo") { if (m.da === "tc") return S.ttt.turn === 1 && S.ttt.sel == null; if (m.id === "tGuess" || m.id === "tCancel" || m.da === "sug") return S.ttt.turn === 1 && S.ttt.sel != null; }
@@ -1995,12 +2077,12 @@ document.addEventListener("click", (e) => {
   if (b.id === "roomLeave") { e.stopImmediatePropagation(); Net.close(); S.game = null; renderRoom(); return; }
   if (Net.role === "guest" && b.closest("#room")) {
     e.stopImmediatePropagation(); e.preventDefault(); const ds = Object.keys(b.dataset).find((k) => ["tc", "sug"].includes(k));
-    const i = document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn") || document.getElementById("finRange");
+    const i = document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn") || document.getElementById("finRange") || document.getElementById("rIn");
     Net.send({ k: "click", id: b.id || null, da: !b.id && ds ? ds.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) : null, dv: !b.id && ds ? b.dataset[ds] : null, v: i ? i.value : null });
   }
 }, true);
-document.addEventListener("input", (e) => { if (Net.role === "guest" && ["qIn", "tIn", "nmIn", "finRange"].includes(e.target.id)) { e.stopImmediatePropagation(); Net.send({ k: "input", id: e.target.id, v: e.target.value }); } }, true);
-document.addEventListener("keydown", (e) => { if (Net.role === "guest" && e.key === "Enter" && ["qIn", "tIn", "nmIn"].includes(e.target.id)) { e.stopImmediatePropagation(); e.preventDefault(); const id = e.target.id === "qIn" ? "qGuess" : e.target.id === "tIn" ? "tGuess" : "nmLock"; Net.send({ k: "click", id, v: e.target.value }); } else if (Net.role === "guest" && !["INPUT"].includes(e.target.tagName)) { e.stopImmediatePropagation(); } }, true);
+document.addEventListener("input", (e) => { if (Net.role === "guest" && ["qIn", "tIn", "nmIn", "finRange", "rIn"].includes(e.target.id)) { e.stopImmediatePropagation(); Net.send({ k: "input", id: e.target.id, v: e.target.value }); } }, true);
+document.addEventListener("keydown", (e) => { if (Net.role === "guest" && e.key === "Enter" && ["qIn", "tIn", "nmIn", "rIn"].includes(e.target.id)) { e.stopImmediatePropagation(); e.preventDefault(); const id = e.target.id === "qIn" ? "qGuess" : e.target.id === "tIn" ? "tGuess" : e.target.id === "rIn" ? "rGuess" : "nmLock"; Net.send({ k: "click", id, v: e.target.value }); } else if (Net.role === "guest" && !["INPUT"].includes(e.target.tagName)) { e.stopImmediatePropagation(); } }, true);
 
 /* ---------- How it works + credits ---------- */
 function renderAbout() {
@@ -2110,7 +2192,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "qNext") { Snd.tick(); nextRound(); return; }
   if (b.id === "qFinish") { finishQuiz(); return; }
   if (b.id === "qAgain") { newQuiz(Q.s.game, "solo", S.code); return; }
-  if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `Beat the Model, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
+  if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `ballknowledge, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
   if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }
   if (b.id === "qGuess") { submitAnswer(null); return; }
@@ -2122,7 +2204,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "finLock") { if (Net.role === "host" && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
   if (b.id === "finNext") { nextFinish(); Snd.tick(); return; }
   if (b.id === "finEnd") { endFinish(); return; }
-  if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(Math.max(...f.scores)), sub: f.mode === "solo" ? `streak of ${f.streak}` : "points", line: "Table knowledge.", share: `Beat the Model, Where did they finish?: ${Math.max(...f.scores)} points.`, tiles: [[String(f.mode === "solo" ? f.streak : f.rounds), f.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [f.mode, "mode"]] }); return; }
+  if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(Math.max(...f.scores)), sub: f.mode === "solo" ? `streak of ${f.streak}` : "points", line: "Table knowledge.", share: `ballknowledge, Where did they finish?: ${Math.max(...f.scores)} points.`, tiles: [[String(f.mode === "solo" ? f.streak : f.rounds), f.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [f.mode, "mode"]] }); return; }
   if (b.dataset.vh) { answerVH(S.vk, b.dataset.vh); return; }
   if (b.id === "vNext") { S.pv = S.cv = null; S.vk = rnd(["p", "c"]); Snd.tick(); renderVH(S.vk); return; }
   if (b.id === "nmSolo") { S.vsolo = true; S.vStreak = 0; S.vk = rnd(["p", "c"]); Snd.tick(); renderValue(); return; }
@@ -2131,15 +2213,22 @@ document.addEventListener("click", (e) => {
   if (b.id === "nmNext") { Snd.tick(); nextNumber(); return; }
   if (b.id === "nmEnd") { endNumber(); return; }
   if (b.id === "nmAgain") { newNumber(S.num.mode); return; }
-  if (b.id === "nmCard") { const g = S.num; showCard("quiz", { lg: S.code, title: "Write your number", big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "Market whisperer?", share: `Beat the Model, Write your number: ${Math.max(...g.scores)} points.`, tiles: [["5", "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
+  if (b.id === "nmCard") { const g = S.num; showCard("quiz", { lg: S.code, title: "Write your number", big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "Market whisperer?", share: `ballknowledge, Write your number: ${Math.max(...g.scores)} points.`, tiles: [["5", "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "ttSolo") { newTTT("solo"); Snd.tick(); return; }
   if (b.id === "ttDuo") { newTTT("duo"); Snd.tick(); return; }
   if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
   if (b.id === "tCancel") { S.ttt.sel = null; renderTTT(); return; }
   if (b.id === "tGuess") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
   if (b.dataset.sug != null && b.closest("#tSug")) { tttSubmit(b.dataset.sug); return; }
+  if (b.id === "rDuo") { newRoulette(); Snd.tick(); return; }
+  if (b.id === "rOnline") { openOnline("roulette"); return; }
+  if (b.id === "rGuess") { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
+  if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
+  if (b.id === "rNext") { Snd.tick(); nextRoulette(); return; }
+  if (b.id === "rFinish") { S.rou.phase = "done"; Snd.win(); confetti(); renderRoulette(); return; }
+  if (b.id === "rAgain") { newRoulette(); return; }
   if (b.id === "ttAgain") { newTTT(S.ttt.mode); return; }
-  if (b.id === "ttCard") { const t = S.ttt, w = t.winner === "draw" ? "Draw" : (t.mode === "solo" ? (t.winner.who === 0 ? "I won" : "Computer won") : `Player ${t.winner.who + 1} won`); showCard("quiz", { lg: S.code, title: "Football tic-tac-toe", big: w, sub: t.mode === "solo" ? "against the computer" : "two players", line: "Name a player who fits.", share: `Beat the Model, Football tic-tac-toe: ${w}.`, tiles: [[String(t.used.size), "players used"], [S.code === "ALL" ? "All 5" : S.code, "league"], [t.mode, "mode"]] }); return; }
+  if (b.id === "ttCard") { const t = S.ttt, w = t.winner === "draw" ? "Draw" : (t.mode === "solo" ? (t.winner.who === 0 ? "I won" : "Computer won") : `Player ${t.winner.who + 1} won`); showCard("quiz", { lg: S.code, title: "Football tic-tac-toe", big: w, sub: t.mode === "solo" ? "against the computer" : "two players", line: "Name a player who fits.", share: `ballknowledge, Football tic-tac-toe: ${w}.`, tiles: [[String(t.used.size), "players used"], [S.code === "ALL" ? "All 5" : S.code, "league"], [t.mode, "mode"]] }); return; }
   if (b.id === "holNext") { S.hol = null; Snd.tick(); renderHol(); return; }
   if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
   if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
@@ -2156,10 +2245,12 @@ document.addEventListener("click", (e) => {
   if (b.id === "rpPlay") { toggleReplay(); return; }
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
-function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; }
+function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; S.rou = null; }
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-diff]"); if (!b) return; S.diff = b.dataset.diff; try { localStorage.setItem("bk_diff", S.diff); } catch (err) { /* storage blocked */ } document.querySelectorAll("[data-diff]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.diff === S.diff)); const n = $("#diffNote"); if (n) n.textContent = DIFFNOTE[S.diff]; Snd.tick(); });
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
-document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; box.innerHTML = suggestions(e.target.value, QZ.players, (x) => x.n).map((x) => `<button type="button" class="sug" data-sug="${x.id}">${clubBadgeFor(x.club, "sm") || ""}<span>${esc(x.n)}</span><small>${flagOf(x.nat)} ${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join(""); } });
-document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
+document.addEventListener("input", (e) => { if (e.target.id === "rIn") { const box = $("#rSug"); if (!box) return; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
+document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
+document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "rIn") { e.preventDefault(); if (Net.role === "host" && S.rou.turn === 1) return; rouSubmit(null); } else if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {
   const t = e.target;
   if (t.id === "styleSel") { S.style = t.value; }

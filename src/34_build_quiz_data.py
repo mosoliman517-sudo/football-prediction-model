@@ -47,7 +47,7 @@ def main():
     cur = p[(p["current_club_domestic_competition_id"].isin(BIG)) & (p["last_season"] >= 2025) & (p["market_value_in_eur"] >= 1e6)]
     famous = p[(p["highest_market_value_in_eur"] >= 30e6) & ~p.index.isin(cur.index)]
     pool = pd.concat([cur, famous]).drop_duplicates("player_id")
-    t = pd.read_csv("01_data_market_value/transfers.csv", usecols=["player_id", "transfer_date", "from_club_name", "to_club_name"])
+    t = pd.read_csv("01_data_market_value/transfers.csv", usecols=["player_id", "transfer_date", "from_club_name", "to_club_name", "from_club_id", "to_club_id"])
     t["d"] = pd.to_datetime(t["transfer_date"], errors="coerce")
     t = t[(t["d"] <= AS_OF) & t["player_id"].isin(pool["player_id"])].sort_values(["player_id", "d"])
     hist = {}
@@ -75,6 +75,59 @@ def main():
             "end": int(str(r.contract_expiration_date)[:4]) if isinstance(r.contract_expiration_date, str) and len(r.contract_expiration_date) >= 4 else 0,
             "hist": h, "active": active,
         })
+    # ---- which manager a player played under and which league titles he won (2017-18 to 2025-26), from club stints and match records.
+    # A player counts as part of a club's season if the club was his on 1 January of that season: squad membership, not appearances.
+    g = pd.read_csv("01_data_market_value/games.csv", usecols=["competition_id", "season", "home_club_id", "away_club_id", "home_club_goals", "away_club_goals", "home_club_manager_name", "away_club_manager_name", "competition_type"])
+    g = g[(g["competition_type"] == "domestic_league") & g["competition_id"].isin(BIG) & (g["season"] >= 2017)]
+    mg_count, pts = {}, {}
+    for r in g.itertuples():
+        for side, cid, mgr, gf, ga in (("h", r.home_club_id, r.home_club_manager_name, r.home_club_goals, r.away_club_goals), ("a", r.away_club_id, r.away_club_manager_name, r.away_club_goals, r.home_club_goals)):
+            if isinstance(mgr, str):
+                mg_count[(cid, r.season, mgr)] = mg_count.get((cid, r.season, mgr), 0) + 1
+            pts[(r.competition_id, r.season, cid)] = pts.get((r.competition_id, r.season, cid), 0) + (3 if gf > ga else 1 if gf == ga else 0)
+    top_mgr = {}
+    for (cid, sn, mgr), n in mg_count.items():
+        if n > top_mgr.get((cid, sn), ("", 0))[1]:
+            top_mgr[(cid, sn)] = (mgr, n)
+    champs = {}
+    for (comp, sn, cid), v in pts.items():
+        if v > champs.get((comp, sn), (None, -1))[1]:
+            champs[(comp, sn)] = (cid, v)
+    ta = pd.read_csv("01_data_market_value/transfers.csv", usecols=["player_id", "transfer_date", "from_club_id", "to_club_id"])
+    ta["d"] = pd.to_datetime(ta["transfer_date"], errors="coerce"); ta = ta[ta["player_id"].isin(pool["player_id"]) & (ta["d"] <= AS_OF)].sort_values(["player_id", "d"])
+    stints = {}
+    for pid, gg in ta.groupby("player_id"):
+        rows = gg.to_dict("records"); st = []
+        for i, rw in enumerate(rows):
+            st.append((rows[i - 1]["d"] if i else pd.Timestamp("1900-01-01"), rw["d"], rows[i - 1]["to_club_id"] if i else rw["from_club_id"]))
+        st.append((rows[-1]["d"], pd.Timestamp("2100-01-01"), rows[-1]["to_club_id"]))
+        stints[pid] = st
+    def club_on(pid, day):
+        for a, b, cid in stints.get(pid, []):
+            if a <= day < b:
+                return cid
+        return None
+    for q in players:
+        mgs, titles = [], []
+        for sn in range(2017, 2026):
+            cid = club_on(q["id"], pd.Timestamp(f"{sn + 1}-01-01"))
+            if cid is None:
+                continue
+            if (cid, sn) in top_mgr and top_mgr[(cid, sn)][0] not in mgs:
+                mgs.append(top_mgr[(cid, sn)][0])
+            for comp, lg in BIG.items():
+                if champs.get((comp, sn), (None,))[0] == cid and lg not in titles:
+                    titles.append(lg)
+        q["mg"], q["ti"] = mgs, titles
+    ov = json.load(open("src/quiz_overrides.json", encoding="utf-8"))
+    cl = pd.read_csv("01_data_market_value/clubs.csv").set_index("club_id")
+    for q in players:
+        o = ov.get(q["n"])
+        if o:
+            q["club"] = cl.loc[o["club_id"], "name"]; q["comp"] = cl.loc[o["club_id"], "domestic_competition_id"] if cl.loc[o["club_id"], "domestic_competition_id"] in BIG else q["comp"]
+            if not q["hist"] or q["hist"][-1] != q["club"]:
+                q["hist"].append(q["club"])
+            print("override applied:", q["n"], "->", q["club"])
     players = [q for q in players if q["dob"] and q["pos"]]
     print(f"players: {len(players)} ({sum(q['active'] for q in players)} active); with a club history: {sum(1 for q in players if len(q['hist']) >= 2)}")
 
@@ -101,14 +154,23 @@ def main():
                 facts[club] = {"tm": best.name, "stadium": best.stadium_name if isinstance(best.stadium_name, str) else "", "seats": int(best.stadium_seats) if pd.notna(best.stadium_seats) else 0,
                                "coach": best.coach_name if isinstance(best.coach_name, str) else "", "squad": int(best.squad_size) if pd.notna(best.squad_size) else 0,
                                "age": float(best.average_age) if pd.notna(best.average_age) else 0, "value": float(best.total_market_value) if pd.notna(best.total_market_value) else 0,
-                               "foreign": float(best.foreigners_percentage) if pd.notna(best.foreigners_percentage) else 0, "lg": lg}
+                               "foreign": float(best.foreigners_percentage) if pd.notna(best.foreigners_percentage) else 0, "lg": lg, "cid": int(best.club_id)}
                 report.append((lg, club, best.name, round(score, 2)))
             else:
                 report.append((lg, club, "NO MATCH", round(score, 2)))
     for lg, club, tm, sc in report:
         print(f"  {lg:<4}{club:<22}-> {tm:<40}{sc}")
     print(f"clubs joined: {len(facts)} of {len(report)}")
-    json.dump({"players": players, "clubs": facts, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
+    # transfer files spell clubs differently from clubs.csv ("Chelsea" v "Chelsea Football Club"), so map every spelling seen there to the arena name through the club id
+    by_id = {f["cid"]: ours for ours, f in facts.items()}
+    tn = pd.read_csv("01_data_market_value/transfers.csv", usecols=["from_club_id", "from_club_name", "to_club_id", "to_club_name"])
+    alias = {}
+    for idc, nmc in (("from_club_id", "from_club_name"), ("to_club_id", "to_club_name")):
+        for cid, nm in tn[[idc, nmc]].dropna().drop_duplicates().itertuples(index=False):
+            if int(cid) in by_id:
+                alias[str(nm)] = by_id[int(cid)]
+    print(f"club spellings mapped: {len(alias)}")
+    json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
     print("Saved 02_processed_data/quiz_data.json")
 
 

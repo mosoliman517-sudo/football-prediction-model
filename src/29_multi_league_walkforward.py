@@ -28,6 +28,7 @@ LEAGUES = {"E0": "Premier League", "D1": "Bundesliga", "SP1": "La Liga", "I1": "
 COLS = ["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR", "HS", "AS", "HST", "AST", "AvgH", "AvgD", "AvgA", "B365H", "B365D", "B365A"]
 CODE = {"A": 0, "D": 1, "H": 2}
 FIRST_TEST = 2017          # test seasons start with 2017-18 (three seasons of history before it)
+LIVE = 2026                # 2026-27, still being played: predicted for the page, left out of the benchmark summary
 
 
 def read(path):
@@ -50,7 +51,6 @@ def load():
     frames = []
     for lg in LEAGUES:
         files = sorted(glob.glob(f"01_data/E0_*.csv")) if lg == "E0" else sorted(glob.glob(f"01_data_leagues/{lg}_*.csv"))
-        files = [f for f in files if "2627" not in f]       # the unfinished live season stays out of the benchmark
         d = pd.concat([read(f) for f in files], ignore_index=True).sort_values("Date", kind="stable").reset_index(drop=True)
         feat = core_features.build(d)
         d = pd.concat([d, feat], axis=1)
@@ -84,7 +84,7 @@ def fit_predict(Xtr, ytr, gh, ga, Xte, seed=0):
     for n, (a, b) in enumerate(zip(lh, la)):
         g = np.outer(poisson.pmf(k, a), poisson.pmf(k, b)); g /= g.sum()
         Pg[n] = [np.triu(g, 1).sum(), np.trace(g), np.tril(g, -1).sum()]
-    return (Prf + Pg) / 2
+    return (Prf + Pg) / 2, lh, la
 
 
 ll = lambda P, y: -np.log(np.clip(P[np.arange(len(y)), y], 1e-9, 1))
@@ -99,17 +99,21 @@ def main():
     for lg in LEAGUES:
         X[f"lg_{lg}"] = (d["League"] == lg).astype(float)
     mk = market(d)
-    rows = []
+    rows, per_match = [], []
     seasons = sorted(s for s in d["Season"].unique() if s >= FIRST_TEST)
     for S in seasons:
         te = np.where(d["Season"] == S)[0]
         tr_all = np.where(d["Season"] < S)[0]
-        P_pool = fit_predict(X.iloc[tr_all], y[tr_all], d["FTHG"].to_numpy()[tr_all], d["FTAG"].to_numpy()[tr_all], X.iloc[te])
+        P_pool, LH_pool, LA_pool = fit_predict(X.iloc[tr_all], y[tr_all], d["FTHG"].to_numpy()[tr_all], d["FTAG"].to_numpy()[tr_all], X.iloc[te])
         for lg in LEAGUES:
             idx = np.where((d["Season"] == S) & (d["League"] == lg))[0]
             tr = np.where((d["Season"] < S) & (d["League"] == lg))[0]
-            P_own = fit_predict(X.iloc[tr], y[tr], d["FTHG"].to_numpy()[tr], d["FTAG"].to_numpy()[tr], X.iloc[idx])
-            Pp = P_pool[np.searchsorted(te, idx)]
+            P_own, _, _ = fit_predict(X.iloc[tr], y[tr], d["FTHG"].to_numpy()[tr], d["FTAG"].to_numpy()[tr], X.iloc[idx])
+            pos = np.searchsorted(te, idx)
+            Pp = P_pool[pos]
+            for j, r_ in enumerate(idx):
+                per_match.append((lg, S, d["Date"].iloc[r_].strftime("%Y-%m-%d"), d["HomeTeam"].iloc[r_], d["AwayTeam"].iloc[r_], int(d["FTHG"].iloc[r_]), int(d["FTAG"].iloc[r_]), d["FTR"].iloc[r_],
+                                  *Pp[j].round(4), round(float(LH_pool[pos[j]]), 3), round(float(LA_pool[pos[j]]), 3), *np.round(mk[r_], 4)))
             m = mk[idx]; ok = ~np.isnan(m).any(1)
             rec = {"season": f"{S}-{str(S + 1)[2:]}", "league": lg, "n": len(idx), "n_market": int(ok.sum()),
                    "own_ll": float(ll(P_own, y[idx]).mean()), "pooled_ll": float(ll(Pp, y[idx]).mean()),
@@ -120,11 +124,15 @@ def main():
                            own_ll_mk=float(ll(P_own[ok], y[idx][ok]).mean()), pooled_ll_mk=float(ll(Pp[ok], y[idx][ok]).mean()))
             rows.append(rec)
         print(f"  {S}-{str(S + 1)[2:]} done ({len(tr_all)} training matches)", flush=True)
+    pm = pd.DataFrame(per_match, columns=["league", "season", "date", "home", "away", "hg", "ag", "res", "p_a", "p_d", "p_h", "lam_h", "lam_a", "mk_a", "mk_d", "mk_h"])
+    pm.to_csv("02_processed_data/multi_league_matches.csv", index=False)
+    print(f"Saved {len(pm)} per-match predictions (pooled model) to 02_processed_data/multi_league_matches.csv")
+    rows = [r for r in rows if r["season"] != f"{LIVE}-{str(LIVE + 1)[2:]}"]
     df = pd.DataFrame(rows)
     df.to_csv("02_processed_data/multi_league_walkforward.csv", index=False)
     w = lambda g, c: float(np.average(g[c], weights=g["n"]))
     wm = lambda g, c: float(np.average(g[c].dropna(), weights=g.loc[g[c].notna(), "n_market"]))
-    print(f"\nTest seasons {seasons[0]}-{str(seasons[0] + 1)[2:]} to {seasons[-1]}-{str(seasons[-1] + 1)[2:]}, every season predicted from earlier ones only.")
+    print(f"\nTest seasons {seasons[0]}-{str(seasons[0] + 1)[2:]} to {seasons[-2]}-{str(seasons[-2] + 1)[2:]}, every season predicted from earlier ones only (2026-27 is predicted for the page but left out of this table).")
     print(f"{'league':<16}{'n':>6}   {'own ll':>7} {'pooled ll':>10} {'market ll':>10}   {'own acc':>8} {'pooled acc':>11} {'market acc':>11} {'always Home':>12}")
     out = {}
     for lg, g in list(df.groupby("league", sort=False)) + [("ALL", df)]:

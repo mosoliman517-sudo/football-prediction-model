@@ -1,0 +1,630 @@
+<title>Beat the Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Big+Shoulders+Display:wght@800&family=Fraunces:opsz,wght@9..144,700&family=DM+Serif+Display&family=Syne:wght@800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a lobby of five league worlds; choosing one repaints the whole page (palette, display face, lamp glow,
+   drifting particles, sounds) and opens that league's four rooms: Call it, Daily 5, Replay, Review.
+   Each league is a deliberately dark, lamplit world, so the page commits to one look per league and has no light/dark switch. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #1B1030; }
+@property --surface { syntax: "<color>"; inherits: true; initial-value: #2A1A47; }
+@property --surface2 { syntax: "<color>"; inherits: true; initial-value: #36225A; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #F7EEDC; }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #B9A9D6; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #7CF5C8; }
+@property --accent2 { syntax: "<color>"; inherits: true; initial-value: #FF5FA2; }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #4A3375; }
+@property --glow { syntax: "<color>"; inherits: true; initial-value: #A855F7; }
+:root {
+  --bg: #1B1030; --surface: #2A1A47; --surface2: #36225A; --ink: #F7EEDC; --muted: #B9A9D6;
+  --accent: #7CF5C8; --accent2: #FF5FA2; --line: #4A3375; --glow: #A855F7; --on-accent: #10261E;
+  --home: #FFB05C; --draw: #9FB0C8; --away: #6CC4FF; --ok: #5EE6A8; --bad: #FF6B7F;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+  transition: --bg .8s ease, --surface .8s ease, --surface2 .8s ease, --ink .8s ease, --muted .8s ease, --accent .8s ease, --accent2 .8s ease, --line .8s ease, --glow .8s ease;
+}
+/* ---- the five worlds ---- */
+:root[data-league="E0"] { --bg: #1B1030; --surface: #2A1A47; --surface2: #36225A; --ink: #F7EEDC; --muted: #B9A9D6; --accent: #7CF5C8; --accent2: #FF5FA2; --line: #4A3375; --glow: #A855F7; --on-accent: #10261E; --display: "Bricolage Grotesque", system-ui, sans-serif; }
+:root[data-league="D1"] { --bg: #1F1510; --surface: #2F211A; --surface2: #3D2B21; --ink: #FBEFD9; --muted: #CDB59A; --accent: #FFB347; --accent2: #E5533D; --line: #5A4332; --glow: #FF8A3D; --on-accent: #2B1704; --display: "Big Shoulders Display", system-ui, sans-serif; }
+:root[data-league="SP1"] { --bg: #2B0F19; --surface: #3B1824; --surface2: #4A2230; --ink: #FFF0E0; --muted: #E0B7A8; --accent: #FFC857; --accent2: #FF7A59; --line: #6B3340; --glow: #FF5E5B; --on-accent: #2E1D00; --display: "Fraunces", Georgia, serif; }
+:root[data-league="I1"] { --bg: #0D2A2B; --surface: #153B3C; --surface2: #1D4A4B; --ink: #F6EDD9; --muted: #A9CBC0; --accent: #F3D9A4; --accent2: #5CC8FF; --line: #2D5F5C; --glow: #2EC4B6; --on-accent: #1F2A16; --display: "DM Serif Display", Georgia, serif; }
+:root[data-league="F1"] { --bg: #0F1A2B; --surface: #172840; --surface2: #1F3452; --ink: #EEF3F7; --muted: #9DB2CB; --accent: #E4F55B; --accent2: #7FD4FF; --line: #2D4668; --glow: #5B8CFF; --on-accent: #1B2200; --display: "Syne", system-ui, sans-serif; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body);
+  padding-block: 18px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100vh; position: relative; overflow-x: hidden;
+}
+body::before { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background:
+  radial-gradient(900px 520px at 12% -8%, color-mix(in srgb, var(--glow) 26%, transparent), transparent 62%),
+  radial-gradient(760px 480px at 100% 4%, color-mix(in srgb, var(--accent2) 14%, transparent), transparent 62%),
+  radial-gradient(900px 600px at 50% 120%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%); }
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.wash { position: fixed; inset: 0; z-index: 50; pointer-events: none; clip-path: circle(0 at var(--wx, 50%) var(--wy, 50%)); background: var(--wash, var(--bg)); }
+.wash.go { animation: wash .85s cubic-bezier(.2, .7, .2, 1) forwards; }
+@keyframes wash { 0% { clip-path: circle(0 at var(--wx) var(--wy)); opacity: 1; } 70% { clip-path: circle(150vmax at var(--wx) var(--wy)); opacity: 1; } 100% { clip-path: circle(150vmax at var(--wx) var(--wy)); opacity: 0; } }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; line-height: 1; }
+button, input, select { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.label { font: 700 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+/* top bar */
+.bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; background: none; border: 0; cursor: pointer; padding: 4px 0; }
+.brand i { width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 12%, var(--accent) 13% 55%, var(--accent2) 56%); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 60%, transparent); display: inline-block; }
+.brand b { color: var(--accent); }
+.spacer { flex: 1; }
+.pill { background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid var(--line); border-radius: 99px; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 13px; backdrop-filter: blur(6px); transition: transform .15s ease, border-color .15s ease; }
+.pill:hover { border-color: var(--accent); transform: translateY(-1px); }
+.pill:active { transform: translateY(1px) scale(.98); }
+.byline { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* lobby */
+.hero { padding: 26px 0 6px; display: flex; flex-direction: column; gap: 12px; }
+.hero h1 { font-size: clamp(40px, 8vw, 84px); font-weight: 800; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p { margin: 0; color: var(--muted); max-width: 58ch; font-size: 16px; }
+.worlds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-top: 10px; }
+.world { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 30%; position: relative; text-align: left; border: 1px solid color-mix(in srgb, var(--c-accent) 35%, transparent); border-radius: 26px; padding: 22px; min-height: 230px; cursor: pointer; overflow: hidden;
+  color: var(--c-ink); background: radial-gradient(420px 260px at var(--mx) var(--my), color-mix(in srgb, var(--c-glow) 38%, transparent), transparent 70%), linear-gradient(160deg, var(--c-surface), var(--c-bg) 80%);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .18s ease, box-shadow .25s ease; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.world:hover { box-shadow: 0 24px 50px -22px color-mix(in srgb, var(--c-glow) 70%, #000), 0 0 0 1px var(--c-accent) inset; }
+.world:active { transform: perspective(900px) scale(.985); }
+.world .wn { font-family: var(--c-display); font-weight: 800; font-size: clamp(30px, 4.4vw, 44px); line-height: .98; }
+.world .wt { color: var(--c-muted); font-size: 14px; }
+.world .wk { font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent); }
+.world .ws { display: flex; gap: 8px; flex-wrap: wrap; }
+.world .ws span { font: 700 12px var(--mono); background: color-mix(in srgb, var(--c-ink) 9%, transparent); border-radius: 99px; padding: 4px 10px; }
+.world .orb { position: absolute; right: -30px; top: -30px; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c-accent) 70%, #fff) 0 8%, var(--c-accent) 9% 38%, transparent 70%); opacity: .45; filter: blur(2px); animation: float 7s ease-in-out infinite; }
+@keyframes float { 50% { transform: translate(-10px, 12px) scale(1.06); } }
+.world.soon { cursor: default; opacity: .7; border-style: dashed; }
+.world.soon:hover { box-shadow: none; }
+
+/* league header */
+.lhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 6px; }
+.lhead h1 { font-size: clamp(34px, 6.4vw, 64px); font-weight: 800; }
+.lhead p { margin: 6px 0 0; color: var(--muted); }
+.scorebox { display: flex; gap: 10px; flex-wrap: wrap; }
+.scorebox div { background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: 14px; padding: 8px 14px; min-width: 92px; backdrop-filter: blur(6px); }
+.scorebox b { display: block; font-family: var(--mono); font-weight: 700; font-size: 24px; line-height: 1.1; }
+.scorebox small { color: var(--muted); font-size: 11.5px; }
+.rooms { display: flex; gap: 8px; flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; padding: 8px 0; background: linear-gradient(var(--bg) 70%, transparent); }
+.room { background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid var(--line); border-radius: 14px; padding: 9px 16px; font-weight: 700; cursor: pointer; transition: transform .15s ease, background .2s ease, border-color .2s ease; }
+.room:hover { border-color: var(--accent); }
+.room[aria-selected="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: 0 8px 24px -10px var(--accent); }
+.card { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 22px; padding: 20px; min-width: 0; backdrop-filter: blur(6px); }
+.card h2 { font-size: 26px; font-weight: 800; }
+.card p.sub { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 14px; padding: 12px 20px; font-weight: 800; cursor: pointer; font-size: 15px; box-shadow: 0 10px 26px -12px var(--accent); transition: transform .12s ease, filter .15s ease; }
+.btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.btn:active { transform: translateY(1px) scale(.98); }
+.btn[disabled] { opacity: .45; cursor: default; transform: none; filter: none; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.btn.ghost:hover { border-color: var(--accent); }
+select { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; }
+.fine { color: var(--muted); font-size: 12.5px; }
+
+/* match stage */
+.stage { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; margin: 18px 0 10px; }
+.team { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; min-width: 0; }
+.team b { font-family: var(--display); font-size: clamp(18px, 3.4vw, 28px); font-weight: 800; overflow-wrap: anywhere; }
+.badge { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font: 800 20px var(--mono); letter-spacing: .02em; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent), 0 12px 24px -10px var(--bc, #000); background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--bc) 60%, #fff), var(--bc) 62%); }
+.badge.sm { width: 28px; height: 28px; font-size: 10px; box-shadow: none; }
+.vs { font: 800 22px var(--display); color: var(--muted); }
+.form { display: flex; gap: 4px; }
+.form i { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font: 700 10.5px var(--mono); font-style: normal; color: #101010; }
+.form i.W { background: var(--ok); } .form i.D { background: var(--draw); } .form i.L { background: var(--bad); }
+.ctx { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.pick { border: 2px solid var(--line); background: var(--surface2); border-radius: 18px; padding: 16px 10px; cursor: pointer; font-weight: 800; font-size: 16px; display: flex; flex-direction: column; gap: 4px; align-items: center; transition: transform .14s ease, border-color .15s ease, background .2s ease; }
+.pick small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.pick:hover { transform: translateY(-2px); border-color: var(--accent); }
+.pick[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--surface2)); transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 28px -16px var(--accent); }
+.pick[disabled] { cursor: default; opacity: .6; }
+.stepper { display: inline-flex; align-items: center; gap: 6px; }
+.stepper button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface2); cursor: pointer; font-weight: 800; }
+.stepper output { min-width: 26px; text-align: center; font: 800 22px var(--mono); }
+.reveal { display: grid; gap: 12px; margin-top: 16px; }
+.rcard { background: var(--surface2); border: 1px solid var(--line); border-radius: 18px; padding: 16px; opacity: 0; transform: translateY(14px) scale(.98); }
+.rcard.on { animation: pop .5s cubic-bezier(.2, .9, .3, 1.2) forwards; }
+@keyframes pop { to { opacity: 1; transform: none; } }
+.pbar { display: grid; grid-template-columns: 70px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; margin-top: 8px; }
+.pbar .track { height: 10px; background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius: 99px; overflow: hidden; }
+.pbar .fill { height: 100%; border-radius: 99px; width: 0; background: var(--c); transition: width .9s cubic-bezier(.2, .8, .2, 1); }
+.big { font-family: var(--display); font-weight: 800; font-size: clamp(54px, 12vw, 104px); line-height: .9; letter-spacing: -.02em; }
+.verdicts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vd { border-radius: 14px; padding: 12px; background: color-mix(in srgb, var(--ink) 6%, transparent); text-align: center; }
+.vd b { display: block; font-size: 20px; }
+.vd.ok { box-shadow: 0 0 0 2px var(--ok) inset; } .vd.no { box-shadow: 0 0 0 2px var(--bad) inset; }
+.daily { display: grid; gap: 8px; margin-top: 14px; }
+.drow { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; cursor: pointer; text-align: left; width: 100%; }
+.drow:hover { border-color: var(--accent); }
+.drow.done { opacity: .75; }
+.drow .mt { display: flex; gap: 8px; align-items: center; min-width: 0; flex-wrap: wrap; font-weight: 700; }
+.mark.y { color: var(--ok); font-weight: 800; } .mark.n { color: var(--bad); font-weight: 800; }
+pre.share { margin: 0; white-space: pre-wrap; font: 500 13px var(--mono); background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; user-select: all; }
+
+/* replay + review */
+.replay { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; margin-top: 14px; align-items: start; }
+@media (max-width: 860px) { .replay { grid-template-columns: minmax(0, 1fr); } }
+.ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ctl input[type=range] { flex: 1 1 200px; accent-color: var(--accent); }
+.ctl .roundlabel { min-width: 15ch; font: 700 14px var(--mono); }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 22px; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 12px; background: var(--surface2); font-size: 13.5px; margin-top: 6px; }
+.mrow .h { text-align: right; } .mrow b { white-space: nowrap; }
+.mrow span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: right; font: 700 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 4px 6px 8px; }
+td { padding: 5px 6px; text-align: right; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); white-space: nowrap; }
+th:nth-child(2), td:nth-child(2) { text-align: left; } td:nth-child(2) { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+tr.z-top td:first-child { box-shadow: 3px 0 0 var(--ok) inset; } tr.z-eu td:first-child { box-shadow: 3px 0 0 var(--away) inset; } tr.z-bot td:first-child { box-shadow: 3px 0 0 var(--bad) inset; }
+tr.moved td { animation: moved 1.2s ease; }
+@keyframes moved { from { background: color-mix(in srgb, var(--accent) 28%, transparent); } }
+.up { color: var(--ok); } .down { color: var(--bad); }
+svg.chart { width: 100%; height: auto; display: block; }
+svg.chart text { fill: var(--muted); font: 500 11px var(--mono); }
+.bars { display: grid; gap: 10px; margin-top: 12px; }
+.brow { display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: center; font-size: 13px; }
+.brow .tracks { display: grid; gap: 4px; }
+.brow .t { display: grid; grid-template-columns: 1fr 52px; gap: 8px; align-items: center; }
+.brow .tr { height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 9%, transparent); overflow: hidden; }
+.brow .tr i { display: block; height: 100%; border-radius: 99px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.tile { background: var(--surface2); border-radius: 16px; padding: 14px; }
+.tile b { font-family: var(--display); font-size: 34px; display: block; line-height: 1; }
+.tile small { color: var(--muted); }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+.confetti i { position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 3px; background: var(--c); animation: cfall var(--d) cubic-bezier(.3, .6, .5, 1) forwards; }
+@keyframes cfall { to { transform: translate(var(--x), 108vh) rotate(var(--r)); } }
+.lb { display: grid; gap: 6px; margin-top: 10px; }
+.lbrow { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--surface2); border-radius: 12px; padding: 8px 12px; }
+.lbrow.me { box-shadow: 0 0 0 1px var(--accent) inset; }
+.foot { color: var(--muted); font-size: 12px; display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+@media (max-width: 560px) { .stage { grid-template-columns: 1fr; } .vs { display: none; } .badge { width: 56px; height: 56px; font-size: 17px; } .picks { gap: 6px; } .pick { font-size: 14px; padding: 12px 6px; } }
+@media (prefers-reduced-motion: reduce) { .world .orb, .rcard.on, .wash.go, .confetti { animation: none; } .rcard { opacity: 1; transform: none; } .confetti { display: none; } html { scroll-behavior: auto; } }
+</style>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="wash" id="wash" aria-hidden="true"></div>
+<div class="wrap">
+  <div class="bar">
+    <button class="brand" id="brand" type="button" aria-label="Back to all leagues"><i></i><span>Beat the <b>Model</b></span></button>
+    <span class="byline">Built by moisback22</span>
+    <span class="spacer"></span>
+    <button class="pill" id="sndBtn" type="button" aria-label="Sound">Sound: soft</button>
+  </div>
+
+  <section id="lobby">
+    <div class="hero">
+      <h1>Can you out-call a <em>model?</em></h1>
+      <p>Pick a league. Predict real matches the model has never seen, then watch the call and the result land. Every league has its own look, its own sounds and the same honest scoring.</p>
+    </div>
+    <div class="worlds" id="worlds"></div>
+  </section>
+
+  <section id="league" hidden>
+    <div class="lhead">
+      <div><div class="label" id="lKicker"></div><h1 id="lName"></h1><p id="lTag"></p></div>
+      <div class="scorebox" id="scorebox"></div>
+    </div>
+    <nav class="rooms" id="rooms" role="tablist" aria-label="Rooms"></nav>
+    <div id="room"></div>
+  </section>
+
+  <div class="foot">
+    <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
+    <span>Club names belong to their clubs; badges here are plain colour discs, not official crests.</span>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pct = (v, d = 0) => (v * 100).toFixed(d) + "%";
+const LG = DATA.leagues, ORDER = ["E0", "D1", "SP1", "I1", "F1"];
+const SLUG = { E0: "premier-league", D1: "bundesliga", SP1: "la-liga", I1: "serie-a", F1: "ligue-1" };
+const BYSLUG = Object.fromEntries(Object.entries(SLUG).map(([k, v]) => [v, k]));
+const PAL = {
+  E0: { bg: "#1B1030", surface: "#2A1A47", ink: "#F7EEDC", muted: "#B9A9D6", accent: "#7CF5C8", glow: "#A855F7", display: '"Bricolage Grotesque", sans-serif', mood: "Floodlit evening" },
+  D1: { bg: "#1F1510", surface: "#2F211A", ink: "#FBEFD9", muted: "#CDB59A", accent: "#FFB347", glow: "#FF8A3D", display: '"Big Shoulders Display", sans-serif', mood: "Lantern autumn" },
+  SP1: { bg: "#2B0F19", surface: "#3B1824", ink: "#FFF0E0", muted: "#E0B7A8", accent: "#FFC857", glow: "#FF5E5B", display: "Fraunces, serif", mood: "Sangria sunset" },
+  I1: { bg: "#0D2A2B", surface: "#153B3C", ink: "#F6EDD9", muted: "#A9CBC0", accent: "#F3D9A4", glow: "#2EC4B6", display: '"DM Serif Display", serif', mood: "Piazza at dusk" },
+  F1: { bg: "#0F1A2B", surface: "#172840", ink: "#EEF3F7", muted: "#9DB2CB", accent: "#E4F55B", glow: "#5B8CFF", display: "Syne, sans-serif", mood: "Parisian twilight" },
+};
+const OUTNAME = { H: "Home", D: "Draw", A: "Away" }, OUTCOL = { H: "var(--home)", D: "var(--draw)", A: "var(--away)" };
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- sound: small synthesised palette, three levels ---------- */
+const Snd = (() => {
+  let ctx = null, master = null, level = 1;           // 0 off, 1 soft, 2 full
+  try { const v = localStorage.getItem("arena-sound"); if (v != null) level = +v; } catch (e) { /* storage unavailable */ }
+  const gainFor = () => [0, 0.5, 1][level];
+  function init() {
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return true; }
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = gainFor();
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6500;
+      const delay = ctx.createDelay(); delay.delayTime.value = 0.19; const fb = ctx.createGain(); fb.gain.value = 0.28; const wet = ctx.createGain(); wet.gain.value = 0.22;
+      master.connect(lp); lp.connect(ctx.destination); lp.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(ctx.destination);
+      return true;
+    } catch (e) { return false; }
+  }
+  const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  function note(n, t0, dur, type = "sine", vol = 0.09, glide = 0) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(midi(n), t0);
+    if (glide) o.frequency.exponentialRampToValueAtTime(midi(n + glide), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function noise(t0, dur, f0, f1, vol = 0.05, q = 1.2) {
+    const len = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = ctx.createBufferSource(); s.buffer = buf; const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t0);
+  }
+  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10] };
+  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine" };
+  const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
+  return {
+    get level() { return level; },
+    cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); return ["off", "soft", "full"][level]; },
+    unlock() { if (level) init(); },
+    tick() { run((t) => noise(t, 0.035, 2600, 1800, 0.035, 2)); },
+    hover() { run((t) => note(88, t, 0.05, "sine", 0.018)); },
+    lock() { run((t) => { note(43, t, 0.22, "sine", 0.16, -5); noise(t, 0.08, 400, 120, 0.05); note(67, t + 0.06, 0.12, "triangle", 0.06); }); },
+    whoosh() { run((t) => noise(t, 0.42, 300, 3200, 0.06, 0.8)); },
+    right() { run((t) => [72, 76, 79].forEach((n, i) => note(n, t + i * 0.09, 0.45, "triangle", 0.075))); },
+    wrong() { run((t) => { note(64, t, 0.3, "sine", 0.07, -2); note(60, t + 0.16, 0.42, "sine", 0.06, -1); }); },
+    win() { run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); }); },
+    league(code) { run((t) => { const sc = SCALES[code], r = ROOT[code]; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code], 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
+    back() { run((t) => { note(67, t, 0.22, "sine", 0.07); note(60, t + 0.11, 0.3, "sine", 0.07); }); },
+  };
+})();
+function paintSound() { $("#sndBtn").textContent = "Sound: " + ["off", "soft", "full"][Snd.level]; }
+
+/* ---------- ambient particles ---------- */
+const fx = $("#fx"), fctx = fx.getContext("2d");
+let parts = [], glowCol = "#A855F7", accCol = "#7CF5C8";
+function sizeFx() { fx.width = innerWidth * devicePixelRatio; fx.height = innerHeight * devicePixelRatio; }
+function seedParts() { parts = Array.from({ length: 46 }, () => ({ x: Math.random(), y: Math.random(), r: 1 + Math.random() * 3, s: 0.02 + Math.random() * 0.05, p: Math.random() * 6.28, a: 0.15 + Math.random() * 0.4 })); }
+function frame(ts) {
+  fctx.clearRect(0, 0, fx.width, fx.height);
+  const W = fx.width, H = fx.height, dpr = devicePixelRatio;
+  parts.forEach((q) => {
+    q.y -= q.s / 60; if (q.y < -0.05) { q.y = 1.05; q.x = Math.random(); }
+    const x = (q.x + Math.sin(ts / 4000 + q.p) * 0.02) * W, y = q.y * H, rr = q.r * 6 * dpr, g = fctx.createRadialGradient(x, y, 0, x, y, rr);
+    const a = q.a * (0.6 + 0.4 * Math.sin(ts / 900 + q.p));
+    g.addColorStop(0, hexA(q.r > 2.4 ? accCol : glowCol, a)); g.addColorStop(1, hexA(glowCol, 0));
+    fctx.fillStyle = g; fctx.beginPath(); fctx.arc(x, y, rr, 0, 6.283); fctx.fill();
+  });
+  if (!document.hidden) requestAnimationFrame(frame);
+}
+function hexA(h, a) { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`; }
+if (!REDUCED) { sizeFx(); seedParts(); requestAnimationFrame(frame); addEventListener("resize", sizeFx); document.addEventListener("visibilitychange", () => { if (!document.hidden) requestAnimationFrame(frame); }); }
+function setParticleColours(code) { const p = PAL[code] || PAL.E0; glowCol = p.glow; accCol = p.accent; }
+
+/* ---------- persistence: browser first, private cloud copy when signed in ---------- */
+const store = { items: {}, coll: null, uid: null, mode: "local" };
+const LOCAL_KEY = "arena-plays-v1";
+function loadLocal() { try { store.items = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}"); } catch (e) { store.items = {}; } }
+function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(store.items)); } catch (e) { /* storage unavailable */ } }
+async function lockIn(key, body) {
+  store.items[key] = body; saveLocal(); paintScore();
+  if (store.coll) { try { await store.coll.doc(key).set(body); } catch (e) { store.mode = "local"; } }
+}
+const playsOf = (code) => Object.entries(store.items).filter(([k]) => k.startsWith(`p_${code}_`)).map(([k, v]) => ({ k, ...v }));
+const allPlays = () => Object.entries(store.items).filter(([k]) => k.startsWith("p_")).map(([k, v]) => ({ k, ...v }));
+
+/* ---------- data helpers ---------- */
+const S = { code: null, room: "call", style: "accuracy", season: null, cur: null, pick: null, score: [0, 0], useScore: false, busy: false, replay: { round: 12, timer: null } };
+const lgOf = (c) => LG[c];
+const poolSeasons = (c) => Object.keys(lgOf(c).seasons).sort();
+function allMatches(c) { return poolSeasons(c).flatMap((s) => lgOf(c).seasons[s].matches.map((m, i) => ({ m, season: s, i }))); }
+// m = [date, home, away, hg, ag, res, pA, pD, pH, lamH, lamA, mkA, mkD, mkH]
+const odds = (m) => [m[6], m[7], m[8]];       // A, D, H
+function modelCall(m, style = S.style) {
+  const f = DATA.profiles[style], adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], k = adj.indexOf(Math.max(...adj)), pick = "ADH"[k];
+  let best = [0, 0, -1];
+  for (let i = 0; i <= 6; i++) for (let j = 0; j <= 6; j++) {
+    if (("ADH"[(i > j) ? 2 : (i === j ? 1 : 0)]) !== pick) continue;
+    const p = pois(i, m[9]) * pois(j, m[10]); if (p > best[2]) best = [i, j, p];
+  }
+  return { pick, score: [best[0], best[1]], probs: { A: m[6], D: m[7], H: m[8] } };
+}
+function pois(k, l) { let p = Math.exp(-l); for (let i = 1; i <= k; i++) p *= l / i; return p; }
+const resOf = (h, a) => (h > a ? "H" : h < a ? "A" : "D");
+const ptsFor = (pick, score, real) => (pick === resOf(real[0], real[1]) ? 1 : 0) + (score && score[0] === real[0] && score[1] === real[1] ? 2 : 0);
+const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h; };
+const mulberry = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function teamCode(n) { const w = n.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean); return (w.length > 1 ? w.map((x) => x[0]).join("") + w[w.length - 1].slice(1) : w[0] || "?").slice(0, 3).toUpperCase(); }
+function teamColour(n) { const h = hash(n) % 360, p = PAL[S.code || "E0"]; return `hsl(${h} 58% 48%)`; }
+const badge = (n, cls = "") => `<span class="badge ${cls}" style="--bc:${teamColour(n)}" aria-hidden="true">${esc(teamCode(n))}</span>`;
+const fmtDate = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+function formOf(c, team, before, n = 5) {
+  const out = [];
+  for (const r of allMatches(c)) { if (r.m[0] >= before) continue; if (r.m[1] === team) out.push([r.m[0], r.m[3] > r.m[4] ? "W" : r.m[3] === r.m[4] ? "D" : "L"]); else if (r.m[2] === team) out.push([r.m[0], r.m[4] > r.m[3] ? "W" : r.m[3] === r.m[4] ? "D" : "L"]); }
+  return out.sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-n).map((x) => x[1]);
+}
+const formHTML = (f) => `<span class="form">${f.map((x) => `<i class="${x}">${x}</i>`).join("") || '<span class="fine">no earlier matches</span>'}</span>`;
+
+/* ---------- theme + routing ---------- */
+function setTheme(code, ev) {
+  const root = document.documentElement, apply = () => { if (code) root.setAttribute("data-league", code); else root.setAttribute("data-league", "E0"); setParticleColours(code || "E0"); };
+  if (REDUCED || !ev) { apply(); return; }
+  const wash = $("#wash"), p = PAL[code || "E0"];
+  wash.style.setProperty("--wx", ev.clientX + "px"); wash.style.setProperty("--wy", ev.clientY + "px"); wash.style.setProperty("--wash", p.bg);
+  wash.classList.remove("go"); void wash.offsetWidth; wash.classList.add("go"); setTimeout(apply, 280);
+}
+function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
+function route(ev) {
+  const h = location.hash.slice(1), code = Object.keys(BYSLUG).find((s) => h === s || h.startsWith(s + "-")) ;
+  const lg = code ? BYSLUG[code] : null;
+  if (lg) { const room = h.slice(code.length + 1); S.room = ["call", "daily", "replay", "review"].includes(room) ? room : "call"; openLeague(lg, ev); }
+  else { S.code = null; setTheme(null, ev); $("#lobby").hidden = false; $("#league").hidden = true; stopReplay(); window.scrollTo(0, 0); }
+}
+function openLeague(code, ev) {
+  const changing = S.code !== code; S.code = code;
+  if (changing) { S.season = poolSeasons(code).filter((s) => !lgOf(code).seasons[s].live).slice(-1)[0]; S.cur = null; S.pick = null; stopReplay(); Snd.league(code); setTheme(code, ev); }
+  $("#lobby").hidden = true; $("#league").hidden = false;
+  const L = lgOf(code), p = PAL[code];
+  $("#lKicker").textContent = `${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = L.tag;
+  paintScore(); renderRooms(); renderRoom(); if (changing) window.scrollTo(0, 0);
+}
+
+/* ---------- lobby ---------- */
+function renderLobby() {
+  $("#worlds").innerHTML = ORDER.map((c) => {
+    const L = lgOf(c), p = PAL[c], sm = DATA.summary[c];
+    return `<button type="button" class="world" data-lg="${c}" style="--c-bg:${p.bg};--c-surface:${p.surface};--c-ink:${p.ink};--c-muted:${p.muted};--c-accent:${p.accent};--c-glow:${p.glow};--c-display:${p.display}">
+      <span class="orb"></span><div><div class="wk">${esc(p.mood)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div></div>
+      <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></button>`;
+  }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display)"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
+  document.querySelectorAll(".world[data-lg]").forEach((el) => {
+    el.addEventListener("pointermove", (e) => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; el.style.setProperty("--mx", x * 100 + "%"); el.style.setProperty("--my", y * 100 + "%"); if (!REDUCED) { el.style.setProperty("--ry", ((x - 0.5) * 7).toFixed(2) + "deg"); el.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg"); } });
+    el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
+    el.addEventListener("pointerenter", () => Snd.hover());
+  });
+}
+
+/* ---------- score strip ---------- */
+function streaks(plays) {
+  const ms = plays.slice().sort((a, b) => (a.at < b.at ? -1 : 1)); let cur = 0, best = 0;
+  ms.forEach((x) => { if (x.pick === x.res) { cur++; best = Math.max(best, cur); } else cur = 0; });
+  return { cur, best };
+}
+function totals(plays) {
+  let you = 0, mod = 0, yr = 0, mr = 0;
+  plays.forEach((x) => { you += ptsFor(x.pick, x.score, x.real); mod += ptsFor(x.mpick, x.mscore, x.real); if (x.pick === x.res) yr++; if (x.mpick === x.res) mr++; });
+  return { you, mod, yr, mr, n: plays.length };
+}
+function paintScore() {
+  if (!S.code) return;
+  const pl = playsOf(S.code), t = totals(pl), st = streaks(pl);
+  $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
+}
+function renderRooms() {
+  const rooms = [["call", "Call it"], ["daily", "Daily 5"], ["replay", "Replay a season"], ["review", "How good is it?"]];
+  $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
+}
+function renderRoom() { stopReplay(); ({ call: renderCall, daily: renderDaily, replay: renderReplay, review: renderReview })[S.room](); }
+
+/* ---------- Call it ---------- */
+function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`] && r.m[0] >= "2022-08-01"); }
+function renderCall() {
+  const c = S.code;
+  if (S.cur) return renderPlay();
+  const fresh = freshPool(c);
+  $("#room").innerHTML = `<div class="card"><h2>Call it</h2><p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
+    <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
+    <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
+    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last four seasons. Locked results can't be replayed, so the record stays honest.</p></div>`;
+}
+function open(c, season, i, onDone) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
+function renderPlay() {
+  const { c, season, i, m } = S.cur, key = `p_${c}_${season}_${i}`, done = store.items[key];
+  const fh = formOf(c, m[1], m[0]), fa = formOf(c, m[2], m[0]);
+  const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${season} · ${fmtDate(m[0])}</span></div>
+    <div class="stage"><div class="team">${badge(m[1])}<b>${esc(m[1])}</b>${formHTML(fh)}</div><div class="vs">vs</div><div class="team">${badge(m[2])}<b>${esc(m[2])}</b>${formHTML(fa)}</div></div>`;
+  if (done) { $("#room").innerHTML = `<div class="card">${head}<div class="reveal" id="reveal"></div></div>`; showReveal(done, true); return; }
+  const mine = S.pick;
+  $("#room").innerHTML = `<div class="card">${head}
+    <div class="picks" id="picks">${[["H", `${esc(m[1])} win`], ["D", "Draw"], ["A", `${esc(m[2])} win`]].map(([k, t]) => `<button type="button" class="pick" data-pick="${k}" aria-pressed="${mine === k}">${t}<small>your call</small></button>`).join("")}</div>
+    <div class="row" style="margin-top:14px"><label class="fine"><input type="checkbox" id="useScore" ${S.useScore ? "checked" : ""}> Also guess the exact score (+2)</label>
+      <span class="stepper" ${S.useScore ? "" : "hidden"} id="stepper"><button type="button" data-st="0-" aria-label="Home goals down">−</button><output class="num" id="sH">${S.score[0]}</output><button type="button" data-st="0+" aria-label="Home goals up">+</button><b>:</b><button type="button" data-st="1-" aria-label="Away goals down">−</button><output class="num" id="sA">${S.score[1]}</output><button type="button" data-st="1+" aria-label="Away goals up">+</button></span></div>
+    <div class="row" style="margin-top:16px"><button class="btn" id="lockBtn" type="button" ${mine ? "" : "disabled"}>Lock it in</button><span class="fine">Once locked it can't be changed.</span></div>
+    <div class="reveal" id="reveal"></div></div>`;
+}
+function lockPlay() {
+  if (S.busy || !S.pick) return; S.busy = true;
+  const { c, season, i, m } = S.cur, key = `p_${c}_${season}_${i}`, call = modelCall(m);
+  const score = S.useScore ? [...S.score] : null, pick = S.useScore ? resOf(S.score[0], S.score[1]) : S.pick;
+  const item = { lg: c, season, date: m[0], home: m[1], away: m[2], pick, score, mpick: call.pick, mscore: call.score, probs: call.probs, real: [m[3], m[4]], res: m[5], style: S.style, at: new Date().toISOString() };
+  Snd.lock(); lockIn(key, item);
+  document.querySelectorAll("#picks .pick, #lockBtn, #useScore, #stepper button").forEach((b) => { b.disabled = true; });
+  showReveal(item, false);
+}
+function showReveal(it, instant) {
+  const box = $("#reveal"), mp = it.mpick, mine = it.pick, ok = it.pick === it.res, mok = it.mpick === it.res;
+  const yp = ptsFor(it.pick, it.score, it.real), mpts = ptsFor(it.mpick, it.mscore, it.real);
+  const step = (el, t, fn) => setTimeout(() => { el.classList.add("on"); if (fn) fn(); }, instant ? 0 : t);
+  box.innerHTML = `<div class="rcard"><div class="label">The model's call (${it.style === "balanced" ? "Balanced" : "Max Accuracy"})</div><div class="row" style="margin:8px 0 2px"><b style="font:800 24px var(--display)">${OUTNAME[mp]}${mp === "D" ? "" : " win"}</b><span class="num fine">predicts ${it.mscore[0]}-${it.mscore[1]}</span></div>
+      ${["H", "D", "A"].map((k) => `<div class="pbar" style="--c:${OUTCOL[k]}"><span class="label">${OUTNAME[k]}</span><div class="track"><div class="fill" data-w="${(it.probs[k] * 100).toFixed(0)}"></div></div><span class="num">${pct(it.probs[k])}</span></div>`).join("")}</div>
+    <div class="rcard"><div class="label">Full time</div><div class="big num" id="bigScore">${instant ? `${it.real[0]}-${it.real[1]}` : "0-0"}</div>
+      <div class="verdicts" style="margin-top:12px"><div class="vd ${ok ? "ok" : "no"}"><span class="label">You</span><b>${ok ? "Right" : "Wrong"} · ${yp} pt${yp === 1 ? "" : "s"}</b><span class="fine">${OUTNAME[mine]}${it.score ? ` ${it.score[0]}-${it.score[1]}` : ""}</span></div><div class="vd ${mok ? "ok" : "no"}"><span class="label">Model</span><b>${mok ? "Right" : "Wrong"} · ${mpts} pt${mpts === 1 ? "" : "s"}</b><span class="fine">${OUTNAME[mp]} ${it.mscore[0]}-${it.mscore[1]}</span></div></div>
+      <div class="row" style="margin-top:12px"><b>${yp > mpts ? "You beat the model on this one." : yp === mpts ? "Level with the model." : "The model took this one."}</b>${S.cur && S.cur.onDone ? "" : '<button class="btn" id="nextBtn" type="button">Next match</button>'}${S.cur && S.cur.onDone ? '<button class="btn" id="dailyNext" type="button">Back to the Daily 5</button>' : ""}</div></div>`;
+  const cards = box.querySelectorAll(".rcard");
+  if (instant) { cards.forEach((c) => c.classList.add("on")); box.querySelectorAll(".fill").forEach((f) => { f.style.transition = "none"; f.style.width = f.dataset.w + "%"; }); return; }
+  Snd.whoosh();
+  step(cards[0], 120, () => requestAnimationFrame(() => box.querySelectorAll(".fill").forEach((f) => { f.style.width = f.dataset.w + "%"; })));
+  step(cards[1], 1300, () => {
+    countUp($("#bigScore"), it.real);
+    setTimeout(() => { if (yp > mpts) { Snd.win(); confetti(); } else if (ok) Snd.right(); else Snd.wrong(); S.busy = false; lbPublish(); }, 700);
+  });
+}
+function countUp(el, real) {
+  const end = real, t0 = performance.now(); const tot = Math.max(end[0], end[1]);
+  (function f(t) { const k = Math.min(1, (t - t0) / 600), h = Math.round(end[0] * k), a = Math.round(end[1] * k); el.textContent = `${h}-${a}`; if (k < 1) requestAnimationFrame(f); })(t0);
+  if (tot > 0) Snd.tick();
+}
+function confetti() {
+  if (REDUCED) return;
+  const box = document.createElement("div"); box.className = "confetti"; box.setAttribute("aria-hidden", "true");
+  const cols = ["--accent", "--accent2", "--home", "--away", "--ok"];
+  for (let k = 0; k < 40; k++) { const e = document.createElement("i"); e.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;--c:var(${cols[k % cols.length]});--x:${((Math.random() - 0.5) * 260).toFixed(0)}px;--r:${(Math.random() * 720 - 360).toFixed(0)}deg;--d:${(1.1 + Math.random() * 1).toFixed(2)}s`; box.appendChild(e); }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 2600);
+}
+
+/* ---------- Daily 5 ---------- */
+const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
+function dailyFixtures(c, key) {
+  const pool = allMatches(c).filter((r) => r.m[0] >= "2022-08-01"), r = mulberry(hash(`daily-${c}-${key}`)), seen = new Set(), out = [];
+  while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
+  return out;
+}
+function dailyState(c, key) { const f = dailyFixtures(c, key), items = f.map((x) => store.items[`p_${c}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; }
+function dailyDays(c) { let s = 0; const now = Date.now(); for (let k = 0; k < 60; k++) { const n = dailyState(c, dayKey(new Date(now - k * 864e5))).n; if (n === 5) s++; else if (k > 0) break; } return s; }
+function renderDaily() {
+  const c = S.code, key = dayKey(), st = dailyState(c, key);
+  if (S.cur) return renderPlay();
+  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
+  let result = "";
+  if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
+  $("#room").innerHTML = `<div class="card"><h2>Daily 5</h2><p class="sub">Five ${esc(lgOf(c).name)} matches picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+}
+async function shareDaily() {
+  const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  const text = `Beat the Model · ${lgOf(c).name} Daily 5 · ${key}\nMe ${you}/5, model ${mod}/5\n${st.items.map((x) => (x.pick === x.res ? "🟩" : "🟥")).join("")} me\n${st.items.map((x) => (x.mpick === x.res ? "🟩" : "🟥")).join("")} model`;
+  try { await navigator.clipboard.writeText(text); $("#shareBtn").textContent = "Copied"; } catch (e) { const pre = $("#shareTxt"); pre.textContent = text; pre.hidden = false; }
+}
+
+/* ---------- Replay a season ---------- */
+function roundsOf(ms) { const teams = new Set(ms.flatMap((m) => [m[1], m[2]])); return { per: Math.floor(teams.size / 2), teams }; }
+function tableAt(ms, n) {
+  const T = {}; ms.forEach((m) => { T[m[1]] = T[m[1]] || { t: m[1], p: 0, pts: 0, gd: 0, gf: 0 }; T[m[2]] = T[m[2]] || { t: m[2], p: 0, pts: 0, gd: 0, gf: 0 }; });
+  for (let i = 0; i < n; i++) { const m = ms[i], h = T[m[1]], a = T[m[2]]; h.p++; a.p++; h.gf += m[3]; a.gf += m[4]; h.gd += m[3] - m[4]; a.gd += m[4] - m[3]; if (m[3] > m[4]) h.pts += 3; else if (m[3] < m[4]) a.pts += 3; else { h.pts++; a.pts++; } }
+  return Object.values(T).sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf);
+}
+function renderReplay() {
+  const c = S.code, seasons = poolSeasons(c);
+  if (!seasons.includes(S.season)) S.season = seasons[seasons.length - 1];
+  $("#room").innerHTML = `<div class="card"><h2>Replay a season</h2><p class="sub">Press play and watch every call land, matchday by matchday, with the table building underneath.</p>
+    <div class="ctl" style="margin-top:12px"><select id="seasonSel" aria-label="Season">${seasons.slice().reverse().map((s) => `<option ${s === S.season ? "selected" : ""}>${s}${lgOf(c).seasons[s].live ? " (live)" : ""}</option>`).join("")}</select>
+      <button class="btn" id="rpPlay" type="button">Play</button><input type="range" id="rpScrub" min="0" value="0" step="1" aria-label="Matchday"><span class="roundlabel" id="rpLabel"></span></div>
+    <div class="replay"><div><div id="rpChart"></div><div id="rpFeed"></div></div><div id="rpTable"></div></div></div>`;
+  S.replay.round = Math.min(S.replay.round, roundsOf(lgOf(c).seasons[S.season.replace(" (live)", "")].matches).per ? 99 : 0);
+  paintReplay(true);
+}
+function paintReplay(first) {
+  const c = S.code, ms = lgOf(c).seasons[S.season].matches, { per } = roundsOf(ms), R = Math.ceil(ms.length / per), r = Math.max(0, Math.min(R, S.replay.round)); S.replay.round = r;
+  const n = Math.min(ms.length, r * per);
+  const sc = $("#rpScrub"); sc.max = R; sc.value = r; $("#rpLabel").textContent = r === 0 ? "Before matchday 1" : `Matchday ${r} / ${R}`;
+  const f = DATA.profiles[S.style]; let right = 0; const pts = [];
+  ms.slice(0, n).forEach((m, i) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], pk = "ADH"[adj.indexOf(Math.max(...adj))]; if (pk === m[5]) right++; if ((i + 1) % per === 0 || i === n - 1) pts.push(right / (i + 1)); });
+  const W = 520, H = 190, L = 34, Rr = 508, T = 10, B = 160, y = (v) => B - ((Math.min(0.8, Math.max(0.2, v)) - 0.2) / 0.6) * (B - T), x = (k) => L + (R <= 1 ? 0 : (k / (R - 1)) * (Rr - L));
+  const mk = ms.reduce((a, m) => a + (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5] ? 1 : 0), 0) / ms.length;
+  let g = [0.3, 0.4, 0.5, 0.6, 0.7].map((v) => `<line x1="${L}" x2="${Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`).join("");
+  g += `<line x1="${L}" x2="${Rr}" y1="${y(mk)}" y2="${y(mk)}" stroke="var(--accent2)" stroke-dasharray="5 5"/>`;
+  if (pts.length) { const d = pts.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join(" "); g += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(pts.length - 1)}" cy="${y(pts[pts.length - 1])}" r="5" fill="var(--accent)"/><text x="${Math.min(x(pts.length - 1), Rr - 14)}" y="${y(pts[pts.length - 1]) - 10}" text-anchor="middle" style="fill:var(--accent);font-weight:700">${pct(pts[pts.length - 1])}</text>`; }
+  $("#rpChart").innerHTML = `<div class="label" style="margin-bottom:6px">Model accuracy so far <span style="color:var(--accent2)">· dashed: bookmakers' season ${pct(mk)}</span></div><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by matchday">${g}</svg>`;
+  const a0 = (r - 1) * per, rows = r === 0 ? [] : ms.slice(a0, Math.min(ms.length, r * per));
+  $("#rpFeed").innerHTML = r === 0 ? `<p class="fine">Press play to start the season.</p>` : `<div class="label" style="margin:10px 0 2px">Matchday ${r}</div>` + rows.map((m) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], k = adj.indexOf(Math.max(...adj)), pk = "ADH"[k]; return `<div class="mrow"><span class="h">${esc(m[1])}</span><b class="num">${m[3]}-${m[4]}</b><span>${esc(m[2])}</span><span class="mark ${pk === m[5] ? "y" : "n"}" title="Model said ${OUTNAME[pk]}">${pk === m[5] ? "✓" : "✗"}</span></div>`; }).join("");
+  const tab = tableAt(ms, n), prev = tableAt(ms, Math.max(0, n - per)).map((q) => q.t), N = tab.length;
+  $("#rpTable").innerHTML = `<table><thead><tr><th>#</th><th>Club</th><th>P</th><th>GD</th><th>Pts</th></tr></thead><tbody>${tab.map((q, i) => { const mv = first || n === 0 ? 0 : prev.indexOf(q.t) - i, z = i < 4 ? "z-top" : i < 7 ? "z-eu" : i >= N - 3 ? "z-bot" : ""; return `<tr class="${z} ${mv ? "moved" : ""}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}${esc(q.t)} ${mv ? `<span class="${mv > 0 ? "up" : "down"} num">${mv > 0 ? "▲" : "▼"}${Math.abs(mv)}</span>` : ""}</td><td class="num">${q.p}</td><td class="num">${q.gd > 0 ? "+" : ""}${q.gd}</td><td class="num"><b>${q.pts}</b></td></tr>`; }).join("")}</tbody></table>`;
+  $("#rpPlay").textContent = S.replay.timer ? "Pause" : (r >= R ? "Replay" : "Play");
+}
+function stopReplay() { if (S.replay.timer) { clearInterval(S.replay.timer); S.replay.timer = null; } }
+function toggleReplay() {
+  if (S.replay.timer) { stopReplay(); paintReplay(); return; }
+  const c = S.code, ms = lgOf(c).seasons[S.season].matches, { per } = roundsOf(ms), R = Math.ceil(ms.length / per);
+  if (S.replay.round >= R) S.replay.round = 0;
+  S.replay.timer = setInterval(() => { if (S.replay.round >= R) { stopReplay(); Snd.win(); paintReplay(); return; } S.replay.round++; Snd.tick(); paintReplay(); }, 1100);
+  paintReplay();
+}
+
+/* ---------- Review ---------- */
+function renderReview() {
+  const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl);
+  const rows = poolSeasons(c).map((s) => {
+    const ms = L.seasons[s].matches, f = DATA.profiles.accuracy; let mo = 0, mk = 0, hm = 0;
+    ms.forEach((m) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h]; if ("ADH"[adj.indexOf(Math.max(...adj))] === m[5]) mo++; if (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5]) mk++; if (m[5] === "H") hm++; });
+    return { s, live: L.seasons[s].live, n: ms.length, mo: mo / ms.length, mk: mk / ms.length, hm: hm / ms.length };
+  });
+  $("#room").innerHTML = `<div class="card"><h2>How good is the model?</h2><p class="sub">Across ${sm.n.toLocaleString()} ${esc(L.name)} matches since 2017-18, each predicted only from earlier seasons: the model gets <b>${pct(sm.pooled_acc, 1)}</b> of results right, the bookmakers <b>${pct(sm.market_acc, 1)}</b>, and always picking the home team <b>${pct(sm.home_acc, 1)}</b>. Football is noisy, so around half is a good score and a point or two is a real gap.</p>
+    <div class="bars">${rows.map((r) => `<div class="brow"><span class="num">${r.s}${r.live ? " live" : ""}</span><div class="tracks"><div class="t"><div class="tr"><i style="width:${r.mo * 100}%;background:var(--accent)"></i></div><span class="num">${pct(r.mo)}</span></div><div class="t"><div class="tr"><i style="width:${r.mk * 100}%;background:var(--accent2)"></i></div><span class="num">${pct(r.mk)}</span></div><div class="t"><div class="tr"><i style="width:${r.hm * 100}%;background:var(--muted)"></i></div><span class="num">${pct(r.hm)}</span></div></div></div>`).join("")}</div>
+    <div class="row fine" style="margin-top:10px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent)"></i> model (Max Accuracy)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent2)"></i> bookmakers</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></i> always Home</span></div>
+    <div class="tiles"><div class="tile"><b class="num">${t.n ? `${t.you} v ${t.mod}` : "–"}</b><small>your points v the model, ${esc(L.name)}</small></div><div class="tile"><b class="num">${t.n ? `${t.yr} v ${t.mr}` : "–"}</b><small>results right, of ${t.n}</small></div><div class="tile"><b class="num">${pct(DATA.profiles.balanced.bench.D)}</b><small>draws found by the Balanced style (Max Accuracy: ${pct(DATA.profiles.accuracy.bench.D)})</small></div></div>
+    <div id="board"></div></div>`;
+  renderBoard();
+}
+
+/* ---------- leaderboard: opt-in, totals only ---------- */
+const LB = { coll: null, uid: null, user: null, rows: [], failed: false };
+function myTotals() { const pl = allPlays(), t = totals(pl); return { played: t.n, edge: t.you - t.mod, right: t.yr, best: streaks(pl).best }; }
+const lbJoined = () => !!LB.uid && LB.rows.some((r) => r.id === LB.uid);
+async function lbPublish() { if (!LB.coll || !lbJoined()) return; try { await LB.coll.doc(LB.uid).set({ ...myTotals(), updatedAt: new Date().toISOString() }); } catch (e) { /* read-only */ } }
+async function renderBoard() {
+  const el = $("#board"); if (!el) return; if (!LB.coll || LB.failed) { el.innerHTML = ""; return; }
+  const rows = [...LB.rows].sort((a, b) => b.edge - a.edge || b.right - a.right).slice(0, 10); let names = {};
+  try { if (LB.user && typeof LB.user.profiles === "function") names = await LB.user.profiles(rows.map((r) => r.id)); } catch (e) { /* generic names */ }
+  const me = lbJoined(), pl = myTotals();
+  el.innerHTML = `<h3 style="font-size:20px;margin:18px 0 4px">Leaderboard</h3><span class="fine">Points ahead of the model across every league you play. Joining is optional; only your totals and display name show, never your picks.</span>
+    <div class="lb">${rows.length ? rows.map((r, i) => `<div class="lbrow ${r.id === LB.uid ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc((names[r.id] && names[r.id].name) || "Someone")}${r.id === LB.uid ? " (you)" : ""}</span><span class="num">${r.edge >= 0 ? "+" : ""}${r.edge} · ${r.right}/${r.played}</span></div>`).join("") : '<div class="fine">No one is on the board yet.</div>'}</div>
+    <div class="row" style="margin-top:10px"><button class="btn ${me ? "ghost" : ""}" id="lbToggle" type="button" ${me || pl.played ? "" : "disabled"}>${me ? "Leave the leaderboard" : "Join the leaderboard"}</button>${!me && !pl.played ? '<span class="fine">Play a match first.</span>' : ""}</div>`;
+}
+async function toggleBoard() { if (!LB.coll) return; try { if (lbJoined()) await LB.coll.doc(LB.uid).delete(); else await LB.coll.doc(LB.uid).set({ ...myTotals(), updatedAt: new Date().toISOString() }); } catch (e) { LB.failed = true; renderBoard(); } }
+async function initStore() {
+  loadLocal(); paintScore();
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const uid = user ? await user.id() : null; if (!db || !uid) return;
+    LB.coll = db.collection("leaderboard"); LB.uid = uid; LB.user = user;
+    LB.coll.onSnapshot((snap) => { LB.rows = snap.docs.filter((d) => d.exists).map((d) => ({ id: d.id, ...d.data() })); renderBoard(); }, () => { LB.failed = true; renderBoard(); });
+    store.coll = db.collection("data/users/" + uid); store.uid = uid; store.mode = "cloud";
+    store.coll.onSnapshot((snap) => { const items = { ...store.items }; snap.docs.forEach((d) => { if (d.exists) items[d.id] = d.data(); }); store.items = items; saveLocal(); paintScore(); if (S.code && S.room === "daily" && !S.cur) renderDaily(); }, () => { store.coll = null; store.mode = "local"; });
+  } catch (e) { /* stay on browser storage */ }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("pointerdown", () => Snd.unlock(), { once: true });
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.lg) { Snd.tick(); go(SLUG[b.dataset.lg]); route(e); return; }
+  if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
+  if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
+  if (b.dataset.room) { Snd.tick(); S.room = b.dataset.room; S.cur = null; renderRooms(); renderRoom(); return; }
+  if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
+  if (b.dataset.pick) { S.pick = b.dataset.pick; Snd.tick(); renderPlay(); return; }
+  if (b.dataset.st) { const [k, d] = [+b.dataset.st[0], b.dataset.st[1]]; S.score[k] = Math.max(0, Math.min(9, S.score[k] + (d === "+" ? 1 : -1))); $("#sH").textContent = S.score[0]; $("#sA").textContent = S.score[1]; Snd.tick(); return; }
+  if (b.id === "lockBtn") { lockPlay(); return; }
+  if (b.id === "nextBtn") { S.cur = null; const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; open(S.code, r.season, r.i); } else renderRoom(); return; }
+  if (b.id === "playBack" || b.id === "dailyNext") { S.cur = null; renderRoom(); paintScore(); return; }
+  if (b.dataset.dfix) { const [s, i] = b.dataset.dfix.split("|"); Snd.tick(); open(S.code, s, +i, true); return; }
+  if (b.id === "shareBtn") { shareDaily(); return; }
+  if (b.id === "rpPlay") { toggleReplay(); return; }
+  if (b.id === "lbToggle") { toggleBoard(); return; }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "styleSel") { S.style = t.value; }
+  else if (t.id === "useScore") { S.useScore = t.checked; $("#stepper").hidden = !t.checked; Snd.tick(); }
+  else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }
+});
+document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });
+addEventListener("hashchange", () => route());
+
+renderLobby(); paintSound(); initStore(); setTheme(null); route();
+</script>

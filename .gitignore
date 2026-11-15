@@ -33,3 +33,4 @@ site/_*.html
 
 # Rebuildable cache of out-of-fold odds (src/oof_blend.py)
 02_processed_data/oof_blend.npz
+site/arena.html

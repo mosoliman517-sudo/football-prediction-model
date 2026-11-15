@@ -579,6 +579,17 @@ New data: Bundesliga, La Liga, Serie A and Ligue 1, 2014-15 to 2026-27 from foot
 - **Season-to-season swings are large** (Premier League accuracy 48% in 2020-21 and 2025-26, 60% in 2018-19, for every method including the bookmakers), so any single season, or the 760-match benchmark, is a noisy yardstick; the walk-forward average over nine seasons is steadier.
 - On the same Premier League matches as the production model (2024-26, 760): compact pooled model 50.9% (log loss 1.0096), production blend 50.8% (1.0055), bookmakers 51.8% (0.9929). The richer Premier League inputs are worth about 0.004 in log loss.
 
+### November 15, 2026 (twentieth pass): the multi-league arena (`src/30_build_arena.py`, `site/arena_template.html`)
+
+A new front door, built fresh around leagues, with the Premier League page kept as its own deep-dive. Opening the page shows five league worlds (Premier League, Bundesliga, La Liga, Serie A, Ligue 1; Champions League is a placeholder card). Picking one repaints the whole page with a circular wash: each league has its own palette, display typeface, lamp glow, drifting particles and a short musical motif (Premier League floodlit violet, Bundesliga lantern amber, La Liga sangria sunset, Serie A piazza teal, Ligue 1 twilight blue).
+
+- **Rooms per league:** Call it (a hidden real match, lock a result and optional exact score, then the model's call and the result are revealed in sequence), Daily 5 (the same five matches for everyone each day, with a copyable result), Replay a season (matchday by matchday with a live table and accuracy line against the bookmakers), How good is it? (model, bookmakers and always-Home by season, plus your own record).
+- **Data:** `src/29` now writes every match's prediction (pooled Big 5 model, trained only on earlier seasons) to `02_processed_data/multi_league_matches.csv`, including the live 2026-27 season; the page ships 2021-22 onward (about 13,000 matches, 0.9 MB).
+- **Two styles, tuned on seasons up to 2023-24 and reported on 2024-26, all five leagues pooled:** Balanced **Home 46 / Draw 42 / Away 53**, accuracy 47.1%; Max Accuracy **Home 78 / Draw 0 / Away 60**, accuracy 52.5%.
+- **Sound:** synthesised in the browser (no audio files): soft tick, lock thunk, reveal whoosh, a chime for a right call, a soft fall for a wrong one, a sparkle plus confetti for beating the model, and a league motif; three levels (off, soft, full).
+- Badges are plain colour discs, not club crests (no trademark issues); the existing Premier League page keeps its own build.
+- Not yet: the Premier League deep-dive link from the arena, minute-by-minute matches for other leagues (need shot and scorer data), Champions League, a mobile check, and a GitHub Pages build.
+
 ### Ideas still on the table
 
 More training seasons (football-data has them back to 1993; Elo and form work for all, the market-value and xG features would be empty); the Fantasy Premier League API (free, includes injury and availability flags) as the first real source of *who is playing*; separate attack-and-defence state in the simulators so the online ratings can be adopted; a proper Bayesian team-strength model; ordinal-logistic and stacked variants for the draw problem.

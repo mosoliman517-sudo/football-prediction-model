@@ -29,6 +29,16 @@ META = {
     "I1": ("Serie A", "Italy", "Tactics, patience and the occasional glorious chaos."),
     "F1": ("Ligue 1", "France", "Fast, young and never quite predictable."),
 }
+# One star player per league: name, the club exactly as written in the match data, and position. Clubs checked against
+# news reports in November 2026 (players move; keep this list in step with the transfer window).
+STARS = {
+    "E0": ("Erling Haaland", "Man City", "Striker"),
+    "D1": ("Harry Kane", "Bayern Munich", "Striker"),
+    "SP1": ("Lamine Yamal", "Barcelona", "Winger"),
+    "I1": ("Nico Paz", "Como", "Attacking midfielder"),
+    "F1": ("Ousmane Dembélé", "Paris SG", "Forward"),
+}
+LOGO_DIR = "site/logos"      # optional: drop E0 / D1 / SP1 / I1 / F1 .svg|.png|.webp files here to use official logos (git-ignored)
 
 d = pd.read_csv(SRC)
 d["season_lab"] = d["season"].map(lambda s: f"{s}-{str(s + 1)[2:]}")
@@ -75,7 +85,15 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
             ms.append([r.date, r.home, r.away, int(r.hg), int(r.ag), r.res, round(r.p_a, 3), round(r.p_d, 3), round(r.p_h, 3), round(r.lam_h, 2), round(r.lam_a, 2), *[round(float(v), 3) for v in mk]])
         seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms}
     name, country, tag = META[lg]
-    leagues[lg] = {"name": name, "country": country, "tag": tag, "seasons": seasons}
+    star = dict(zip(("name", "club", "role"), STARS[lg]))
+    logo = None
+    for ext, mime in (("svg", "image/svg+xml"), ("png", "image/png"), ("webp", "image/webp"), ("jpg", "image/jpeg")):
+        f = f"{LOGO_DIR}/{lg}.{ext}"
+        if os.path.exists(f):
+            import base64
+            logo = f"data:{mime};base64," + base64.b64encode(open(f, "rb").read()).decode()
+            break
+    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}

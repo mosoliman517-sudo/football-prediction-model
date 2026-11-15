@@ -72,24 +72,39 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .hero h1 { font-size: clamp(40px, 8vw, 84px); font-weight: 800; }
 .hero h1 em { font-style: normal; color: var(--accent); }
 .hero p { margin: 0; color: var(--muted); max-width: 58ch; font-size: 16px; }
-.worlds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-top: 10px; }
-.world { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 30%; position: relative; text-align: left; border: 1px solid color-mix(in srgb, var(--c-accent) 35%, transparent); border-radius: 26px; padding: 22px; min-height: 230px; cursor: pointer; overflow: hidden;
-  color: var(--c-ink); background: radial-gradient(420px 260px at var(--mx) var(--my), color-mix(in srgb, var(--c-glow) 38%, transparent), transparent 70%), linear-gradient(160deg, var(--c-surface), var(--c-bg) 80%);
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .18s ease, box-shadow .25s ease; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.worlds { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 10px; }
+.world { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 30%; position: relative; text-align: left; border: 1px solid color-mix(in srgb, var(--c-accent) 35%, transparent); border-radius: 26px; padding: 22px 24px; min-height: 168px; cursor: pointer; overflow: hidden;
+  color: var(--c-ink); background: radial-gradient(520px 260px at var(--mx) var(--my), color-mix(in srgb, var(--c-glow) 34%, transparent), transparent 70%), linear-gradient(160deg, var(--c-surface), var(--c-bg) 80%);
+  transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .18s ease, box-shadow .25s ease; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 0.8fr); gap: 20px; align-items: center; }
+.world > * { position: relative; z-index: 1; }
 .world:hover { box-shadow: 0 24px 50px -22px color-mix(in srgb, var(--c-glow) 70%, #000), 0 0 0 1px var(--c-accent) inset; }
-.world:active { transform: perspective(900px) scale(.985); }
-.world .wn { font-family: var(--c-display); font-weight: 800; font-size: clamp(30px, 4.4vw, 44px); line-height: .98; }
-.world .wt { color: var(--c-muted); font-size: 14px; }
-.world .wk { font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent); }
-.world .ws { display: flex; gap: 8px; flex-wrap: wrap; }
+.world:active { transform: perspective(1100px) scale(.99); }
+.world .wn { font-family: var(--c-display); font-weight: 800; font-size: clamp(32px, 5vw, 52px); line-height: .98; }
+.world .wt { color: var(--c-muted); font-size: 14px; margin-top: 6px; max-width: 44ch; }
+.world .wk { font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent); margin-bottom: 6px; }
+.world .ws { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .world .ws span { font: 700 12px var(--mono); background: color-mix(in srgb, var(--c-ink) 9%, transparent); border-radius: 99px; padding: 4px 10px; }
-.world .orb { position: absolute; right: -30px; top: -30px; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c-accent) 70%, #fff) 0 8%, var(--c-accent) 9% 38%, transparent 70%); opacity: .45; filter: blur(2px); animation: float 7s ease-in-out infinite; }
-@keyframes float { 50% { transform: translate(-10px, 12px) scale(1.06); } }
+.world .star { display: flex; gap: 12px; align-items: center; justify-content: flex-end; text-align: right; background: color-mix(in srgb, var(--c-bg) 62%, transparent); border: 1px solid color-mix(in srgb, var(--c-ink) 12%, transparent); border-radius: 18px; padding: 10px 14px; backdrop-filter: blur(5px); }
+.world .star .sn { font-family: var(--c-display); font-weight: 800; font-size: 20px; line-height: 1.05; }
+.world .star small { color: var(--c-muted); display: block; font-size: 12.5px; }
+.world .star .badge { flex: none; }
+.flag { position: absolute !important; inset: 0 0 0 38%; z-index: 0 !important; opacity: .3; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%); mask-image: linear-gradient(90deg, transparent, #000 55%); }
+.emblem { width: 84px; height: 84px; flex: none; filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--c-glow, var(--glow)) 55%, transparent)); }
+.emblem.sm { width: 64px; height: 64px; }
+img.emblem { object-fit: contain; }
+@media (max-width: 760px) { .world { grid-template-columns: auto minmax(0, 1fr); } .world .star { grid-column: 1 / -1; justify-content: flex-start; text-align: left; } .flag { inset: 0 0 0 20%; } }
 .world.soon { cursor: default; opacity: .7; border-style: dashed; }
 .world.soon:hover { box-shadow: none; }
 
 /* league header */
-.lhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 6px; }
+.lhead { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 8px 0 6px; }
+.lhead .flag { inset: -10px -16px -6px 30%; border-radius: 24px; }
+.lhead > * { position: relative; z-index: 1; }
+.lid { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.starwatch { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; margin-bottom: 14px; padding: 16px 18px; border-radius: 20px; border: 1px solid var(--line); background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 12%, var(--surface2)), var(--surface2)); }
+.starwatch h3 { font-size: 22px; font-weight: 800; }
+.starwatch .fine { margin-top: 4px; }
+@media (max-width: 640px) { .starwatch { grid-template-columns: auto minmax(0, 1fr); } .starwatch .btn { grid-column: 1 / -1; } }
 .lhead h1 { font-size: clamp(34px, 6.4vw, 64px); font-weight: 800; }
 .lhead p { margin: 6px 0 0; color: var(--muted); }
 .scorebox { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -213,7 +228,7 @@ svg.chart text { fill: var(--muted); font: 500 11px var(--mono); }
 
   <section id="league" hidden>
     <div class="lhead">
-      <div><div class="label" id="lKicker"></div><h1 id="lName"></h1><p id="lTag"></p></div>
+      <div class="flag" id="lFlag" aria-hidden="true"></div><div class="lid"><span id="lEmblem"></span><div><div class="label" id="lKicker"></div><h1 id="lName"></h1><p id="lTag"></p></div></div>
       <div class="scorebox" id="scorebox"></div>
     </div>
     <nav class="rooms" id="rooms" role="tablist" aria-label="Rooms"></nav>
@@ -241,6 +256,26 @@ const PAL = {
   I1: { bg: "#0D2A2B", surface: "#153B3C", ink: "#F6EDD9", muted: "#A9CBC0", accent: "#F3D9A4", glow: "#2EC4B6", display: '"DM Serif Display", serif', mood: "Piazza at dusk" },
   F1: { bg: "#0F1A2B", surface: "#172840", ink: "#EEF3F7", muted: "#9DB2CB", accent: "#E4F55B", glow: "#5B8CFF", display: "Syne, sans-serif", mood: "Parisian twilight" },
 };
+const FLAG = {
+  E0: "linear-gradient(#CE1124,#CE1124) center/100% 17% no-repeat, linear-gradient(#CE1124,#CE1124) center/11% 100% no-repeat, #ffffff",
+  D1: "linear-gradient(180deg,#111 0 33.3%,#DD0000 33.3% 66.6%,#FFCE00 66.6%)",
+  SP1: "linear-gradient(180deg,#AA151B 0 25%,#F1BF00 25% 75%,#AA151B 75%)",
+  I1: "linear-gradient(90deg,#009246 0 33.3%,#ffffff 33.3% 66.6%,#CE2B37 66.6%)",
+  F1: "linear-gradient(90deg,#0055A4 0 33.3%,#ffffff 33.3% 66.6%,#EF4135 66.6%)",
+};
+const INITIALS = { E0: "PL", D1: "BL", SP1: "LL", I1: "SA", F1: "L1" };
+// Original emblems (not the official league logos, which are trademarked): a ring, a motif, the initials. If site/logos/<code>.* exists at build time its image is used instead.
+function emblem(c, cls = "") {
+  const L = lgOf(c); if (L.logo) return `<img class="emblem ${cls}" src="${L.logo}" alt="${esc(L.name)} logo">`;
+  const motif = {
+    E0: '<path d="M22 44l7-16 8 11 7-17 7 17 8-11 7 16z" fill="currentColor" opacity=".95"/>',
+    D1: '<path d="M50 22l17 10v20L50 62 33 52V32z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="42" r="5" fill="currentColor"/>',
+    SP1: '<circle cx="50" cy="42" r="10" fill="currentColor"/>' + [0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<path d="M50 24v-7" stroke="currentColor" stroke-width="4" stroke-linecap="round" transform="rotate(${a} 50 42)"/>`).join(""),
+    I1: '<path d="M30 58V40a20 20 0 0140 0v18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M40 58V42a10 10 0 0120 0v16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
+    F1: '<path d="M50 20l7 16 17 2-13 12 4 17-15-9-15 9 4-17-13-12 17-2z" fill="currentColor"/>',
+  }[c];
+  return `<svg class="emblem ${cls}" viewBox="0 0 100 100" role="img" aria-label="${esc(L.name)} emblem" style="color:var(--c-accent,var(--accent))"><circle cx="50" cy="50" r="46" fill="var(--c-bg,var(--bg))" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/>${motif}<text x="50" y="82" text-anchor="middle" font-size="15" font-weight="800" fill="var(--c-ink,var(--ink))" style="font-family:var(--c-display,var(--display));letter-spacing:.06em">${INITIALS[c]}</text></svg>`;
+}
 const OUTNAME = { H: "Home", D: "Draw", A: "Away" }, OUTCOL = { H: "var(--home)", D: "var(--draw)", A: "var(--away)" };
 const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -381,17 +416,20 @@ function openLeague(code, ev) {
   $("#lobby").hidden = true; $("#league").hidden = false;
   const L = lgOf(code), p = PAL[code];
   $("#lKicker").textContent = `${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = L.tag;
+  $("#lFlag").style.background = FLAG[code]; $("#lEmblem").innerHTML = emblem(code, "sm");
   paintScore(); renderRooms(); renderRoom(); if (changing) window.scrollTo(0, 0);
 }
 
 /* ---------- lobby ---------- */
 function renderLobby() {
   $("#worlds").innerHTML = ORDER.map((c) => {
-    const L = lgOf(c), p = PAL[c], sm = DATA.summary[c];
+    const L = lgOf(c), p = PAL[c], sm = DATA.summary[c], st = L.star;
     return `<button type="button" class="world" data-lg="${c}" style="--c-bg:${p.bg};--c-surface:${p.surface};--c-ink:${p.ink};--c-muted:${p.muted};--c-accent:${p.accent};--c-glow:${p.glow};--c-display:${p.display}">
-      <span class="orb"></span><div><div class="wk">${esc(p.mood)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div></div>
-      <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></button>`;
-  }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display)"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
+      <span class="flag" style="background:${FLAG[c]}" aria-hidden="true"></span>${emblem(c)}
+      <div><div class="wk">${esc(p.mood)} · ${esc(L.country)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div>
+        <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></div>
+      <div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club)}</div></button>`;
+  }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display);grid-template-columns:1fr;min-height:120px"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
   document.querySelectorAll(".world[data-lg]").forEach((el) => {
     el.addEventListener("pointermove", (e) => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; el.style.setProperty("--mx", x * 100 + "%"); el.style.setProperty("--my", y * 100 + "%"); if (!REDUCED) { el.style.setProperty("--ry", ((x - 0.5) * 7).toFixed(2) + "deg"); el.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg"); } });
     el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
@@ -427,7 +465,12 @@ function renderCall() {
   const c = S.code;
   if (S.cur) return renderPlay();
   const fresh = freshPool(c);
-  $("#room").innerHTML = `<div class="card"><h2>Call it</h2><p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
+  const st = lgOf(c).star, clubMs = allMatches(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club).sort((a, b) => (a.m[0] < b.m[0] ? -1 : 1)), recent = clubMs.slice(-10), fm = DATA.profiles[S.style];
+  const hit = (m) => { const adj = [m[6] * fm.a, m[7] * fm.d, m[8] * fm.h]; return "ADH"[adj.indexOf(Math.max(...adj))] === m[5]; };
+  const form = clubMs.slice(-5).map((r) => { const m = r.m, own = m[1] === st.club ? m[3] - m[4] : m[4] - m[3]; return own > 0 ? "W" : own === 0 ? "D" : "L"; });
+  const clubFresh = freshPool(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club);
+  const starCard = `<div class="starwatch">${badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="fine">${esc(st.role)} · ${esc(st.club)} · the model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
+  $("#room").innerHTML = starCard + `<div class="card"><h2>Call it</h2><p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
     <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last four seasons. Locked results can't be replayed, so the record stays honest.</p></div>`;
@@ -606,6 +649,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
   if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
   if (b.dataset.room) { Snd.tick(); S.room = b.dataset.room; S.cur = null; renderRooms(); renderRoom(); return; }
+  if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
   if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
   if (b.dataset.pick) { S.pick = b.dataset.pick; Snd.tick(); renderPlay(); return; }
   if (b.dataset.st) { const [k, d] = [+b.dataset.st[0], b.dataset.st[1]]; S.score[k] = Math.max(0, Math.min(9, S.score[k] + (d === "+" ? 1 : -1))); $("#sH").textContent = S.score[0]; $("#sA").textContent = S.score[1]; Snd.tick(); return; }

@@ -426,6 +426,11 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
 .tcell small { font: 600 11px var(--sans, system-ui); color: var(--muted); } .tcell:hover:not([disabled]) { border-color: var(--accent); transform: scale(1.04); }
 .tcell.x { color: #e0334c; border-style: solid; } .tcell.o { color: #2f6fe0; border-style: solid; } .tcell.win { box-shadow: 0 0 30px -4px var(--ok); border-color: var(--ok); }
 @media (max-width: 560px) { .tgrid { grid-template-columns: 78px repeat(3, 1fr); gap: 5px; } .tcat { font-size: 11px; } .tcell { font-size: 28px; } .buzz { font-size: 18px; } }
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; }
+.mode { text-align: left; padding: 16px; border-radius: 18px; border: 2px solid var(--line); background: var(--surface2); cursor: pointer; display: flex; flex-direction: column; gap: 6px; color: var(--ink); transition: transform .15s ease, border-color .2s ease; }
+.mode:hover { border-color: var(--accent); transform: translateY(-3px); } .mode b { font: 800 18px var(--display); } .mode span { color: var(--muted); font-size: 13px; }
+.gmodes { font: 700 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.about h3 { font-size: 20px; margin: 18px 0 4px; } .about p, .about li { color: var(--muted); max-width: 70ch; } .about ul { padding-left: 18px; }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -454,8 +459,8 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
 
   <section id="lobby" hidden>
     <div class="hero">
-      <h1>The <em>Model Lab</em></h1>
-      <p>Pick a league to see what the model predicts: title-race odds, a season replay with the model's table beside the real one, and how it compares with the bookmakers.</p>
+      <h1><em>Our model</em></h1>
+      <p>Pick a league to see what the model predicts: title-race odds, a season replay with the model's table beside the real one, how it compares with the bookmakers, and how it all works.</p>
     </div>
     <div class="worlds" id="worlds"></div>
   </section>
@@ -470,7 +475,7 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:35 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:50 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -651,7 +656,7 @@ function setTheme(code, ev) {
   wash.classList.remove("go"); void wash.offsetWidth; wash.classList.add("go"); setTimeout(apply, 280);
 }
 function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
-const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt"];
+const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value"];
 function route(ev) {
   const h = location.hash.slice(1);
   stopReplay(); stopTheatre(); resetGames();
@@ -666,8 +671,8 @@ function route(ev) {
   const lg = BYSLUG[slug], tail = rest.slice(slug.length + 1);
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; } }
-  else { S.room = ["race", "replay", "review"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL") S.room = "review"; }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; } }
+  else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
 function showHome(ev) {
@@ -683,7 +688,7 @@ function openLeague(code, ev) {
   if (changing) { S.season = poolSeasons(code).filter((x) => !lgOf(code).seasons[x].live).slice(-1)[0]; S.cur = null; S.pick = null; S.md = null; S.up = null; S.tab = null; S.hol = null; stopReplay(); Snd.league(code); setTheme(code, ev); }
   $("#home").hidden = true; $("#lobby").hidden = true; $("#league").hidden = false;
   const L = lgOf(code), p = PAL[code];
-  $("#lKicker").textContent = `${S.mode === "games" ? "Games" : "Model Lab"} · ${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = S.mode === "games" ? "Pick a game, or switch leagues above." : L.tag;
+  $("#lKicker").textContent = `${S.mode === "games" ? "Games" : "Our model"} · ${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = S.mode === "games" ? "Pick a game, or switch leagues above." : L.tag;
   $("#lFlag").style.background = FLAG[code]; $("#lEmblem").innerHTML = emblem(code, "sm");
   paintScore(); renderScope(); renderRooms(); renderRoom(); if (changing) window.scrollTo(0, 0);
 }
@@ -700,7 +705,7 @@ function renderHome() {
   const sm = DATA.summary.ALL, clubs = Object.keys(CREST);
   const faces = (seed) => [0, 1, 2].map((j) => badge(clubs[hash(seed + j) % clubs.length], "md")).join("");
   $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Call real matches against the model, then test your ball knowledge: who am I, market values, football tic-tac-toe and more. Solo or against a friend.</div><span class="dgo">Play</span></button>
-    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Model Lab</div><div class="dtag">See what the model predicts: title-race odds, season replays with the model's table beside the real one, and how it stacks up against the bookmakers.</div><span class="dgo">Explore</span></button>`;
+    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Our model</div><div class="dtag">See what the model predicts: title-race odds, season replays with the model's table beside the real one, how it stacks up against the bookmakers, how it works and who made it possible.</div><span class="dgo">Explore</span></button>`;
   $("#ribbon").innerHTML = `<span><b class="num">${sm.n.toLocaleString()}</b> matches tested</span><span>model <b class="num">${pct(sm.pooled_acc, 1)}</b></span><span>bookmakers <b class="num">${pct(sm.market_acc, 1)}</b></span><span><b class="num">5</b> leagues</span><span><b class="num">10</b> seasons</span>`;
 }
 
@@ -739,10 +744,10 @@ function paintScore() {
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboards"]] : S.code === "ALL" ? [["review", "How good is it?"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"]];
+  const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboards"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview })[S.room](); }
+function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); }
 
 /* ---------- Call it ---------- */
 function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${r.c}_${r.season}_${r.i}`]); }
@@ -1062,30 +1067,29 @@ function recordLine(c, id) {
   if (id === "table") { const it = Object.entries(store.items).filter(([k]) => (c === "ALL" ? k.startsWith("t_") : k.startsWith(`t_${c}_`))).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
   if (id === "hol") { const h = store.items[`h_${c}`]; return h ? `best streak ${h.best}` : "not played yet"; }
   if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish") { const b = store.items[`best_${id}_${c}`]; return b ? `best ${b.best}` : "not played yet"; }
-  if (id === "pvalue" || id === "cvalue") { const b = store.items[`${id === "pvalue" ? "pv" : "cv"}_${c}`]; return b ? `best streak ${b.best}` : "not played yet"; }
+  if (id === "value") { const b = store.items[`v_${c}`]; return b ? `best streak ${b.best}` : "not played yet"; }
   if (id === "challenge") { const n = Object.keys(store.items).filter((k) => k.startsWith("xpc_")).length; return n ? `${n} challenge${n === 1 ? "" : "s"} played` : "not played yet"; }
   return "";
 }
 const QUIZ_GAMES = [
-  { id: "who", name: "Who am I?", tag: "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.", faces: () => heroFaces(3) },
-  { id: "career", name: "Career path", tag: "Every club he played for, in order. Name the player.", faces: () => heroFaces(3) },
-  { id: "club", name: "Name that club", tag: "Goals, wins and a stadium size. Which club is it?" },
-  { id: "blur", name: "Badge blur", tag: "A blurry badge that sharpens by the second." },
-  { id: "finish", name: "Where did they finish?", tag: "A club, a season, a slider. How close can you get?" },
-  { id: "pvalue", name: "Player value", tag: "Two players. Who is worth more? Keep the streak alive.", faces: () => heroFaces(2) },
-  { id: "cvalue", name: "Club value", tag: "Two squads. Which one costs more?" },
-  { id: "number", name: "Write your number", tag: "Guess a market value in millions. Closest wins. Solo or against a friend.", faces: () => heroFaces(2) },
-  { id: "ttt", name: "Football tic-tac-toe", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
+  { id: "who", name: "Who am I?", modes: "Solo streak · 2 players", tag: "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.", faces: () => heroFaces(3) },
+  { id: "career", name: "Career path", modes: "Solo streak · 2 players", tag: "Every club he played for, in order. Name the player.", faces: () => heroFaces(3) },
+  { id: "club", name: "Name that club", modes: "Solo streak · 2 players", tag: "Goals, wins and a stadium size. Which club is it?" },
+  { id: "blur", name: "Badge blur", modes: "Solo streak · 2 players", tag: "A blurry badge that sharpens by the second." },
+  { id: "finish", name: "Where did they finish?", modes: "Solo streak · 2 players", tag: "A club, a season, a slider. How close can you get?" },
+  { id: "value", name: "Market value", modes: "Solo higher or lower · 2 players", tag: "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.", faces: () => heroFaces(2) },
+  { id: "ttt", name: "Football tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
 ];
 const heroFaces = (n) => { const h = (DATA.hero || []).slice(); const out = []; for (let i = 0; i < n && h.length; i++) { const x = h.splice(Math.floor(Math.random() * h.length), 1)[0]; out.push(`<span class="badge xl hface"><img src="${x.img || x.src || x[1] || ""}" alt=""></span>`); } return out.join(""); };
 function renderHub() {
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
-  const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
+  const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`;
   $("#room").innerHTML = `<h2 class="sec">Predict the match</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`
     + (QUIZ_GAMES.length ? `<h2 class="sec" style="margin-top:28px">Ball knowledge</h2><p class="secsub">Players, clubs, careers and market values ${where}. Clues start hard and get easier; the faster you answer, the more you score.</p><div class="hub">${QUIZ_GAMES.map((g, k) => card(g, k + GAMES.length)).join("")}</div>` : "");
 }
+const modeIntro = (title, blurb, opts) => `<div class="card">${gamesBar(title)}<p class="sub">${blurb}</p><div class="modes">${opts.map((o) => `<button class="mode" id="${o.id}" type="button"><b>${o.t}</b><span>${o.d}</span></button>`).join("")}</div><div id="roomBox"></div></div>`;
 const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">All games</button><h2 style="font-size:24px">${title}</h2></div>`;
 function renderPlayRoom() {
   stopTheatre();
@@ -1093,8 +1097,8 @@ function renderPlayRoom() {
   stopQuiz();
   if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
   ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol, challenge: renderChallenge,
-     finish: () => (S.fin ? renderFinish() : $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}<p class="sub">A club and a season appear. Slide to where you think it finished in the table. Six rounds; closer is worth more.</p><div class="row" style="margin-top:14px"><button class="btn" id="finStart" type="button">Start</button></div></div>`),
-     pvalue: () => renderVH("p"), cvalue: () => renderVH("c"), number: renderNumber, ttt: renderTTT })[S.game]();
+     finish: renderFinish,
+     value: renderValue, ttt: renderTTT })[S.game]();
 }
 
 /* ---------- Matchday ---------- */
@@ -1414,7 +1418,7 @@ const Board = {
     try { const r = await fetch(`${this.cfg.url}/rest/v1/rpc/leaderboard`, { method: "POST", headers: this.headers(), body: JSON.stringify({ p_game: game, p_league: league, p_period: period, p_week: weekId(), p_day: todayKey(), p_code: code || "" }) }); if (!r.ok) return null; return await r.json(); } catch (err) { return null; }
   },
 };
-const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that club", "points"], ["blur", "Badge blur", "points"], ["finish", "Where did they finish?", "points"], ["pvalue", "Player value", "best streak"], ["cvalue", "Club value", "best streak"], ["number", "Write your number", "points"], ["ttt", "Tic-tac-toe", "wins"]];
+const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that club", "points"], ["blur", "Badge blur", "points"], ["finish", "Where did they finish?", "points"], ["pvalue", "Market value streak", "best streak"], ["number", "Write your number", "points"], ["ttt", "Tic-tac-toe", "wins"]];
 S.bgame = "xp"; S.bperiod = "week"; S.bscope = "league";
 async function renderBoards() {
   const c = S.code, p = prof();
@@ -1630,6 +1634,7 @@ const QDEF = {
 function newQuiz(game, mode, scope) { Q.s = { game, mode, scope, round: 0, scores: mode === "duo" ? [0, 0] : [0], log: [], phase: "intro" }; renderQuiz(); }
 function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
+  if (S_.round === 0) { S_.streak = 0; S_.over = false; }
   S_.round++; S_.r = d.mk(S_.scope); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
   S_.total = S_.clues.length * d.clueS + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
@@ -1659,7 +1664,7 @@ function wrongGuess(timedOut) {
 }
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
-  if (winner != null) { pts = worth(); S_.scores[winner] += pts; Snd.win(); if (pts > 700) confetti(); } else Snd.wrong();
+  if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
   S_.result = { winner, pts }; S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 function finishQuiz() {
@@ -1685,18 +1690,20 @@ function renderQuiz() {
   const S_ = Q.s, d = QDEF[S_.game], duo = S_.mode === "duo", who = ["Player 1", "Player 2"];
   const head = gamesBar(d.name) ;
   if (S_.phase === "intro") {
-    $("#room").innerHTML = `<div class="card">${head}<p class="sub">${S_.game === "blur" ? "A club badge starts blurred and sharpens. " : "Clues start hard and get easier. "}Buzz in whenever you think you know it; the sooner you are right, the more you score (up to 1,000). A wrong guess costs 150. ${S_.rounds || d.rounds} rounds.</p>
-      <div class="row" style="margin-top:14px"><button class="btn" id="qSolo" type="button">Play solo</button><button class="btn" id="qDuo" type="button">Two players, one screen</button><button class="btn ghost" id="qOnline" type="button">Online room</button></div>
-      <div class="fine" style="margin-top:10px">${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above. ${QZ.players.length ? "" : "Quiz data is missing from this build."}</div><div id="roomBox"></div></div>`; return;
+    const clue = S_.game === "blur" ? "A club badge starts blurred and sharpens." : "Clues start hard and get easier.";
+    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above.${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
+      { id: "qSolo", t: "Solo streak", d: "Keep going for as long as you can. The run ends the first time a round runs out of time." },
+      { id: "qDuo", t: "Two players, one device", d: "Five rounds. Race to buzz: A for player 1, L for player 2. The first right answer takes the points." },
+      { id: "qOnline", t: "Two players, two devices", d: "The same race, from two phones or computers, with a four-letter room code." }]); return;
   }
   if (S_.phase === "done") {
     const best = Math.max(...S_.scores), winner = duo ? (S_.scores[0] === S_.scores[1] ? -1 : S_.scores[0] > S_.scores[1] ? 0 : 1) : 0;
-    $("#room").innerHTML = `<div class="card">${head}<div class="rcard on"><div class="label">Final score</div><div class="verdicts" style="margin-top:8px">${S_.scores.map((s, i) => `<div class="vd ${winner === i ? "ok" : duo ? "no" : "ok"}"><span class="label">${duo ? who[i] : "You"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (winner < 0 ? "A draw." : who[winner] + " wins!") : best >= 3500 ? "Serious ball knowledge." : best >= 2000 ? "Solid." : "Keep practising."}</b><button class="btn" id="qAgain" type="button">Play again</button><button class="btn ghost" id="qCard" type="button">Make a result card</button></div></div></div>`; return;
+    $("#room").innerHTML = `<div class="card">${head}<div class="rcard on"><div class="label">${duo ? "Final score" : `Streak of ${S_.streak}`}</div><div class="verdicts" style="margin-top:8px">${S_.scores.map((s, i) => `<div class="vd ${winner === i ? "ok" : duo ? "no" : "ok"}"><span class="label">${duo ? who[i] : "Points"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (winner < 0 ? "A draw." : who[winner] + " wins!") : best >= 3500 ? "Serious ball knowledge." : best >= 2000 ? "Solid." : "Keep practising."}</b><button class="btn" id="qAgain" type="button">Play again</button><button class="btn ghost" id="qCard" type="button">Make a result card</button></div></div></div>`; return;
   }
-  const rounds = S_.rounds || d.rounds, hud = `<div class="qhud"><span class="label">Round ${S_.round} of ${rounds}</span>${S_.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
+  const rounds = duo ? (S_.rounds || d.rounds) : Infinity, last = duo ? S_.round >= rounds : S_.over, hud = `<div class="qhud"><span class="label">${duo ? `Round ${S_.round} of ${rounds}` : `Streak ${S_.streak}`}</span>${S_.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
   if (S_.phase === "reveal") {
-    const r = S_.result, name = r.winner == null ? "Nobody got it" : duo ? who[r.winner] + " got it" : "You got it";
-    $("#room").innerHTML = `<div class="card">${head}${hud}<div class="rcard on" style="margin-bottom:10px"><b style="font-size:20px">${name}${r.winner != null ? `: +${r.pts}` : ""}</b></div>${answerCard(S_)}<div class="row" style="margin-top:14px"><button class="btn" id="${S_.round >= rounds ? "qFinish" : "qNext"}" type="button">${S_.round >= rounds ? "See the final score" : "Next round"}</button></div></div>`; return;
+    const r = S_.result, name = r.winner == null ? (duo ? "Nobody got it" : "Time ran out. The run is over") : duo ? who[r.winner] + " got it" : "You got it";
+    $("#room").innerHTML = `<div class="card">${head}${hud}<div class="rcard on" style="margin-bottom:10px"><b style="font-size:20px">${name}${r.winner != null ? `: +${r.pts}` : ""}</b></div>${answerCard(S_)}<div class="row" style="margin-top:14px"><button class="btn" id="${last ? "qFinish" : "qNext"}" type="button">${last ? "See the final score" : "Next round"}</button></div></div>`; return;
   }
   const buzzed = S_.paused;
   const buzzers = duo ? `<div class="buzzers"><button class="buzz p1" id="qB0" type="button" ${S_.locked[0] || buzzed ? "disabled" : ""}>Player 1<small>key A</small></button><button class="buzz p2" id="qB1" type="button" ${S_.locked[1] || buzzed ? "disabled" : ""}>Player 2<small>key L</small></button></div>` : `<div class="buzzers"><button class="buzz p1 wide" id="qB0" type="button" ${buzzed ? "disabled" : ""}>BUZZ<small>space bar</small></button></div>`;
@@ -1716,28 +1723,34 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- Where did they finish? ---------- */
-function newFinish() {
-  const scope = S.code; S.fin = { scope, round: 0, score: 0, rounds: 6, phase: "ask" }; nextFinish();
-}
+function newFinish(mode) { S.fin = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], streak: 0, over: false, turn: 0, phase: "ask" }; nextFinish(); }
 function nextFinish() {
   const f = S.fin, lg = rnd(lgs(f.scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), n = tabs[sn].length, pos = Math.floor(Math.random() * n);
-  f.round++; f.cur = { lg, sn, n, pos: pos + 1, row: tabs[sn][pos], guess: Math.ceil(n / 2) }; f.phase = "ask"; renderFinish();
+  f.round++; f.turn = 0; f.cur = { lg, sn, n, pos: pos + 1, row: tabs[sn][pos], guess: Math.ceil(n / 2), guesses: [null, null], diffs: [0, 0], pts: [0, 0] }; f.phase = "ask"; renderFinish();
 }
+const ordn = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function renderFinish() {
-  const f = S.fin, c = f.cur;
-  if (f.phase === "done") { $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}<div class="rcard on"><div class="label">Final score</div><div class="big num">${f.score}</div><div class="row" style="margin-top:12px"><button class="btn" id="finAgain" type="button">Play again</button><button class="btn ghost" id="finCard" type="button">Make a result card</button></div></div></div>`; return; }
-  const r = c.row, ctx = f.phase === "ask" ? `Scored ${r[2]} and conceded ${r[3]}` : `${r[1]} points, ${r[4]} wins, ${r[5]} draws, ${r[6]} defeats`;
-  const guessPos = c.guess, ord = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
-  const body = f.phase === "ask" ? `<div class="sliderbox"><div class="num bigpos" id="finVal">${ord(guessPos)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${guessPos}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Champions</span><span>Bottom</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">Lock it in</button></div>`
-    : `<div class="rcard on"><div class="label">The real table position</div><div class="row" style="gap:16px;align-items:baseline"><div class="big num">${ord(c.pos)}</div><div>You said ${ord(c.guess)}: <b>${c.diff === 0 ? "spot on!" : c.diff + " place" + (c.diff === 1 ? "" : "s") + " off"}</b></div></div><div class="fine">+${c.pts} points</div></div><div class="row" style="margin-top:12px"><button class="btn" id="${f.round >= f.rounds ? "finEnd" : "finNext"}" type="button">${f.round >= f.rounds ? "See the final score" : "Next club"}</button></div>`;
-  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}<div class="qhud"><span class="label">Round ${f.round} of ${f.rounds}</span><span class="num qscore"><small>Score</small> <b>${f.score}</b></span></div>
-    <div class="row" style="gap:14px;margin:6px 0">${badge(c.row[0], "xl")}<div><h3 style="font-size:30px">${esc(c.row[0])}</h3><div class="fine">${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
+  const f = S.fin;
+  if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A club and a season appear. Slide to where you think it finished in the table; the closer you are, the more you score.", [
+    { id: "finStart", t: "Solo streak", d: "Keep going while you are within two places. The first bigger miss ends the run." },
+    { id: "finDuo", t: "Two players, one device", d: "Five clubs. You each slide in turn without seeing the other's guess. Closest scores most." },
+    { id: "finOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
+  const duo = f.mode === "duo", who = ["Player 1", "Player 2"], c = f.cur, r = c.row;
+  if (f.phase === "done") { const w = duo ? (f.scores[0] === f.scores[1] ? -1 : f.scores[0] > f.scores[1] ? 0 : 1) : 0; $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}<div class="rcard on"><div class="label">${duo ? "Final score" : `Streak of ${f.streak}`}</div><div class="verdicts" style="margin-top:8px">${f.scores.map((s, i) => `<div class="vd ${!duo || w === i ? "ok" : "no"}"><span class="label">${duo ? who[i] : "Points"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (w < 0 ? "A draw." : who[w] + " wins!") : ""}</b><button class="btn" id="finAgain" type="button">Play again</button><button class="btn ghost" id="finCard" type="button">Make a result card</button></div></div></div>`; return; }
+  const ctx = f.phase === "ask" ? `Scored ${r[2]} and conceded ${r[3]}` : `${r[1]} points, ${r[4]} wins, ${r[5]} draws, ${r[6]} defeats`, hud = `<div class="qhud"><span class="label">${duo ? `Round ${f.round} of ${f.rounds}` : `Streak ${f.streak}`}</span>${f.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Points"}</small> <b>${s}</b></span>`).join("")}</div>`;
+  let body;
+  if (f.phase === "ask") body = `<div class="sliderbox">${duo ? `<b>${who[f.turn]}, your guess</b>` : ""}<div class="num bigpos" id="finVal">${ordn(c.guess)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${c.guess}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Champions</span><span>Bottom</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">${duo && f.turn === 0 && !Net.role ? "Lock it in, pass the device" : "Lock it in"}</button></div>`;
+  else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real table position</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than two places out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next club"}</button></div>`; }
+  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine">${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
 }
 function lockFinish() {
-  const f = S.fin, c = f.cur; c.diff = Math.abs(c.guess - c.pos); c.pts = Math.max(0, 1000 - 220 * c.diff); f.score += c.pts; f.phase = "reveal"; c.diff === 0 ? (Snd.win(), confetti()) : c.diff <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
+  const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
+  if (duo && f.turn === 0) { f.turn = 1; c.guess = Math.ceil(c.n / 2); renderFinish(); return; }
+  const n = duo ? 2 : 1; for (let i = 0; i < n; i++) { c.diffs[i] = Math.abs(c.guesses[i] - c.pos); c.pts[i] = Math.max(0, 1000 - 220 * c.diffs[i]); f.scores[i] += c.pts[i]; }
+  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= 2) f.streak++; else f.over = true; }
+  f.phase = "reveal"; best === 0 ? (Snd.win(), confetti()) : best <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
 }
-function endFinish() { const f = S.fin; f.phase = "done"; { const k = `best_finish_${f.scope}`, cur = store.items[k] || { best: 0 }; if (f.score > cur.best) lockIn(k, { best: f.score }); } reward(30 + Math.round(f.score / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: f.score }); renderFinish(); }
-
+function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "solo") { const k = `best_finish_${f.scope}`, cur = store.items[k] || { best: 0 }; if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(f.scores[0] / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: f.scores[0] }); } renderFinish(); }
 
 /* ================= Market value games ================= */
 const ordinal2 = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
@@ -1752,22 +1765,22 @@ function cvPair(scope) {
   return null;
 }
 function renderVH(kind) {
-  const scope = S.code, key = kind === "p" ? "pv" : "cv"; if (S[key] && S[key].sc !== scope) S[key] = null; const q = S[key] || (S[key] = (kind === "p" ? pvPair(scope) : cvPair(scope)) || null); if (q) q.sc = scope; const  st = S[key + "Streak"] || 0, best = (store.items[`${key}_${scope}`] || { best: 0 }).best;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar(kind === "p" ? "Player value" : "Club value")}<p class="sub">Not enough data for this league.</p></div>`; return; }
+  const scope = S.code, key = kind === "p" ? "pv" : "cv"; if (S[key] && S[key].sc !== scope) S[key] = null; const q = S[key] || (S[key] = (kind === "p" ? pvPair(scope) : cvPair(scope)) || null); if (q) q.sc = scope; const  st = S.vStreak || 0, best = (store.items[`v_${scope}`] || { best: 0 }).best;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Market value")}<p class="sub">Not enough data for this league.</p></div>`; return; }
   const side = (x, k) => {
     const rev = q.chosen != null, val = kind === "p" ? x.val : x.f.value, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : "";
     const info = kind === "p" ? `<span class="fine">${esc(x.sub || x.pos)} · ${esc(x.nat)} · ${ageOf(x)} yrs</span><span class="row" style="gap:6px;justify-content:center">${clubBadgeFor(x.club, "sm")}<small class="fine">${esc(x.club || "")}</small></span>` : `<span class="fine">${esc(lgOf(x.f.lg).name)} · squad of ${x.f.squad}</span>`;
     return `<button type="button" class="holc ${cls}" data-vh="${k}" ${rev ? "disabled" : ""}>${kind === "p" ? "" : badge(x.n, "xl")}<b>${esc(kind === "p" ? x.n : x.n)}</b>${info}<span class="num holv" data-v="${val}">${rev ? euro(val) : "?"}</span></button>`;
   };
-  $("#room").innerHTML = `<div class="card">${gamesBar(kind === "p" ? "Player value" : "Club value")}<p class="sub">Who is worth more on Transfermarkt${kind === "c" ? " (whole squad)" : ""}?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
-    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${S[key + "Streak"]}</b><button class="btn" id="${key}Next" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${st} · best ${best}</p>`}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Market value")}<p class="sub">Who is worth more on Transfermarkt${kind === "c" ? " (whole squad)" : ""}?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
+    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${S.vStreak}</b><button class="btn" id="vNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${st} · best ${best}</p>`}</div>`;
   if (q.chosen != null) document.querySelectorAll(".holv").forEach((el) => { const end = +el.dataset.v, t0 = performance.now(); (function f(t) { const k = REDUCED ? 1 : Math.min(1, (t - t0) / 700); if (el.isConnected) el.textContent = euro(end * k); if (k < 1 && el.isConnected) requestAnimationFrame(f); })(t0); });
 }
 function answerVH(kind, k) {
-  const key = kind === "p" ? "pv" : "cv", q = S[key]; if (q.chosen != null) return; q.chosen = k; const ok = k === q.win; S[key + "Streak"] = ok ? (S[key + "Streak"] || 0) + 1 : 0;
-  const cur = store.items[`${key}_${S.code}`] || { best: 0 }; if (S[key + "Streak"] > cur.best) lockIn(`${key}_${S.code}`, { best: S[key + "Streak"] });
-  reward(5 + (ok ? 5 + 2 * Math.min(S[key + "Streak"], 10) : 0), kind === "p" ? "Player value" : "Club value", null); if (ok) Board.submit({ game: key === "pv" ? "pvalue" : "cvalue", league: S.code === "ALL" ? "all" : S.code, score: S[key + "Streak"] });
-  Snd.flip(); renderVH(kind); setTimeout(() => { ok ? (S[key + "Streak"] >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S[key + "Streak"] >= 5 && S[key + "Streak"] % 5 === 0) confetti(); }, 500);
+  const key = kind === "p" ? "pv" : "cv", q = S[key]; if (q.chosen != null) return; q.chosen = k; const ok = k === q.win; S.vStreak = ok ? (S.vStreak || 0) + 1 : 0;
+  const cur = store.items[`v_${S.code}`] || { best: 0 }; if (S.vStreak > cur.best) lockIn(`v_${S.code}`, { best: S.vStreak });
+  reward(5 + (ok ? 5 + 2 * Math.min(S.vStreak, 10) : 0), "Market value", null); if (ok) Board.submit({ game: "pvalue", league: S.code === "ALL" ? "all" : S.code, score: S.vStreak });
+  Snd.flip(); renderVH(kind); setTimeout(() => { ok ? (S.vStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.vStreak >= 5 && S.vStreak % 5 === 0) confetti(); }, 500);
 }
 
 /* ---------- Write your number: one or two players ---------- */
@@ -1775,14 +1788,18 @@ function numItem(scope) {
   if (Math.random() < 0.65) { const p = rnd(playerPool(scope, (x) => x.val >= 5e6)); return { type: "p", e: p, actual: p.val }; }
   const [n, f] = rnd(Object.entries(QZ.clubs).filter(([nm, fc]) => fc.value > 0 && (scope === "ALL" || fc.lg === scope))); return { type: "c", e: { n, f }, actual: f.value };
 }
+function renderValue() { if (S.num) return renderNumber(); if (S.vsolo) { S.vk = S.vk || rnd(["p", "c"]); return renderVH(S.vk); } renderNumber(); }
 function newNumber(mode) { S.num = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], phase: "setup" }; nextNumber(); }
 function nextNumber() {
   const g = S.num; g.round++; g.item = numItem(g.scope); g.guesses = [null, null]; g.turn = 0; g.phase = "guess"; g.pts = [0, 0]; renderNumber();
 }
 const numPts = (guess, actual) => Math.max(0, Math.round(1000 * (1 - Math.abs(Math.log(guess / actual)) / Math.log(4))));
 function renderNumber() {
-  const g = S.num; if (!g) { $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}<p class="sub">A random player or club appears. Type what you think its Transfermarkt market value is, in millions of euros. Closest guess scores the most (up to 1,000). Play alone, or take turns on one screen and see who is closer.</p><div class="row" style="margin-top:14px"><button class="btn" id="nmSolo" type="button">Play solo</button><button class="btn" id="nmDuo" type="button">Two players, one screen</button><button class="btn ghost" id="nmOnline" type="button">Online room</button></div><div id="roomBox"></div></div>`; return; }
-  const duo = g.mode === "duo", who = ["Player 1", "Player 2"], it = g.item;
+  const g = S.num; if (!g) { $("#room").innerHTML = modeIntro("Market value", "Transfermarkt puts a market value on every player and every squad. How well do you know the numbers?", [
+    { id: "nmSolo", t: "Solo: higher or lower", d: "Two players or two squads. Pick the more valuable. Keep the streak alive." },
+    { id: "nmDuo", t: "Two players, one device", d: "Write your number: a player or club appears and you each type a value in millions. Closest scores most over five rounds." },
+    { id: "nmOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
+    const duo = g.mode === "duo", who = ["Player 1", "Player 2"], it = g.item;
   if (g.phase === "done") { const best = Math.max(...g.scores), w = duo ? (g.scores[0] === g.scores[1] ? -1 : g.scores[0] > g.scores[1] ? 0 : 1) : 0; $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}<div class="rcard on"><div class="label">Final score</div><div class="verdicts" style="margin-top:8px">${g.scores.map((s, i) => `<div class="vd ${w === i || !duo ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (w < 0 ? "A draw." : who[w] + " wins!") : best >= 3500 ? "Market whisperer." : "Not bad."}</b><button class="btn" id="nmAgain" type="button">Play again</button><button class="btn ghost" id="nmCard" type="button">Make a result card</button></div></div></div>`; return; }
   const facts = it.type === "p" ? `<div class="row" style="gap:12px">${clubBadgeFor(it.e.club, "md")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(it.e.sub || it.e.pos)} · ${esc(it.e.nat)} · ${ageOf(it.e)} yrs · ${esc(it.e.club || "")}</div></div></div>` : `<div class="row" style="gap:12px">${badge(it.e.n, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(lgOf(it.e.f.lg).name)} · squad of ${it.e.f.squad} · average age ${it.e.f.age.toFixed(1)}</div><div class="fine">${it.e.f.seats ? "Stadium holds " + it.e.f.seats.toLocaleString() : ""}</div></div></div>`;
   const hud = `<div class="qhud"><span class="label">Round ${g.round} of ${g.rounds}</span>${g.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
@@ -1800,7 +1817,7 @@ function lockNumber() {
   const n = g.mode === "duo" ? 2 : 1; for (let k = 0; k < n; k++) { g.pts[k] = numPts(g.guesses[k] * 1e6, g.item.actual); g.scores[k] += g.pts[k]; }
   g.phase = "reveal"; (Math.max(...g.pts) >= 800 ? (Snd.win(), confetti()) : Snd.right()); renderNumber();
 }
-function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "solo") { reward(25 + Math.round(g.scores[0] / 120), "Write your number", null); Board.submit({ game: "number", league: g.scope === "ALL" ? "all" : g.scope, score: g.scores[0] }); } renderNumber(); }
+function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "solo") { reward(25, "Write your number", null); } renderNumber(); }
 
 /* ================= Football tic-tac-toe ================= */
 const POSNAME = { Goalkeeper: "Goalkeepers", Defender: "Defenders", Midfield: "Midfielders", Attack: "Attackers" };
@@ -1835,8 +1852,10 @@ const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8],
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
 function catHead(c) { return `<div class="tcat">${c.club && oursOf(c.club) && CREST[oursOf(c.club)] ? badge(oursOf(c.club), "sm") : ""}<span>${esc(c.label)}</span></div>`; }
 function renderTTT() {
-  const t = S.ttt; if (!t) { $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<p class="sub">Each row and column is a football category. Claim a square by naming a player who fits both its row and its column; a player can only be used once. Three in a row wins. Wrong answers lose your turn.</p><div class="row" style="margin-top:14px"><button class="btn" id="ttSolo" type="button">Play the computer</button><button class="btn" id="ttDuo" type="button">Two players, one screen</button><button class="btn ghost" id="ttOnline" type="button">Online room</button></div><div id="roomBox"></div></div>`; return; }
-  const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
+  const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Each row and column is a football category. Claim a square by naming a player who fits both its row and its column. A player can only be used once, and a wrong answer loses your turn. Three in a row wins.", [
+    { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
+    { id: "ttOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
+    const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
   const cells = t.cells.map((v, i) => `<button type="button" class="tcell ${v === 0 ? "x" : v === 1 ? "o" : ""} ${win && win.line.includes(i) ? "win" : ""}" data-tc="${i}" ${v != null || t.phase !== "play" || (t.mode === "solo" && t.turn === 1) ? "disabled" : ""}>${v != null ? `<b>${mark[v]}</b><small>${esc(t.names && t.names[i] || "")}</small>` : ""}</button>`).join("");
   const status = t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins!`) : `${who[t.turn]} (${mark[t.turn]}) to play`;
   const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
@@ -1900,9 +1919,9 @@ const Net = {
     if (this.role === "host") {
       if (m.k === "hello") { this.send({ k: "welcome" }); if (!Net.started) startOnline(); else this.push(true); }
       else if (m.k === "click") applyRemote(m);
-      else if (m.k === "input") { const el = document.getElementById(m.id); if (el) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
+      else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
-      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
+      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
   },
@@ -1918,11 +1937,11 @@ const Net = {
 };
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
-function onlineGame() { return Net.game; }
+function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
 function startOnline() {
   Net.started = true; const g = Net.game;
   if (QDEF[g]) { newQuiz(g, "duo", S.code); Q.s.mode = "duo"; Q.s.scores = [0, 0]; nextRound(); }
-  else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
+  else if (g === "finish") newFinish("duo"); else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
   Net.watch(); Net.push(true); toast("Player 2 joined. You are Player 1.");
 }
 function openOnline(game) {
@@ -1937,11 +1956,12 @@ function applyRemote(m) {
   const guestOk = () => {
     if (m.id === "qB1" || m.id === "nmLock" || m.id === "tGuess" || m.id === "qGuess" || m.id === "tCancel") { /* checked below */ }
     if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") { if (m.id === "qB1") return true; if (m.id === "qGuess" || m.da === "sug") return Q.s.buzzed === 1; return false; }
+    if (S.fin && S.fin.mode === "duo") return m.id === "finLock" && S.fin.turn === 1 && S.fin.phase === "ask";
     if (S.num && S.num.mode === "duo") return m.id === "nmLock" ? S.num.turn === 1 && S.num.phase === "guess" : false;
     if (S.ttt && S.ttt.mode === "duo") { if (m.da === "tc") return S.ttt.turn === 1 && S.ttt.sel == null; if (m.id === "tGuess" || m.id === "tCancel" || m.da === "sug") return S.ttt.turn === 1 && S.ttt.sel != null; }
     return false;
   };
-  if (!guestOk()) return; if (m.v != null) { const i = el.tagName === "INPUT" ? el : document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn"); if (i) i.value = m.v; }
+  if (!guestOk()) return; if (m.id === "finLock" && m.v != null) S.fin.cur.guess = Math.max(1, Math.min(S.fin.cur.n, +m.v || 1)); else if (m.v != null) { const i = el.tagName === "INPUT" ? el : document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn"); if (i) i.value = m.v; }
   Net.applying = true; try { el.click(); } finally { Net.applying = false; }
 }
 document.addEventListener("click", (e) => {
@@ -1951,12 +1971,24 @@ document.addEventListener("click", (e) => {
   if (b.id === "roomLeave") { e.stopImmediatePropagation(); Net.close(); S.game = null; renderRoom(); return; }
   if (Net.role === "guest" && b.closest("#room")) {
     e.stopImmediatePropagation(); e.preventDefault(); const ds = Object.keys(b.dataset).find((k) => ["tc", "sug"].includes(k));
-    const i = document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn");
+    const i = document.getElementById("qIn") || document.getElementById("tIn") || document.getElementById("nmIn") || document.getElementById("finRange");
     Net.send({ k: "click", id: b.id || null, da: !b.id && ds ? ds.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) : null, dv: !b.id && ds ? b.dataset[ds] : null, v: i ? i.value : null });
   }
 }, true);
-document.addEventListener("input", (e) => { if (Net.role === "guest" && ["qIn", "tIn", "nmIn"].includes(e.target.id)) { e.stopImmediatePropagation(); Net.send({ k: "input", id: e.target.id, v: e.target.value }); } }, true);
+document.addEventListener("input", (e) => { if (Net.role === "guest" && ["qIn", "tIn", "nmIn", "finRange"].includes(e.target.id)) { e.stopImmediatePropagation(); Net.send({ k: "input", id: e.target.id, v: e.target.value }); } }, true);
 document.addEventListener("keydown", (e) => { if (Net.role === "guest" && e.key === "Enter" && ["qIn", "tIn", "nmIn"].includes(e.target.id)) { e.stopImmediatePropagation(); e.preventDefault(); const id = e.target.id === "qIn" ? "qGuess" : e.target.id === "tIn" ? "tGuess" : "nmLock"; Net.send({ k: "click", id, v: e.target.value }); } else if (Net.role === "guest" && !["INPUT"].includes(e.target.tagName)) { e.stopImmediatePropagation(); } }, true);
+
+/* ---------- How it works + credits ---------- */
+function renderAbout() {
+  const sm = DATA.summary[S.code] || DATA.summary.ALL;
+  $("#room").innerHTML = `<div class="card about"><h2>How it works</h2>
+    <p>The model forecasts Home, Draw or Away for a match using only what was known before kickoff: each team's recent results and goals, an Elo-style strength rating built from past results, rest days and table position. A random forest and a Poisson goal model are blended, and the blend is trained on all five leagues together.</p>
+    <h3>How we test it honestly</h3><p>Season by season, the model is trained only on earlier seasons and then predicts the next one it has never seen. Across ${sm.n.toLocaleString()} matches it gets <b>${pct(sm.pooled_acc, 1)}</b> of results right; the bookmakers' closing odds get <b>${pct(sm.market_acc, 1)}</b>. The gap is information (lineups, injuries, news), not effort: many extra signals were tried and thrown out because they did not help in both of the test models.</p>
+    <h3>Two playing styles</h3><p><b>Max Accuracy</b> simply picks the most likely result. <b>Balanced</b> also calls draws and away wins, so its picks are spread like real results, at the cost of some accuracy. In the games, switch between them where it says "Model plays".</p>
+    <h3>What the games do with it</h3><ul><li>The title race comes from 20,000 simulations of the rest of the season per league.</li><li>The season replay puts the model's expected-points table beside the real one.</li><li>The ball-knowledge games use player and club facts from Transfermarkt, which stop at July 2026.</li></ul>
+    <h3>Credits</h3><ul><li>Results and bookmaker odds: football-data.co.uk. Expected goals (Premier League): Understat.</li><li>Players, transfers and market values: the Transfermarkt dataset on Kaggle (CC0).</li><li>Club badges, league logos and player cutouts: TheSportsDB and football-data.org. They belong to their owners and appear here only to identify clubs, leagues and players.</li><li>Built by moisback22, a student project, in pair-programming sessions with Claude Code. Not affiliated with any league, club or player, and not betting advice.</li></ul>
+    <p class="fine">Source code and the full project log: github.com/mosoliman517-sudo/football-prediction-model</p></div>`;
+}
 
 /* ---------- Review ---------- */
 function renderReview() {
@@ -2054,20 +2086,22 @@ document.addEventListener("click", (e) => {
   if (b.id === "qNext") { Snd.tick(); nextRound(); return; }
   if (b.id === "qFinish") { finishQuiz(); return; }
   if (b.id === "qAgain") { newQuiz(Q.s.game, "solo", S.code); return; }
-  if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `Beat the Model, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.rounds || d.rounds), "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
+  if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `Beat the Model, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
   if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }
   if (b.id === "qGuess") { submitAnswer(null); return; }
   if (b.dataset.sug != null && b.closest("#qSug")) { const v = b.dataset.sug; submitAnswer(QDEF[Q.s.game].unit === "club" ? v : +v); return; }
-  if (b.id === "finStart" || b.id === "finAgain") { newFinish(); Snd.tick(); return; }
-  if (b.id === "finLock") { lockFinish(); return; }
+  if (b.id === "finStart") { newFinish("solo"); Snd.tick(); return; }
+  if (b.id === "finDuo") { newFinish("duo"); Snd.tick(); return; }
+  if (b.id === "finOnline") { openOnline("finish"); return; }
+  if (b.id === "finAgain") { newFinish(S.fin.mode); Snd.tick(); return; }
+  if (b.id === "finLock") { if (Net.role === "host" && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
   if (b.id === "finNext") { nextFinish(); Snd.tick(); return; }
   if (b.id === "finEnd") { endFinish(); return; }
-  if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(f.score), sub: "points", line: "Table knowledge.", share: `Beat the Model, Where did they finish?: ${f.score} points.`, tiles: [[String(f.rounds), "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], ["solo", "mode"]] }); return; }
-  if (b.dataset.vh) { answerVH(S.game === "pvalue" ? "p" : "c", b.dataset.vh); return; }
-  if (b.id === "pvNext") { S.pv = null; Snd.tick(); renderVH("p"); return; }
-  if (b.id === "cvNext") { S.cv = null; Snd.tick(); renderVH("c"); return; }
-  if (b.id === "nmSolo") { newNumber("solo"); Snd.tick(); return; }
+  if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(Math.max(...f.scores)), sub: f.mode === "solo" ? `streak of ${f.streak}` : "points", line: "Table knowledge.", share: `Beat the Model, Where did they finish?: ${Math.max(...f.scores)} points.`, tiles: [[String(f.mode === "solo" ? f.streak : f.rounds), f.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [f.mode, "mode"]] }); return; }
+  if (b.dataset.vh) { answerVH(S.vk, b.dataset.vh); return; }
+  if (b.id === "vNext") { S.pv = S.cv = null; S.vk = rnd(["p", "c"]); Snd.tick(); renderVH(S.vk); return; }
+  if (b.id === "nmSolo") { S.vsolo = true; S.vStreak = 0; S.vk = rnd(["p", "c"]); Snd.tick(); renderValue(); return; }
   if (b.id === "nmDuo") { newNumber("duo"); Snd.tick(); return; }
   if (b.id === "nmLock") { if (Net.role === "host" && !Net.applying && S.num.turn === 1) return; lockNumber(); return; }
   if (b.id === "nmNext") { Snd.tick(); nextNumber(); return; }
@@ -2098,7 +2132,8 @@ document.addEventListener("click", (e) => {
   if (b.id === "rpPlay") { toggleReplay(); return; }
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
-function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; }
+function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; }
+document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
 document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; box.innerHTML = suggestions(e.target.value, QZ.players, (x) => x.n).map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join(""); } });
 document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {

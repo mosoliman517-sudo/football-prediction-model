@@ -146,7 +146,7 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "tables": final_tables(lg), "scorers": ({sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in scorers_all.items()} if lg == "E0" else None), "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
-sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}
+sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items()}
 board = None          # online database (Supabase) settings: site/board_config.json = {"url": "...", "key": "<anon public key>"}; env BOARD_URL / BOARD_KEY override (for tests)
 if os.environ.get("BOARD_URL") and os.environ.get("BOARD_KEY"):
     board = {"url": os.environ["BOARD_URL"].rstrip("/"), "key": os.environ["BOARD_KEY"]}

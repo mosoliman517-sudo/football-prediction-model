@@ -33,6 +33,7 @@
 :root[data-league="I1"] { --bg: #0D2A2B; --surface: #153B3C; --surface2: #1D4A4B; --ink: #F6EDD9; --muted: #A9CBC0; --accent: #F3D9A4; --accent2: #5CC8FF; --line: #2D5F5C; --glow: #2EC4B6; --on-accent: #1F2A16; --display: "DM Serif Display", Georgia, serif; }
 :root[data-league="F1"] { --bg: #0F1A2B; --surface: #172840; --surface2: #1F3452; --ink: #EEF3F7; --muted: #9DB2CB; --accent: #E4F55B; --accent2: #7FD4FF; --line: #2D4668; --glow: #5B8CFF; --on-accent: #1B2200; --display: "Syne", system-ui, sans-serif; }
 
+:root[data-league="ALL"] { --bg: #14121F; --surface: #211D33; --surface2: #2C2742; --ink: #F4EFE6; --muted: #B3AEC4; --accent: #FFD166; --accent2: #FF6B9D; --line: #3E3860; --glow: #7C6CFF; --on-accent: #2A2000; --display: "Bricolage Grotesque", system-ui, sans-serif; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
@@ -354,6 +355,19 @@ input { background: var(--surface2); border: 1px solid var(--line); border-radiu
 @media (prefers-reduced-motion: reduce) { .toast, .modal, .xpbar i { animation: none; transition: none; } }
 .authform { display: grid; gap: 10px; margin-top: 12px; }
 .link { background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 600; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
+.gstep { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; }
+.gstep button { width: 52px; height: 52px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface2); cursor: pointer; font: 800 26px var(--mono); transition: transform .12s ease, border-color .15s ease; }
+.gstep button:hover:not([disabled]) { border-color: var(--accent); transform: translateY(-2px); }
+.gstep button:active:not([disabled]) { transform: scale(.94); }
+.gstep output { min-width: 44px; text-align: center; font: 800 54px var(--mono); line-height: 1; }
+.toggle { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 18px 8px 12px; border-radius: 18px; border: 2px solid var(--line); background: var(--surface2); cursor: pointer; text-align: left; transition: border-color .2s ease, background .2s ease; }
+.toggle:hover { border-color: var(--accent); }
+.toggle b { display: block; font-size: 17px; } .toggle small { color: var(--muted); font-size: 13px; }
+.toggle .tk { width: 58px; height: 32px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 18%, transparent); position: relative; flex: none; transition: background .25s ease; }
+.toggle .tk i { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .25s cubic-bezier(.2, 1.2, .3, 1); box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.toggle[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface2)); }
+.toggle[aria-pressed="true"] .tk { background: var(--accent); } .toggle[aria-pressed="true"] .tk i { transform: translateX(26px); }
+@media (max-width: 560px) { .gstep output { font-size: 44px; } }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -396,7 +410,9 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pct = (v, d = 0) => (v * 100).toFixed(d) + "%";
 const LG = DATA.leagues, ORDER = ["E0", "D1", "SP1", "I1", "F1"];
-const SLUG = { E0: "premier-league", D1: "bundesliga", SP1: "la-liga", I1: "serie-a", F1: "ligue-1" };
+LG.ALL = { name: "All five leagues", country: "Europe", tag: "Random matches from every league on one big pitch.", star: null, logo: null, crests: {}, seasons: {}, tables: {}, race: null, scorers: null };
+const lgs = (c) => (c === "ALL" ? ORDER : [c]);
+const SLUG = { E0: "premier-league", D1: "bundesliga", SP1: "la-liga", I1: "serie-a", F1: "ligue-1", ALL: "all-leagues" };
 const BYSLUG = Object.fromEntries(Object.entries(SLUG).map(([k, v]) => [v, k]));
 const PAL = {
   E0: { bg: "#1B1030", surface: "#2A1A47", ink: "#F7EEDC", muted: "#B9A9D6", accent: "#7CF5C8", glow: "#A855F7", display: '"Bricolage Grotesque", sans-serif', mood: "Floodlit evening" },
@@ -404,6 +420,7 @@ const PAL = {
   SP1: { bg: "#2B0F19", surface: "#3B1824", ink: "#FFF0E0", muted: "#E0B7A8", accent: "#FFC857", glow: "#FF5E5B", display: "Fraunces, serif", mood: "Sangria sunset" },
   I1: { bg: "#0D2A2B", surface: "#153B3C", ink: "#F6EDD9", muted: "#A9CBC0", accent: "#F3D9A4", glow: "#2EC4B6", display: '"DM Serif Display", serif', mood: "Piazza at dusk" },
   F1: { bg: "#0F1A2B", surface: "#172840", ink: "#EEF3F7", muted: "#9DB2CB", accent: "#E4F55B", glow: "#5B8CFF", display: "Syne, sans-serif", mood: "Parisian twilight" },
+  ALL: { bg: "#14121F", surface: "#211D33", ink: "#F4EFE6", muted: "#B3AEC4", accent: "#FFD166", glow: "#7C6CFF", display: '"Bricolage Grotesque", sans-serif', mood: "Five leagues, one pitch" },
 };
 const FLAG = {
   E0: "linear-gradient(#CE1124,#CE1124) center/100% 17% no-repeat, linear-gradient(#CE1124,#CE1124) center/11% 100% no-repeat, #ffffff",
@@ -411,8 +428,9 @@ const FLAG = {
   SP1: "linear-gradient(180deg,#AA151B 0 25%,#F1BF00 25% 75%,#AA151B 75%)",
   I1: "linear-gradient(90deg,#009246 0 33.3%,#ffffff 33.3% 66.6%,#CE2B37 66.6%)",
   F1: "linear-gradient(90deg,#0055A4 0 33.3%,#ffffff 33.3% 66.6%,#EF4135 66.6%)",
+  ALL: "linear-gradient(90deg,#CE1124 0 20%,#FFCE00 20% 40%,#AA151B 40% 60%,#009246 60% 80%,#0055A4 80%)",
 };
-const INITIALS = { E0: "PL", D1: "BL", SP1: "LL", I1: "SA", F1: "L1" };
+const INITIALS = { E0: "PL", D1: "BL", SP1: "LL", I1: "SA", F1: "L1", ALL: "ALL" };
 // Original emblems (not the official league logos, which are trademarked): a ring, a motif, the initials. If site/logos/<code>.* exists at build time its image is used instead.
 function emblem(c, cls = "") {
   const L = lgOf(c); if (L.logo) return `<img class="emblem ${cls}" src="${L.logo}" alt="${esc(L.name)} logo">`;
@@ -422,6 +440,7 @@ function emblem(c, cls = "") {
     SP1: '<circle cx="50" cy="42" r="10" fill="currentColor"/>' + [0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<path d="M50 24v-7" stroke="currentColor" stroke-width="4" stroke-linecap="round" transform="rotate(${a} 50 42)"/>`).join(""),
     I1: '<path d="M30 58V40a20 20 0 0140 0v18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M40 58V42a10 10 0 0120 0v16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
     F1: '<path d="M50 20l7 16 17 2-13 12 4 17-15-9-15 9 4-17-13-12 17-2z" fill="currentColor"/>',
+    ALL: [[50, 24], [30, 42], [70, 42], [38, 62], [62, 62]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="currentColor"/>`).join(""),
   }[c];
   return `<svg class="emblem ${cls}" viewBox="0 0 100 100" role="img" aria-label="${esc(L.name)} emblem" style="color:var(--c-accent,var(--accent))"><circle cx="50" cy="50" r="46" fill="var(--c-bg,var(--bg))" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/>${motif}<text x="50" y="82" text-anchor="middle" font-size="15" font-weight="800" fill="var(--c-ink,var(--ink))" style="font-family:var(--c-display,var(--display));letter-spacing:.06em">${INITIALS[c]}</text></svg>`;
 }
@@ -459,8 +478,8 @@ const Snd = (() => {
     const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     s.connect(f); f.connect(g); g.connect(master); s.start(t0);
   }
-  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10] };
-  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine" };
+  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
+  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
   return {
     get level() { return level; },
@@ -512,7 +531,7 @@ async function lockIn(key, body) {
   store.items[key] = body; saveLocal(); paintScore(); if (typeof Account !== "undefined") Account.queue();
   if (store.coll) { try { await store.coll.doc(key).set(body); } catch (e) { store.mode = "local"; } }
 }
-const playsOf = (code) => Object.entries(store.items).filter(([k]) => k.startsWith(`p_${code}_`)).map(([k, v]) => ({ k, ...v }));
+const playsOf = (code) => Object.entries(store.items).filter(([k]) => (code === "ALL" ? k.startsWith("p_") : k.startsWith(`p_${code}_`))).map(([k, v]) => ({ k, ...v }));
 const allPlays = () => Object.entries(store.items).filter(([k]) => k.startsWith("p_")).map(([k, v]) => ({ k, ...v }));
 
 /* ---------- data helpers ---------- */
@@ -521,7 +540,7 @@ const lgOf = (c) => LG[c];
 const poolSeasons = (c) => Object.keys(lgOf(c).seasons).sort();
 // The games draw from every season on the page (a decade of matches); the replay and the title race show only the last three finished seasons and the live one.
 function replaySeasons(c) { const ks = poolSeasons(c), L = lgOf(c).seasons; return ks.filter((k) => L[k].live).concat(ks.filter((k) => !L[k].live).slice(-3)).sort(); }
-function allMatches(c) { return poolSeasons(c).flatMap((s) => lgOf(c).seasons[s].matches.map((m, i) => ({ m, season: s, i }))); }
+function allMatches(c) { return lgs(c).flatMap((lg) => poolSeasons(lg).flatMap((s) => lgOf(lg).seasons[s].matches.map((m, i) => ({ m, season: s, i, c: lg })))); }
 // m = [date, home, away, hg, ag, res, pA, pD, pH, lamH, lamA, mkA, mkD, mkH]
 const odds = (m) => [m[6], m[7], m[8]];       // A, D, H
 function modelCall(m, style = S.style) {
@@ -564,7 +583,7 @@ function route(ev) {
   if (cm && FROMSHORT[cm[1]]) { S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
   const h = location.hash.slice(1), code = Object.keys(BYSLUG).find((s) => h === s || h.startsWith(s + "-")) ;
   const lg = code ? BYSLUG[code] : null;
-  if (lg) { const room = h.slice(code.length + 1); const GM = ["call", "daily", "matchday", "upset", "table", "hol"]; if (GM.includes(room)) { S.room = "play"; S.game = room; } else { S.room = ["play", "race", "replay", "boards", "review"].includes(room) ? room : "play"; S.game = null; } openLeague(lg, ev); }
+  if (lg) { const room = h.slice(code.length + 1); const GM = ["call", "daily", "matchday", "upset", "table", "hol"]; if (GM.includes(room)) { S.room = "play"; S.game = room; } else { S.room = ["play", "race", "replay", "boards", "review"].includes(room) ? room : "play"; S.game = null; if (lg === "ALL" && (S.room === "race" || S.room === "replay")) S.room = "play"; } openLeague(lg, ev); }
   else { S.code = null; setTheme(null, ev); $("#lobby").hidden = false; $("#league").hidden = true; stopReplay(); window.scrollTo(0, 0); }
 }
 function openLeague(code, ev) {
@@ -579,13 +598,13 @@ function openLeague(code, ev) {
 
 /* ---------- lobby ---------- */
 function renderLobby() {
-  $("#worlds").innerHTML = ORDER.map((c) => {
+  $("#worlds").innerHTML = ["ALL", ...ORDER].map((c) => {
     const L = lgOf(c), p = PAL[c], sm = DATA.summary[c], st = L.star;
     return `<button type="button" class="world" data-lg="${c}" style="--c-bg:${p.bg};--c-surface:${p.surface};--c-ink:${p.ink};--c-muted:${p.muted};--c-accent:${p.accent};--c-glow:${p.glow};--c-display:${p.display}">
       <span class="flag" style="background:${FLAG[c]}" aria-hidden="true"></span>${emblem(c)}
       <div><div class="wk">${esc(p.mood)} · ${esc(L.country)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div>
         <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></div>
-      <div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club, "md")}${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : ""}</div></button>`;
+      ${st ? `<div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club, "md")}${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : ""}</div>` : `<div class="star"><div><div class="wk">Mix it up</div><div class="sn">Any league, any season</div><small>Every game, random across all five</small></div></div>`}</button>`;
   }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display);grid-template-columns:1fr;min-height:120px"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
   document.querySelectorAll(".world[data-lg]").forEach((el) => {
     el.addEventListener("pointermove", (e) => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; el.style.setProperty("--mx", x * 100 + "%"); el.style.setProperty("--my", y * 100 + "%"); if (!REDUCED) { el.style.setProperty("--ry", ((x - 0.5) * 7).toFixed(2) + "deg"); el.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg"); } });
@@ -612,49 +631,50 @@ function paintScore() {
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = [["play", "Play"], ["race", "Title race"], ["replay", "Replay a season"], ["boards", "Leaderboards"], ["review", "How good is it?"]];
+  const rooms = S.code === "ALL" ? [["play", "Play"], ["boards", "Leaderboards"], ["review", "How good is it?"]] : [["play", "Play"], ["race", "Title race"], ["replay", "Replay a season"], ["boards", "Leaderboards"], ["review", "How good is it?"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
 function renderRoom() { stopReplay(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview })[S.room](); }
 
 /* ---------- Call it ---------- */
-function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`]); }
+function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${r.c}_${r.season}_${r.i}`]); }
 function renderCall() {
   const c = S.code;
   if (S.cur) return renderPlay();
   const fresh = freshPool(c);
-  const st = lgOf(c).star, clubMs = allMatches(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club).sort((a, b) => (a.m[0] < b.m[0] ? -1 : 1)), recent = clubMs.slice(-10), fm = DATA.profiles[S.style];
+  const st = lgOf(c).star || { club: "", name: "", role: "", face: null }, clubMs = allMatches(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club).sort((a, b) => (a.m[0] < b.m[0] ? -1 : 1)), recent = clubMs.slice(-10), fm = DATA.profiles[S.style];
   const hit = (m) => { const adj = [m[6] * fm.a, m[7] * fm.d, m[8] * fm.h]; return "ADH"[adj.indexOf(Math.max(...adj))] === m[5]; };
   const form = clubMs.slice(-5).map((r) => { const m = r.m, own = m[1] === st.club ? m[3] - m[4] : m[4] - m[3]; return own > 0 ? "W" : own === 0 ? "D" : "L"; });
   const clubFresh = freshPool(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club);
   const starCard = `<div class="starwatch">${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="row" style="gap:8px">${badge(st.club, "sm")}<span class="fine">${esc(st.role)} · ${esc(st.club)}</span></div><div class="fine">The model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
-  $("#room").innerHTML = starCard + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
+  $("#room").innerHTML = (c === "ALL" ? "" : starCard) + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
     <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last ten years, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
 }
-function open(c, season, i, onDone, key) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null, key: key || `p_${c}_${season}_${i}` }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
+function open(c, season, i, onDone, key) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null, key: key || `p_${c}_${season}_${i}` }; S.pick = null; S.score = [0, 0]; S.useScore = true; S.busy = false; renderRoom(); }
 function renderPlay() {
   const { c, season, i, m } = S.cur, key = S.cur.key, done = store.items[key];
   const fh = formOf(c, m[1], m[0]), fa = formOf(c, m[2], m[0]);
-  const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone === "chal" ? "Back to the challenge" : S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${season} · ${fmtDate(m[0])}</span></div>
-    <div class="stage"><div class="team">${badge(m[1])}<b>${esc(m[1])}</b>${formHTML(fh)}</div><div class="vs">vs</div><div class="team">${badge(m[2])}<b>${esc(m[2])}</b>${formHTML(fa)}</div></div>`;
+  const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone === "chal" ? "Back to the challenge" : S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${S.code === "ALL" ? lgOf(c).name + " · " : ""}${season} · ${fmtDate(m[0])}</span></div>
+    <div class="stage"><div class="team">${badge(m[1])}<b>${esc(m[1])}</b>${formHTML(fh)}${done ? "" : goalStep(0)}</div><div class="vs">vs</div><div class="team">${badge(m[2])}<b>${esc(m[2])}</b>${formHTML(fa)}${done ? "" : goalStep(1)}</div></div>`;
   if (done) { $("#room").innerHTML = `<div class="card">${head}<div class="theatre" id="theatre" hidden></div><div class="reveal" id="reveal"></div></div>`; showReveal(done, true); return; }
   const mine = S.pick;
   $("#room").innerHTML = `<div class="card">${head}
     <div class="picks" id="picks">${[["H", `${esc(m[1])} win`], ["D", "Draw"], ["A", `${esc(m[2])} win`]].map(([k, t]) => `<button type="button" class="pick" data-pick="${k}" aria-pressed="${mine === k}">${t}<small>your call</small></button>`).join("")}</div>
-    <div class="row" style="margin-top:14px"><label class="fine"><input type="checkbox" id="useScore" ${S.useScore ? "checked" : ""}> Also guess the exact score (+2)</label>
-      <span class="stepper" ${S.useScore ? "" : "hidden"} id="stepper"><button type="button" data-st="0-" aria-label="Home goals down">−</button><output class="num" id="sH">${S.score[0]}</output><button type="button" data-st="0+" aria-label="Home goals up">+</button><b>:</b><button type="button" data-st="1-" aria-label="Away goals down">−</button><output class="num" id="sA">${S.score[1]}</output><button type="button" data-st="1+" aria-label="Away goals up">+</button></span></div>
+    <div class="row" style="margin-top:16px"><button type="button" class="toggle" id="useScoreBtn" aria-pressed="${S.useScore}"><span class="tk"><i></i></span><span><b>Exact score</b><small>${S.useScore ? "On: set each team's goals above for +2 points if you nail it" : "Off: just pick the result"}</small></span></button></div>
     <div class="row" style="margin-top:16px"><button class="btn" id="lockBtn" type="button" ${mine ? "" : "disabled"}>Lock it in</button><span class="fine">Once locked it can't be changed.</span></div>
     <div class="theatre" id="theatre" hidden></div><div class="reveal" id="reveal"></div></div>`;
 }
+const goalStep = (k) => (S.useScore ? `<div class="gstep" role="group" aria-label="${k === 0 ? "Home" : "Away"} goals"><button type="button" data-st="${k}-" aria-label="One fewer goal">−</button><output class="num" id="${k === 0 ? "sH" : "sA"}">${S.score[k]}</output><button type="button" data-st="${k}+" aria-label="One more goal">+</button></div>` : "");
+const defaultScore = (pick) => (pick === "H" ? [1, 0] : pick === "A" ? [0, 1] : [1, 1]);
 function lockPlay() {
   if (S.busy || !S.pick) return; S.busy = true;
   const { c, season, i, m } = S.cur, key = S.cur.key, call = modelCall(m);
   const score = S.useScore ? [...S.score] : null, pick = S.useScore ? resOf(S.score[0], S.score[1]) : S.pick;
   const item = { lg: c, season, date: m[0], home: m[1], away: m[2], pick, score, mpick: call.pick, mscore: call.score, probs: call.probs, real: [m[3], m[4]], res: m[5], style: S.style, at: new Date().toISOString() };
   Snd.lock(); lockIn(key, item);
-  document.querySelectorAll("#picks .pick, #lockBtn, #useScore, #stepper button").forEach((b) => { b.disabled = true; });
+  document.querySelectorAll("#picks .pick, #lockBtn, #useScoreBtn, .gstep button").forEach((b) => { b.disabled = true; });
   startTheatre(c, season, m, call.score, () => showReveal(item, false));
 }
 function showReveal(it, instant) {
@@ -698,12 +718,12 @@ function dailyFixtures(c, key) {
   while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
   return out;
 }
-function dailyState(c, key) { const f = dailyFixtures(c, key), items = f.map((x) => store.items[`p_${c}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; }
+function dailyState(c, key) { const f = dailyFixtures(c, key), items = f.map((x) => store.items[`p_${x.c}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; }
 function dailyDays(c) { let s = 0; const now = Date.now(); for (let k = 0; k < 60; k++) { const n = dailyState(c, dayKey(new Date(now - k * 864e5))).n; if (n === 5) s++; else if (k > 0) break; } return s; }
 function renderDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key);
   if (S.cur) return renderPlay();
-  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
+  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.c}|${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button><button class="btn ghost" id="dailyCard" type="button">Make a result card</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
   $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from the last ten years, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
@@ -929,15 +949,15 @@ const GAMES = [
 function recordLine(c, id) {
   if (id === "call") { const t = totals(playsOf(c)); return t.n ? `${t.you} v ${t.mod} points over ${t.n} matches` : "not played yet"; }
   if (id === "daily") { const n = dailyDays(c); return n ? `${n} day${n === 1 ? "" : "s"} in a row` : "not played today"; }
-  if (id === "matchday") { const it = Object.entries(store.items).filter(([k]) => k.startsWith(`md_${c}_`)).map(([, v]) => v); return it.length ? `you ${it.reduce((a, x) => a + x.you, 0)} v model ${it.reduce((a, x) => a + x.mod, 0)} right, ${it.length} matchday${it.length === 1 ? "" : "s"}` : "not played yet"; }
+  if (id === "matchday") { const it = Object.entries(store.items).filter(([k]) => (c === "ALL" ? k.startsWith("md_") : k.startsWith(`md_${c}_`))).map(([, v]) => v); return it.length ? `you ${it.reduce((a, x) => a + x.you, 0)} v model ${it.reduce((a, x) => a + x.mod, 0)} right, ${it.length} matchday${it.length === 1 ? "" : "s"}` : "not played yet"; }
   if (id === "upset") { const u = store.items[`u_${c}`]; return u ? `${u.right}/${u.rounds} right, best streak ${u.best}` : "not played yet"; }
-  if (id === "table") { const it = Object.entries(store.items).filter(([k]) => k.startsWith(`t_${c}_`)).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
+  if (id === "table") { const it = Object.entries(store.items).filter(([k]) => (c === "ALL" ? k.startsWith("t_") : k.startsWith(`t_${c}_`))).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
   if (id === "hol") { const h = store.items[`h_${c}`]; return h ? `best streak ${h.best}` : "not played yet"; }
   if (id === "challenge") { const n = Object.keys(store.items).filter((k) => k.startsWith("xpc_")).length; return n ? `${n} challenge${n === 1 ? "" : "s"} played` : "not played yet"; }
   return "";
 }
 function renderHub() {
-  const c = S.code, clubs = Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
+  const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
   $("#room").innerHTML = `<div class="hub">${GAMES.map((g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 70}ms"><div class="gfaces">${pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`).join("")}</div>`;
 }
@@ -951,21 +971,21 @@ function renderPlayRoom() {
 /* ---------- Matchday ---------- */
 function mdList(c) {
   const out = [];
-  poolSeasons(c).forEach((sn) => { const ms = lgOf(c).seasons[sn].matches, per = roundsOf(ms).per; for (let n = 1; n * per <= ms.length; n++) out.push({ season: sn, n, per }); });
+  lgs(c).forEach((lg) => poolSeasons(lg).forEach((sn) => { const ms = lgOf(lg).seasons[sn].matches, per = roundsOf(ms).per; for (let n = 1; n * per <= ms.length; n++) out.push({ c: lg, season: sn, n, per }); }));
   return out;
 }
 const mdKey = (c, sn, n) => `md_${c}_${sn}_${n}`;
 function renderMatchday() {
   const c = S.code;
   if (!S.md) {
-    const free = mdList(c).filter((x) => !store.items[mdKey(c, x.season, x.n)]);
+    const free = mdList(c).filter((x) => !store.items[mdKey(x.c, x.season, x.n)]);
     $("#room").innerHTML = `<div class="card">${gamesBar("Matchday")}<p class="sub">A whole round of real matches. Pick a result for each, lock them all, and the real scores land one by one against the model's calls.</p>
       <div class="row" style="margin-top:14px"><button class="btn" id="mdRandom" type="button" ${free.length ? "" : "disabled"}>Random matchday</button>
       <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
-      <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${poolSeasons(c).length} seasons.</p></div>`;
+      <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${c === "ALL" ? "all five leagues and ten seasons" : poolSeasons(c).length + " seasons"}.</p></div>`;
     return;
   }
-  const { season, n, per, picks, locked } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per), done = store.items[mdKey(c, season, n)];
+  const { c: mc, season, n, per, picks, locked } = S.md, ms = lgOf(mc).seasons[season].matches.slice((n - 1) * per, n * per), done = store.items[mdKey(mc, season, n)];
   const rows = ms.map((m, i) => {
     const call = modelCall(m), res = done ? done.res[i] : null;
     return `<div class="mdrow2" data-i="${i}"><div class="mteam h">${esc(m[1])}${badge(m[1], "sm")}</div>
@@ -973,13 +993,13 @@ function renderMatchday() {
       <div class="mteam">${badge(m[2], "sm")}${esc(m[2])}</div><div class="mres" id="mres${i}">${done ? mdResult(m, picks[i] != null ? picks[i] : done.picks[i], call) : ""}</div></div>`;
   }).join("");
   const filled = picks.filter(Boolean).length;
-  $("#room").innerHTML = `<div class="card">${gamesBar(`${season} · matchday ${n}`)}<div class="mdlist">${rows}</div>
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${c === "ALL" ? lgOf(mc).name + " · " : ""}${season} · matchday ${n}`)}<div class="mdlist">${rows}</div>
     <div class="row" style="margin-top:14px"><button class="btn" id="mdLock" type="button" ${filled === per && !locked && !done ? "" : "disabled"}>Lock all ${per}</button><span class="fine" id="mdCount">${filled}/${per} picked</span></div><div id="mdSum"></div></div>`;
   if (done) renderMdSummary(done, true);
 }
 const mdResult = (m, pick, call) => { const ok = pick === m[5], mok = call.pick === m[5]; return `<span class="num score">${m[3]}-${m[4]}</span><span class="mark ${ok ? "y" : "n"}" title="You">${ok ? "✓" : "✗"}</span><span class="mark ${mok ? "y" : "n"} dim" title="Model: ${OUTNAME[call.pick]}">${mok ? "✓" : "✗"}</span>`; };
 function lockMd() {
-  const c = S.code, { season, n, per, picks } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per);
+  const { c, season, n, per, picks } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per);
   S.md.locked = true; Snd.lock();
   document.querySelectorAll(".mp, #mdLock").forEach((b) => { b.disabled = true; });
   let you = 0, mod = 0, i = 0; const res = ms.map((m) => m[5]), mp = ms.map((m) => modelCall(m).pick);
@@ -1024,42 +1044,43 @@ function renderUpset() {
 }
 function answerUpset(k) {
   const c = S.code, u = S.up; if (u.chosen != null) return; u.chosen = k; const ok = k === u.ans; S.upStreak = ok ? S.upStreak + 1 : 0;
-  const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) }); afterUpset(ok, u.ps[u.ans], S.upStreak);
+  const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) }); afterUpset(ok, u.ps[u.ans], S.upStreak, u.items[u.ans].c);
   Snd.flip(); renderUpset(); setTimeout(() => { ok ? (S.upStreak >= 3 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.upStreak >= 3) confetti(); }, 350);
 }
 
 /* ---------- Guess the table ---------- */
 const tabKey = (c, sn) => `t_${c}_${sn}`;
-function tabSeasons(c) { return Object.keys(lgOf(c).tables).sort().filter((s) => s > Object.keys(lgOf(c).tables).sort()[0]); }
+function tabSeasons(c) { const ks = Object.keys(lgOf(c).tables).sort(); return ks.filter((s) => s > ks[0]); }
+const tabChoices = (c) => lgs(c).flatMap((lg) => tabSeasons(lg).map((sn) => ({ c: lg, season: sn })));
 function prevPos(c, sn) { const keys = Object.keys(lgOf(c).tables).sort(), i = keys.indexOf(sn); return i > 0 ? Object.fromEntries(lgOf(c).tables[keys[i - 1]].map((r, j) => [r[0], j + 1])) : {}; }
 function renderTableGame() {
-  const c = S.code, L = lgOf(c);
+  const c = S.tab ? S.tab.c : S.code, L = lgOf(c);
   if (!S.tab) {
-    const seasons = tabSeasons(c), done = (sn) => store.items[tabKey(c, sn)];
+    const choices = tabChoices(S.code), done = (x) => store.items[tabKey(x.c, x.season)];
     $("#room").innerHTML = `<div class="card">${gamesBar("Guess the table")}<p class="sub">Predict a whole season's final table. You start from last season's table and move clubs up or down; drag a row or use the arrows. The model's table is simply the points it expected from its pre-match probabilities over the whole season. Whoever is closer wins. Fair warning: just repeating last season is a hard baseline to beat.</p>
-      <div class="row" style="margin-top:14px"><select id="tbSeason" aria-label="Season">${seasons.slice().reverse().map((sn) => `<option value="${sn}">${sn}${done(sn) ? " ✓" : ""}</option>`).join("")}</select><button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div></div>`;
+      <div class="row" style="margin-top:14px"><select id="tbSeason" aria-label="Season">${choices.slice().reverse().map((x) => `<option value="${x.c}|${x.season}">${S.code === "ALL" ? lgOf(x.c).name + " " : ""}${x.season}${done(x) ? " ✓" : ""}</option>`).join("")}</select><button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div></div>`;
     return;
   }
   const { season, order } = S.tab, done = store.items[tabKey(c, season)], prev = prevPos(c, season);
   if (done) return renderTableVerdict(done);
   const rows = order.map((t, i) => `<div class="tbrow" draggable="true" data-tb="${i}"><span class="num tbn">${i + 1}</span>${badge(t, "sm")}<b>${esc(t)}</b><span class="fine">${prev[t] ? `last season ${prev[t]}${["th", "st", "nd", "rd"][prev[t] % 10 > 3 || (prev[t] > 10 && prev[t] < 14) ? 0 : prev[t] % 10]}` : "promoted"}</span><span class="tbbtns"><button class="xbtn" type="button" data-mv="${i}|-1" aria-label="Move up" ${i === 0 ? "disabled" : ""}>▲</button><button class="xbtn" type="button" data-mv="${i}|1" aria-label="Move down" ${i === order.length - 1 ? "disabled" : ""}>▼</button></span></div>`).join("");
-  $("#room").innerHTML = `<div class="card">${gamesBar(`${season} · final table`)}<div class="tblist" id="tbList">${rows}</div><div class="row" style="margin-top:14px"><button class="btn" id="tbLock" type="button">Lock in my table</button><span class="fine">Drag rows or use the arrows. Top places and the bottom places are marked after you lock.</span></div></div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${S.code === "ALL" ? lgOf(c).name + " · " : ""}${season} · final table`)}<div class="tblist" id="tbList">${rows}</div><div class="row" style="margin-top:14px"><button class="btn" id="tbLock" type="button">Lock in my table</button><span class="fine">Drag rows or use the arrows. Top places and the bottom places are marked after you lock.</span></div></div>`;
 }
-function startTable(sn) {
-  const c = S.code, tab = lgOf(c).tables[sn], prev = prevPos(c, sn), clubs = tab.map((r) => r[0]);
+function startTable(lg, sn) {
+  const c = lg, tab = lgOf(c).tables[sn], prev = prevPos(c, sn), clubs = tab.map((r) => r[0]);
   const xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
-  S.tab = { season: sn, order: [...clubs].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]) }; renderTableGame();
+  S.tab = { c, season: sn, order: [...clubs].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]) }; renderTableGame();
 }
 function lockTable() {
-  const c = S.code, { season, order } = S.tab, tab = lgOf(c).tables[season], real = Object.fromEntries(tab.map((r, i) => [r[0], i + 1])), prev = prevPos(c, season), xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
+  const { c, season, order } = S.tab, tab = lgOf(c).tables[season], real = Object.fromEntries(tab.map((r, i) => [r[0], i + 1])), prev = prevPos(c, season), xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
   const model = [...order].sort((a, b) => xp[b] - xp[a]), last = [...order].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]);
   const err = (o) => o.reduce((a, t, i) => a + Math.abs(i + 1 - real[t]), 0) / o.length;
   Snd.lock(); lockIn(tabKey(c, season), { lg: c, season, you: order, model, last, youErr: err(order), modErr: err(model), lastErr: err(last), at: new Date().toISOString() }); afterTable({ lg: c, season, youErr: err(order), modErr: err(model), lastErr: err(last) }); renderTableGame();
 }
 function renderTableVerdict(d) {
-  const c = S.code, tab = lgOf(c).tables[d.season], N = tab.length, exact = (o) => o.filter((t, i) => tab[i][0] === t).length, beat = d.youErr < d.modErr;
+  const c = d.lg, tab = lgOf(c).tables[d.season], N = tab.length, exact = (o) => o.filter((t, i) => tab[i][0] === t).length, beat = d.youErr < d.modErr;
   const rows = tab.map((r, i) => `<div class="tbrow tbres" style="--d:${i * 40}ms"><span class="num tbn">${i + 1}</span>${badge(r[0], "sm")}<b>${esc(r[0])}</b><span class="num">${r[1]} pts</span><span>You <b class="num">${d.you.indexOf(r[0]) + 1}</b></span><span>Model <b class="num">${d.model.indexOf(r[0]) + 1}</b></span></div>`).join("");
-  $("#room").innerHTML = `<div class="card">${gamesBar(`${d.season} · the real table`)}<div class="rcard on"><h3 style="font-size:24px" class="${beat ? "up" : d.youErr > d.modErr ? "down" : ""}">${beat ? "You beat the model!" : d.youErr > d.modErr ? "The model wins this one." : "Level with the model."}</h3>
+  $("#room").innerHTML = `<div class="card">${gamesBar(`${S.code === "ALL" ? lgOf(c).name + " · " : ""}${d.season} · the real table`)}<div class="rcard on"><h3 style="font-size:24px" class="${beat ? "up" : d.youErr > d.modErr ? "down" : ""}">${beat ? "You beat the model!" : d.youErr > d.modErr ? "The model wins this one." : "Level with the model."}</h3>
     <div class="tiles"><div class="tile"><b class="num">${d.youErr.toFixed(2)}</b><small>You: places off per club (${exact(d.you)} exact)</small></div><div class="tile"><b class="num">${d.modErr.toFixed(2)}</b><small>Model: places off (${exact(d.model)} exact)</small></div><div class="tile"><b class="num">${d.lastErr.toFixed(2)}</b><small>Just repeating last season: places off (${exact(d.last)} exact)</small></div></div></div>
     <div class="tblist" style="margin-top:12px">${rows}</div><div class="row" style="margin-top:12px"><button class="btn" id="tbAgain" type="button">Another season</button><button class="btn ghost" id="tbCard" type="button">Make a result card</button></div></div>`;
   if (beat) { Snd.win(); confetti(); } else Snd.tick();
@@ -1068,12 +1089,12 @@ function renderTableVerdict(d) {
 /* ---------- Higher or lower ---------- */
 const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8]];
 function newHol(c) {
-  const tabs = lgOf(c).tables, keys = Object.keys(tabs);
+  const lg = lgs(c)[Math.floor(Math.random() * lgs(c).length)], tabs = lgOf(lg).tables, keys = Object.keys(tabs);
   for (let tries = 0; tries < 300; tries++) {
     const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => ({ t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3] })), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
     const a = rows[Math.floor(Math.random() * rows.length)], b = rows[Math.floor(Math.random() * rows.length)];
     if (a === b || Math.abs(a[key] - b[key]) < gap) continue;
-    return { sn, key, text, a, b, win: dir * (a[key] - b[key]) > 0 ? a : b, chosen: null };
+    return { c: lg, sn, key, text, a, b, win: dir * (a[key] - b[key]) > 0 ? a : b, chosen: null };
   }
   return null;
 }
@@ -1081,13 +1102,13 @@ function renderHol() {
   const c = S.code; if (!S.hol) S.hol = newHol(c);
   const q = S.hol, best = (store.items[`h_${c}`] || { best: 0 }).best;
   const side = (r, k) => { const rev = q.chosen != null; return `<button type="button" class="holc ${rev ? (r === q.win ? "ans" : r === q.chosen ? "wrong" : "") : ""}" data-hol="${k}" ${rev ? "disabled" : ""}>${badge(r.t, "xl")}<b>${esc(r.t)}</b><span class="num holv" data-v="${r[q.key]}">${rev ? r[q.key] : "?"}</span></button>`; };
-  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Which club ${esc(q.text)} in <b>${q.sn}</b>?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
+  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Which club ${esc(q.text)} in <b>${S.code === "ALL" ? lgOf(q.c).name + " " : ""}${q.sn}</b>?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
     ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${S.holStreak}</b><button class="btn" id="holNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${S.holStreak} · best ${best}</p>`}</div>`;
   if (q.chosen != null) document.querySelectorAll(".holv").forEach((el) => { const end = +el.dataset.v, t0 = performance.now(); (function f(t) { const k = REDUCED ? 1 : Math.min(1, (t - t0) / 700); el.textContent = Math.round(end * k); if (k < 1) requestAnimationFrame(f); })(t0); });
 }
 function answerHol(k) {
   const c = S.code, q = S.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b; const ok = q.chosen === q.win; S.holStreak = ok ? S.holStreak + 1 : 0;
-  const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak }); afterHol(ok, S.holStreak);
+  const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak }); afterHol(ok, S.holStreak, q.c);
   Snd.flip(); renderHol(); setTimeout(() => { ok ? (S.holStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.holStreak >= 5 && S.holStreak % 5 === 0) confetti(); }, 500);
 }
 
@@ -1158,9 +1179,9 @@ function afterChallenge(c, code, st) {
   Board.submit({ game: "challenge", league: c, score: you, code });
 }
 function afterMatchday(it) { reward(20 + 4 * it.you + (it.you > it.mod ? 20 : 0), "Matchday", (p) => { mark(p, it.lg, it.season); if (it.you >= 9) unlock(p, "md9"); }); Board.submit({ game: "matchday", league: it.lg, score: it.you }); }
-function afterUpset(ok, prob, streak) { reward(10 + (ok ? 15 + 5 * Math.min(streak, 5) : 0), "Spot the upset", (p) => { mark(p, S.code, null); if (ok && prob <= 0.12) unlock(p, "upset"); }); if (ok) Board.submit({ game: "upset", league: S.code, score: streak }); }
+function afterUpset(ok, prob, streak, lg) { reward(10 + (ok ? 15 + 5 * Math.min(streak, 5) : 0), "Spot the upset", (p) => { mark(p, lg, null); if (ok && prob <= 0.12) unlock(p, "upset"); }); if (ok) Board.submit({ game: "upset", league: S.code, score: streak }); }
 function afterTable(d) { const beat = d.youErr < d.modErr; reward(60 + (beat ? 40 : 0) + (d.youErr < d.lastErr ? 20 : 0), "Guess the table", (p) => { mark(p, d.lg, d.season); if (beat) unlock(p, "table"); }); Board.submit({ game: "table", league: d.lg, score: beat ? 1 : 0 }); }
-function afterHol(ok, streak) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, S.code, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
+function afterHol(ok, streak, lg) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, lg, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
 
 function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; }
 function calendarHTML(p) {
@@ -1254,7 +1275,7 @@ const Board = {
   async submit(e) {
     const p = prof(); if (this.mode !== "rest" || !p.board || !p.nick || !Account.signedIn) return;
     const t = await Account.token(); if (!t) return;
-    const row = { game: e.game, league: e.league || "all", score: e.score, week: weekId(), day: e.day || todayKey(), code: e.code || null };
+    const row = { game: e.game, league: !e.league || e.league === "ALL" ? "all" : e.league, score: e.score, week: weekId(), day: e.day || todayKey(), code: e.code || null };
     try { await fetch(`${this.cfg.url}/rest/v1/results`, { method: "POST", headers: { ...Account.hdr(t), Prefer: "return=minimal" }, body: JSON.stringify(row) }); } catch (err) { /* offline: the score stays local */ }
   },
   async top(game, league, period, code) {
@@ -1271,24 +1292,24 @@ async function renderBoards() {
   if (S.bgame !== "daily" && S.bperiod === "day") S.bperiod = "week";
   $("#room").innerHTML = `<div class="card"><h2>Leaderboards</h2><p class="sub">The weekly boards reset every Monday so newcomers can win; the all-time boards keep the legends. Scores come from the honest game results, but this is a friendly competition: nothing stops someone submitting made-up numbers, so treat the boards as fun, not proof.</p>
     <div class="ctl" style="margin-top:12px">${seg(BOARD_GAMES.map(([v, t]) => [v, t]), "game", S.bgame)}</div>
-    <div class="ctl" style="margin-top:8px">${seg(periods, "period", S.bperiod)}${S.bgame !== "xp" ? seg([["league", lgOf(c).name], ["all", "All leagues"]], "scope", S.bscope) : ""}</div><div id="bBody" class="lb" style="margin-top:12px"><div class="fine">Loading…</div></div>
+    <div class="ctl" style="margin-top:8px">${seg(periods, "period", S.bperiod)}${S.bgame !== "xp" && c !== "ALL" ? seg([["league", lgOf(c).name], ["all", "All leagues"]], "scope", S.bscope) : ""}</div><div id="bBody" class="lb" style="margin-top:12px"><div class="fine">Loading…</div></div>
     <div class="row" style="margin-top:12px">${p.board ? '<span class="fine">You are sharing scores as <b>' + esc(p.nick) + "</b>.</span>" : '<button class="btn" id="openProfileJoin" type="button">Join the leaderboards</button>'}</div></div>`;
   const body = $("#bBody");
   if (Board.mode === "none") { body.innerHTML = `<div class="fine">The global boards are built but not switched on yet: they need a free score database (the README has a five-minute setup). Meanwhile your own results are saved on this device, and you can share them as picture cards.</div>`; return; }
-  const rows = await Board.top(S.bgame, S.bgame === "xp" || S.bscope === "all" ? "all" : c, S.bperiod, "");
+  const rows = await Board.top(S.bgame, S.bgame === "xp" || S.bscope === "all" || c === "ALL" ? "all" : c, S.bperiod, "");
   if (!rows) { body.innerHTML = `<div class="fine">The leaderboard could not be reached. Try again in a moment.</div>`; return; }
   const unit = (BOARD_GAMES.find((x) => x[0] === S.bgame) || [])[2] || "";
   body.innerHTML = rows.length ? rows.slice(0, 25).map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${Number(r.value) > 0 && S.bgame === "call" ? "+" : ""}${Math.round(Number(r.value) * 10) / 10} <span class="fine">${esc(unit)}</span></span></div>`).join("") : `<div class="fine">No scores here yet. Be the first.</div>`;
 }
 
 /* ================= Challenge a friend ================= */
-const SHORT = { E0: "pl", D1: "bl", SP1: "ll", I1: "sa", F1: "l1" }, FROMSHORT = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
+const SHORT = { E0: "pl", D1: "bl", SP1: "ll", I1: "sa", F1: "l1", ALL: "al" }, FROMSHORT = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
 function seededFixtures(c, seedStr) {
   const pool = allMatches(c), r = mulberry(hash(seedStr)), seen = new Set(), out = [];
   while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
   return out;
 }
-const chalState = (c, code) => { const f = seededFixtures(c, `chal-${c}-${code}`), items = f.map((x) => store.items[`x_${code}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; };
+const chalState = (c, code) => { const f = seededFixtures(c, `chal-${c}-${code}`), items = f.map((x) => store.items[`x_${code}_${x.c}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; };
 const chalLink = (c, code) => `${location.href.split("#")[0]}#challenge-${SHORT[c]}-${code}`;
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
 function renderChallenge() {
@@ -1301,7 +1322,7 @@ function renderChallenge() {
     return;
   }
   const code = S.chal.code, st = chalState(c, code);
-  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-cfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
+  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-cfix="${x.c}|${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it" : you === mod ? "a tie" : "the model wins"}</b></div><div class="row" style="margin-top:10px"><button class="btn" id="chCard" type="button">Make a result card</button><button class="btn ghost" id="chCopy" type="button">Copy the challenge link</button></div><pre class="share" id="chTxt" hidden></pre>`; }
   else result = `<div class="row" style="margin-top:14px"><button class="btn ghost" id="chCopy" type="button">Copy the challenge link</button><span class="fine">Send it before you play, or after, to see who does better.</span></div><pre class="share" id="chTxt" hidden></pre>`;
@@ -1408,12 +1429,9 @@ async function submitAuth(mode) {
 
 /* ---------- Review ---------- */
 function renderReview() {
-  const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl);
-  const rows = poolSeasons(c).map((s) => {
-    const ms = L.seasons[s].matches, f = DATA.profiles.accuracy; let mo = 0, mk = 0, hm = 0;
-    ms.forEach((m) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h]; if ("ADH"[adj.indexOf(Math.max(...adj))] === m[5]) mo++; if (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5]) mk++; if (m[5] === "H") hm++; });
-    return { s, live: L.seasons[s].live, n: ms.length, mo: mo / ms.length, mk: mk / ms.length, hm: hm / ms.length };
-  });
+  const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl), f = DATA.profiles.accuracy, agg = {};
+  lgs(c).forEach((lg) => Object.entries(lgOf(lg).seasons).forEach(([sn, S_]) => { const a = agg[sn] || (agg[sn] = { s: sn, live: S_.live, n: 0, mo: 0, mk: 0, hm: 0 }); S_.matches.forEach((m) => { a.n++; const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h]; if ("ADH"[adj.indexOf(Math.max(...adj))] === m[5]) a.mo++; if (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5]) a.mk++; if (m[5] === "H") a.hm++; }); }));
+  const rows = Object.values(agg).sort((x, y) => (x.s < y.s ? -1 : 1)).map((a) => ({ s: a.s, live: a.live, n: a.n, mo: a.mo / a.n, mk: a.mk / a.n, hm: a.hm / a.n }));
   $("#room").innerHTML = `<div class="card"><h2>How good is the model?</h2><p class="sub">Across ${sm.n.toLocaleString()} ${esc(L.name)} matches since 2017-18, each predicted only from earlier seasons: the model gets <b>${pct(sm.pooled_acc, 1)}</b> of results right, the bookmakers <b>${pct(sm.market_acc, 1)}</b>, and always picking the home team <b>${pct(sm.home_acc, 1)}</b>. Football is noisy, so around half is a good score and a point or two is a real gap.</p>
     <div class="bars">${rows.map((r) => `<div class="brow"><span class="num">${r.s}${r.live ? " live" : ""}</span><div class="tracks"><div class="t"><div class="tr"><i style="width:${r.mo * 100}%;background:var(--accent)"></i></div><span class="num">${pct(r.mo)}</span></div><div class="t"><div class="tr"><i style="width:${r.mk * 100}%;background:var(--accent2)"></i></div><span class="num">${pct(r.mk)}</span></div><div class="t"><div class="tr"><i style="width:${r.hm * 100}%;background:var(--muted)"></i></div><span class="num">${pct(r.hm)}</span></div></div></div>`).join("")}</div>
     <div class="row fine" style="margin-top:10px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent)"></i> model (Max Accuracy)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent2)"></i> bookmakers</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></i> always Home</span></div>
@@ -1471,11 +1489,11 @@ document.addEventListener("click", (e) => {
   if (b.id === "acctOut") { Account.signOut().then(() => { closeModal(); openProfile(); }); return; }
   if (b.id === "nickLeave") { const p = prof(); p.board = false; saveProf(p); closeModal(); openProfile(); return; }
   if (b.id === "dailyCard") { dailyCard(); return; }
-  if (b.id === "mdCard") { const it = store.items[mdKey(S.code, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
-  if (b.id === "tbCard") { const d = store.items[tabKey(S.code, S.tab.season)]; if (d) tableCardNow({ lg: S.code, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
+  if (b.id === "mdCard") { const it = store.items[mdKey(S.md.c, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
+  if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
   if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }
-  if (b.dataset.cfix) { const [sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(S.code, sn, +i, "chal", `x_${S.chal.code}_${sn}_${i}`); return; }
+  if (b.dataset.cfix) { const [lg, sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(lg, sn, +i, "chal", `x_${S.chal.code}_${lg}_${sn}_${i}`); return; }
   if (b.id === "chCopy") { copyChallenge(S.code, S.chal.code); return; }
   if (b.id === "chCard") { challengeCard(S.code, S.chal.code); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
@@ -1486,27 +1504,28 @@ document.addEventListener("click", (e) => {
   if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }
   if (b.id === "thSkip") { finishTheatre(); return; }
   if (b.id === "watchBtn") { const { c, season, i, m } = S.cur, it = store.items[`p_${c}_${season}_${i}`], box = $("#theatre"); if (box) { box.hidden = false; startTheatre(c, season, m, it ? it.mscore : modelCall(m).score, null); } return; }
-  if (b.id === "mdRandom") { const free = mdList(S.code).filter((x) => !store.items[mdKey(S.code, x.season, x.n)]); if (free.length) { const x = free[Math.floor(Math.random() * free.length)]; S.md = { ...x, picks: Array(x.per).fill(null), locked: false }; Snd.tick(); renderMatchday(); } return; }
+  if (b.id === "mdRandom") { const free = mdList(S.code).filter((x) => !store.items[mdKey(x.c, x.season, x.n)]); if (free.length) { const x = free[Math.floor(Math.random() * free.length)]; S.md = { ...x, picks: Array(x.per).fill(null), locked: false }; Snd.tick(); renderMatchday(); } return; }
   if (b.dataset.mdp) { const [i, k] = b.dataset.mdp.split("|"); S.md.picks[+i] = k; Snd.tick(); renderMatchday(); return; }
   if (b.id === "mdLock") { lockMd(); return; }
   if (b.id === "mdAgain") { S.md = null; renderMatchday(); return; }
   if (b.dataset.up != null && b.dataset.up !== "") { answerUpset(+b.dataset.up); return; }
   if (b.id === "upNext") { S.up = null; Snd.tick(); renderUpset(); return; }
-  if (b.id === "tbGo") { startTable($("#tbSeason").value); Snd.tick(); return; }
-  if (b.id === "tbRandom") { const fresh = tabSeasons(S.code).filter((sn) => !store.items[tabKey(S.code, sn)]), pool = fresh.length ? fresh : tabSeasons(S.code); startTable(pool[Math.floor(Math.random() * pool.length)]); Snd.tick(); return; }
+  if (b.id === "tbGo") { const [lg, sn] = $("#tbSeason").value.split("|"); startTable(lg, sn); Snd.tick(); return; }
+  if (b.id === "tbRandom") { const all = tabChoices(S.code), fresh = all.filter((x) => !store.items[tabKey(x.c, x.season)]), pool = fresh.length ? fresh : all, x = pool[Math.floor(Math.random() * pool.length)]; startTable(x.c, x.season); Snd.tick(); return; }
   if (b.dataset.mv) { const [i, d] = b.dataset.mv.split("|").map(Number), o = S.tab.order, j = i + d; if (j >= 0 && j < o.length) { [o[i], o[j]] = [o[j], o[i]]; Snd.tick(); renderTableGame(); } return; }
   if (b.id === "tbLock") { lockTable(); return; }
   if (b.id === "tbAgain") { S.tab = null; renderTableGame(); return; }
   if (b.dataset.hol) { answerHol(b.dataset.hol); return; }
   if (b.id === "holNext") { S.hol = null; Snd.tick(); renderHol(); return; }
-  if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
-  if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(S.code, r.season, r.i); } return; }
-  if (b.dataset.pick) { S.pick = b.dataset.pick; Snd.tick(); renderPlay(); return; }
-  if (b.dataset.st) { const [k, d] = [+b.dataset.st[0], b.dataset.st[1]]; S.score[k] = Math.max(0, Math.min(9, S.score[k] + (d === "+" ? 1 : -1))); $("#sH").textContent = S.score[0]; $("#sA").textContent = S.score[1]; Snd.tick(); return; }
+  if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
+  if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
+  if (b.dataset.pick) { S.pick = b.dataset.pick; if (S.useScore && resOf(S.score[0], S.score[1]) !== S.pick) S.score = defaultScore(S.pick); Snd.tick(); renderPlay(); return; }
+  if (b.id === "useScoreBtn") { S.useScore = !S.useScore; if (S.useScore && S.pick && resOf(S.score[0], S.score[1]) !== S.pick) S.score = defaultScore(S.pick); Snd.tick(); renderPlay(); return; }
+  if (b.dataset.st) { const [k, d] = [+b.dataset.st[0], b.dataset.st[1]]; S.score[k] = Math.max(0, Math.min(9, S.score[k] + (d === "+" ? 1 : -1))); S.pick = resOf(S.score[0], S.score[1]); Snd.tick(); renderPlay(); return; }
   if (b.id === "lockBtn") { lockPlay(); return; }
-  if (b.id === "nextBtn") { S.cur = null; const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; open(S.code, r.season, r.i); } else renderRoom(); return; }
+  if (b.id === "nextBtn") { S.cur = null; const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; open(r.c, r.season, r.i); } else renderRoom(); return; }
   if (b.id === "playBack" || b.id === "dailyNext") { S.cur = null; renderRoom(); paintScore(); return; }
-  if (b.dataset.dfix) { const [s, i] = b.dataset.dfix.split("|"); Snd.tick(); open(S.code, s, +i, true); return; }
+  if (b.dataset.dfix) { const [lg, sn, i] = b.dataset.dfix.split("|"); Snd.tick(); open(lg, sn, +i, true); return; }
   if (b.id === "shareBtn") { shareDaily(); return; }
   if (b.dataset.cp) { S.raceCp = b.dataset.cp; Snd.tick(); renderRace(); return; }
   if (b.id === "heatBtn") { S.raceHeat = !S.raceHeat; Snd.tick(); renderRace(); return; }
@@ -1516,7 +1535,6 @@ document.addEventListener("click", (e) => {
 document.addEventListener("change", (e) => {
   const t = e.target;
   if (t.id === "styleSel") { S.style = t.value; }
-  else if (t.id === "useScore") { S.useScore = t.checked; $("#stepper").hidden = !t.checked; Snd.tick(); }
   else if (t.id === "raceSeasonSel") { S.raceSeason = t.value; renderRace(); }
   else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }
 });

@@ -175,8 +175,14 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 pre.share { margin: 0; white-space: pre-wrap; font: 500 13px var(--mono); background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; user-select: all; }
 
 /* replay + review */
-.replay { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; margin-top: 14px; align-items: start; }
-@media (max-width: 860px) { .replay { grid-template-columns: minmax(0, 1fr); } }
+.replay { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 16px; margin-top: 14px; align-items: start; }
+.tpair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tpair .tcol { min-width: 0; }
+.tpair td:nth-child(2) { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.tpair .cn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tpair td, .tpair th { padding-left: 4px; padding-right: 4px; font-size: 12.5px; }
+@media (max-width: 640px) { .tpair { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 980px) { .replay { grid-template-columns: minmax(0, 1fr); } }
 .ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ctl input[type=range] { flex: 1 1 200px; accent-color: var(--accent); }
 .ctl .roundlabel { min-width: 15ch; font: 700 14px var(--mono); }
@@ -608,7 +614,14 @@ function paintReplay(first) {
   const a0 = (r - 1) * per, rows = r === 0 ? [] : ms.slice(a0, Math.min(ms.length, r * per));
   $("#rpFeed").innerHTML = r === 0 ? `<p class="fine">Press play to start the season.</p>` : `<div class="label" style="margin:10px 0 2px">Matchday ${r}</div>` + rows.map((m) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], k = adj.indexOf(Math.max(...adj)), pk = "ADH"[k]; return `<div class="mrow"><span class="h">${esc(m[1])}${badge(m[1], "sm")}</span><b class="num">${m[3]}-${m[4]}</b><span>${badge(m[2], "sm")}${esc(m[2])}</span><span class="mark ${pk === m[5] ? "y" : "n"}" title="Model said ${OUTNAME[pk]}">${pk === m[5] ? "✓" : "✗"}</span></div>`; }).join("");
   const tab = tableAt(ms, n), prev = tableAt(ms, Math.max(0, n - per)).map((q) => q.t), N = tab.length;
-  $("#rpTable").innerHTML = `<table><thead><tr><th>#</th><th>Club</th><th>P</th><th>GD</th><th>Pts</th></tr></thead><tbody>${tab.map((q, i) => { const mv = first || n === 0 ? 0 : prev.indexOf(q.t) - i, z = i < 4 ? "z-top" : i < 7 ? "z-eu" : i >= N - 3 ? "z-bot" : ""; return `<tr class="${z} ${mv ? "moved" : ""}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}${esc(q.t)} ${mv ? `<span class="${mv > 0 ? "up" : "down"} num">${mv > 0 ? "▲" : "▼"}${Math.abs(mv)}</span>` : ""}</td><td class="num">${q.p}</td><td class="num">${q.gd > 0 ? "+" : ""}${q.gd}</td><td class="num"><b>${q.pts}</b></td></tr>`; }).join("")}</tbody></table>`;
+  // The model's table: each match's win / draw / loss probabilities turned into expected points (3 x P(win) + P(draw)), summed over the matches played so far.
+  const xp = {}; tab.forEach((q) => { xp[q.t] = { t: q.t, x: 0, pts: q.pts, p: q.p }; });
+  for (let i = 0; i < n; i++) { const m = ms[i]; xp[m[1]].x += 3 * m[8] + m[7]; xp[m[2]].x += 3 * m[6] + m[7]; }
+  const mod = Object.values(xp).sort((a, b) => b.x - a.x || b.pts - a.pts), mrank = Object.fromEntries(mod.map((q, i) => [q.t, i + 1]));
+  const zone = (i) => (i < 4 ? "z-top" : i < 7 ? "z-eu" : i >= N - 3 ? "z-bot" : "");
+  const real = `<div class="tcol"><div class="label" style="margin-bottom:6px">Real table</div><table><thead><tr><th>#</th><th>Club</th><th>Pts</th><th title="Places above (up) or below (down) where the model's table has the club">vs model</th></tr></thead><tbody>${tab.map((q, i) => { const mv = first || n === 0 ? 0 : prev.indexOf(q.t) - i, d = n === 0 ? 0 : mrank[q.t] - (i + 1); return `<tr class="${zone(i)} ${mv ? "moved" : ""}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}<span class="cn">${esc(q.t)}</span>${mv ? `<span class="${mv > 0 ? "up" : "down"} num">${mv > 0 ? "▲" : "▼"}${Math.abs(mv)}</span>` : ""}</td><td class="num"><b>${q.pts}</b></td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d === 0 ? "=" : (d > 0 ? "▲" : "▼") + Math.abs(d)}</td></tr>`; }).join("")}</tbody></table></div>`;
+  const model = `<div class="tcol"><div class="label" style="margin-bottom:6px">Model table <span style="text-transform:none;letter-spacing:0">(expected points)</span></div><table><thead><tr><th>#</th><th>Club</th><th>xPts</th><th title="Real points minus expected points: positive means the club has got more than the model expected">luck</th></tr></thead><tbody>${mod.map((q, i) => { const lk = q.pts - q.x; return `<tr class="${zone(i)}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}<span class="cn">${esc(q.t)}</span></td><td class="num"><b>${q.x.toFixed(1)}</b></td><td class="num ${n === 0 ? "" : lk > 0.5 ? "up" : lk < -0.5 ? "down" : ""}">${n === 0 ? "" : (lk > 0 ? "+" : "") + lk.toFixed(1)}</td></tr>`; }).join("")}</tbody></table></div>`;
+  $("#rpTable").innerHTML = `<div class="tpair">${real}${model}</div><p class="fine" style="margin-top:8px">Left: the real table. Right: what the table would look like if every match had gone exactly as the model's probabilities said. "luck" is real points minus expected points.</p>`;
   $("#rpPlay").textContent = S.replay.timer ? "Pause" : (r >= R ? "Replay" : "Play");
 }
 function stopReplay() { if (S.replay.timer) { clearInterval(S.replay.timer); S.replay.timer = null; } }

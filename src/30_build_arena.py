@@ -17,6 +17,7 @@ import io
 import json
 import os
 import re
+import sys
 
 import numpy as np
 import pandas as pd
@@ -24,7 +25,8 @@ from PIL import Image
 
 SRC = "02_processed_data/multi_league_matches.csv"
 TEMPLATE = "site/arena_template.html"
-OUT = os.environ.get("ARENA_OUT", "site/arena.html")
+PUBLIC = "--public" in sys.argv         # public build: no third-party artwork (badges, logos, photos), standalone page in docs/ for GitHub Pages
+OUT = os.environ.get("ARENA_OUT", "docs/index.html" if PUBLIC else "site/arena.html")
 KEEP_FROM = 2023          # seasons shipped to the page: the last three finished (2023-24 on) plus the live one; older seasons are only in the summary table
 META = {
     "E0": ("Premier League", "England", "Twenty clubs, the loudest league on earth."),
@@ -79,7 +81,7 @@ for name, obj in (("balanced", lambda r: min(r[0], r[1], r[2])), ("accuracy", la
 
 def webp_uri(path, max_px):
     """Official artwork (git-ignored, from src/31_fetch_assets.py) as a small WebP data URI; None if the file is absent."""
-    if not os.path.exists(path):
+    if PUBLIC or not os.path.exists(path):
         return None
     im = Image.open(path).convert("RGBA")
     im.thumbnail((max_px, max_px), Image.LANCZOS)
@@ -108,7 +110,7 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     clubs = sorted({m[1] for s_ in seasons.values() for m in s_["matches"]} | {m[2] for s_ in seasons.values() for m in s_["matches"]})
     def crest(c):
         u = webp_uri(f"{LOGO_DIR}/clubs/{lg}/{slug(c)}.png", 96)
-        if u is None and lg == "E0" and os.path.exists(f"site/crests/{slug(c)}.svg"):      # the Premier League's own badge files from src/13
+        if u is None and not PUBLIC and lg == "E0" and os.path.exists(f"site/crests/{slug(c)}.svg"):      # the Premier League's own badge files from src/13
             u = "data:image/svg+xml;base64," + base64.b64encode(open(f"site/crests/{slug(c)}.svg", "rb").read()).decode()
         return u
     crests = {c: u for c in clubs if (u := crest(c))}
@@ -119,5 +121,12 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}
 data = {"leagues": leagues, "profiles": profiles, "summary": sm}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
+CREDIT = " Results and odds come from football-data.co.uk."
+if PUBLIC:
+    old_foot = "<span>League and club badges and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with any league, club or player.</span>"
+    assert old_foot in html
+    html = html.replace(old_foot, "<span>Club and league names belong to their owners. The coloured discs and emblems are original drawings, not official crests or logos, and no third-party artwork or photographs are used. This is an independent student project, not affiliated with any league, club or player." + CREDIT + "</span>")
+    html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + html + "</html>"
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
 open(OUT, "w").write(html)
 print(f"Wrote {OUT} ({len(html) / 1e6:.2f} MB)")

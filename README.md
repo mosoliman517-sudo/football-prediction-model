@@ -10,6 +10,8 @@ Machine-learning models that forecast the result of Premier League, Bundesliga, 
 >
 > **Where it stands (15 Nov 2026).** *Five-league walk-forward test, 16,111 matches, nine seasons (2017-18 to 2025-26), each season predicted only from earlier ones:* the pooled model gets **52.6%** of results right (log loss 0.9855), the bookmakers' average closing odds **53.7%** (0.9689), always picking the home side **43.5%**. Training on all five leagues beats per-league models by 0.0021 log loss on average (34 of 45 league-seasons). *Premier League, 760 held-out matches (2024-25 and 2025-26):* blend 50.8% (log loss 1.0055), hybrid with the market's odds 52.6%. Two final playing styles: **Balanced** (Home, Draw and Away found about equally often) Home 49 / Draw 38 / Away 46 at 45.0% accuracy on the Premier League, and **Max Accuracy** 76 / 0 / 59 at 50.8%. The remaining gap to the bookmakers is information (lineups, injuries, news), not modelling; a drop-one and add-one feature test and a late-season "nothing to play for" signal both came back negative.
 >
+> **Live site.** https://mosoliman517-sudo.github.io/football-prediction-model/ (GitHub Pages, served from `docs/` on `main`). The public build uses **no third-party artwork**: club badges are colour discs and league marks are original drawings. A richer private build with the official badges, league logos and player photos is made locally (see below) and is never committed.
+>
 > **The commands that matter.**
 >
 > ```bash
@@ -18,14 +20,15 @@ Machine-learning models that forecast the result of Premier League, Bundesliga, 
 > python3 src/29_multi_league_walkforward.py # five-league walk-forward evaluation; writes per-match predictions (~10 min)
 > python3 src/32_title_race.py               # title / Europe / relegation odds for every league (20,000 simulations each)
 > python3 src/31_fetch_assets.py             # league and club badges and star photos into site/logos/ (git-ignored, slow: API throttle)
-> python3 src/30_build_arena.py              # build site/arena.html from the data above
+> python3 src/30_build_arena.py              # private build: site/arena.html (with the official artwork from site/logos/, git-ignored)
+> python3 src/30_build_arena.py --public     # public build: docs/index.html (no third-party artwork), the file GitHub Pages serves
 > ```
 >
 > **Standing rules.** A new signal or model is kept only if it helps out-of-fold in *both* a logistic regression and a random forest; held-out matches are touched once, at the end. Club badges, league logos and player photos are other people's property: `site/logos/`, `site/crests/` and the built pages are git-ignored and must not go into a public build without permission. Do not scrape sources that block scripts, and do not work around refusals.
 >
 > **Known limits, stated plainly.** (1) Understat (xG) blocks scripted requests, so 2026-27 xG form is carried forward. (2) The Kaggle Transfermarkt copy ends in July 2026. (3) The four non-Premier League leagues use results-only features, so they have no xG, squad-value or manager inputs, and no stats forecasts or real goalscorers yet. (4) Title-race odds assume today's form holds and know nothing about injuries or transfers. (5) The Champions League needs a different data source and is not built.
 >
-> **Open next steps.** Minute-by-minute simulated matches and the other games (Matchday Challenge, Spot the Upset, Guess the Table, Higher or Lower) for the four newer leagues; a Champions League data source; a public build without third-party artwork; real lineups from the daily Fantasy snapshots once there are enough of them.
+> **Open next steps.** Minute-by-minute simulated matches and the other games (Matchday Challenge, Spot the Upset, Guess the Table, Higher or Lower) for the four newer leagues; a Champions League data source; real lineups from the daily Fantasy snapshots once there are enough of them.
 
 ### How the project developed
 
@@ -99,6 +102,10 @@ Most of the real progress on this project came from finding things that were wro
 | 15 Nov | The model's expected-points table disappeared when the page was rebuilt around leagues | Noticed by the owner | Restored beside the real table, with "vs model" and "luck" columns; expected points checked to sum exactly in all five leagues |
 
 The progress log that follows has a detailed entry for each phase and remains the authoritative record of every experiment, including the many that were rejected.
+
+#### 15 November 2026: going public
+
+The page is published on GitHub Pages from `docs/index.html`. Because the club badges, league logos and player photographs belong to their owners, the public build is generated with `--public` and contains none of them: badges fall back to colour discs, league marks to original emblems, and the star-player photo is omitted. The private build keeps the official artwork. Problems met while doing this: the page had been written as a fragment for a hosting wrapper (no document type or character set), so the public build wraps it as a complete standalone page; and the optional cloud features (private progress saving and the leaderboard) need the original host, so on Pages the page quietly falls back to saving progress in the browser and hides the leaderboard. Results and odds data come from football-data.co.uk and are credited in the page footer.
 
 #### How it was built
 

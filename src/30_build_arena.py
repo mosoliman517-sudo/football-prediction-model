@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -122,6 +123,10 @@ sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.item
 data = {"leagues": leagues, "profiles": profiles, "summary": sm}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
+latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])
+STAMP = f'Build {datetime.now(timezone.utc):%d %b %Y %H:%M} UTC · {"public" if PUBLIC else "private"} · results through {latest}'
+assert html.count('<div class="foot">') == 1
+html = html.replace('<div class="foot">', f'<div class="foot"><span class="num" id="buildStamp">{STAMP}</span>')
 if PUBLIC:
     old_foot = "<span>League and club badges and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with any league, club or player.</span>"
     assert old_foot in html

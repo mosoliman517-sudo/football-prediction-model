@@ -324,6 +324,33 @@ table.race td, table.race th { padding: 6px 7px; }
 .holc.ans .holv { color: var(--ok); }
 @media (max-width: 560px) { .holpair { grid-template-columns: 1fr; } .holpair .vs { display: block; text-align: center; } .badge.xl { width: 72px; height: 72px; } }
 @media (prefers-reduced-motion: reduce) { .gcard, .gfaces .badge, .upc, .upin, .tbres, .mt-feed li, .goalpop, .mres.land { animation: none; transition: none; } }
+
+/* profile, toasts, share cards, leaderboards */
+.profilebtn { display: inline-flex; gap: 8px; align-items: center; }
+.profilebtn .flame { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: var(--on-accent); border-radius: 99px; padding: 1px 8px; font: 800 11px var(--mono); }
+#toasts { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 80; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: min(92vw, 420px); }
+.toast { background: var(--surface2); color: var(--ink); border: 1px solid var(--accent); border-radius: 16px; padding: 10px 16px; font-size: 14px; box-shadow: 0 16px 40px -16px #000; animation: toastin .4s cubic-bezier(.2, 1.2, .3, 1) both; text-align: center; }
+.toast.ach { border-color: var(--accent2); background: linear-gradient(120deg, color-mix(in srgb, var(--accent2) 22%, var(--surface2)), var(--surface2)); }
+.toast.up { background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 30%, var(--surface2)), var(--surface2)); font-size: 16px; }
+.toast.out { opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease; }
+@keyframes toastin { from { opacity: 0; transform: translateY(16px) scale(.9); } to { opacity: 1; transform: none; } }
+.modal { position: fixed; inset: 0; z-index: 70; background: color-mix(in srgb, var(--bg) 78%, #000); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; overflow-y: auto; animation: toastin .25s ease both; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 22px; width: min(100%, 640px); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 30px 80px -30px #000; }
+.xpbar { height: 12px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); margin: 8px 0 12px; overflow: hidden; }
+.xpbar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .8s cubic-bezier(.2, .8, .2, 1); }
+.calgrid { display: grid; grid-template-rows: repeat(7, 14px); grid-auto-flow: column; grid-auto-columns: 14px; gap: 4px; }
+.cal { border-radius: 4px; background: color-mix(in srgb, var(--ink) 9%, transparent); display: block; }
+.cal.fut { opacity: .25; } .cal.l1 { background: color-mix(in srgb, var(--accent) 35%, transparent); } .cal.l2 { background: color-mix(in srgb, var(--accent) 65%, transparent); } .cal.l3 { background: var(--accent); }
+.achgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.achv { background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; opacity: .55; }
+.achv.on { opacity: 1; border-color: var(--accent2); background: linear-gradient(120deg, color-mix(in srgb, var(--accent2) 16%, var(--surface2)), var(--surface2)); }
+.achv b { color: var(--accent); font-size: 18px; } .achv span { font-weight: 700; } .achv small { color: var(--muted); font-size: 12px; }
+.cardimg { width: 100%; height: auto; border-radius: 18px; display: block; border: 1px solid var(--line); }
+input { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.seg { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .toast, .modal, .xpbar i { animation: none; transition: none; } }
+.authform { display: grid; gap: 10px; margin-top: 12px; }
+.link { background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 600; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -333,6 +360,7 @@ table.race td, table.race th { padding: 6px 7px; }
     <button class="brand" id="brand" type="button" aria-label="Back to all leagues"><i></i><span>Beat the <b>Model</b></span></button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
+    <button class="pill profilebtn" id="profileBtn" type="button" aria-label="Your profile, rank and achievements"></button>
     <button class="pill" id="sndBtn" type="button" aria-label="Sound">Sound: soft</button>
   </div>
 
@@ -478,7 +506,7 @@ const LOCAL_KEY = "arena-plays-v1";
 function loadLocal() { try { store.items = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}"); } catch (e) { store.items = {}; } }
 function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(store.items)); } catch (e) { /* storage unavailable */ } }
 async function lockIn(key, body) {
-  store.items[key] = body; saveLocal(); paintScore();
+  store.items[key] = body; saveLocal(); paintScore(); if (typeof Account !== "undefined") Account.queue();
   if (store.coll) { try { await store.coll.doc(key).set(body); } catch (e) { store.mode = "local"; } }
 }
 const playsOf = (code) => Object.entries(store.items).filter(([k]) => k.startsWith(`p_${code}_`)).map(([k, v]) => ({ k, ...v }));
@@ -529,9 +557,11 @@ function setTheme(code, ev) {
 }
 function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
 function route(ev) {
+  const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(location.hash.slice(1));
+  if (cm && FROMSHORT[cm[1]]) { S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
   const h = location.hash.slice(1), code = Object.keys(BYSLUG).find((s) => h === s || h.startsWith(s + "-")) ;
   const lg = code ? BYSLUG[code] : null;
-  if (lg) { const room = h.slice(code.length + 1); const GM = ["call", "daily", "matchday", "upset", "table", "hol"]; if (GM.includes(room)) { S.room = "play"; S.game = room; } else { S.room = ["play", "race", "replay", "review"].includes(room) ? room : "play"; S.game = null; } openLeague(lg, ev); }
+  if (lg) { const room = h.slice(code.length + 1); const GM = ["call", "daily", "matchday", "upset", "table", "hol"]; if (GM.includes(room)) { S.room = "play"; S.game = room; } else { S.room = ["play", "race", "replay", "boards", "review"].includes(room) ? room : "play"; S.game = null; } openLeague(lg, ev); }
   else { S.code = null; setTheme(null, ev); $("#lobby").hidden = false; $("#league").hidden = true; stopReplay(); window.scrollTo(0, 0); }
 }
 function openLeague(code, ev) {
@@ -572,16 +602,17 @@ function totals(plays) {
   plays.forEach((x) => { you += ptsFor(x.pick, x.score, x.real); mod += ptsFor(x.mpick, x.mscore, x.real); if (x.pick === x.res) yr++; if (x.mpick === x.res) mr++; });
   return { you, mod, yr, mr, n: plays.length };
 }
+const renderBoardsIfOpen = () => { if (S.room === "boards") renderBoards(); };
 function paintScore() {
   if (!S.code) return;
   const pl = playsOf(S.code), t = totals(pl), st = streaks(pl);
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = [["play", "Play"], ["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"]];
+  const rooms = [["play", "Play"], ["race", "Title race"], ["replay", "Replay a season"], ["boards", "Leaderboards"], ["review", "How good is it?"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, review: renderReview })[S.room](); }
+function renderRoom() { stopReplay(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview })[S.room](); }
 
 /* ---------- Call it ---------- */
 function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`]); }
@@ -599,11 +630,11 @@ function renderCall() {
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
     <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last ten years, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
 }
-function open(c, season, i, onDone) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
+function open(c, season, i, onDone, key) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null, key: key || `p_${c}_${season}_${i}` }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
 function renderPlay() {
-  const { c, season, i, m } = S.cur, key = `p_${c}_${season}_${i}`, done = store.items[key];
+  const { c, season, i, m } = S.cur, key = S.cur.key, done = store.items[key];
   const fh = formOf(c, m[1], m[0]), fa = formOf(c, m[2], m[0]);
-  const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${season} · ${fmtDate(m[0])}</span></div>
+  const head = `<div class="row"><button class="btn ghost" id="playBack" type="button">${S.cur.onDone === "chal" ? "Back to the challenge" : S.cur.onDone ? "Back to the Daily 5" : "Choose another"}</button><span class="label">${season} · ${fmtDate(m[0])}</span></div>
     <div class="stage"><div class="team">${badge(m[1])}<b>${esc(m[1])}</b>${formHTML(fh)}</div><div class="vs">vs</div><div class="team">${badge(m[2])}<b>${esc(m[2])}</b>${formHTML(fa)}</div></div>`;
   if (done) { $("#room").innerHTML = `<div class="card">${head}<div class="theatre" id="theatre" hidden></div><div class="reveal" id="reveal"></div></div>`; showReveal(done, true); return; }
   const mine = S.pick;
@@ -616,7 +647,7 @@ function renderPlay() {
 }
 function lockPlay() {
   if (S.busy || !S.pick) return; S.busy = true;
-  const { c, season, i, m } = S.cur, key = `p_${c}_${season}_${i}`, call = modelCall(m);
+  const { c, season, i, m } = S.cur, key = S.cur.key, call = modelCall(m);
   const score = S.useScore ? [...S.score] : null, pick = S.useScore ? resOf(S.score[0], S.score[1]) : S.pick;
   const item = { lg: c, season, date: m[0], home: m[1], away: m[2], pick, score, mpick: call.pick, mscore: call.score, probs: call.probs, real: [m[3], m[4]], res: m[5], style: S.style, at: new Date().toISOString() };
   Snd.lock(); lockIn(key, item);
@@ -640,7 +671,7 @@ function showReveal(it, instant) {
   if (cards[2]) step(cards[2], 2200);
   step(cards[1], 1300, () => {
     countUp($("#bigScore"), it.real);
-    setTimeout(() => { if (yp > mpts) { Snd.win(); confetti(); } else if (ok) Snd.right(); else Snd.wrong(); S.busy = false; lbPublish(); }, 700);
+    setTimeout(() => { if (yp > mpts) { Snd.win(); confetti(); } else if (ok) Snd.right(); else Snd.wrong(); S.busy = false; lbPublish(); afterPlayHook(it); }, 700);
   });
 }
 function countUp(el, real) {
@@ -671,7 +702,7 @@ function renderDaily() {
   if (S.cur) return renderPlay();
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
-  if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
+  if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button><button class="btn ghost" id="dailyCard" type="button">Make a result card</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
   $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from the last ten years, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
@@ -890,6 +921,7 @@ const GAMES = [
   { id: "upset", name: "Spot the upset", tag: "Five real results. Which one did the model think was least likely?" },
   { id: "table", name: "Guess the table", tag: "Rebuild a final table from last season's, then see you against the model." },
   { id: "hol", name: "Higher or lower", tag: "Two clubs, one number. Keep the streak alive." },
+  { id: "challenge", name: "Challenge a friend", tag: "Five matches, one link. Send it and see who does better." },
 ];
 function recordLine(c, id) {
   if (id === "call") { const t = totals(playsOf(c)); return t.n ? `${t.you} v ${t.mod} points over ${t.n} matches` : "not played yet"; }
@@ -898,6 +930,7 @@ function recordLine(c, id) {
   if (id === "upset") { const u = store.items[`u_${c}`]; return u ? `${u.right}/${u.rounds} right, best streak ${u.best}` : "not played yet"; }
   if (id === "table") { const it = Object.entries(store.items).filter(([k]) => k.startsWith(`t_${c}_`)).map(([, v]) => v); return it.length ? `${it.filter((x) => x.youErr < x.modErr).length} of ${it.length} tables beat the model` : "not played yet"; }
   if (id === "hol") { const h = store.items[`h_${c}`]; return h ? `best streak ${h.best}` : "not played yet"; }
+  if (id === "challenge") { const n = Object.keys(store.items).filter((k) => k.startsWith("xpc_")).length; return n ? `${n} challenge${n === 1 ? "" : "s"} played` : "not played yet"; }
   return "";
 }
 function renderHub() {
@@ -909,7 +942,7 @@ const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button
 function renderPlayRoom() {
   stopTheatre();
   if (!S.game) return renderHub();
-  ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol })[S.game]();
+  ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol, challenge: renderChallenge })[S.game]();
 }
 
 /* ---------- Matchday ---------- */
@@ -953,14 +986,14 @@ function lockMd() {
     el.innerHTML = mdResult(m, picks[i], { pick: mp[i] }); el.classList.add("land");
     ok ? Snd.right() : Snd.wrong(); i++;
     if (i < ms.length) setTimeout(step, REDUCED ? 0 : 650);
-    else setTimeout(() => { const item = { lg: c, season, n, picks, res, mpicks: mp, you, mod, at: new Date().toISOString() }; lockIn(mdKey(c, season, n), item); renderMdSummary(item, false); }, 500);
+    else setTimeout(() => { const item = { lg: c, season, n, picks, res, mpicks: mp, you, mod, at: new Date().toISOString() }; lockIn(mdKey(c, season, n), item); renderMdSummary(item, false); afterMatchday(item); }, 500);
   };
   setTimeout(step, 400);
 }
 function renderMdSummary(it, instant) {
   const beat = it.you > it.mod, tie = it.you === it.mod;
   $("#mdSum").innerHTML = `<div class="rcard on" style="margin-top:14px"><div class="label">Full time</div><div class="verdicts" style="margin-top:8px"><div class="vd ${beat || tie ? "ok" : "no"}"><span class="label">You</span><b class="big2 num">${it.you}/${it.picks.length}</b></div><div class="vd ${it.mod >= it.you ? "ok" : "no"}"><span class="label">Model</span><b class="big2 num">${it.mod}/${it.picks.length}</b></div></div>
-    <div class="row" style="margin-top:12px"><b>${beat ? "You beat the model this round." : tie ? "Level with the model." : "The model won this round."}</b><button class="btn" id="mdAgain" type="button">Another matchday</button></div></div>`;
+    <div class="row" style="margin-top:12px"><b>${beat ? "You beat the model this round." : tie ? "Level with the model." : "The model won this round."}</b><button class="btn" id="mdAgain" type="button">Another matchday</button><button class="btn ghost" id="mdCard" type="button">Make a result card</button></div></div>`;
   if (!instant && beat) { Snd.win(); confetti(); }
 }
 
@@ -988,7 +1021,7 @@ function renderUpset() {
 }
 function answerUpset(k) {
   const c = S.code, u = S.up; if (u.chosen != null) return; u.chosen = k; const ok = k === u.ans; S.upStreak = ok ? S.upStreak + 1 : 0;
-  const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) });
+  const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) }); afterUpset(ok, u.ps[u.ans], S.upStreak);
   Snd.flip(); renderUpset(); setTimeout(() => { ok ? (S.upStreak >= 3 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.upStreak >= 3) confetti(); }, 350);
 }
 
@@ -1018,14 +1051,14 @@ function lockTable() {
   const c = S.code, { season, order } = S.tab, tab = lgOf(c).tables[season], real = Object.fromEntries(tab.map((r, i) => [r[0], i + 1])), prev = prevPos(c, season), xp = Object.fromEntries(tab.map((r) => [r[0], r[7]]));
   const model = [...order].sort((a, b) => xp[b] - xp[a]), last = [...order].sort((a, b) => (prev[a] || 99) - (prev[b] || 99) || xp[b] - xp[a]);
   const err = (o) => o.reduce((a, t, i) => a + Math.abs(i + 1 - real[t]), 0) / o.length;
-  Snd.lock(); lockIn(tabKey(c, season), { lg: c, season, you: order, model, last, youErr: err(order), modErr: err(model), lastErr: err(last), at: new Date().toISOString() }); renderTableGame();
+  Snd.lock(); lockIn(tabKey(c, season), { lg: c, season, you: order, model, last, youErr: err(order), modErr: err(model), lastErr: err(last), at: new Date().toISOString() }); afterTable({ lg: c, season, youErr: err(order), modErr: err(model), lastErr: err(last) }); renderTableGame();
 }
 function renderTableVerdict(d) {
   const c = S.code, tab = lgOf(c).tables[d.season], N = tab.length, exact = (o) => o.filter((t, i) => tab[i][0] === t).length, beat = d.youErr < d.modErr;
   const rows = tab.map((r, i) => `<div class="tbrow tbres" style="--d:${i * 40}ms"><span class="num tbn">${i + 1}</span>${badge(r[0], "sm")}<b>${esc(r[0])}</b><span class="num">${r[1]} pts</span><span>You <b class="num">${d.you.indexOf(r[0]) + 1}</b></span><span>Model <b class="num">${d.model.indexOf(r[0]) + 1}</b></span></div>`).join("");
   $("#room").innerHTML = `<div class="card">${gamesBar(`${d.season} · the real table`)}<div class="rcard on"><h3 style="font-size:24px" class="${beat ? "up" : d.youErr > d.modErr ? "down" : ""}">${beat ? "You beat the model!" : d.youErr > d.modErr ? "The model wins this one." : "Level with the model."}</h3>
     <div class="tiles"><div class="tile"><b class="num">${d.youErr.toFixed(2)}</b><small>You: places off per club (${exact(d.you)} exact)</small></div><div class="tile"><b class="num">${d.modErr.toFixed(2)}</b><small>Model: places off (${exact(d.model)} exact)</small></div><div class="tile"><b class="num">${d.lastErr.toFixed(2)}</b><small>Just repeating last season: places off (${exact(d.last)} exact)</small></div></div></div>
-    <div class="tblist" style="margin-top:12px">${rows}</div><div class="row" style="margin-top:12px"><button class="btn" id="tbAgain" type="button">Another season</button></div></div>`;
+    <div class="tblist" style="margin-top:12px">${rows}</div><div class="row" style="margin-top:12px"><button class="btn" id="tbAgain" type="button">Another season</button><button class="btn ghost" id="tbCard" type="button">Make a result card</button></div></div>`;
   if (beat) { Snd.win(); confetti(); } else Snd.tick();
 }
 
@@ -1051,8 +1084,323 @@ function renderHol() {
 }
 function answerHol(k) {
   const c = S.code, q = S.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b; const ok = q.chosen === q.win; S.holStreak = ok ? S.holStreak + 1 : 0;
-  const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak });
+  const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak }); afterHol(ok, S.holStreak);
   Snd.flip(); renderHol(); setTimeout(() => { ok ? (S.holStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.holStreak >= 5 && S.holStreak % 5 === 0) confetti(); }, 500);
+}
+
+
+/* ================= Progression: XP, ranks, achievements, streak calendar ================= */
+const LEVELS = [["Sunday League", 0], ["Pub Team", 100], ["Academy", 300], ["Reserves", 650], ["First Team", 1200], ["Captain", 2000], ["Club Legend", 3200], ["World Class", 5000]];
+const ACH = [
+  ["first_call", "First blood", "Make your first correct call"],
+  ["giant", "Giant killer", "Beat the model on a single match"],
+  ["sharp", "Sharpshooter", "Predict an exact score"],
+  ["draw", "Draw whisperer", "Call a draw correctly"],
+  ["streak5", "On a roll", "Five correct calls in a row"],
+  ["streak10", "Unstoppable", "Ten correct calls in a row"],
+  ["upset", "Upset detective", "Spot an upset the model gave 12% or less"],
+  ["daily5", "Perfect five", "Get 5 of 5 on a Daily 5"],
+  ["dailybeat", "Daily double", "Beat the model on a Daily 5"],
+  ["flame3", "Warming up", "Play three days in a row"],
+  ["flame7", "Seven-day flame", "Play seven days in a row"],
+  ["md9", "Matchday master", "Call 9 or more results right in one matchday"],
+  ["table", "Table whisperer", "Beat the model at Guess the table"],
+  ["hol5", "Higher power", "Five right in a row at Higher or lower"],
+  ["globe", "Globetrotter", "Play a game in all five leagues"],
+  ["decade", "Time traveller", "Play matches from five different seasons"],
+  ["friend", "Rival", "Finish a challenge"],
+  ["captain", "Captain's armband", "Reach the Captain rank"],
+];
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const weekId = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = t.getUTCFullYear(), w = Math.ceil(((t - new Date(Date.UTC(y, 0, 1))) / 864e5 + 1) / 7); return y * 100 + w; };
+function prof() { const p = store.items.profile || {}; return { xp: 0, ach: {}, days: {}, nick: "", board: false, leagues: {}, seasons: {}, ...p, ach: { ...(p.ach || {}) }, days: { ...(p.days || {}) }, leagues: { ...(p.leagues || {}) }, seasons: { ...(p.seasons || {}) } }; }
+const saveProf = (p) => lockIn("profile", p);
+function levelOf(xp) { let i = 0; LEVELS.forEach(([, t], k) => { if (xp >= t) i = k; }); const next = LEVELS[i + 1]; return { i, name: LEVELS[i][0], from: LEVELS[i][1], to: next ? next[1] : null, next: next ? next[0] : null }; }
+function dayStreak(p) { let s = 0; const now = Date.now(); for (let k = 0; k < 400; k++) { const key = new Date(now - k * 864e5).toISOString().slice(0, 10); if ((p.days[key] || 0) > 0) s++; else if (k > 0) break; } return s; }
+function bestDayStreak(p) { const keys = Object.keys(p.days).filter((k) => p.days[k] > 0).sort(); let best = 0, cur = 0, prev = null; keys.forEach((k) => { const d = new Date(k + "T00:00:00Z").getTime(); cur = prev !== null && d - prev === 864e5 ? cur + 1 : 1; best = Math.max(best, cur); prev = d; }); return best; }
+function toast(html, kind = "") {
+  let box = $("#toasts"); if (!box) { box = document.createElement("div"); box.id = "toasts"; box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
+  const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t); setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3700);
+}
+function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
+function reward(xp, label, mutate) {
+  const p = prof(), before = levelOf(p.xp).i; p.xp += xp; p.days[todayKey()] = (p.days[todayKey()] || 0) + 1;
+  if (mutate) mutate(p);
+  const st = dayStreak(p); if (st >= 3) unlock(p, "flame3"); if (st >= 7) unlock(p, "flame7");
+  if (Object.keys(p.leagues).length >= 5) unlock(p, "globe"); if (Object.keys(p.seasons).length >= 5) unlock(p, "decade");
+  const after = levelOf(p.xp); if (after.i >= 5) unlock(p, "captain");
+  saveProf(p); toast(`+${xp} XP · ${esc(label)}`);
+  if (after.i > before) { toast(`<b>Rank up</b><br>${esc(after.name)}`, "up"); Snd.win(); confetti(); }
+  paintProfileBtn(); Board.submit({ game: "xp", league: "all", score: xp });
+}
+const mark = (p, c, season) => { p.leagues[c] = (p.leagues[c] || 0) + 1; if (season) p.seasons[season] = 1; };
+function afterCall(it) {
+  const yp = ptsFor(it.pick, it.score, it.real), mp = ptsFor(it.mpick, it.mscore, it.real), ok = it.pick === it.res, st = streaks(playsOf(it.lg));
+  reward(10 + (ok ? 8 : 0) + (yp > mp ? 12 : 0) + (it.score && it.score[0] === it.real[0] && it.score[1] === it.real[1] ? 15 : 0), "Call it", (p) => {
+    mark(p, it.lg, it.season); if (ok) unlock(p, "first_call"); if (yp > mp) unlock(p, "giant"); if (it.score && it.score[0] === it.real[0] && it.score[1] === it.real[1]) unlock(p, "sharp");
+    if (ok && it.res === "D") unlock(p, "draw"); if (st.cur >= 5) unlock(p, "streak5"); if (st.cur >= 10) unlock(p, "streak10");
+  });
+  Board.submit({ game: "call", league: it.lg, score: yp - mp });
+}
+function afterDaily(c, st, key) {
+  const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  if (store.items[`xpd_${c}_${key}`]) return; lockIn(`xpd_${c}_${key}`, { you, mod });
+  reward(40 + 10 * you + (you > mod ? 25 : 0), "Daily 5", (p) => { if (you === 5) unlock(p, "daily5"); if (you > mod) unlock(p, "dailybeat"); });
+  Board.submit({ game: "daily", league: c, score: you, day: key });
+}
+function afterChallenge(c, code, st) {
+  const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  if (store.items[`xpc_${code}`]) return; lockIn(`xpc_${code}`, { you, mod, c });
+  reward(40 + 10 * you + (you > mod ? 25 : 0), "Challenge", (p) => { unlock(p, "friend"); if (you === 5) unlock(p, "daily5"); });
+  Board.submit({ game: "challenge", league: c, score: you, code });
+}
+function afterMatchday(it) { reward(20 + 4 * it.you + (it.you > it.mod ? 20 : 0), "Matchday", (p) => { mark(p, it.lg, it.season); if (it.you >= 9) unlock(p, "md9"); }); Board.submit({ game: "matchday", league: it.lg, score: it.you }); }
+function afterUpset(ok, prob, streak) { reward(10 + (ok ? 15 + 5 * Math.min(streak, 5) : 0), "Spot the upset", (p) => { mark(p, S.code, null); if (ok && prob <= 0.12) unlock(p, "upset"); }); if (ok) Board.submit({ game: "upset", league: S.code, score: streak }); }
+function afterTable(d) { const beat = d.youErr < d.modErr; reward(60 + (beat ? 40 : 0) + (d.youErr < d.lastErr ? 20 : 0), "Guess the table", (p) => { mark(p, d.lg, d.season); if (beat) unlock(p, "table"); }); Board.submit({ game: "table", league: d.lg, score: beat ? 1 : 0 }); }
+function afterHol(ok, streak) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, S.code, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
+
+function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; }
+function calendarHTML(p) {
+  const weeks = 12, today = new Date(), dow = (today.getUTCDay() + 6) % 7, cells = [];
+  for (let w = weeks - 1; w >= 0; w--) for (let d = 0; d < 7; d++) { const off = w * 7 + (dow - d); const dt = new Date(today.getTime() - off * 864e5), key = dt.toISOString().slice(0, 10), n = off < 0 ? null : p.days[key] || 0; cells.push(`<i class="cal ${n == null ? "fut" : n === 0 ? "" : n < 3 ? "l1" : n < 6 ? "l2" : "l3"}" title="${key}: ${n || 0} games"></i>`); }
+  return `<div class="calgrid">${cells.join("")}</div>`;
+}
+function openProfile() {
+  const p = prof(), lv = levelOf(p.xp), st = dayStreak(p), pl = allPlays(), t = totals(pl), won = Object.keys(p.ach).length;
+  const pct2 = lv.to ? Math.min(100, ((p.xp - lv.from) / (lv.to - lv.from)) * 100) : 100;
+  const ach = ACH.map(([id, n, d]) => `<div class="achv ${p.ach[id] ? "on" : ""}" title="${esc(d)}"><b>${p.ach[id] ? "★" : "☆"}</b><span>${esc(n)}</span><small>${esc(d)}</small></div>`).join("");
+  modal(`<h2 style="font-size:28px">${esc(p.nick || "Your profile")}</h2>
+    <div class="label" style="margin-top:6px">${esc(lv.name)} · ${p.xp} XP${lv.next ? ` · next: ${esc(lv.next)} at ${lv.to}` : " · top rank"}</div>
+    <div class="xpbar"><i style="width:${pct2}%"></i></div>
+    <div class="tiles"><div class="tile"><b class="num">${st}</b><small>days in a row (best ${bestDayStreak(p)})</small></div><div class="tile"><b class="num">${t.you} v ${t.mod}</b><small>points: you v model</small></div><div class="tile"><b class="num">${won}/${ACH.length}</b><small>achievements</small></div></div>
+    <h3 style="font-size:18px;margin:16px 0 8px">Streak calendar</h3>${calendarHTML(p)}<div class="fine">Each square is a day; brighter means more games played. Last 12 weeks.</div>
+    <h3 style="font-size:18px;margin:16px 0 8px">Achievements</h3><div class="achgrid">${ach}</div>
+    <h3 style="font-size:18px;margin:16px 0 8px">Account</h3>${accountHTML()}
+    <h3 style="font-size:18px;margin:16px 0 8px">Leaderboards</h3>${boardSettingsHTML(p)}
+    <div class="row" style="margin-top:16px"><button class="btn" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="modalClose" type="button">Close</button></div>`);
+}
+function boardSettingsHTML(p) {
+  if (Board.mode === "none") return `<p class="fine">Global leaderboards switch on when the online database is connected (see the README). Until then your results stay on this device.</p>`;
+  if (!Account.signedIn) return `<p class="fine">Leaderboards need an account, so scores belong to a real person. Sign in or create a free account above to join.</p>`;
+  return `<p class="fine">Pick a nickname to appear on the global boards. Only your nickname and your scores are shown, never your picks.</p><div class="row"><input id="nickIn" maxlength="16" placeholder="Nickname (3 to 16 letters or numbers)" value="${esc(p.nick || "")}" aria-label="Nickname"><button class="btn" id="nickSave" type="button">${p.board ? "Update nickname" : "Join the leaderboards"}</button>${p.board ? '<button class="btn ghost" id="nickLeave" type="button">Stop sharing scores</button>' : ""}</div><div class="fine" id="nickMsg"></div>`;
+}
+function modal(html) {
+  let m = $("#modal"); if (!m) { m = document.createElement("div"); m.id = "modal"; m.className = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); document.body.appendChild(m); }
+  m.innerHTML = `<div class="sheet">${html}</div>`; m.hidden = false; m.querySelector("button, input")?.focus(); Snd.tick();
+}
+const closeModal = () => { const m = $("#modal"); if (m) m.hidden = true; };
+addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+/* ================= Share cards (drawn on a canvas, saved as a picture) ================= */
+const loadImg = (src) => new Promise((res) => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+async function cardCanvas(kind, d) {
+  const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const g = cv.getContext("2d"), lg = d.lg || S.code || "E0", p = PAL[lg] || PAL.E0, L = LG[lg] || LG.E0;
+  const dispFont = p.display.split(",")[0].replace(/"/g, "");
+  try { await Promise.all([document.fonts.load(`800 80px "${dispFont}"`), document.fonts.load('700 30px "DM Sans"'), document.fonts.load('700 24px "JetBrains Mono"')]); } catch (e) { /* fall back to system fonts */ }
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, p.bg); bg.addColorStop(1, p.surface); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const glow = g.createRadialGradient(W * 0.85, 120, 0, W * 0.85, 120, 700); glow.addColorStop(0, p.glow + "88"); glow.addColorStop(1, p.glow + "00"); g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  const glow2 = g.createRadialGradient(80, H - 100, 0, 80, H - 100, 600); glow2.addColorStop(0, p.accent + "33"); glow2.addColorStop(1, p.accent + "00"); g.fillStyle = glow2; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 30; i++) { const x = (hash(`s${i}`) % W), y = (hash(`t${i}`) % H), r = 2 + (hash(`u${i}`) % 5); g.fillStyle = (i % 3 ? p.glow : p.accent) + "55"; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill(); }
+  const text = (s, x, y, font, color, align = "left") => { g.font = font; g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); };
+  text("BEAT THE MODEL", 70, 100, '700 28px "JetBrains Mono"', p.accent);
+  const logo = await loadImg(L.logo); if (logo) { g.save(); rrect(g, W - 190, 52, 120, 120, 28); g.fillStyle = "#ffffffee"; g.fill(); g.clip(); const k = Math.min(100 / logo.width, 100 / logo.height); g.drawImage(logo, W - 130 - (logo.width * k) / 2, 112 - (logo.height * k) / 2, logo.width * k, logo.height * k); g.restore(); } else text(L.name.toUpperCase(), W - 70, 100, '700 28px "JetBrains Mono"', p.muted, "right");
+  text(d.title, 70, 250, `800 96px "${dispFont}", sans-serif`, p.ink);
+  text(d.big, 70, 520, `800 270px "${dispFont}", sans-serif`, p.accent);
+  text(d.sub, 70, 600, '700 36px "DM Sans", sans-serif', p.muted);
+  let y = 680;
+  if (d.rows) {
+    for (const r of d.rows) { rrect(g, 70, y, W - 140, 96, 24); g.fillStyle = p.surface + "dd"; g.fill(); g.strokeStyle = p.glow + "66"; g.lineWidth = 2; g.stroke();
+      const hi = await loadImg(CREST[r.home]), ai = await loadImg(CREST[r.away]);
+      if (hi) g.drawImage(hi, 96, y + 16, 64, 64); if (ai) g.drawImage(ai, W - 160, y + 16, 64, 64);
+      text(r.home, hi ? 176 : 96, y + 62, '700 32px "DM Sans", sans-serif', p.ink); text(r.away, ai ? W - 176 : W - 96, y + 62, '700 32px "DM Sans", sans-serif', p.ink, "right");
+      text(r.score, W / 2, y + 62, '800 36px "JetBrains Mono"', p.accent, "center"); text(r.you, W / 2 - 150, y + 62, '800 34px "JetBrains Mono"', r.youOk ? "#5EE6A8" : "#FF6B7F", "center"); y += 112; }
+  }
+  if (d.tiles) { const tw = (W - 140 - 40) / 3; d.tiles.forEach(([v, l], k) => { const x = 70 + k * (tw + 20); rrect(g, x, y, tw, 190, 26); g.fillStyle = p.surface + "ee"; g.fill(); text(v, x + 28, y + 100, `800 64px "${dispFont}", sans-serif`, p.ink); text(l, x + 28, y + 150, '500 26px "DM Sans", sans-serif', p.muted); }); y += 220; }
+  if (d.line) text(d.line, 70, Math.max(y + 40, 1180), '700 34px "DM Sans", sans-serif', p.ink);
+  const pr = prof(); text(`${pr.nick || "Player"} · ${levelOf(pr.xp).name}`, 70, 1290, '700 30px "DM Sans", sans-serif', p.ink);
+  text(location.host ? location.host.replace(/^www\./, "") : "Beat the Model", W - 70, 1290, '500 26px "JetBrains Mono"', p.muted, "right");
+  return cv;
+}
+async function showCard(kind, d) {
+  Snd.tick(); const cv = await cardCanvas(kind, d), url = cv.toDataURL("image/png");
+  modal(`<h2 style="font-size:24px">Your card</h2><img class="cardimg" src="${url}" alt="Result card"><div class="row" style="margin-top:12px"><button class="btn" id="cardSave" type="button">Save picture</button><button class="btn ghost" id="cardShare" type="button">Share</button><button class="btn ghost" id="modalClose" type="button">Close</button></div><div class="fine" id="cardMsg">If saving is blocked on your device, press and hold the picture to save it.</div>`);
+  window.__card = { cv, name: `beat-the-model-${kind}.png`, text: d.share || `${d.title}: ${d.big}` };
+}
+async function saveCard() {
+  const { cv, name } = window.__card, blob = await new Promise((r) => cv.toBlob(r, "image/png")); let ok = false;
+  try { const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); ok = true; } } catch (e) { /* use the normal download */ }
+  if (!ok) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  const m = $("#cardMsg"); if (m) m.textContent = "Saved (check your downloads).";
+}
+async function shareCard() {
+  const { cv, name, text } = window.__card, blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+  try { const f = new File([blob], name, { type: "image/png" }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text }); return; } } catch (e) { /* fall through */ }
+  try { await navigator.clipboard.writeText(text); const m = $("#cardMsg"); if (m) m.textContent = "Sharing pictures isn't supported here, so the text was copied instead."; } catch (e) { const m = $("#cardMsg"); if (m) m.textContent = text; }
+}
+function recordCard() {
+  const pl = allPlays(), t = totals(pl), st = streaks(pl), p = prof(), top = Object.entries(p.leagues).sort((a, b) => b[1] - a[1])[0];
+  return showCard("record", { lg: top ? top[0] : S.code, title: "My record", big: `${t.you} v ${t.mod}`, sub: `points against the model over ${t.n} match${t.n === 1 ? "" : "es"}`, tiles: [[String(st.best), "best streak"], [levelOf(p.xp).name, "rank"], [`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"]], line: t.you > t.mod ? "Ahead of the model." : t.you === t.mod ? "Level with the model." : "The model leads, for now.", share: `My Beat the Model record: ${t.you} points to the model's ${t.mod}. Think you can do better?` });
+}
+
+/* ================= Global leaderboards: one adapter, two backends ================= */
+const Board = {
+  mode: "none", cfg: null,
+  init() { if (DATA.board && DATA.board.url && DATA.board.key) { this.mode = "rest"; this.cfg = DATA.board; } },
+  headers() { return { apikey: this.cfg.key, Authorization: `Bearer ${this.cfg.key}`, "Content-Type": "application/json" }; },
+  async submit(e) {
+    const p = prof(); if (this.mode !== "rest" || !p.board || !p.nick || !Account.signedIn) return;
+    const t = await Account.token(); if (!t) return;
+    const row = { game: e.game, league: e.league || "all", score: e.score, week: weekId(), day: e.day || todayKey(), code: e.code || null };
+    try { await fetch(`${this.cfg.url}/rest/v1/results`, { method: "POST", headers: { ...Account.hdr(t), Prefer: "return=minimal" }, body: JSON.stringify(row) }); } catch (err) { /* offline: the score stays local */ }
+  },
+  async top(game, league, period, code) {
+    if (this.mode !== "rest") return null;
+    try { const r = await fetch(`${this.cfg.url}/rest/v1/rpc/leaderboard`, { method: "POST", headers: this.headers(), body: JSON.stringify({ p_game: game, p_league: league, p_period: period, p_week: weekId(), p_day: todayKey(), p_code: code || "" }) }); if (!r.ok) return null; return await r.json(); } catch (err) { return null; }
+  },
+};
+const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"]];
+S.bgame = "xp"; S.bperiod = "week"; S.bscope = "league";
+async function renderBoards() {
+  const c = S.code, p = prof();
+  const seg = (items, key, cur) => `<div class="seg">${items.map(([v, t]) => `<button type="button" class="pill" data-b="${key}|${v}" aria-pressed="${cur === v}" style="${cur === v ? "border-color:var(--accent);color:var(--accent)" : ""}">${t}</button>`).join("")}</div>`;
+  const periods = [["week", "This week"], ["all", "All time"]].concat(S.bgame === "daily" ? [["day", "Today"]] : []);
+  if (S.bgame !== "daily" && S.bperiod === "day") S.bperiod = "week";
+  $("#room").innerHTML = `<div class="card"><h2>Leaderboards</h2><p class="sub">The weekly boards reset every Monday so newcomers can win; the all-time boards keep the legends. Scores come from the honest game results, but this is a friendly competition: nothing stops someone submitting made-up numbers, so treat the boards as fun, not proof.</p>
+    <div class="ctl" style="margin-top:12px">${seg(BOARD_GAMES.map(([v, t]) => [v, t]), "game", S.bgame)}</div>
+    <div class="ctl" style="margin-top:8px">${seg(periods, "period", S.bperiod)}${S.bgame !== "xp" ? seg([["league", lgOf(c).name], ["all", "All leagues"]], "scope", S.bscope) : ""}</div><div id="bBody" class="lb" style="margin-top:12px"><div class="fine">Loading…</div></div>
+    <div class="row" style="margin-top:12px">${p.board ? '<span class="fine">You are sharing scores as <b>' + esc(p.nick) + "</b>.</span>" : '<button class="btn" id="openProfileJoin" type="button">Join the leaderboards</button>'}</div></div>`;
+  const body = $("#bBody");
+  if (Board.mode === "none") { body.innerHTML = `<div class="fine">The global boards are built but not switched on yet: they need a free score database (the README has a five-minute setup). Meanwhile your own results are saved on this device, and you can share them as picture cards.</div>`; return; }
+  const rows = await Board.top(S.bgame, S.bgame === "xp" || S.bscope === "all" ? "all" : c, S.bperiod, "");
+  if (!rows) { body.innerHTML = `<div class="fine">The leaderboard could not be reached. Try again in a moment.</div>`; return; }
+  const unit = (BOARD_GAMES.find((x) => x[0] === S.bgame) || [])[2] || "";
+  body.innerHTML = rows.length ? rows.slice(0, 25).map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${Number(r.value) > 0 && S.bgame === "call" ? "+" : ""}${Math.round(Number(r.value) * 10) / 10} <span class="fine">${esc(unit)}</span></span></div>`).join("") : `<div class="fine">No scores here yet. Be the first.</div>`;
+}
+
+/* ================= Challenge a friend ================= */
+const SHORT = { E0: "pl", D1: "bl", SP1: "ll", I1: "sa", F1: "l1" }, FROMSHORT = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
+function seededFixtures(c, seedStr) {
+  const pool = allMatches(c), r = mulberry(hash(seedStr)), seen = new Set(), out = [];
+  while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
+  return out;
+}
+const chalState = (c, code) => { const f = seededFixtures(c, `chal-${c}-${code}`), items = f.map((x) => store.items[`x_${code}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; };
+const chalLink = (c, code) => `${location.href.split("#")[0]}#challenge-${SHORT[c]}-${code}`;
+const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+function renderChallenge() {
+  const c = S.code;
+  if (S.cur) return renderPlay();
+  if (!S.chal) {
+    $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Create a challenge: five matches from the last ten years, the same for you and anyone you send the link to. Play them, then compare scores.</p>
+      <div class="row" style="margin-top:14px"><button class="btn" id="chNew" type="button">Create a challenge</button></div>
+      <div class="row" style="margin-top:14px"><input id="chCode" maxlength="10" placeholder="Got a code? Type it here" aria-label="Challenge code"><button class="btn ghost" id="chJoin" type="button">Play it</button></div></div>`;
+    return;
+  }
+  const code = S.chal.code, st = chalState(c, code);
+  const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-cfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
+  let result = "";
+  if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it" : you === mod ? "a tie" : "the model wins"}</b></div><div class="row" style="margin-top:10px"><button class="btn" id="chCard" type="button">Make a result card</button><button class="btn ghost" id="chCopy" type="button">Copy the challenge link</button></div><pre class="share" id="chTxt" hidden></pre>`; }
+  else result = `<div class="row" style="margin-top:14px"><button class="btn ghost" id="chCopy" type="button">Copy the challenge link</button><span class="fine">Send it before you play, or after, to see who does better.</span></div><pre class="share" id="chTxt" hidden></pre>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar(`Challenge ${code}`)}<p class="sub">${esc(lgOf(c).name)} · ${st.n}/5 played. Everyone with this code gets the same five matches.</p><div class="daily">${rows}</div>${result}${st.n === 5 ? '<div id="chBoard"></div>' : ""}</div>`;
+  if (st.n === 5) challengeBoard(code);
+}
+async function challengeBoard(code) {
+  const el = $("#chBoard"); if (!el || Board.mode !== "rest") return;
+  const rows = await Board.top("challenge", "all", "all", code); if (!rows || !rows.length || !$("#chBoard")) return;
+  $("#chBoard").innerHTML = `<h3 style="font-size:18px;margin:16px 0 6px">Everyone who played this challenge</h3><div class="lb">${rows.slice(0, 10).map((r, i) => `<div class="lbrow"><b class="num">${i + 1}</b><span>${esc(r.nick)}</span><span class="num">${Math.round(Number(r.value))}/5</span></div>`).join("")}</div>`;
+}
+async function copyChallenge(c, code) { const txt = `Beat the Model challenge: five ${lgOf(c).name} matches, same for everyone. Can you beat me? ${chalLink(c, code)}`; try { await navigator.clipboard.writeText(txt); toast("Challenge link copied"); } catch (e) { const pre = $("#chTxt"); if (pre) { pre.textContent = txt; pre.hidden = false; } } }
+function challengeCard(c, code) {
+  const st = chalState(c, code), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  return showCard("challenge", { lg: c, title: `Challenge ${code}`, big: `${you}/5`, sub: `the model got ${mod}/5`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "Beat the model. Your turn to beat me." : "Can you do better?", share: `I scored ${you}/5 on Beat the Model challenge ${code}. Can you beat me? ${chalLink(c, code)}` });
+}
+
+function afterPlayHook(it) {
+  const k = S.cur && S.cur.onDone;
+  if (k === "chal") { if (S.chal) { const st = chalState(S.code, S.chal.code); if (st.n === 5) afterChallenge(S.code, S.chal.code, st); } }
+  else if (k) { const key = todayKey(), st = dailyState(S.code, key); if (st.n === 5) afterDaily(S.code, st, key); }
+  else afterCall(it);
+}
+function dailyCard() {
+  const c = S.code, key = todayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
+  return showCard("daily", { lg: c, title: "Daily 5", big: `${you}/5`, sub: `the model got ${mod}/5 · ${key}`, rows: st.f.map((x, k) => ({ home: x.m[1], away: x.m[2], score: `${x.m[3]}-${x.m[4]}`, you: st.items[k].pick === st.items[k].res ? "✓" : "✗", youOk: st.items[k].pick === st.items[k].res })), line: you > mod ? "I beat the model today." : "Can you beat the model?", share: `Beat the Model, ${lgOf(c).name} Daily 5, ${key}: me ${you}/5, the model ${mod}/5.` });
+}
+const mdCardNow = (it) => showCard("matchday", { lg: it.lg, title: `Matchday ${it.n}`, big: `${it.you}/${it.picks.length}`, sub: `the model got ${it.mod}/${it.picks.length} · ${it.season}`, tiles: [[`${it.you}`, "you"], [`${it.mod}`, "model"], [it.season, "season"]], line: it.you > it.mod ? "I beat the model this round." : it.you === it.mod ? "Level with the model." : "The model won this round.", share: `Beat the Model, ${lgOf(it.lg).name} matchday ${it.n} (${it.season}): me ${it.you}/${it.picks.length}, the model ${it.mod}/${it.picks.length}.` });
+const tableCardNow = (d) => showCard("table", { lg: d.lg, title: "Guess the table", big: d.youErr < d.modErr ? "Beat it" : d.youErr > d.modErr ? "Close" : "Level", sub: `${d.season} · places off per club`, tiles: [[d.youErr.toFixed(2), "me"], [d.modErr.toFixed(2), "the model"], [d.lastErr.toFixed(2), "repeat last year"]], line: d.youErr < d.modErr ? "I out-guessed the model." : "The model edged it.", share: `Beat the Model, ${lgOf(d.lg).name} ${d.season} table: me ${d.youErr.toFixed(2)} places off per club, the model ${d.modErr.toFixed(2)}.` });
+
+/* ================= Accounts: play as a guest, or sign in so progress is saved online ================= */
+const Account = {
+  session: null, pushTimer: null, status: "",
+  get available() { return Board.mode === "rest"; },
+  get signedIn() { return !!(this.session && this.session.user); },
+  get claude() { return store.mode === "cloud"; },
+  load() { try { const s = JSON.parse(localStorage.getItem("arena-session") || "null"); if (s && s.refresh_token) this.session = s; } catch (e) { /* storage unavailable */ } },
+  persist() { try { if (this.session) localStorage.setItem("arena-session", JSON.stringify(this.session)); else localStorage.removeItem("arena-session"); } catch (e) { /* storage unavailable */ } },
+  hdr(token) { return { apikey: Board.cfg.key, Authorization: `Bearer ${token || Board.cfg.key}`, "Content-Type": "application/json" }; },
+  take(j) { if (!j || !j.access_token) return false; this.session = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600), user: { id: j.user.id, email: j.user.email } }; this.persist(); return true; },
+  async auth(path, body) { const r = await fetch(`${Board.cfg.url}/auth/v1/${path}`, { method: "POST", headers: this.hdr(), body: JSON.stringify(body) }); let j = {}; try { j = await r.json(); } catch (e) { /* empty body */ } return { ok: r.ok, j }; },
+  errText(j) { return (j && (j.error_description || j.msg || j.message)) || "Something went wrong. Please try again."; },
+  async signUp(email, password) {
+    const { ok, j } = await this.auth("signup", { email, password }); if (!ok) return { error: this.errText(j) };
+    if (this.take(j)) { await this.afterSignIn(); return { ok: true }; }
+    return { ok: true, confirm: true };
+  },
+  async signIn(email, password) { const { ok, j } = await this.auth("token?grant_type=password", { email, password }); if (!ok || !this.take(j)) return { error: this.errText(j) }; await this.afterSignIn(); return { ok: true }; },
+  async recover(email) { const { ok, j } = await this.auth("recover", { email }); return ok ? { ok: true } : { error: this.errText(j) }; },
+  async token() {
+    if (!this.session) return null;
+    if (this.session.expires_at - 60 > Date.now() / 1000) return this.session.access_token;
+    const { ok, j } = await this.auth("token?grant_type=refresh_token", { refresh_token: this.session.refresh_token });
+    if (ok && this.take(j)) return this.session.access_token;
+    this.session = null; this.persist(); paintProfileBtn(); return null;
+  },
+  async flush() { if (this.pushTimer) { clearTimeout(this.pushTimer); this.pushTimer = null; await this.push(); } },
+  async signOut() { await this.flush(); try { if (this.session) await fetch(`${Board.cfg.url}/auth/v1/logout`, { method: "POST", headers: this.hdr(this.session.access_token) }); } catch (e) { /* offline */ } this.session = null; this.persist(); this.status = ""; paintProfileBtn(); },
+  async afterSignIn() { await this.pull(); await this.push(); paintProfileBtn(); paintScore(); },
+  async pull() {
+    const t = await this.token(); if (!t) return;
+    try { const r = await fetch(`${Board.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); if (rows[0] && rows[0].data) mergeProgress(rows[0].data); this.status = "Progress synced."; } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
+  },
+  async push() {
+    const t = await this.token(); if (!t) return;
+    try { await fetch(`${Board.cfg.url}/rest/v1/progress`, { method: "POST", headers: { ...this.hdr(t), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: this.session.user.id, data: store.items, updated_at: new Date().toISOString() }) }); this.status = "Progress saved online."; } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
+  },
+  queue() { if (!this.signedIn) return; clearTimeout(this.pushTimer); this.pushTimer = setTimeout(() => { this.pushTimer = null; this.push(); }, 2500); },
+  async setNick(nick) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; try { const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/set_nickname`, { method: "POST", headers: this.hdr(t), body: JSON.stringify({ p_nick: nick }) }); const j = await r.json(); if (j === "ok") return { ok: true }; return { error: j === "taken" ? "That nickname is taken. Try another." : j === "invalid" ? "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." : this.errText(j) }; } catch (e) { return { error: "Could not reach the server." }; } },
+};
+document.addEventListener("visibilitychange", () => { if (document.hidden) Account.flush(); });
+addEventListener("pagehide", () => { Account.flush(); });
+// Bring cloud progress into this device without losing anything: plays are append-only locks, so the union is safe; the profile merges field by field.
+function mergeProgress(cloud) {
+  const mine = store.items; let changed = false;
+  Object.entries(cloud || {}).forEach(([k, v]) => {
+    if (k === "profile") { const a = prof(), b = v || {}; const m = { ...a, ...b, xp: Math.max(a.xp || 0, b.xp || 0), ach: { ...(b.ach || {}), ...a.ach }, leagues: { ...(b.leagues || {}), ...a.leagues }, seasons: { ...(b.seasons || {}), ...a.seasons }, nick: a.nick || b.nick || "", board: a.board || b.board || false, days: {} }; new Set([...Object.keys(a.days), ...Object.keys(b.days || {})]).forEach((d) => { m.days[d] = Math.max(a.days[d] || 0, (b.days || {})[d] || 0); }); mine.profile = m; changed = true; }
+    else if (!(k in mine)) { mine[k] = v; changed = true; }
+  });
+  if (changed) { saveLocal(); paintScore(); paintProfileBtn(); }
+}
+function accountHTML() {
+  if (Account.claude) return `<p class="fine">Signed in with your claude.ai account: your progress is saved privately and follows you automatically.</p>`;
+  if (!Account.available) return `<p class="fine">You are playing as a guest: your progress is saved in this browser. Accounts (so progress follows you across devices) switch on when the online database is connected; the README has the short setup.</p>`;
+  if (Account.signedIn) return `<div class="row"><span>Signed in as <b>${esc(Account.session.user.email)}</b></span><button class="btn ghost" id="acctOut" type="button">Sign out</button></div><div class="fine" id="acctMsg">${esc(Account.status || "Your progress is saved online automatically.")}</div>`;
+  return `<p class="fine">You are playing as a guest: your progress is saved in this browser. Create a free account to keep it across devices and to appear on the global leaderboards.</p><div class="row"><button class="btn" id="acctIn" type="button">Sign in</button><button class="btn ghost" id="acctNew" type="button">Create an account</button></div>`;
+}
+function authForm(mode) {
+  const up = mode === "up";
+  modal(`<h2 style="font-size:26px">${up ? "Create an account" : "Sign in"}</h2><p class="fine">${up ? "Your progress is saved to your account and follows you to any device. Guests can keep playing without one." : "Welcome back. Your saved progress will load."}</p>
+    <div class="authform"><input id="aEmail" type="email" autocomplete="email" placeholder="Email" aria-label="Email"><input id="aPass" type="password" autocomplete="${up ? "new-password" : "current-password"}" placeholder="Password (6 or more characters)" aria-label="Password"></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="aGo" data-mode="${mode}" type="button">${up ? "Create account" : "Sign in"}</button><button class="btn ghost" id="aSwitch" data-mode="${up ? "in" : "up"}" type="button">${up ? "I already have an account" : "Create an account"}</button>${up ? "" : '<button class="link" id="aForgot" type="button">Forgot password?</button>'}<button class="btn ghost" id="modalClose" type="button">Continue as a guest</button></div><div class="fine" id="aMsg" style="margin-top:8px"></div>`);
+}
+async function submitAuth(mode) {
+  const email = ($("#aEmail").value || "").trim(), pw = $("#aPass").value || "", msg = $("#aMsg"), btn = $("#aGo");
+  if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = "Please enter a valid email address."; return; }
+  if (pw.length < 6) { msg.textContent = "The password needs at least 6 characters."; return; }
+  btn.disabled = true; msg.textContent = "One moment…";
+  const res = mode === "up" ? await Account.signUp(email, pw) : await Account.signIn(email, pw); btn.disabled = false;
+  if (res.error) { msg.textContent = res.error; Snd.wrong(); return; }
+  if (res.confirm) { msg.textContent = "Almost there: check your email and click the confirmation link, then sign in here."; return; }
+  Snd.right(); toast(`Signed in as ${esc(email)}`); closeModal(); openProfile();
 }
 
 /* ---------- Review ---------- */
@@ -1106,9 +1454,31 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lg) { Snd.tick(); go(SLUG[b.dataset.lg]); route(e); return; }
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
   if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
+  if (b.id === "profileBtn" || b.id === "openProfileJoin") { openProfile(); return; }
+  if (b.id === "modalClose") { closeModal(); return; }
+  if (b.id === "shareRecord") { recordCard(); return; }
+  if (b.id === "cardSave") { saveCard(); return; }
+  if (b.id === "cardShare") { shareCard(); return; }
+  if (b.id === "nickSave") { const v = ($("#nickIn").value || "").trim(), msg = $("#nickMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } msg.textContent = "Checking…"; Account.setNick(v).then((r) => { if (r.error) { msg.textContent = r.error; Snd.wrong(); return; } const p = prof(); p.nick = v; p.board = true; saveProf(p); msg.textContent = `You are on the boards as ${v}.`; Snd.right(); renderBoardsIfOpen(); }); return; }
+  if (b.id === "acctIn") { authForm("in"); return; }
+  if (b.id === "acctNew") { authForm("up"); return; }
+  if (b.id === "aSwitch") { authForm(b.dataset.mode); return; }
+  if (b.id === "aGo") { submitAuth(b.dataset.mode); return; }
+  if (b.id === "aForgot") { const email = ($("#aEmail").value || "").trim(); if (!/^\S+@\S+\.\S+$/.test(email)) { $("#aMsg").textContent = "Type your email above first."; return; } Account.recover(email).then((r) => { $("#aMsg").textContent = r.error || "If that address has an account, a reset link is on its way."; }); return; }
+  if (b.id === "acctOut") { Account.signOut().then(() => { closeModal(); openProfile(); }); return; }
+  if (b.id === "nickLeave") { const p = prof(); p.board = false; saveProf(p); closeModal(); openProfile(); return; }
+  if (b.id === "dailyCard") { dailyCard(); return; }
+  if (b.id === "mdCard") { const it = store.items[mdKey(S.code, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
+  if (b.id === "tbCard") { const d = store.items[tabKey(S.code, S.tab.season)]; if (d) tableCardNow({ lg: S.code, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
+  if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
+  if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }
+  if (b.dataset.cfix) { const [sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(S.code, sn, +i, "chal", `x_${S.chal.code}_${sn}_${i}`); return; }
+  if (b.id === "chCopy") { copyChallenge(S.code, S.chal.code); return; }
+  if (b.id === "chCard") { challengeCard(S.code, S.chal.code); return; }
+  if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
-  if (b.dataset.game) { Snd.tick(); S.game = b.dataset.game; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
-  if (b.id === "gamesBack") { Snd.back(); S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
+  if (b.dataset.game) { Snd.tick(); S.game = b.dataset.game; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
+  if (b.id === "gamesBack") { Snd.back(); S.game = null; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
   if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }
   if (b.id === "thSkip") { finishTheatre(); return; }
@@ -1155,5 +1525,5 @@ document.addEventListener("dragend", () => { dragIx = null; });
 document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });
 addEventListener("hashchange", () => route());
 
-renderLobby(); paintSound(); initStore(); setTheme(null); route();
+renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) Account.pull(); initStore(); setTheme(null); route();
 </script>

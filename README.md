@@ -1,134 +1,74 @@
 ## Beat the Model
 
-*A multi-league football prediction project and game, built by moisback22.*
+*A five-league football prediction project and game, built by moisback22.*
 
-Machine-learning models that forecast the result of Premier League, Bundesliga, La Liga, Serie A and Ligue 1 matches using only information available before kickoff, tested strictly on matches they never saw, and a browser game in which you try to beat them. The project began on 30 April 2026 as a single-league classifier and has grown, in stages documented below, into a five-league, season-by-season-validated system with a playable front end.
+### The short version
 
-> **Resuming after a break? Read this box first.**
->
-> **What this is.** Two connected things. (1) The **modelling pipeline**: Premier League models with a rich feature set (Elo, form, expected goals, squad value, managers) plus a **five-league pooled model** built from results-only features and evaluated season by season. (2) The **front end**: the **arena** (`site/arena_template.html`, built by `src/30_build_arena.py`), where you pick a league, call real matches against the model, play a Daily 5, replay a season against a real-versus-model table, and read title-race odds; and the original **Premier League deep dive** (`site/season_wrapped_template.html`, built by `src/08_build_wrapped.py`) with minute-by-minute simulated matches, five games and rest-of-season odds.
->
-> **Where it stands (15 Nov 2026).** *Five-league walk-forward test, 16,111 matches, nine seasons (2017-18 to 2025-26), each season predicted only from earlier ones:* the pooled model gets **52.6%** of results right (log loss 0.9855), the bookmakers' average closing odds **53.7%** (0.9689), always picking the home side **43.5%**. Training on all five leagues beats per-league models by 0.0021 log loss on average (34 of 45 league-seasons). *Premier League, 760 held-out matches (2024-25 and 2025-26):* blend 50.8% (log loss 1.0055), hybrid with the market's odds 52.6%. Two final playing styles: **Balanced** (Home, Draw and Away found about equally often) Home 49 / Draw 38 / Away 46 at 45.0% accuracy on the Premier League, and **Max Accuracy** 76 / 0 / 59 at 50.8%. The remaining gap to the bookmakers is information (lineups, injuries, news), not modelling; a drop-one and add-one feature test and a late-season "nothing to play for" signal both came back negative.
->
-> **Live site.** https://mosoliman517-sudo.github.io/football-prediction-model/ (GitHub Pages, served from `docs/` on `main`). The public build includes the official league logos, club badges and star-player photographs (owner's decision), credited in the page footer with a takedown route. The raw image files stay out of git (`site/logos/`, `site/crests/`); they appear only inside the built page.
->
-> **The commands that matter.**
+Beat the Model is machine-learning forecasting of football results (Home, Draw or Away) for the Premier League, Bundesliga, La Liga, Serie A and Ligue 1, plus a browser game in which you try to out-call the model. Every forecast uses only what was known before kickoff, and every number is tested on matches the model never saw.
+
+- **How good is it?** Over 16,111 matches (nine seasons, each predicted only from earlier seasons), the model gets **52.6%** of results right. The bookmakers' closing odds get **53.7%**, and always picking the home team gets **43.5%**. It sits about one point behind the market in every league, and the gap is information (lineups, injuries, news), not modelling.
+- **What can you do?** Pick a league (each has its own look and sounds), then play seven games against the model, watch the model's predicted match play out minute by minute, replay a season next to the model's table, read title-race odds, climb ranks, unlock achievements, share result cards, challenge a friend, and compete on leaderboards.
+- **Play it:** https://mosoliman517-sudo.github.io/football-prediction-model/
+- **How it was built:** Python (pandas, scikit-learn, Poisson goal models, Elo ratings, Monte Carlo simulation) for the models; plain JavaScript for the page. Data from football-data.co.uk. Most of the later engineering was done in pair-programming sessions with Claude Code (credited in the commits); the evaluation rules and what to keep or discard are the owner's.
+- **Honest notes:** the Premier League models use richer inputs than the other four leagues (which use results-only features); many plausible ideas were tested and rejected rather than shipped; accounts and global leaderboards need a free online database that has to be connected first (`online/SETUP.md`).
+
+> **Resuming after a break? Read this box.**
 >
 > ```bash
-> ./refresh.sh --no-download                 # rebuild the Premier League pipeline and deep-dive page from files already in 01_data/ (~12 min)
-> ./refresh.sh                               # same, after downloading the latest 2026-27 results
-> python3 src/29_multi_league_walkforward.py # five-league walk-forward evaluation; writes per-match predictions (~10 min)
-> python3 src/32_title_race.py               # title / Europe / relegation odds for every league (20,000 simulations each)
-> python3 src/33_match_stats_leagues.py      # shots, on target, corners, fouls and card forecasts for every league (walk-forward)
-> python3 src/31_fetch_assets.py             # league and club badges and star photos into site/logos/ (git-ignored, slow: API throttle)
-> python3 src/30_build_arena.py              # private build: site/arena.html (hosted page, with cloud saving and the leaderboard)
-> python3 src/30_build_arena.py --public     # public build: docs/index.html, the file GitHub Pages serves (official artwork from site/logos/ included)
-> python3 src/30_build_arena.py --public --no-artwork   # the same page with colour discs and original emblems instead of third-party artwork
+> ./refresh.sh --no-download                 # rebuild the Premier League pipeline and the deep-dive page from files already in 01_data/ (~12 min)
+> python3 src/29_multi_league_walkforward.py # five-league walk-forward evaluation + per-match predictions (~10 min)
+> python3 src/33_match_stats_leagues.py      # shots, corners, fouls, card forecasts for every league
+> python3 src/32_title_race.py               # title / Europe / relegation odds (20,000 simulations per league)
+> python3 src/31_fetch_assets.py             # badges, logos, star photos into site/logos/ (git-ignored; slow, API throttled)
+> python3 src/30_build_arena.py              # private build: site/arena.html
+> python3 src/30_build_arena.py --public     # public build: docs/index.html (what GitHub Pages serves)
+> python3 src/30_build_arena.py --public --no-artwork   # same, with colour discs instead of third-party artwork
 > ```
 >
-> **Standing rules.** A new signal or model is kept only if it helps out-of-fold in *both* a logistic regression and a random forest; held-out matches are touched once, at the end. Club badges, league logos and player photos are other people's property. The owner has chosen to show them on the public site as identification only, credited in the footer; the raw files (`site/logos/`, `site/crests/`) and the private page stay git-ignored, and if a rights holder objects, rebuild with `--no-artwork` and push. Do not scrape sources that block scripts, and do not work around refusals.
+> **Rules that stay:** a new signal is kept only if it helps out-of-fold in both a logistic regression and a random forest, and held-out matches are touched once. Badges, league logos and player photos belong to others: the raw files stay git-ignored, they appear in the built page only as identification with credit and a takedown route, and `--no-artwork` removes them in one command. Never scrape sources that block scripts or work around refusals.
 >
-> **Known limits, stated plainly.** (1) Understat (xG) blocks scripted requests, so 2026-27 xG form is carried forward. (2) The Kaggle Transfermarkt copy ends in July 2026. (3) The four non-Premier League leagues use results-only features, so they have no xG, squad-value or manager inputs, and no real goalscorers: simulated goals in those leagues name the league's star for his club and generic "striker/midfielder" labels otherwise. Yellow cards are not forecast better than the league average. (4) Title-race odds assume today's form holds and know nothing about injuries or transfers. (5) The Champions League needs a different data source and is not built.
+> **Known limits:** the four newer leagues have no xG, squad-value or manager inputs and no real goalscorers; yellow cards are not forecast better than the league average; title-race odds assume today's form holds; the Champions League has no data source yet; accounts and leaderboards are built and tested against a stand-in for the database but not yet connected to a real one.
 >
-> **Open next steps.** A Champions League data source; real goalscorers for the four newer leagues (only the Premier League has them); a better yellow-card forecast; real lineups from the daily Fantasy snapshots once there are enough of them.
+> **Next:** connect the online database; Champions League; real goalscorers for the four newer leagues; real lineups from the daily Fantasy snapshots.
 
-### How the project developed
+### Project diary
 
-The work was done in bursts around heavy academic and study commitments, and the dated record below shows it as it happened: a long foundation phase, a concentrated rigour phase in late summer, a pause of about ten weeks (3 September to 12 November, with no commits) while exams and study commitments took priority, and a sustained expansion phase in mid-November that rested on the pipeline, validation rules and tooling built earlier. Commit counts per phase come from the repository history.
+Written as dated notes, as it happened. Development ran in bursts around heavy academic and study commitments, which is why the dates come in clusters with a long gap in the middle.
 
-| Dates (2026) | Phase | What changed | Commits |
-|---|---|---|---|
-| 30 Apr to 5 Jun | Foundation | One Premier League season, a cleaned data pipeline, the first leakage-free pre-match features (form, goals, shots, rest, opponent strength) | before the repository existed |
-| 6 Jun to 22 Jul | Scaling the data | Ten seasons (about 3,800 matches) merged by an automated loader that handles inconsistent date formats and column drift | before the repository existed |
-| 23 to 30 Jul | First models | Five classifiers compared (Random Forest, Gradient Boosting, XGBoost, LightGBM, CatBoost), modular feature code, evaluation tools. The headline 57.1% was on a single season and proved optimistic once the test became stricter | 6 |
-| 28 Aug to 2 Sep | Rigour | Odds leakage removed, a duplicated season file found and replaced, Elo rebuilt with an expectation model, Poisson goal model, xG and market-value data, a two-season 760-match test set, validated ensemble selection, three tuned playing styles. Accuracy on the stricter test: 47.9% to 49.6% | 35 |
-| 3 Sep to 12 Nov | Pause | Exams and study commitments; no commits | 0 |
-| 13 Nov | Live season and the first front end | 2026-27 added and kept out of the benchmark, a same-day table-position leak fixed, the "last 5 matches" features found to be reading away matches only and rebuilt, blind rest-of-season simulation, market-informed hybrid, the first interactive page | 10 |
-| 14 Nov | Experiments and a game | Seven Elo formats compared (a single rating won), expected-goals Elo adopted, real lineups, player ratings, nothing-to-play-for signals and a full drop-one ablation all tested and honestly rejected, five games and a minute-by-minute match whose statistics follow the model's own forecast | 18 |
-| 15 Nov | Five leagues | Bundesliga, La Liga, Serie A and Ligue 1 added; season-by-season walk-forward evaluation; title-race simulation; the multi-league arena (details below) | 8 |
+**30 April to 5 June, before the repository.** Started with one Premier League season of football-data CSVs and a plain question: can anything beat "always pick the home team"? Cleaned the files, built the first pre-kickoff features (recent form, goals, shots, rest days, how strong the last five opponents were) and made a habit that never went away: every feature may only look at matches played *before* the one it describes. First problem: the raw files carried duplicate betting columns, so those were stripped early.
 
-#### 15 November 2026: from one league to the Big 5
+**6 June to 22 July.** Grew from one season to ten (about 3,800 matches) with a loader that merges the season files. Problem: the seasons did not agree on date formats, so the same loader failed on some years until the parsing was made tolerant. Ended with a combined dataset that passed a basic validation.
 
-This was the largest structural change since the first multi-season pipeline, and it touched every layer.
+**23 to 30 July.** First models: Random Forest, Gradient Boosting, XGBoost, LightGBM and CatBoost, compared side by side. Gradient Boosting hit 57.1% on the 2023-24 season, which felt great for about a month. The repository was created on 30 July (six commits).
 
-- **Data engineering.** 52 season files (2014-15 to 2026-27) for four more leagues were added alongside the Premier League's, about 19,800 finished matches in total, all from the same source and schema. A single compact feature builder (`core_features.py`: classic Elo with margin multiplier, form over five matches, shots, rest days, head to head, season-to-date record) is run **per league** so that each league keeps its own rating pool, then the leagues are concatenated with a league indicator. The builder was also made safe for fixtures with no result yet, so the rest of a season can be forecast from the current state without future fixtures contaminating each other.
-- **Modelling and evaluation.** The earlier fixed split (train up to 2024, test 2024-26) was replaced for this work by a **rolling-origin, season-by-season walk-forward**: each season from 2017-18 is predicted by a model trained only on earlier seasons and then joins the training data, so every season serves as both test and training data and no season is ever predicted by a model that has seen it. A random forest and a Poisson goal model are blended, and a model per league is compared with one pooled across all five. Result over 16,111 matches: pooled 52.6%, per-league 52.6% (but 0.0021 worse in log loss), bookmakers 53.7%, always-Home 43.5%. Season-to-season swings are large (Premier League accuracy from 48% to 60%, for every method including the bookmakers), which is why a nine-season average is more trustworthy than any single season.
-- **Title-race simulation.** Every unplayed pairing of the live season is predicted from the current state and the rest of the season is simulated 20,000 times per league, with the outcome drawn from the model's probabilities and the score from its goal rates given that outcome so that goal difference can break ties. For the last three finished seasons the same method runs after matchdays 10, 19 and 28 against what actually happened (an optimistic back-test, and labelled as one). The model made Liverpool 90% to win the 2024-25 Premier League after matchday 19, and had Real Madrid at 48% and Barcelona at 35% to win La Liga that season; Barcelona won.
-- **The arena.** A new front end built around leagues: a lobby of five themed worlds, each with its own palette, display typeface, ambient particles and a short synthesised musical motif, and four rooms per league (Call it, Daily 5, Title race, Replay a season with the real table beside the model's expected-points table, and a Review of how the model really did). Sound is generated in the browser, with off, soft and full levels.
-- **Official artwork pipeline.** A fetcher matches every club in the data (138) to a public sports-data API by name, downloads league badges, club badges and star-player cutouts into a git-ignored folder, and the build embeds them as small WebP images. Name matching went wrong in places (a women's team, a Brazilian club and a Colombian club were matched for Mainz, St Pauli and Santander), so every badge was checked by eye on contact sheets and the gaps were filled from two other public sources.
+**28 August.** Came back and audited everything, and the 57% did not survive. The features included betting-market columns, which already contain the result's likelihood; removing them dropped the number to something honest. Also found that the "2015-16" file was byte-for-byte a copy of 2017-18, so one season had been counted twice in every earlier result. Rebuilt Elo with separate home and away ratings and added a Poisson goal model.
 
-### Problems encountered and how they were solved
+**29 August.** Thirteen commits. Added head-to-head and win-rate features, dropped some weak congestion features and added second-half goal patterns, and flip-flopped on class balancing (off, then on) before settling it with validation. Moved from one test season to two (2024-25 and 2025-26, 760 matches) because one season is small enough for a lucky run to move the headline.
 
-Most of the real progress on this project came from finding things that were wrong, not from adding features. This is the consolidated record: what went wrong, how it was found, the cause, the fix and what the fix changed. Every future log entry should keep this shape, including fixes that turned out to change nothing.
+**31 August.** Thirteen more. Chose class balancing per model using an internal validation set scored on macro-F1 instead of accuracy. Wrote a blind full-season forecast; its first output was degenerate (every score the same) because it took the most likely scoreline each time, so it now samples scorelines instead. Added Understat expected goals (fixing a duplicate-season data bug while wiring it in), added Transfermarkt squad values, and wrote down why Away wins were being under-called.
 
-**Data and leakage**
+**1 and 2 September.** Codebase audit; transfer-window activity; validated ensemble selection (dropping one model beat using all five). Added table position, which pushed accuracy to a project best of 49.34%, then a combination search over five more features (49.61%) and three tuned playing styles. Late on the 2nd, a sanity check on a new feature produced a 21st-place finish in a 20-team league. The cause: the shared season-boundary function treated July as a new season, but the COVID-delayed 2019-20 season ran to 26 July 2020, so its last matches were filed into the next season. Fixed at the source, along with three files that had copied the same logic by hand.
 
-| Date | Problem | How it was found | Cause | Fix and effect |
-|---|---|---|---|---|
-| 28 Aug | Betting-odds columns were feeding the model | Audit of the feature list against "known before kickoff" | Raw football-data columns included bookmaker prices, which already contain the result's likelihood | Removed. Accuracy fell to honest levels (the early 57.1% single-season headline was inflated; the stricter test settled near 48%) |
-| 28 Aug | One season was in the data twice and another was missing | A duplicate-detection pass on the season files | The "2015-16" file was byte-for-byte identical to 2017-18, so 2017-18 was silently double-counted in every earlier result | Replaced with the real 2015-16 file and re-ran everything |
-| 2 Sep | A 20-team league produced a 21st-place finish | A sanity check on a new "average placement" feature | The shared `get_season()` treated July as the start of a season, but the COVID-delayed 2019-20 season ran to 26 July 2020, so its last matches were filed into 2020-21 | Fixed at the source (cutoff moved to August), and three more files that had copied the same logic by hand now call the shared function. Measured effect small, kept on principle |
-| 13 Nov | Table position included matches played the same day | Building the live-season forecast | A same-date look-ahead in the walk-forward standings | Standings now use strictly earlier matches only. The old baseline had been flattered slightly (ensemble 49.47% to 48.55%) |
-| 13 Nov | The "last 5 matches" features were really the last 5 away matches (about 20 columns per side) | Building the next-matchday forecast grid | `pd.concat` of home and away games puts home first, so `.tail(5)` took away games. Tested directly: it matched the last five away games in 114 of 114 sampled rows and the true last five in only 20 | Restored chronological order in five feature modules and added a test. Effect roughly neutral (log loss 1.0141 against 1.0154); kept because the features now do what their names say |
-| 14 Nov | Forecasts for unplayed fixtures used a different "overall Elo" from training | The duplicate-column audit below | The fixture-grid code averaged the home and away rating tracks, while training used the single classic rating | Removed the duplicate columns, which removed the mismatch |
-| 14 Nov | Six Elo columns and fourteen others carried no information | A drop-one ablation noticed two Elo groups behaved identically | Under the classic Elo format the "overall" columns equal the home/away ones exactly (correlation 1.0), and the match-xG and closing-odds columns are empty for these seasons | Removed from the model inputs. Accuracy 50.9% to 50.8%, log loss 1.0058 to 1.0055: no real change, as expected |
-| 15 Nov | Forecasting the rest of a season would corrupt itself | Designing the title-race simulation | The feature builder updated Elo and form after every row, so unplayed fixtures with no result would feed each other fake results | The builder now skips the state update when a result is missing; checked that two future fixtures see identical state |
+**3 September to 12 November.** No commits. Exams and study came first.
 
-**Evaluation and modelling**
+**13 November.** Back, with the 2026-27 season under way. Added it as a live season kept out of the benchmark, fixed a same-day look-ahead in table position, and built the first interactive page, a match lab and a simulation of the rest of the season. Building the next-matchday forecast exposed a bug that had sat in the project for months: the "last 5 matches" features were actually the last 5 *away* matches (a `.tail(5)` after joining home and away games). Fixed it, wrote a test, and found the effect was roughly neutral, which was a useful lesson in itself. Also: the page viewer dropped temporary image links, so club badges moved to embedded images.
 
-| Date | Problem | Cause | Fix and effect |
-|---|---|---|---|
-| Jul to Sep | A single test season gave an unreliable and optimistic number | One season is small enough that a hot or cold run moves the headline more than the model did | A two-season, 760-match test, then on 15 Nov a rolling-origin walk-forward over nine seasons and 16,111 matches. Premier League accuracy ranged from 48% to 60% between seasons for every method, bookmakers included, which confirmed why single seasons mislead |
-| 13 Nov | A per-model accuracy figure fell 2.5 to 5 points after a correct bug fix | The figure is reported after a Home-penalty and Draw-boost step chosen by internal validation, and that choice is chaotic (one model's chosen penalty moved from 0.95 to 0.60) | Stopped comparing feature sets on that number; compare on log loss and plain accuracy. The fix was not what lowered the figure |
-| Sep | Heavy over-prediction of Home wins | Elo's home and away rating pools carry a structural home-field tilt, so the model needed less evidence to call Home | A probability-threshold correction chosen by multi-fold internal validation, trading raw accuracy for much better Away and Draw recognition, as a deliberate and documented choice |
-| 14 Nov | The "Balanced" style was redefined three times | Calling draws to even out recall costs accuracy, and calling them only when close almost never finds any (Home 75 / Draw 3 / Away 57) | Settled on two final styles: Balanced, tuned so Home, Draw and Away recall are as equal as possible (Premier League 49 / 38 / 46), and Max Accuracy (76 / 0 / 59). Home 70 / Away 60 / Draw 40 together is not reachable on this information |
-| 14 Nov | A balance dial between the two styles did nothing for 70% of its travel | Found while testing it in the browser: the draw factor stayed too low to ever call a draw until nearly the Balanced end | First remapped, then removed when the two-style decision made it redundant |
-| 13 to 15 Nov | Many plausible ideas did not help | Tested against the rule that both models must improve out-of-fold: seven Elo formats, Dixon-Coles, draw models, real lineups, player ratings, 14 new form signals, a drop-one ablation and a "nothing left to play for" signal | Each was rejected or limited with its numbers recorded in the log. Rejections are results too: they show the feature set is near a plateau and the remaining gap to the bookmakers is information the model does not have |
+**14 November.** The busiest day for experiments, and mostly for things that did not work. Compared seven ways of building Elo (a single rating won), adopted an Elo built from expected goals, and tested real starting lineups, player ratings, a dedicated draw model, a Dixon-Coles correction, a "nothing left to play for" signal and a full drop-one test of every feature group. All were rejected under the rule that both models must agree. Defined the playing styles three times before settling on two: Balanced (Home, Draw and Away found about equally often) and Max Accuracy. Trimmed six duplicate Elo columns and fourteen empty ones, and caught a mismatch where forecasts for unplayed games used a different Elo from training. The page got five games and a minute-by-minute match whose totals now equal the model's own forecast. A layout bug (the slider label "Matchday 10 / 10" is wider than "Matchday 9 / 10", re-wrapping the control row in a split-screen window) was reported, reproduced by sweeping widths and fixed.
 
-**Data acquisition**
+**15 November.** The big expansion, in one long day built on everything above. Added the Bundesliga, La Liga, Serie A and Ligue 1: 52 season files, one compact feature builder run per league so each keeps its own Elo pool, then a single model pooled across all five. Evaluation moved to a season-by-season walk-forward so every season is both test data and training data (16,111 test matches; pooled training beat per-league models by 0.0021 log loss, in 34 of 45 league-seasons). Built title-race odds from 20,000 simulations per league. Rebuilt the front end as an "arena": a lobby of five league worlds, each with its own palette, typeface, particles, sounds and flag, plus rooms for games, title race, season replay (real table beside the model's expected-points table) and a review. Added official league logos, 138 club badges and star-player photos, matched by name from a public sports-data API; the matching went wrong in places (a women's team for Mainz, a Brazilian club for St Pauli, a Colombian one for Santander), so all 138 badges were checked by eye. Brought back the match simulation and four more games for every league, with statistics forecasts built for the four leagues that had none (yellow cards turned out no better than the league average, and the page says so). Opened the games to a decade of matches after checking that older seasons are not predicted worse. Published on GitHub Pages; a first build without third-party artwork looked "old", so the artwork went in, credited, with a one-command way to remove it. A sweep of every game found a missing way back to the games hub and a crash if you left mid-reveal; both fixed. Finished with progression (XP and eight ranks, 18 achievements, a streak calendar), image result cards, Challenge a friend, weekly and all-time leaderboards, and accounts with guest play, tested against a stand-in for the database. One catch from that test: a save delayed by a few seconds could be lost if the tab closed, so progress now saves the moment you leave or sign out.
 
-| Date | Problem | Cause | Fix |
-|---|---|---|---|
-| Sep | No expected-goals data for the live season | Understat blocks scripted requests | Not circumvented; 2026-27 xG form is carried forward and listed as a known limit |
-| 13 Nov | One club badge missing (Coventry) | The Premier League badge host returns HTTP 403 for that file | Not worked around; the page shows a text chip and accepts a supplied image |
-| 13 Nov | Badges vanished for most clubs in the viewer | Temporary `blob:` URLs were dropped by the page viewer | Badges are embedded once as `data:` images. The failure could not be reproduced locally, so this is recorded as a fix made on the evidence available |
-| 15 Nov | Logo and photo download failed or matched the wrong club | The free API key used first had been retired (the documented test key is now different); name matching confused Mainz with a women's team, St Pauli with a Brazilian club and Santander with a Colombian one; several clubs returned nothing or a different sport (Nott'm Forest returned a netball team); calls were throttled | Matched by name with manual overrides, filled the gaps from the Premier League's own badge file and a second public crest host, and checked all 138 badges by eye on labelled contact sheets before anything was shown. The raw artwork files are kept out of git because they belong to others |
+### What is in the box
 
-**Front end**
-
-| Date | Problem | How it was found and cause | Fix |
-|---|---|---|---|
-| 14 Nov | Moving the matchday slider between 9 and 10 broke the layout in a split-screen window | Reported by the owner. "Matchday 10 / 10" is wider than "Matchday 9 / 10", so the label grew and re-wrapped the control row under the cursor. Reproduced by sweeping the container width (79 of the widths tried differed between the two matchdays; at 360 px the row jumped from 130 to 176 px) | The label has a fixed width; the same sweep then showed no difference |
-| 14 Nov | Chart reference labels collided with the line's end label | Visual check at matchdays 9 and 10 | Percentages moved into the legend |
-| 14 Nov | A simulated match's statistics drifted from the model's own forecast beside them | Totals were random draws around the forecast | Totals are now the rounded forecast, with only two physical limits (shots on target at least the goals, shots at least shots on target). Verified on all 860 matches that have a forecast: every total equals the rounded forecast, goals on the pitch equal the predicted score, no impossible line |
-| 15 Nov | The model's expected-points table disappeared when the page was rebuilt around leagues | Noticed by the owner | Restored beside the real table, with "vs model" and "luck" columns; expected points checked to sum exactly in all five leagues |
-
-The progress log that follows has a detailed entry for each phase and remains the authoritative record of every experiment, including the many that were rejected.
-
-#### 15 November 2026: the match simulation and the other games return, for every league
-
-The first arena rebuild had dropped the minute-by-minute match and four of the five games the Premier League page had. They were rebuilt for all five leagues rather than copied across, because they depended on data only the Premier League had.
-
-- **Statistics forecasts for every league (`src/33_match_stats_leagues.py`).** Ten Poisson regressions (shots, shots on target, corners, fouls and yellow cards, home and away) are trained walk-forward on earlier seasons of all five leagues with the compact feature set, then scored on 2023-24 to 2025-26 against "always the training average". Average miss against that baseline: shots 3.8 against 4.3 (home) and 3.4 against 3.7 (away), on target 1.9 against 2.0 and 1.7 against 1.8, corners 2.3 against 2.4 and 2.0 against 2.1, fouls 3.1 against 3.2 and 3.2 against 3.3. **Yellow cards are no better than the average** (1.06 against 1.05 and 1.12 against 1.11), and the page says so. The share of goals scored in the first half (44.1%) is measured from the data and places goal minutes.
-- **The match theatre.** Locking a call in Call it or Daily 5 now plays the model's predicted match minute by minute: score, clock, share of shots, shots, on target, corners, fouls and cards update live on a pitch showing where shots were taken, with a feed of events, pause, 3x and 8x speed, and skip. The played-out totals are the forecast rounded (only two physical limits can move one: shots on target at least the goals, shots at least shots on target), so the match fits its own forecast; a statistics card then shows real against forecast against played out. Goals name real players for the Premier League (Fantasy Premier League data) and the league's star for his club elsewhere.
-- **Matchday, Spot the upset, Guess the table, Higher or lower.** All use the real club badges. Matchday reveals a whole round row by row against the model; Spot the upset flips five result cards to show the model's probability for each; Guess the table lets you drag or nudge clubs from last season's order and compares you with the model's expected-points table and with repeating last season (final tables for 2018-19 onward are shipped for this); Higher or lower compares two clubs on points, goals, wins or goal difference with a count-up reveal and a streak. A games hub groups them under one Play tab. New sound effects (goal, whistle, card flip) were added to the synthesised set.
-- **Problems met.** A scripted sweep of every game in every league found that the Call it and Daily 5 start screens had no way back to the games hub (fixed with an "All games" button), and that delayed reveal animations threw an error if a player left the screen mid-reveal (the animation steps now check the element still exists). The browser pane also stalls any script longer than 45 seconds, so the sweep was run in batches of leagues.
-
-#### 15 November 2026: a decade of matches in the games
-
-At the owner's suggestion the games (Call it, Daily 5, Matchday, Spot the upset) now draw from every season on the page, 2017-18 to the live season, instead of only the last three, so players can remember some of the matches. This needed no new modelling: every season from 2017-18 already had a walk-forward prediction from a model that had never seen it. The worry that older seasons would be predicted worse was checked first: model accuracy against the bookmakers' by season (all five leagues, Max Accuracy style) is within about a point in every season, with the same gap in 2017-19 (-0.8 points) as in 2023-25 (-0.9), so no recency penalty exists. The replay and the title race stay at the last three finished seasons plus the live one, and the "How good is it?" room now shows every season. Fifteen clubs that have left these leagues since 2017 needed badges (13 matched by name, Chievo and Nimes needed alternative spellings), all checked by eye. Page size: 4.2 MB.
-
-#### 15 November 2026: going public
-
-The page is published on GitHub Pages from `docs/index.html`. A first public build deliberately left out all third-party artwork (colour-disc badges, original emblems, no photographs) because the club badges, league logos and player photographs belong to their owners. The owner then decided the public site should show the official artwork, so the public build now includes it as identification only: the footer credits the sources (TheSportsDB, football-data.org and the Premier League's own badge files), states that the project is independent and non-commercial, and gives a takedown route; the raw image files remain git-ignored, and `--no-artwork` regenerates the artwork-free page in one command if a rights holder ever objects. Problems met while doing this: the page had been written as a fragment for a hosting wrapper (no document type or character set), so the public build wraps it as a complete standalone page; the optional cloud features (private progress saving and the leaderboard) need the original host, so on Pages the page falls back to saving progress in the browser and hides the leaderboard; and a "previous version" report was traced to caching and to the older Premier League-only link, which led to a build stamp (time, public or private, data date) in the footer of every build. Results and odds data come from football-data.co.uk and are credited in the page footer.
-
-#### How it was built
-
-The modelling decisions, evaluation rules and the choice of what to keep or throw away are the project owner's; most of the later engineering was done in pair-programming sessions with Claude Code (Anthropic), which is credited in the commit history. Every change was tested against held-out matches before it was kept.
+- **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).
+- **Playing styles:** Balanced (Premier League Home 49 / Draw 38 / Away 46 at 45.0% accuracy) and Max Accuracy (76 / 0 / 59 at 50.8%). Home 70 / Away 60 / Draw 40 together is not reachable on this information.
+- **Front ends:** the arena (`site/arena_template.html`, built by `src/30_build_arena.py`) and the original Premier League deep dive (`site/season_wrapped_template.html`, built by `src/08_build_wrapped.py`).
+- **Online features:** `online/schema.sql` and `online/SETUP.md` (accounts, saved progress, leaderboards).
 
 ---
 
-# Progress Log
+# Detailed technical log
+
+The full record of every experiment, including the many that were rejected, in the order they happened. The diary above is the readable version; this is the evidence behind it.
 
 ## Update 1 — April 30 – June 5, 2026
 
@@ -725,6 +665,8 @@ football-prediction-model/
 │   ├── 13_fetch_crests.py          # downloads official club badges into site/crests/ (git-ignored)
 │   ├── blind_engine.py             # the state-updating simulation engine shared by 07 and 12
 │   ├── 08_build_wrapped.py         # builds the interactive Season Wrapped page from saved predictions
+│   │  (newer scripts, in order: 14 signal tests, 17 match-stat forecasts, 18 Elo formats, 20 older seasons, 24-25 lineup tests, 26 accuracy ideas,
+│   │   27 drop-one ablation, 28 motivation signal, 29 five-league walk-forward, 30 arena build, 31 badge and photo fetcher, 32 title race, 33 league stats forecasts)
 │   └── features/
 │       ├── form.py                 # points-based form + win-rate
 │       ├── goals.py
@@ -746,7 +688,9 @@ football-prediction-model/
 │       ├── half_time.py            # second-half goal patterns
 │       └── elo.py                  # dual-track Elo + calibrated expectation model
 │
-├── site/                           # Season Wrapped page template (the built page and site/crests/ are git-ignored)
+├── site/                           # page templates (arena_template.html, season_wrapped_template.html); built pages, site/crests/ and site/logos/ are git-ignored
+├── docs/                           # the public build GitHub Pages serves (docs/index.html)
+├── online/                         # schema.sql and SETUP.md for accounts, saved progress and leaderboards
 ├── refresh.sh                      # one-command refresh of the live season
 ├── README.md
 ├── requirements.txt

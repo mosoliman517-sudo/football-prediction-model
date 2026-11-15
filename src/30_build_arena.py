@@ -147,7 +147,12 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval}
+board = None          # online database (Supabase) settings: site/board_config.json = {"url": "...", "key": "<anon public key>"}; env BOARD_URL / BOARD_KEY override (for tests)
+if os.environ.get("BOARD_URL") and os.environ.get("BOARD_KEY"):
+    board = {"url": os.environ["BOARD_URL"].rstrip("/"), "key": os.environ["BOARD_KEY"]}
+elif os.path.exists("site/board_config.json"):
+    board = json.load(open("site/board_config.json")); board["url"] = board["url"].rstrip("/")
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

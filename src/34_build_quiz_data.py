@@ -119,6 +119,50 @@ def main():
                 if champs.get((comp, sn), (None,))[0] == cid and lg not in titles:
                     titles.append(lg)
         q["mg"], q["ti"] = mgs, titles
+    # cup honours (from src/36_fetch_honours.py): same squad-membership rule as the league titles above
+    try:
+        hon = json.load(open("02_processed_data/honours.json", encoding="utf-8"))
+    except FileNotFoundError:
+        hon = []
+    allc = pd.read_csv("01_data_market_value/clubs.csv")
+    allc["key"] = allc["name"].map(norm)
+    def club_id_of(label):
+        want = norm(label); best, sc = None, 0
+        for r in allc.itertuples():
+            v = max(difflib.SequenceMatcher(None, want, r.key).ratio(), 0.95 if want and (want in r.key or r.key in want) and min(len(want), len(r.key)) >= 4 else 0)
+            if v > sc:
+                best, sc = r.club_id, v
+        return int(best) if sc >= 0.8 else None
+    cache = {}
+    won = {}
+    for h in hon:
+        cid = cache.setdefault(h["winner"], club_id_of(h["winner"]))
+        if cid is None:
+            print("  honour winner not matched:", h["winner"]); continue
+        won.setdefault((cid, h["season"]), []).append(h["comp"])
+    for q in players:
+        hn = []
+        for sn in range(2016, 2026):
+            cid = club_on(q["id"], pd.Timestamp(f"{sn + 1}-01-01"))
+            for comp in won.get((cid, sn), []):
+                if comp not in hn:
+                    hn.append(comp)
+        q["hn"] = hn
+    # teammates: for the 40 most valuable-ever players, everyone who shared a club with them for at least a year
+    stars = sorted(players, key=lambda x: -x["peak"])[:40]
+    star_ids = {st["id"] for st in stars}
+    def overlap(a, b):
+        end = pd.Timestamp(AS_OF)
+        return max(0, (min(a[1], b[1], end) - max(a[0], b[0])).days)
+    for q in players:
+        q["tm"] = []
+    for st in stars:
+        for q in players:
+            if q["id"] == st["id"]:
+                continue
+            if any(sa[2] == sb[2] and sa[2] == sa[2] and overlap(sa, sb) >= 365 for sa in stints.get(st["id"], []) for sb in stints.get(q["id"], [])):
+                q["tm"].append(st["id"])
+    print("honours matched:", sum(1 for q in players if q["hn"]), "players; star list:", [x["n"] for x in stars][:12])
     ov = json.load(open("src/quiz_overrides.json", encoding="utf-8"))
     cl = pd.read_csv("01_data_market_value/clubs.csv").set_index("club_id")
     for q in players:

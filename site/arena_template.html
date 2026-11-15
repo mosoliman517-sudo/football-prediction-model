@@ -1657,6 +1657,7 @@ function playerClues(p) {
   if (p.h) cl.push(["Build", `${p.h} cm tall${p.foot ? `, ${p.foot}-footed` : ""}`]);
   cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
   if (p.end) cl.push(["Contract", `Contract runs until ${p.end}`]);
+  if ((p.hn || []).length) cl.push(["Honours", `Has won the ${p.hn.map((k) => ({ UCL: "Champions League", UEL: "Europa League", FAC: "FA Cup", EFL: "League Cup", CDR: "Copa del Rey", DFB: "DFB-Pokal", COP: "Coppa Italia", CDF: "Coupe de France" })[k]).join(", ")}`, "🏆"]);
   if (p.val) cl.push(["Value", `Market value about ${euro(p.val)}${p.peak > p.val * 1.2 ? `, peak ${euro(p.peak)}` : ""}`]);
   if (p.caps) cl.push(["Caps", `${p.caps} international caps, ${p.ig} goal${p.ig === 1 ? "" : "s"}`]);
   cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
@@ -1930,6 +1931,10 @@ function tttCategories(pool, scope) {
   pool.forEach((p) => (p.mg || []).forEach((m) => { mc[m] = (mc[m] || 0) + 1; }));
   Object.entries(mc).filter(([m, n]) => n >= (scope === "ALL" ? 18 : 9) && NOTABLE.some((k) => qnorm(m).includes(k))).forEach(([m]) => cats.push({ id: "mg:" + m, fam: "mgr", label: `Played under ${m}`, icon: '<span class="cflag">🧑‍🏫</span>', test: (p) => (p.mg || []).includes(m) }));
   Object.keys(LGLABEL).forEach((lg) => { const f = (p) => (p.ti || []).includes(lg); if (count(f) >= 14) cats.push({ id: "ti:" + lg, fam: "title", label: `Won the ${lgOf(lg).name} (2017 on)`, icon: '<span class="cflag">🏆</span>', test: f }); });
+  const HON = { UCL: "Won the Champions League", UEL: "Won the Europa League", FAC: "Won the FA Cup", EFL: "Won the League Cup", CDR: "Won the Copa del Rey", DFB: "Won the DFB-Pokal", COP: "Won the Coppa Italia", CDF: "Won the Coupe de France" };
+  Object.entries(HON).forEach(([k, label]) => { const f = (p) => (p.hn || []).includes(k); if (count(f) >= (k === "UCL" ? 20 : 12)) cats.push({ id: "hn:" + k, fam: "honour", label: `${label} (2016 on)`, icon: '<span class="cflag">🏆</span>', test: f }); });
+  const starCount = {}; pool.forEach((p) => (p.tm || []).forEach((id) => { starCount[id] = (starCount[id] || 0) + 1; }));
+  Object.entries(starCount).filter(([, n]) => n >= (scope === "ALL" ? 25 : 12)).forEach(([id]) => { const st = QZ.players.find((x) => x.id === +id); if (st) cats.push({ id: "tm:" + id, fam: "mate", label: `Played with ${st.n}`, icon: faceOf(st.n) ? `<span class="badge md hface"><img src="${faceOf(st.n)}" alt=""></span>` : '<span class="cflag">🤝</span>', test: (p) => (p.tm || []).includes(+id) }); });
   const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) cats.push({ id: "ti:any", fam: "title", label: "Won a Big 5 league title", icon: '<span class="cflag">🏆</span>', test: anyT });
   const jm = (p) => oursSet(p).size >= 5 || p.hist.length >= 7; if (count(jm) >= 25) cats.push({ id: "journey", fam: "stat", label: "Played for 7 or more clubs", icon: '<span class="cflag">🧳</span>', test: (p) => p.hist.length >= 7 });
   Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "🌍"}</span>`, test: (p) => p.nat === n }));

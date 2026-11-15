@@ -1,0 +1,392 @@
+[
+{
+"comp": "UCL",
+"season": 2016,
+"winner": "Real Madrid Club de Fútbol"
+},
+{
+"comp": "UCL",
+"season": 2017,
+"winner": "Real Madrid Club de Fútbol"
+},
+{
+"comp": "UCL",
+"season": 2018,
+"winner": "Liverpool F.C."
+},
+{
+"comp": "UCL",
+"season": 2019,
+"winner": "FC Bayern Munich"
+},
+{
+"comp": "UCL",
+"season": 2020,
+"winner": "Chelsea F.C."
+},
+{
+"comp": "UCL",
+"season": 2021,
+"winner": "Real Madrid Club de Fútbol"
+},
+{
+"comp": "UCL",
+"season": 2022,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "UCL",
+"season": 2023,
+"winner": "Real Madrid Club de Fútbol"
+},
+{
+"comp": "UCL",
+"season": 2024,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "UCL",
+"season": 2025,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "UEL",
+"season": 2016,
+"winner": "Manchester United F.C."
+},
+{
+"comp": "UEL",
+"season": 2017,
+"winner": "Atlético Madrid"
+},
+{
+"comp": "UEL",
+"season": 2018,
+"winner": "Chelsea F.C."
+},
+{
+"comp": "UEL",
+"season": 2019,
+"winner": "Sevilla FC"
+},
+{
+"comp": "UEL",
+"season": 2020,
+"winner": "Villarreal CF"
+},
+{
+"comp": "UEL",
+"season": 2021,
+"winner": "Eintracht Frankfurt"
+},
+{
+"comp": "UEL",
+"season": 2022,
+"winner": "Sevilla FC"
+},
+{
+"comp": "UEL",
+"season": 2023,
+"winner": "Atalanta BC"
+},
+{
+"comp": "UEL",
+"season": 2024,
+"winner": "Tottenham Hotspur F.C."
+},
+{
+"comp": "UEL",
+"season": 2025,
+"winner": "Aston Villa F.C."
+},
+{
+"comp": "FAC",
+"season": 2016,
+"winner": "Arsenal F.C."
+},
+{
+"comp": "FAC",
+"season": 2017,
+"winner": "Chelsea F.C."
+},
+{
+"comp": "FAC",
+"season": 2018,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "FAC",
+"season": 2019,
+"winner": "Arsenal F.C."
+},
+{
+"comp": "FAC",
+"season": 2020,
+"winner": "Leicester City F.C."
+},
+{
+"comp": "FAC",
+"season": 2021,
+"winner": "Liverpool F.C."
+},
+{
+"comp": "FAC",
+"season": 2022,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "FAC",
+"season": 2023,
+"winner": "Manchester United F.C."
+},
+{
+"comp": "FAC",
+"season": 2024,
+"winner": "Crystal Palace F.C."
+},
+{
+"comp": "FAC",
+"season": 2025,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "EFL",
+"season": 2016,
+"winner": "Manchester United F.C."
+},
+{
+"comp": "EFL",
+"season": 2017,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "EFL",
+"season": 2018,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "EFL",
+"season": 2019,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "EFL",
+"season": 2020,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "EFL",
+"season": 2021,
+"winner": "Liverpool F.C."
+},
+{
+"comp": "EFL",
+"season": 2022,
+"winner": "Manchester United F.C."
+},
+{
+"comp": "EFL",
+"season": 2023,
+"winner": "Liverpool F.C."
+},
+{
+"comp": "EFL",
+"season": 2024,
+"winner": "Newcastle United F.C."
+},
+{
+"comp": "EFL",
+"season": 2025,
+"winner": "Manchester City F.C."
+},
+{
+"comp": "CDR",
+"season": 2016,
+"winner": "FC Barcelona"
+},
+{
+"comp": "CDR",
+"season": 2017,
+"winner": "FC Barcelona"
+},
+{
+"comp": "CDR",
+"season": 2018,
+"winner": "Valencia CF"
+},
+{
+"comp": "CDR",
+"season": 2019,
+"winner": "Real Sociedad"
+},
+{
+"comp": "CDR",
+"season": 2020,
+"winner": "FC Barcelona"
+},
+{
+"comp": "CDR",
+"season": 2021,
+"winner": "Real Betis Balompié"
+},
+{
+"comp": "CDR",
+"season": 2022,
+"winner": "Real Madrid Club de Fútbol"
+},
+{
+"comp": "CDR",
+"season": 2023,
+"winner": "Athletic Club"
+},
+{
+"comp": "CDR",
+"season": 2024,
+"winner": "FC Barcelona"
+},
+{
+"comp": "CDR",
+"season": 2025,
+"winner": "Real Sociedad"
+},
+{
+"comp": "DFB",
+"season": 2016,
+"winner": "Borussia Dortmund"
+},
+{
+"comp": "DFB",
+"season": 2017,
+"winner": "Eintracht Frankfurt"
+},
+{
+"comp": "DFB",
+"season": 2018,
+"winner": "FC Bayern Munich"
+},
+{
+"comp": "DFB",
+"season": 2019,
+"winner": "FC Bayern Munich"
+},
+{
+"comp": "DFB",
+"season": 2020,
+"winner": "Borussia Dortmund"
+},
+{
+"comp": "DFB",
+"season": 2021,
+"winner": "RB Leipzig"
+},
+{
+"comp": "DFB",
+"season": 2022,
+"winner": "RB Leipzig"
+},
+{
+"comp": "DFB",
+"season": 2023,
+"winner": "Bayer 04 Leverkusen"
+},
+{
+"comp": "DFB",
+"season": 2024,
+"winner": "VfB Stuttgart"
+},
+{
+"comp": "DFB",
+"season": 2025,
+"winner": "FC Bayern Munich"
+},
+{
+"comp": "COP",
+"season": 2016,
+"winner": "Juventus FC"
+},
+{
+"comp": "COP",
+"season": 2017,
+"winner": "Juventus FC"
+},
+{
+"comp": "COP",
+"season": 2018,
+"winner": "SS Lazio"
+},
+{
+"comp": "COP",
+"season": 2019,
+"winner": "SSC Napoli"
+},
+{
+"comp": "COP",
+"season": 2020,
+"winner": "Juventus FC"
+},
+{
+"comp": "COP",
+"season": 2021,
+"winner": "Inter Milan"
+},
+{
+"comp": "COP",
+"season": 2022,
+"winner": "Inter Milan"
+},
+{
+"comp": "COP",
+"season": 2025,
+"winner": "Inter Milan"
+},
+{
+"comp": "CDF",
+"season": 2018,
+"winner": "Stade Rennais F.C."
+},
+{
+"comp": "CDF",
+"season": 2019,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "CDF",
+"season": 2020,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "CDF",
+"season": 2021,
+"winner": "FC Nantes"
+},
+{
+"comp": "CDF",
+"season": 2022,
+"winner": "Toulouse FC"
+},
+{
+"comp": "CDF",
+"season": 2023,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "CDF",
+"season": 2024,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "CDF",
+"season": 2025,
+"winner": "R.C. Lens"
+},
+{
+"comp": "CDF",
+"season": 2016,
+"winner": "Paris Saint-Germain FC"
+},
+{
+"comp": "CDF",
+"season": 2017,
+"winner": "Paris Saint-Germain FC"
+}
+]

@@ -65,6 +65,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **15 November, polish pass.** Went through every screen at phone width. Fixes: no game repeats a player, club or table within a run (and the game cards never show the same photo twice); the "points v model" strip now shows only on the predict-the-match games, since it meant nothing in a quiz; the header, league chips and room tabs were rewrapped for phones (chips scroll sideways instead of stacking three rows); starting a game on a phone scrolls to it instead of leaving you at the top. Caught on the way: the private build has no viewport tag (the artifact host adds one), so phone testing needed it injected; the public build already has it.
 
+**15 November, pictures everywhere.** The ball-knowledge games looked bland, so they got images: tic-tac-toe categories now show club crests, country flags, league logos and position or stat icons, placed players show their club crest, and the suggestion lists show crest and flag; Who am I? and Career path clues carry flags, crests and position icons; answer cards, Market value and Write your number show a star photo where there is one (27 players), otherwise the club crest with the country flag. Flags are emoji, so older Windows machines will show letters instead. Not done: some earlier-club crests in clues are missing where the Transfermarkt club name does not map to an arena club.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

@@ -436,6 +436,11 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
   .scorebox { flex-wrap: nowrap; gap: 6px; } .scorebox div { min-width: 0; flex: 1; padding: 6px 8px; } .scorebox b { font-size: 17px; } .scorebox small { font-size: 10px; }
   .scope, .rooms { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .scope::-webkit-scrollbar, .rooms::-webkit-scrollbar { display: none; } .chip, .room { flex: none; }
 }
+.ppic { position: relative; display: inline-flex; } .pflag { position: absolute; right: -8px; bottom: -6px; font-size: 24px; font-style: normal; line-height: 1; filter: drop-shadow(0 1px 2px #0008); }
+.cflag { font-size: 30px; line-height: 1.1; } .cico { font-size: 20px; display: inline-flex; gap: 4px; align-items: center; } .clue b { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tcat .badge { width: 34px; height: 34px; } .tcat .emblem { width: 34px; height: 34px; object-fit: contain; }
+.tcell { position: relative; gap: 2px; } .tcell b { position: absolute; top: 4px; left: 8px; font-size: 15px; } .tcell .ppic .pflag { font-size: 15px; right: -6px; bottom: -4px; } .tcell small { font-weight: 700; color: var(--ink); } .tcell.x { background: color-mix(in srgb, #e0334c 12%, var(--surface)); } .tcell.o { background: color-mix(in srgb, #2f6fe0 14%, var(--surface)); }
+.sug .badge { width: 22px; height: 22px; }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -480,7 +485,7 @@ h2.sec { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 16:59 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 15 Nov 2026 17:10 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -1591,29 +1596,36 @@ function suggestions(q, items, key) {
   const hit = items.filter((x) => qnorm(key(x)).includes(n)); hit.sort((a, b) => (qnorm(key(a)).startsWith(n) ? 0 : 1) - (qnorm(key(b)).startsWith(n) ? 0 : 1) || key(a).length - key(b).length);
   return hit.slice(0, 6);
 }
+/* ---------- pictures for the ball-knowledge games: flags, positions, faces ---------- */
+const FLAGISO = {"Spain": "ES", "France": "FR", "Germany": "DE", "England": "ENG", "Italy": "IT", "Brazil": "BR", "Argentina": "AR", "Netherlands": "NL", "Portugal": "PT", "Belgium": "BE", "Denmark": "DK", "Morocco": "MA", "Senegal": "SN", "Cote d'Ivoire": "CI", "Sweden": "SE", "Croatia": "HR", "Switzerland": "CH", "United States": "US", "Nigeria": "NG", "Norway": "NO", "Uruguay": "UY", "Austria": "AT", "Serbia": "RS", "Japan": "JP", "Ghana": "GH", "Algeria": "DZ", "Colombia": "CO", "Ireland": "IE", "Türkiye": "TR", "Turkey": "TR", "Cameroon": "CM", "Poland": "PL", "Scotland": "SCT", "Wales": "WLS", "Greece": "GR", "Mali": "ML", "DR Congo": "CD", "Bosnia-Herzegovina": "BA", "Slovakia": "SK", "Georgia": "GE", "Ukraine": "UA", "Kosovo": "XK", "Czech Republic": "CZ", "Canada": "CA", "Chile": "CL", "Slovenia": "SI", "Albania": "AL", "Northern Ireland": "GB", "Korea, South": "KR", "Ecuador": "EC", "Hungary": "HU", "Australia": "AU", "Romania": "RO", "Mexico": "MX", "Iceland": "IS", "Tunisia": "TN", "Guinea": "GN", "Angola": "AO", "Paraguay": "PY", "Burkina Faso": "BF", "Montenegro": "ME", "Finland": "FI", "Egypt": "EG", "Venezuela": "VE", "Israel": "IL", "The Gambia": "GM", "New Zealand": "NZ", "Mauritania": "MR", "Indonesia": "ID", "Russia": "RU", "Jamaica": "JM", "Haiti": "HT", "Gabon": "GA", "North Macedonia": "MK", "Suriname": "SR", "Guinea-Bissau": "GW", "Luxembourg": "LU", "Bulgaria": "BG", "Dominican Republic": "DO", "Central African Republic": "CF", "Togo": "TG", "Benin": "BJ", "Cyprus": "CY", "Panama": "PA", "Zimbabwe": "ZW", "Cape Verde": "CV", "Libya": "LY", "Zambia": "ZM", "Peru": "PE", "Iraq": "IQ", "Niger": "NE", "Comoros": "KM", "Armenia": "AM", "Syria": "SY", "Mozambique": "MZ", "Bangladesh": "BD", "Malta": "MT", "Curacao": "CW", "South Africa": "ZA", "Estonia": "EE", "Honduras": "HN", "Malaysia": "MY", "Jordan": "JO", "Latvia": "LV", "Equatorial Guinea": "GQ", "Saudi Arabia": "SA", "Burundi": "BI", "Guadeloupe": "GP", "Uzbekistan": "UZ", "Lithuania": "LT", "Moldova": "MD", "Sierra Leone": "SL", "Kenya": "KE", "Iran": "IR", "China": "CN", "Costa Rica": "CR", "Bolivia": "BO", "Trinidad and Tobago": "TT", "Congo": "CG", "Uganda": "UG", "Tanzania": "TZ", "Ethiopia": "ET", "Madagascar": "MG", "Namibia": "NA", "Liberia": "LR", "Lebanon": "LB", "Palestine": "PS", "Belarus": "BY", "Azerbaijan": "AZ", "Kazakhstan": "KZ", "Faroe Islands": "FO", "Liechtenstein": "LI", "Martinique": "MQ", "French Guiana": "GF", "Philippines": "PH", "India": "IN", "Thailand": "TH", "Vietnam": "VN"};
+const TAGFLAG = { ENG: "gbeng", SCT: "gbsct", WLS: "gbwls" };
+const flagOf = (nat) => { const c = FLAGISO[nat]; if (!c) return ""; if (TAGFLAG[c]) return String.fromCodePoint(0x1F3F4, ...[...TAGFLAG[c]].map((ch) => 0xE0000 + ch.charCodeAt(0)), 0xE007F); return String.fromCodePoint(...[...c].map((ch) => 127397 + ch.charCodeAt(0))); };
+const POSICON = { Goalkeeper: "🧤", Defender: "🛡️", Midfield: "⚙️", Attack: "⚽" };
+const faceOf = (name) => { const h = (DATA.hero || []).find((x) => x.img && qnorm(x.n) === qnorm(name)); return h ? h.img : null; };
+const playerPic = (p, cls = "xl") => { const f = faceOf(p.n), c = clubBadgeFor(p.club, cls); return `<span class="ppic">${f ? `<span class="badge ${cls} hface"><img src="${f}" alt=""></span>` : c || badge(p.n, cls)}${flagOf(p.nat) ? `<i class="pflag">${flagOf(p.nat)}</i>` : ""}</span>`; };
 function stopQuiz() { if (Q.timer) { clearInterval(Q.timer); Q.timer = null; } }
 const Q = { timer: null, s: null };
 
 /* ---------- clue ladders, hardest first ---------- */
 function playerClues(p) {
   const a = ageOf(p), prev = p.hist.filter((c) => c !== p.club).slice(-3), cl = [];
-  if (p.city || p.bc) cl.push(["Birthplace", `Born in ${p.city ? p.city + ", " : ""}${p.bc || p.nat}`]);
+  if (p.city || p.bc) cl.push(["Birthplace", `Born in ${p.city ? p.city + ", " : ""}${p.bc || p.nat}`, flagOf(p.bc || p.nat)]);
   if (p.h) cl.push(["Build", `${p.h} cm tall${p.foot ? `, ${p.foot}-footed` : ""}`]);
   cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
   if (p.end) cl.push(["Contract", `Contract runs until ${p.end}`]);
   if (p.val) cl.push(["Value", `Market value about ${euro(p.val)}${p.peak > p.val * 1.2 ? `, peak ${euro(p.peak)}` : ""}`]);
   if (p.caps) cl.push(["Caps", `${p.caps} international caps, ${p.ig} goal${p.ig === 1 ? "" : "s"}`]);
-  cl.push(["Position", `${p.sub || p.pos}`]);
-  cl.push(["Nationality", p.nat]);
-  if (prev.length) cl.push(["Earlier clubs", `Previously at ${prev.join(", ")}`]);
-  if (p.club) cl.push(["Club", `${p.active ? "Plays for" : "Last club:"} ${p.club}`]);
+  cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
+  cl.push(["Nationality", p.nat, flagOf(p.nat)]);
+  if (prev.length) cl.push(["Earlier clubs", `Previously at ${prev.join(", ")}`, prev.map((c) => clubBadgeFor(c, "sm")).join("")]);
+  if (p.club) cl.push(["Club", `${p.active ? "Plays for" : "Last club:"} ${p.club}`, clubBadgeFor(p.club, "sm")]);
   cl.push(["Name", `${p.n.split(" ").length} word${p.n.split(" ").length > 1 ? "s" : ""}, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
   return cl;
 }
 function careerClues(p) {
   const h = p.hist, cl = [];
-  h.forEach((c, i) => cl.push([i === 0 ? "Started" : `Move ${i}`, i === 0 ? `Career began at ${c}` : `Then ${c}`]));
-  cl.push(["Age", `${ageOf(p)} years old`]); cl.push(["Nationality", p.nat]); cl.push(["Position", p.sub || p.pos]);
+  h.forEach((c, i) => cl.push([i === 0 ? "Started" : `Move ${i}`, i === 0 ? `Career began at ${c}` : `Then ${c}`, clubBadgeFor(c, "sm")]));
+  cl.push(["Age", `${ageOf(p)} years old`]); cl.push(["Nationality", p.nat, flagOf(p.nat)]); cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
   cl.push(["Name", `Starts with ${p.n[0]}, ${p.n.replace(/ /g, "").length} letters`]);
   return cl;
 }
@@ -1624,7 +1636,7 @@ function clubClues(e) {
   if (f.seats) cl.push(["Stadium", `Stadium holds ${f.seats.toLocaleString()}`]);
   if (f.value) cl.push(["Squad value", `Squad worth about ${euro(f.value)} today`]);
   if (f.age) cl.push(["Squad age", `Average squad age ${f.age.toFixed(1)} today`]);
-  cl.push(["League", `${lgOf(e.lg).name}, ${e.season}`]);
+  cl.push(["League", `${lgOf(e.lg).name}, ${e.season}`, emblem(e.lg, "sm")]);
   if (f.coach) cl.push(["Coach", `Coach today: ${f.coach}`]);
   if (f.stadium) cl.push(["Ground", `Plays at ${f.stadium}`]);
   cl.push(["Name", `${e.n.replace(/ /g, "").length} letters, starts with ${e.n[0]}`]);
@@ -1683,8 +1695,8 @@ function finishQuiz() {
 }
 const answerOf = (S_) => { const d = QDEF[S_.game]; return d.ans(S_.r); };
 function answerCard(S_) {
-  if (S_.game === "who" || S_.game === "career") { const p = S_.r.p; return `<div class="rcard on"><div class="label">The answer</div><h3 style="font-size:30px;margin:6px 0">${esc(p.n)}</h3><div class="row" style="gap:8px">${clubBadgeFor(p.club, "sm")}<span class="fine">${esc(p.sub || p.pos)} · ${esc(p.nat)} · ${esc(p.club || "")}</span></div><div class="fine" style="margin-top:6px">${p.hist.length ? esc(p.hist.join(" → ")) : ""}</div></div>`; }
-  const e = S_.r.e; return `<div class="rcard on"><div class="label">The answer</div><div class="row" style="gap:12px;margin:8px 0">${badge(e.n, "md")}<h3 style="font-size:30px">${esc(e.n)}</h3></div>${e.season ? `<div class="fine">${esc(lgOf(e.lg).name)}, ${e.season}: finished ${e.pos}${["th", "st", "nd", "rd"][e.pos % 10 > 3 || (e.pos > 10 && e.pos < 14) ? 0 : e.pos % 10]}</div>` : ""}</div>`;
+  if (S_.game === "who" || S_.game === "career") { const p = S_.r.p; return `<div class="rcard on"><div class="label">The answer</div><div class="row" style="gap:14px;margin:8px 0">${playerPic(p, "xl")}<div><h3 style="font-size:30px">${esc(p.n)}</h3><div class="fine">${POSICON[p.pos] || ""} ${esc(p.sub || p.pos)} · ${flagOf(p.nat)} ${esc(p.nat)} · ${esc(p.club || "")}</div></div></div><div class="fine" style="margin-top:6px">${p.hist.length ? esc(p.hist.join(" → ")) : ""}</div></div>`; }
+  const e = S_.r.e; return `<div class="rcard on"><div class="label">The answer</div><div class="row" style="gap:12px;margin:8px 0">${badge(e.n, "md")}<h3 style="font-size:30px">${esc(e.n)}</h3></div>${e.season ? `<div class="fine row" style="gap:6px">${emblem(e.lg, "sm")}${esc(lgOf(e.lg).name)}, ${e.season}: finished ${e.pos}${["th", "st", "nd", "rd"][e.pos % 10 > 3 || (e.pos > 10 && e.pos < 14) ? 0 : e.pos % 10]}</div>` : ""}</div>`;
 }
 function paintMeter() { const m = $("#qMeter"), w = $("#qWorth"); if (m) m.style.width = (100 * (1 - Q.s.elapsed / Q.s.total)).toFixed(1) + "%"; if (w) w.textContent = worth(); }
 function paintAnswerClock() { const el = $("#qClock"); if (el) el.textContent = Math.max(0, Math.ceil(Q.s.answerLeft)) + "s"; }
@@ -1692,7 +1704,7 @@ function paintClues() { const box = $("#qClues"); if (box) box.innerHTML = clues
 function cluesHTML() {
   const S_ = Q.s, n = shownCount();
   if (S_.game === "blur") return `<div class="blurwrap"><span class="badge xl" style="filter:blur(${BLUR[Math.min(n - 1, BLUR.length - 1)]}px)">${CREST[S_.r.e.n] ? `<img src="${CREST[S_.r.e.n]}" alt="">` : esc(teamCode(S_.r.e.n))}</span></div><div class="fine" style="text-align:center">The badge sharpens every few seconds</div>`;
-  return S_.clues.map((c, i) => i < n ? `<div class="clue on ${i === n - 1 ? "new" : ""}"><span class="label">${esc(c[0])}</span><b>${esc(c[1])}</b></div>` : `<div class="clue off"><span class="label">${esc(c[0])}</span><b>?</b></div>`).join("");
+  return S_.clues.map((c, i) => i < n ? `<div class="clue on ${i === n - 1 ? "new" : ""}"><span class="label">${esc(c[0])}</span><b>${c[2] ? `<span class="cico">${c[2]}</span>` : ""}${esc(c[1])}</b></div>` : `<div class="clue off"><span class="label">${esc(c[0])}</span><b>?</b></div>`).join("");
 }
 function renderQuiz() {
   const S_ = Q.s, d = QDEF[S_.game], duo = S_.mode === "duo", who = ["Player 1", "Player 2"];
@@ -1721,7 +1733,7 @@ function renderQuiz() {
 function paintSuggestions() {
   const S_ = Q.s, box = $("#qSug"), q = $("#qIn").value; if (!box) return;
   const isClub = QDEF[S_.game].unit === "club", list = isClub ? suggestions(q, clubList(S_.scope), (x) => x.n) : suggestions(q, QZ.players, (x) => x.n);
-  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join("");
+  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}">${clubBadgeFor(x.club, "sm") || ""}<span>${esc(x.n)}</span><small>${flagOf(x.nat)} ${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join("");
 }
 document.addEventListener("input", (e) => { if (e.target.id === "qIn") paintSuggestions(); });
 document.addEventListener("keydown", (e) => {
@@ -1750,7 +1762,7 @@ function renderFinish() {
   let body;
   if (f.phase === "ask") body = `<div class="sliderbox">${duo ? `<b>${who[f.turn]}, your guess</b>` : ""}<div class="num bigpos" id="finVal">${ordn(c.guess)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${c.guess}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Champions</span><span>Bottom</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">${duo && f.turn === 0 && !Net.role ? "Lock it in, pass the device" : "Lock it in"}</button></div>`;
   else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real table position</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than two places out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next club"}</button></div>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine">${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine row" style="gap:6px">${emblem(c.lg, "sm")}${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
 }
 function lockFinish() {
   const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
@@ -1780,8 +1792,8 @@ function renderVH(kind) {
   if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Market value")}<p class="sub">Not enough data for this league.</p></div>`; return; }
   const side = (x, k) => {
     const rev = q.chosen != null, val = kind === "p" ? x.val : x.f.value, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : "";
-    const info = kind === "p" ? `<span class="fine">${esc(x.sub || x.pos)} · ${esc(x.nat)} · ${ageOf(x)} yrs</span><span class="row" style="gap:6px;justify-content:center">${clubBadgeFor(x.club, "sm")}<small class="fine">${esc(x.club || "")}</small></span>` : `<span class="fine">${esc(lgOf(x.f.lg).name)} · squad of ${x.f.squad}</span>`;
-    return `<button type="button" class="holc ${cls}" data-vh="${k}" ${rev ? "disabled" : ""}>${kind === "p" ? "" : badge(x.n, "xl")}<b>${esc(kind === "p" ? x.n : x.n)}</b>${info}<span class="num holv" data-v="${val}">${rev ? euro(val) : "?"}</span></button>`;
+    const info = kind === "p" ? `<span class="fine">${POSICON[x.pos] || ""} ${esc(x.sub || x.pos)} · ${flagOf(x.nat)} ${esc(x.nat)} · ${ageOf(x)} yrs</span><span class="fine">${esc(x.club || "")}</span>` : `<span class="fine">${esc(lgOf(x.f.lg).name)} · squad of ${x.f.squad}</span>`;
+    return `<button type="button" class="holc ${cls}" data-vh="${k}" ${rev ? "disabled" : ""}>${kind === "p" ? playerPic(x, "xl") : badge(x.n, "xl")}<b>${esc(kind === "p" ? x.n : x.n)}</b>${info}<span class="num holv" data-v="${val}">${rev ? euro(val) : "?"}</span></button>`;
   };
   $("#room").innerHTML = `<div class="card">${gamesBar("Market value")}<p class="sub">Who is worth more on Transfermarkt${kind === "c" ? " (whole squad)" : ""}?</p><div class="holpair">${side(q.a, "a")}<span class="vs">or</span>${side(q.b, "b")}</div>
     ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${S.vStreak}</b><button class="btn" id="vNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${st} · best ${best}</p>`}</div>`;
@@ -1813,7 +1825,7 @@ function renderNumber() {
     { id: "nmOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
     const duo = g.mode === "duo", who = ["Player 1", "Player 2"], it = g.item;
   if (g.phase === "done") { const best = Math.max(...g.scores), w = duo ? (g.scores[0] === g.scores[1] ? -1 : g.scores[0] > g.scores[1] ? 0 : 1) : 0; $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}<div class="rcard on"><div class="label">Final score</div><div class="verdicts" style="margin-top:8px">${g.scores.map((s, i) => `<div class="vd ${w === i || !duo ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (w < 0 ? "A draw." : who[w] + " wins!") : best >= 3500 ? "Market whisperer." : "Not bad."}</b><button class="btn" id="nmAgain" type="button">Play again</button><button class="btn ghost" id="nmCard" type="button">Make a result card</button></div></div></div>`; return; }
-  const facts = it.type === "p" ? `<div class="row" style="gap:12px">${clubBadgeFor(it.e.club, "md")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(it.e.sub || it.e.pos)} · ${esc(it.e.nat)} · ${ageOf(it.e)} yrs · ${esc(it.e.club || "")}</div></div></div>` : `<div class="row" style="gap:12px">${badge(it.e.n, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(lgOf(it.e.f.lg).name)} · squad of ${it.e.f.squad} · average age ${it.e.f.age.toFixed(1)}</div><div class="fine">${it.e.f.seats ? "Stadium holds " + it.e.f.seats.toLocaleString() : ""}</div></div></div>`;
+  const facts = it.type === "p" ? `<div class="row" style="gap:12px">${playerPic(it.e, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${POSICON[it.e.pos] || ""} ${esc(it.e.sub || it.e.pos)} · ${flagOf(it.e.nat)} ${esc(it.e.nat)} · ${ageOf(it.e)} yrs · ${esc(it.e.club || "")}</div></div></div>` : `<div class="row" style="gap:12px">${badge(it.e.n, "xl")}<div><h3 style="font-size:30px">${esc(it.e.n)}</h3><div class="fine">${esc(lgOf(it.e.f.lg).name)} · squad of ${it.e.f.squad} · average age ${it.e.f.age.toFixed(1)}</div><div class="fine">${it.e.f.seats ? "Stadium holds " + it.e.f.seats.toLocaleString() : ""}</div></div></div>`;
   const hud = `<div class="qhud"><span class="label">Round ${g.round} of ${g.rounds}</span>${g.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
   if (g.phase === "reveal") {
     const rows = g.guesses.slice(0, duo ? 2 : 1).map((v, i) => `<div class="vd ${g.pts[i] === Math.max(...g.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">€${v}m</b><span class="fine">+${g.pts[i]} points</span></div>`).join("");
@@ -1838,12 +1850,12 @@ function tttCategories(pool, scope) {
   const cats = [], count = (f) => pool.filter(f).length;
   const clubs = {}, nats = {}; pool.forEach((p) => { new Set(p.hist).forEach((c) => { clubs[c] = (clubs[c] || 0) + 1; }); nats[p.nat] = (nats[p.nat] || 0) + 1; });
   const minC = scope === "ALL" ? 55 : 22;
-  Object.entries(clubs).filter(([c, n]) => n >= minC && oursOf(c)).forEach(([c]) => cats.push({ id: "club:" + c, fam: "club", label: oursOf(c), club: c, test: (p) => p.hist.includes(c) }));
-  Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, test: (p) => p.nat === n }));
-  const fixed = [["age30", "stat", "Aged 30 or over", (p) => ageOf(p) >= 30], ["age23", "stat", "Aged 23 or under", (p) => ageOf(p) <= 23], ["tall", "stat", "190 cm or taller", (p) => p.h >= 190], ["left", "stat", "Left-footed", (p) => p.foot === "left"], ["val50", "val", "Worth €50m or more", (p) => p.val >= 50e6], ["val10", "val", "Worth under €10m", (p) => p.val > 0 && p.val < 10e6], ["caps50", "val", "50 or more caps", (p) => p.caps >= 50]];
-  fixed.forEach(([id, fam, label, test]) => { if (count(test) >= 25) cats.push({ id, fam, label, test }); });
-  Object.keys(POSNAME).forEach((k) => cats.push({ id: "pos:" + k, fam: "pos", label: POSNAME[k], test: (p) => p.pos === k }));
-  if (scope === "ALL") Object.keys(LGLABEL).forEach((lg) => cats.push({ id: "lg:" + lg, fam: "lg", label: LGLABEL[lg], test: (p) => LG_OF_COMP[p.comp] === lg }));
+  Object.entries(clubs).filter(([c, n]) => n >= minC && oursOf(c)).forEach(([c]) => cats.push({ id: "club:" + c, fam: "club", label: oursOf(c), club: c, icon: badge(oursOf(c), "md"), test: (p) => p.hist.includes(c) }));
+  Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "🌍"}</span>`, test: (p) => p.nat === n }));
+  const fixed = [["age30", "stat", "Aged 30 or over", (p) => ageOf(p) >= 30, "⏳"], ["age23", "stat", "Aged 23 or under", (p) => ageOf(p) <= 23, "🌱"], ["tall", "stat", "190 cm or taller", (p) => p.h >= 190, "📏"], ["left", "stat", "Left-footed", (p) => p.foot === "left", "🦶"], ["val50", "val", "Worth €50m or more", (p) => p.val >= 50e6, "💶"], ["val10", "val", "Worth under €10m", (p) => p.val > 0 && p.val < 10e6, "🪙"], ["caps50", "val", "50 or more caps", (p) => p.caps >= 50, "🧢"]];
+  fixed.forEach(([id, fam, label, test, ico]) => { if (count(test) >= 25) cats.push({ id, fam, label, icon: `<span class="cflag">${ico}</span>`, test }); });
+  Object.keys(POSNAME).forEach((k) => cats.push({ id: "pos:" + k, fam: "pos", label: POSNAME[k], icon: `<span class="cflag">${POSICON[k]}</span>`, test: (p) => p.pos === k }));
+  if (scope === "ALL") Object.keys(LGLABEL).forEach((lg) => cats.push({ id: "lg:" + lg, fam: "lg", label: LGLABEL[lg], icon: emblem(lg, "sm"), test: (p) => LG_OF_COMP[p.comp] === lg }));
   return cats;
 }
 function tttGrid(scope) {
@@ -1862,13 +1874,13 @@ function newTTT(mode) {
 }
 const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
-function catHead(c) { return `<div class="tcat">${c.club && oursOf(c.club) && CREST[oursOf(c.club)] ? badge(oursOf(c.club), "sm") : ""}<span>${esc(c.label)}</span></div>`; }
+function catHead(c) { return `<div class="tcat">${c.icon || ""}<span>${esc(c.label)}</span></div>`; }
 function renderTTT() {
   const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Each row and column is a football category. Claim a square by naming a player who fits both its row and its column. A player can only be used once, and a wrong answer loses your turn. Three in a row wins.", [
     { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "ttOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
     const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
-  const cells = t.cells.map((v, i) => `<button type="button" class="tcell ${v === 0 ? "x" : v === 1 ? "o" : ""} ${win && win.line.includes(i) ? "win" : ""}" data-tc="${i}" ${v != null || t.phase !== "play" || (t.mode === "solo" && t.turn === 1) ? "disabled" : ""}>${v != null ? `<b>${mark[v]}</b><small>${esc(t.names && t.names[i] || "")}</small>` : ""}</button>`).join("");
+  const cells = t.cells.map((v, i) => `<button type="button" class="tcell ${v === 0 ? "x" : v === 1 ? "o" : ""} ${win && win.line.includes(i) ? "win" : ""}" data-tc="${i}" ${v != null || t.phase !== "play" || (t.mode === "solo" && t.turn === 1) ? "disabled" : ""}>${v != null ? `<b>${mark[v]}</b>${t.pl && t.pl[i] ? playerPic(t.pl[i], "sm") : ""}<small>${esc(t.names && t.names[i] || "")}</small>` : ""}</button>`).join("");
   const status = t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins!`) : `${who[t.turn]} (${mark[t.turn]}) to play`;
   const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
   $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">${status}</span></div>
@@ -1881,7 +1893,7 @@ function tttSubmit(pickId) {
   if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { const typed = $("#tIn").value, s = suggestions(typed, g.pool, (x) => x.n); p = s.length === 1 || (s[0] && qnorm(s[0].n) === qnorm(typed)) ? s[0] : null; }
   if (!p) { t.msg = "Pick a player from the suggestions."; renderTTT(); return; }
   if (t.used.has(p.id)) { t.msg = `${p.n} is already on the board. Turn lost.`; Snd.wrong(); endTurn(); return; }
-  if (r.test(p) && c.test(p)) { t.cells[t.sel] = t.turn; (t.names || (t.names = {}))[t.sel] = p.n.split(" ").slice(-1)[0]; t.used.add(p.id); t.msg = `${p.n} fits. Square claimed.`; Snd.right(); } else { t.msg = `${p.n} does not fit both. Turn lost.`; Snd.wrong(); }
+  if (r.test(p) && c.test(p)) { t.cells[t.sel] = t.turn; (t.names || (t.names = {}))[t.sel] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[t.sel] = p; t.used.add(p.id); t.msg = `${p.n} fits. Square claimed.`; Snd.right(); } else { t.msg = `${p.n} does not fit both. Turn lost.`; Snd.wrong(); }
   t.sel = null; endTurn();
 }
 function endTurn() {
@@ -1895,7 +1907,7 @@ function computerMove() {
   let move = free.find((i) => wins(1, i)); if (move == null) move = free.find((i) => wins(0, i)); if (move == null) move = free.includes(4) && Math.random() < 0.6 ? 4 : rnd(free);
   const valid = g.pool.filter((p) => g.rows[Math.floor(move / 3)].test(p) && g.cols[move % 3].test(p) && !t.used.has(p.id)); const miss = Math.random() < 0.25;
   if (miss || !valid.length) { t.msg = "The computer could not think of one. Your turn."; Snd.wrong(); t.turn = 0; renderTTT(); return; }
-  const p = rnd(valid.slice(0, Math.max(3, Math.ceil(valid.length / 2)))); t.cells[move] = 1; (t.names || (t.names = {}))[move] = p.n.split(" ").slice(-1)[0]; t.used.add(p.id); t.msg = `The computer plays ${p.n}.`; Snd.tick(); endTurn();
+  const p = rnd(valid.slice(0, Math.max(3, Math.ceil(valid.length / 2)))); t.cells[move] = 1; (t.names || (t.names = {}))[move] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[move] = p; t.used.add(p.id); t.msg = `The computer plays ${p.n}.`; Snd.tick(); endTurn();
 }
 function finishTTT() { const t = S.ttt; const won = t.mode === "solo" && t.winner && t.winner.who === 0; reward(20 + (won ? 40 : 0), "Football tic-tac-toe", (p) => { if (won) unlock(p, "tttwin"); }); if (won) Board.submit({ game: "ttt", league: S.code === "ALL" ? "all" : S.code, score: 1 }); }
 
@@ -2146,7 +2158,7 @@ document.addEventListener("click", (e) => {
 });
 function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; }
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
-document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; box.innerHTML = suggestions(e.target.value, QZ.players, (x) => x.n).map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join(""); } });
+document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; box.innerHTML = suggestions(e.target.value, QZ.players, (x) => x.n).map((x) => `<button type="button" class="sug" data-sug="${x.id}">${clubBadgeFor(x.club, "sm") || ""}<span>${esc(x.n)}</span><small>${flagOf(x.nat)} ${esc(x.club || "")} · ${esc(x.pos)}</small></button>`).join(""); } });
 document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {
   const t = e.target;

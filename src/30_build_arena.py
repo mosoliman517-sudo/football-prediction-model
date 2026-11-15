@@ -29,7 +29,7 @@ TEMPLATE = "site/arena_template.html"
 PUBLIC = "--public" in sys.argv         # public build: a standalone page in docs/ for GitHub Pages
 ARTWORK = "--no-artwork" not in sys.argv   # the official badges, logos and photos from site/logos/ are included unless --no-artwork is given
 OUT = os.environ.get("ARENA_OUT", "docs/index.html" if PUBLIC else "site/arena.html")
-KEEP_FROM = 2023          # seasons shipped to the page: the last three finished (2023-24 on) plus the live one; older seasons are only in the summary table
+KEEP_FROM = 2017          # seasons shipped to the page for the games: every walk-forward season (2017-18 on) plus the live one. The replay and title race show only the last three finished seasons and the live one (chosen in the page).
 META = {
     "E0": ("Premier League", "England", "Twenty clubs, the loudest league on earth."),
     "D1": ("Bundesliga", "Germany", "Goals, standing terraces and a title that usually has an owner."),

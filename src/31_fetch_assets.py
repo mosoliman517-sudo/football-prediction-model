@@ -40,6 +40,7 @@ ALIAS = {   # data name -> a name TheSportsDB is likelier to know
     "Milan": "AC Milan", "Inter": "Inter Milan", "Verona": "Hellas Verona", "Paris SG": "Paris Saint-Germain", "St Etienne": "Saint-Etienne", "Marseille": "Olympique Marseille",
     "Lyon": "Olympique Lyonnais", "Monaco": "AS Monaco", "Lille": "Lille OSC", "Nice": "OGC Nice", "Lens": "RC Lens", "Rennes": "Stade Rennais", "Brest": "Stade Brestois",
     "Strasbourg": "RC Strasbourg", "Nantes": "FC Nantes", "Montpellier": "Montpellier HSC", "Reims": "Stade de Reims", "Toulouse": "Toulouse FC", "Auxerre": "AJ Auxerre",
+    "Fortuna Dusseldorf": "Fortuna Düsseldorf", "Hannover": "Hannover 96", "Nurnberg": "1. FC Nürnberg", "Nimes": "Nîmes", "Spal": "SPAL", "Chievo": "Chievo Verona", "Eibar": "SD Eibar", "Huesca": "SD Huesca", "Guingamp": "EA Guingamp",
     "Angers": "Angers SCO", "Le Havre": "Le Havre AC", "Lorient": "FC Lorient", "Metz": "FC Metz", "Paris FC": "Paris FC", "Clermont": "Clermont Foot",
 }
 slug = lambda n: re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")
@@ -86,7 +87,7 @@ def save_image(url, path, box):
 
 def club_names():
     d = pd.read_csv("02_processed_data/multi_league_matches.csv")
-    d = d[d["season"] >= 2021]
+    d = d[d["season"] >= 2017]
     return {lg: sorted(set(g["home"]) | set(g["away"])) for lg, g in d.groupby("league")}
 
 

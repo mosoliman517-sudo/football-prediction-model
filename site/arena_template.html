@@ -488,6 +488,8 @@ const allPlays = () => Object.entries(store.items).filter(([k]) => k.startsWith(
 const S = { code: null, room: "play", game: null, md: null, up: null, tab: null, hol: null, upStreak: 0, holStreak: 0, style: "accuracy", season: null, cur: null, pick: null, score: [0, 0], useScore: false, busy: false, replay: { round: 12, timer: null } };
 const lgOf = (c) => LG[c];
 const poolSeasons = (c) => Object.keys(lgOf(c).seasons).sort();
+// The games draw from every season on the page (a decade of matches); the replay and the title race show only the last three finished seasons and the live one.
+function replaySeasons(c) { const ks = poolSeasons(c), L = lgOf(c).seasons; return ks.filter((k) => L[k].live).concat(ks.filter((k) => !L[k].live).slice(-3)).sort(); }
 function allMatches(c) { return poolSeasons(c).flatMap((s) => lgOf(c).seasons[s].matches.map((m, i) => ({ m, season: s, i }))); }
 // m = [date, home, away, hg, ag, res, pA, pD, pH, lamH, lamA, mkA, mkD, mkH]
 const odds = (m) => [m[6], m[7], m[8]];       // A, D, H
@@ -582,7 +584,7 @@ function renderRooms() {
 function renderRoom() { stopReplay(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, review: renderReview })[S.room](); }
 
 /* ---------- Call it ---------- */
-function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`] && r.m[0] >= "2023-08-01"); }
+function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`]); }
 function renderCall() {
   const c = S.code;
   if (S.cur) return renderPlay();
@@ -595,7 +597,7 @@ function renderCall() {
   $("#room").innerHTML = starCard + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
-    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last three seasons and this one. Locked results can't be replayed, so the record stays honest.</p></div>`;
+    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last ten years, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
 }
 function open(c, season, i, onDone) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
 function renderPlay() {
@@ -658,7 +660,7 @@ function confetti() {
 /* ---------- Daily 5 ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 function dailyFixtures(c, key) {
-  const pool = allMatches(c).filter((r) => r.m[0] >= "2023-08-01"), r = mulberry(hash(`daily-${c}-${key}`)), seen = new Set(), out = [];
+  const pool = allMatches(c), r = mulberry(hash(`daily-${c}-${key}`)), seen = new Set(), out = [];
   while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
   return out;
 }
@@ -670,7 +672,7 @@ function renderDaily() {
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from the last ten years, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
@@ -686,7 +688,7 @@ function tableAt(ms, n) {
   return Object.values(T).sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf);
 }
 function renderReplay() {
-  const c = S.code, seasons = poolSeasons(c);
+  const c = S.code, seasons = replaySeasons(c);
   if (!seasons.includes(S.season)) S.season = seasons[seasons.length - 1];
   $("#room").innerHTML = `<div class="card"><h2>Replay a season</h2><p class="sub">Press play and watch every call land, matchday by matchday, with the table building underneath.</p>
     <div class="ctl" style="margin-top:12px"><select id="seasonSel" aria-label="Season">${seasons.slice().reverse().map((s) => `<option ${s === S.season ? "selected" : ""}>${s}${lgOf(c).seasons[s].live ? " (live)" : ""}</option>`).join("")}</select>
@@ -965,7 +967,7 @@ function renderMdSummary(it, instant) {
 /* ---------- Spot the upset ---------- */
 const probOfResult = (m) => ({ A: m[6], D: m[7], H: m[8] }[m[5]]);
 function newUpset(c) {
-  const pool = allMatches(c).filter((r) => r.m[0] >= "2023-08-01");
+  const pool = allMatches(c);
   for (let tries = 0; tries < 500; tries++) {
     const pick = []; while (pick.length < 5) { const r = pool[Math.floor(Math.random() * pool.length)]; if (!pick.includes(r)) pick.push(r); }
     const ps = pick.map((r) => probOfResult(r.m)), sorted = [...ps].sort((a, b) => a - b);

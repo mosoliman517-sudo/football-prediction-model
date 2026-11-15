@@ -1080,8 +1080,10 @@ const QUIZ_GAMES = [
   { id: "value", name: "Market value", modes: "Solo higher or lower · 2 players", tag: "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.", faces: () => heroFaces(2) },
   { id: "ttt", name: "Football tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
 ];
-const heroFaces = (n) => { const h = (DATA.hero || []).slice(); const out = []; for (let i = 0; i < n && h.length; i++) { const x = h.splice(Math.floor(Math.random() * h.length), 1)[0]; out.push(`<span class="badge xl hface"><img src="${x.img || x.src || x[1] || ""}" alt=""></span>`); } return out.join(""); };
+let heroQueue = [];
+const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
 function renderHub() {
+  heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;

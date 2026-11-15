@@ -12,16 +12,20 @@ pooled over all five leagues:
 
 Run from the project root:  python3 src/30_build_arena.py     (env WRAPPED_OUT overrides the output path)
 """
+import base64
+import io
 import json
 import os
+import re
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 SRC = "02_processed_data/multi_league_matches.csv"
 TEMPLATE = "site/arena_template.html"
 OUT = os.environ.get("ARENA_OUT", "site/arena.html")
-KEEP_FROM = 2021          # seasons shipped to the page (from 2021-22); older seasons are only in the summary table
+KEEP_FROM = 2023          # seasons shipped to the page: the last three finished (2023-24 on) plus the live one; older seasons are only in the summary table
 META = {
     "E0": ("Premier League", "England", "Twenty clubs, the loudest league on earth."),
     "D1": ("Bundesliga", "Germany", "Goals, standing terraces and a title that usually has an owner."),
@@ -73,6 +77,19 @@ for name, obj in (("balanced", lambda r: min(r[0], r[1], r[2])), ("accuracy", la
     profiles[name] = {"h": 1.0, "a": round(float(a), 3), "d": round(float(dr), 3), "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}
     print(f"{name:<9} away x{a:.2f} draw x{dr:.2f} -> Home {r[0]:.0%} Draw {r[1]:.0%} Away {r[2]:.0%} accuracy {r[3]:.1%} (2024-26, all five leagues)")
 
+def webp_uri(path, max_px):
+    """Official artwork (git-ignored, from src/31_fetch_assets.py) as a small WebP data URI; None if the file is absent."""
+    if not os.path.exists(path):
+        return None
+    im = Image.open(path).convert("RGBA")
+    im.thumbnail((max_px, max_px), Image.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, "WEBP", quality=88, method=6)
+    return "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+slug = lambda n: re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")
+race = json.load(open("02_processed_data/title_race.json")) if os.path.exists("02_processed_data/title_race.json") else {}
 summary = json.load(open("02_processed_data/multi_league_summary.json"))
 leagues = {}
 for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
@@ -86,14 +103,17 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
         seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms}
     name, country, tag = META[lg]
     star = dict(zip(("name", "club", "role"), STARS[lg]))
-    logo = None
-    for ext, mime in (("svg", "image/svg+xml"), ("png", "image/png"), ("webp", "image/webp"), ("jpg", "image/jpeg")):
-        f = f"{LOGO_DIR}/{lg}.{ext}"
-        if os.path.exists(f):
-            import base64
-            logo = f"data:{mime};base64," + base64.b64encode(open(f, "rb").read()).decode()
-            break
-    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "seasons": seasons}
+    star["face"] = webp_uri(f"{LOGO_DIR}/players/{lg}.png", 300)
+    logo = webp_uri(f"{LOGO_DIR}/{lg}.png", 200)
+    clubs = sorted({m[1] for s_ in seasons.values() for m in s_["matches"]} | {m[2] for s_ in seasons.values() for m in s_["matches"]})
+    def crest(c):
+        u = webp_uri(f"{LOGO_DIR}/clubs/{lg}/{slug(c)}.png", 96)
+        if u is None and lg == "E0" and os.path.exists(f"site/crests/{slug(c)}.svg"):      # the Premier League's own badge files from src/13
+            u = "data:image/svg+xml;base64," + base64.b64encode(open(f"site/crests/{slug(c)}.svg", "rb").read()).decode()
+        return u
+    crests = {c: u for c in clubs if (u := crest(c))}
+    print(f"   logo {'yes' if logo else 'no'}, face {'yes' if star['face'] else 'no'}, crests {len(crests)}/{len(clubs)}" + (f"  missing: {[c for c in clubs if c not in crests]}" if len(crests) < len(clubs) else ""))
+    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items() if k != "ALL"}

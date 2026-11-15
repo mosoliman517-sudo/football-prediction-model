@@ -133,7 +133,13 @@ select { background: var(--surface2); border: 1px solid var(--line); border-radi
 .team { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; min-width: 0; }
 .team b { font-family: var(--display); font-size: clamp(18px, 3.4vw, 28px); font-weight: 800; overflow-wrap: anywhere; }
 .badge { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font: 800 20px var(--mono); letter-spacing: .02em; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent), 0 12px 24px -10px var(--bc, #000); background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--bc) 60%, #fff), var(--bc) 62%); }
+.badge.md { width: 46px; height: 46px; font-size: 13px; }
 .badge.sm { width: 28px; height: 28px; font-size: 10px; box-shadow: none; }
+.badge.crest { background: none; box-shadow: none; text-shadow: none; }
+.badge.crest img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.badge.crest.sm img { filter: none; }
+.face { height: 92px; width: auto; max-width: 96px; object-fit: contain; object-position: bottom; flex: none; filter: drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+.emblem.plate, img.emblem { background: color-mix(in srgb, #fff 92%, var(--c-bg, var(--bg))); border-radius: 22px; padding: 8px; }
 .vs { font: 800 22px var(--display); color: var(--muted); }
 .form { display: flex; gap: 4px; }
 .form i { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font: 700 10.5px var(--mono); font-style: normal; color: #101010; }
@@ -197,6 +203,21 @@ svg.chart text { fill: var(--muted); font: 500 11px var(--mono); }
 .tile { background: var(--surface2); border-radius: 16px; padding: 14px; }
 .tile b { font-family: var(--display); font-size: 34px; display: block; line-height: 1; }
 .tile small { color: var(--muted); }
+.tile .tn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 var(--body); display: block; }
+table.race td, table.race th { padding: 6px 7px; }
+.tablewrap { overflow-x: auto; margin-top: 14px; }
+.pcell { min-width: 74px; text-align: left !important; }
+.pcell .pb { height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; margin-bottom: 3px; }
+.pcell .pb i { display: block; height: 100%; border-radius: 99px; }
+.rng { position: relative; height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 9%, transparent); min-width: 140px; margin-bottom: 3px; }
+.rng i { position: absolute; top: 0; bottom: 0; border-radius: 99px; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.rng b { position: absolute; top: -3px; width: 4px; height: 16px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+.heatwrap { overflow-x: auto; margin-top: 14px; }
+.heat { display: grid; gap: 3px; min-width: 560px; }
+.hrow { display: grid; grid-template-columns: 150px repeat(var(--n), 1fr); gap: 3px; align-items: center; }
+.hrow .hn { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.hrow .hc { height: 24px; display: grid; place-items: center; border-radius: 5px; font: 700 10px var(--mono); background: color-mix(in srgb, var(--accent) calc(var(--a, 0) * 100%), color-mix(in srgb, var(--ink) 6%, transparent)); color: var(--ink); }
+.hhead .hc { background: none; color: var(--muted); height: auto; }
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
 .confetti i { position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 3px; background: var(--c); animation: cfall var(--d) cubic-bezier(.3, .6, .5, 1) forwards; }
 @keyframes cfall { to { transform: translate(var(--x), 108vh) rotate(var(--r)); } }
@@ -237,7 +258,7 @@ svg.chart text { fill: var(--muted); font: 500 11px var(--mono); }
 
   <div class="foot">
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
-    <span>Club names belong to their clubs; badges here are plain colour discs, not official crests.</span>
+    <span>League and club badges and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with any league, club or player.</span>
   </div>
 </div>
 
@@ -386,7 +407,8 @@ const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h <
 const mulberry = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 function teamCode(n) { const w = n.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean); return (w.length > 1 ? w.map((x) => x[0]).join("") + w[w.length - 1].slice(1) : w[0] || "?").slice(0, 3).toUpperCase(); }
 function teamColour(n) { const h = hash(n) % 360, p = PAL[S.code || "E0"]; return `hsl(${h} 58% 48%)`; }
-const badge = (n, cls = "") => `<span class="badge ${cls}" style="--bc:${teamColour(n)}" aria-hidden="true">${esc(teamCode(n))}</span>`;
+const CREST = Object.assign({}, ...Object.values(LG).map((l) => l.crests || {}));
+const badge = (n, cls = "") => (CREST[n] ? `<span class="badge crest ${cls}" aria-hidden="true"><img src="${CREST[n]}" alt=""></span>` : `<span class="badge ${cls}" style="--bc:${teamColour(n)}" aria-hidden="true">${esc(teamCode(n))}</span>`);
 const fmtDate = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 function formOf(c, team, before, n = 5) {
   const out = [];
@@ -407,7 +429,7 @@ function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState
 function route(ev) {
   const h = location.hash.slice(1), code = Object.keys(BYSLUG).find((s) => h === s || h.startsWith(s + "-")) ;
   const lg = code ? BYSLUG[code] : null;
-  if (lg) { const room = h.slice(code.length + 1); S.room = ["call", "daily", "replay", "review"].includes(room) ? room : "call"; openLeague(lg, ev); }
+  if (lg) { const room = h.slice(code.length + 1); S.room = ["call", "daily", "race", "replay", "review"].includes(room) ? room : "call"; openLeague(lg, ev); }
   else { S.code = null; setTheme(null, ev); $("#lobby").hidden = false; $("#league").hidden = true; stopReplay(); window.scrollTo(0, 0); }
 }
 function openLeague(code, ev) {
@@ -428,7 +450,7 @@ function renderLobby() {
       <span class="flag" style="background:${FLAG[c]}" aria-hidden="true"></span>${emblem(c)}
       <div><div class="wk">${esc(p.mood)} · ${esc(L.country)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div>
         <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></div>
-      <div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club)}</div></button>`;
+      <div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club, "md")}${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : ""}</div></button>`;
   }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display);grid-template-columns:1fr;min-height:120px"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
   document.querySelectorAll(".world[data-lg]").forEach((el) => {
     el.addEventListener("pointermove", (e) => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; el.style.setProperty("--mx", x * 100 + "%"); el.style.setProperty("--my", y * 100 + "%"); if (!REDUCED) { el.style.setProperty("--ry", ((x - 0.5) * 7).toFixed(2) + "deg"); el.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg"); } });
@@ -454,13 +476,13 @@ function paintScore() {
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = [["call", "Call it"], ["daily", "Daily 5"], ["replay", "Replay a season"], ["review", "How good is it?"]];
+  const rooms = [["call", "Call it"], ["daily", "Daily 5"], ["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); ({ call: renderCall, daily: renderDaily, replay: renderReplay, review: renderReview })[S.room](); }
+function renderRoom() { stopReplay(); ({ call: renderCall, daily: renderDaily, race: renderRace, replay: renderReplay, review: renderReview })[S.room](); }
 
 /* ---------- Call it ---------- */
-function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`] && r.m[0] >= "2022-08-01"); }
+function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${c}_${r.season}_${r.i}`] && r.m[0] >= "2023-08-01"); }
 function renderCall() {
   const c = S.code;
   if (S.cur) return renderPlay();
@@ -469,11 +491,11 @@ function renderCall() {
   const hit = (m) => { const adj = [m[6] * fm.a, m[7] * fm.d, m[8] * fm.h]; return "ADH"[adj.indexOf(Math.max(...adj))] === m[5]; };
   const form = clubMs.slice(-5).map((r) => { const m = r.m, own = m[1] === st.club ? m[3] - m[4] : m[4] - m[3]; return own > 0 ? "W" : own === 0 ? "D" : "L"; });
   const clubFresh = freshPool(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club);
-  const starCard = `<div class="starwatch">${badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="fine">${esc(st.role)} · ${esc(st.club)} · the model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
+  const starCard = `<div class="starwatch">${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="row" style="gap:8px">${badge(st.club, "sm")}<span class="fine">${esc(st.role)} · ${esc(st.club)}</span></div><div class="fine">The model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
   $("#room").innerHTML = starCard + `<div class="card"><h2>Call it</h2><p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
-    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last four seasons. Locked results can't be replayed, so the record stays honest.</p></div>`;
+    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last three seasons and this one. Locked results can't be replayed, so the record stays honest.</p></div>`;
 }
 function open(c, season, i, onDone) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null }; S.pick = null; S.score = [1, 1]; S.useScore = false; S.busy = false; renderRoom(); }
 function renderPlay() {
@@ -533,7 +555,7 @@ function confetti() {
 /* ---------- Daily 5 ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 function dailyFixtures(c, key) {
-  const pool = allMatches(c).filter((r) => r.m[0] >= "2022-08-01"), r = mulberry(hash(`daily-${c}-${key}`)), seen = new Set(), out = [];
+  const pool = allMatches(c).filter((r) => r.m[0] >= "2023-08-01"), r = mulberry(hash(`daily-${c}-${key}`)), seen = new Set(), out = [];
   while (out.length < 5) { const x = pool[Math.floor(r() * pool.length)], id = x.season + "|" + x.i; if (!seen.has(id)) { seen.add(id); out.push(x); } }
   return out;
 }
@@ -597,6 +619,34 @@ function toggleReplay() {
   paintReplay();
 }
 
+
+/* ---------- Title race: odds from simulating the rest of the season ---------- */
+S.raceSeason = null; S.raceCp = "19"; S.raceHeat = false;
+function renderRace() {
+  const c = S.code, L = lgOf(c), R = L.race;
+  if (!R) { $("#room").innerHTML = `<div class="card"><h2>Title race</h2><p class="sub">The race for this league is not built yet.</p></div>`; return; }
+  const live = R.live, pasts = Object.keys(R.past).sort().reverse();
+  if (!S.raceSeason || (S.raceSeason !== live.season && !R.past[S.raceSeason])) S.raceSeason = live.season;
+  const isLive = S.raceSeason === live.season, P = isLive ? null : R.past[S.raceSeason];
+  const rows = isLive ? live.rows : P.checkpoints[S.raceCp], [clN, euN, relN] = live.rules;
+  const fin = isLive ? null : P.final;
+  const maxP = Math.max(...rows.map((r) => r.p90)), minP = Math.min(...rows.map((r) => r.p10)), span = Math.max(1, maxP - minP);
+  const top = [...rows].sort((a, b) => b.title - a.title).slice(0, 3), clCut = [...rows].sort((a, b) => b.cl - a.cl).slice(Math.max(0, clN - 2), clN + 1), danger = [...rows].sort((a, b) => b.drop - a.drop).slice(0, 3);
+  const pc = (v) => (v < 0.005 ? (v === 0 ? "–" : "<1%") : v > 0.995 ? ">99%" : pct(v));
+  const cell = (v, col) => `<td class="pcell"><div class="pb"><i style="width:${(v * 100).toFixed(0)}%;background:${col}"></i></div><span class="num">${pc(v)}</span></td>`;
+  const card = (title, list, key, col) => `<div class="tile"><span class="label">${title}</span>${list.map((r) => `<div class="row" style="gap:8px;margin-top:8px">${badge(r.team, "sm")}<b class="tn">${esc(r.team)}</b><span class="num" style="color:${col};font-weight:700">${pc(r[key])}</span></div>`).join("")}</div>`;
+  const N = rows.length, heat = S.raceHeat ? [...rows].sort((a, b) => a.mean - b.mean).reverse().slice(0, Math.min(10, N)) : [];
+  const seasonOpts = [live.season, ...pasts].map((x) => `<option value="${x}" ${x === S.raceSeason ? "selected" : ""}>${x}${x === live.season ? " (live)" : ""}</option>`).join("");
+  const asof = isLive ? `As of ${fmtDate(live.as_of)}: ${live.played} matches played, ${live.remaining} to go, ${live.n_sims.toLocaleString()} simulated finishes.` : `Odds after matchday ${S.raceCp} of ${P.rounds}, using the model's real pre-match probabilities for the matches still to come (optimistic: they used form that had not happened yet at that point). ${fin ? "The last column is how the season really ended." : ""}`;
+  $("#room").innerHTML = `<div class="card"><h2>Title race</h2><p class="sub">The model plays out the rest of the season thousands of times, match by match, and counts how often each club finishes where. ${asof}</p>
+    <div class="ctl" style="margin-top:12px"><select id="raceSeasonSel" aria-label="Season">${seasonOpts}</select>
+      ${isLive ? "" : `<span class="seg" role="group" aria-label="Checkpoint">${["10", "19", "28"].map((k) => `<button type="button" class="pill" data-cp="${k}" aria-pressed="${S.raceCp === k}" style="${S.raceCp === k ? "border-color:var(--accent);color:var(--accent)" : ""}">After MD ${k}</button>`).join(" ")}</span>`}
+      <button type="button" class="pill" id="heatBtn" aria-pressed="${S.raceHeat}">${S.raceHeat ? "Show the odds table" : "Show finishing positions"}</button></div>
+    <div class="tiles" style="margin-top:14px">${card("Title favourites", top, "title", "var(--accent)")}${card(`Fighting for the last top-${clN} place`, clCut, "cl", "var(--ok)")}${card(`Relegation, most at risk (bottom ${relN})`, danger, "drop", "var(--bad)")}</div>
+    ${S.raceHeat ? `<div class="heatwrap"><div class="heat" style="--n:${N}">${heat.map((r) => `<div class="hrow"><span class="hn">${badge(r.team, "sm")}${esc(r.team)}</span>${r.dist.map((v, k) => `<span class="hc" style="--a:${Math.min(1, v * 2.6).toFixed(2)}" title="${esc(r.team)} finishes ${k + 1}: ${pct(v)}">${v >= 0.05 ? Math.round(v * 100) : ""}</span>`).join("")}</div>`).join("")}<div class="hrow hhead"><span></span>${rows.map((_, k) => `<span class="hc">${k + 1}</span>`).join("")}</div></div><p class="fine">Cell: chance (%) of finishing in that position. Top ${Math.min(10, N)} clubs by expected points.</p></div>` : `<div class="tablewrap"><table class="race"><thead><tr><th>Now</th><th>Club</th><th>Pts</th><th style="text-align:left">Expected final points (10th to 90th percentile)</th><th>Title</th><th>Top ${clN}</th><th>Europe</th><th>Drop</th>${fin ? "<th>Real</th>" : ""}</tr></thead><tbody>${rows.map((r) => `<tr><td class="num">${r.now}</td><td>${badge(r.team, "sm")}${esc(r.team)}</td><td class="num">${r.pts}<span class="fine"> (${r.played})</span></td><td style="text-align:left"><div class="rng"><i style="left:${((r.p10 - minP) / span * 100).toFixed(1)}%;width:${Math.max(2, (r.p90 - r.p10) / span * 100).toFixed(1)}%"></i><b style="left:${((r.mean - minP) / span * 100).toFixed(1)}%"></b></div><span class="num fine">${r.mean.toFixed(0)}</span></td>${cell(r.title, "var(--accent)")}${cell(r.cl, "var(--ok)")}${cell(r.eu, "var(--away)")}${cell(r.drop, "var(--bad)")}${fin ? `<td class="num"><b>${fin[r.team]}</b></td>` : ""}</tr>`).join("")}</tbody></table></div>`}
+    <p class="fine" style="margin-top:10px">These are probabilities from a model that has never seen injuries, transfers or news, and a real title race has more late surprises than a simulation. Ties on points are split by goal difference then goals scored.</p></div>`;
+}
+
 /* ---------- Review ---------- */
 function renderReview() {
   const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl);
@@ -658,6 +708,8 @@ document.addEventListener("click", (e) => {
   if (b.id === "playBack" || b.id === "dailyNext") { S.cur = null; renderRoom(); paintScore(); return; }
   if (b.dataset.dfix) { const [s, i] = b.dataset.dfix.split("|"); Snd.tick(); open(S.code, s, +i, true); return; }
   if (b.id === "shareBtn") { shareDaily(); return; }
+  if (b.dataset.cp) { S.raceCp = b.dataset.cp; Snd.tick(); renderRace(); return; }
+  if (b.id === "heatBtn") { S.raceHeat = !S.raceHeat; Snd.tick(); renderRace(); return; }
   if (b.id === "rpPlay") { toggleReplay(); return; }
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
@@ -665,6 +717,7 @@ document.addEventListener("change", (e) => {
   const t = e.target;
   if (t.id === "styleSel") { S.style = t.value; }
   else if (t.id === "useScore") { S.useScore = t.checked; $("#stepper").hidden = !t.checked; Snd.tick(); }
+  else if (t.id === "raceSeasonSel") { S.raceSeason = t.value; renderRace(); }
   else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }
 });
 document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });

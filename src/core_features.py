@@ -61,8 +61,10 @@ def build(df):
         meet = list(h2h[frozenset((h, a))])
         cols["H2HHomeWins"].append(np.mean([1.0 if m_[0] == h else 0.0 for m_ in meet if m_[0] is not None]) if meet else np.nan)
         cols["H2HDraws"].append(np.mean([1.0 if m_[0] is None else 0.0 for m_ in meet]) if meet else np.nan)
-        # ---- update after the result
+        # ---- update after the result (a fixture with no result yet, used to forecast the rest of a season, changes nothing)
         gh, ga = GH[i], GA[i]
+        if np.isnan(gh) or np.isnan(ga):
+            continue
         res = 1.0 if gh > ga else 0.5 if gh == ga else 0.0
         E = 1 / (1 + 10 ** (-(el_c[h] - el_c[a] + 40) / 400))
         d = 15 * mm(gh - ga) * (res - E); el_c[h] += d; el_c[a] -= d

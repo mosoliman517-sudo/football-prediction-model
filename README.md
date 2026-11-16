@@ -112,6 +112,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **20 November: badges and epic ranked rooms.** Every achievement now has a difficulty (Common, Uncommon, Rare, Epic, Legendary) and can be worn as a badge: up to three, picked on the profile page, shown next to your picture in the header, Ranked lobbies, the leaderboard, friends and the live board. Rarer badges glow and shine. Two special badges, Owner and Admin, are only offered to accounts with that role, and the server strips them from anyone else (`online/schema_v9.sql`: `profiles.badges`, `admins.role`, `set_badges`, `my_role`). Joining or hosting a room now opens a full-screen sequence: a sonar for the host waiting, converging rings for the joiner, then a versus screen with both players' picture, badges, Elo and rank, a flash and a 3-2-1-GO countdown before the game starts. It respects the reduced-motion setting.
 
+**20 November, later: music.** Background music is generated live in the browser (no audio files): a calm lobby loop (slow, soft pads and a recurring four-bar motif with random sparkle notes) and a livelier in-game loop that takes over during quizzes and online matches, crossfading between the two. It has its own Music button beside Sound, starts only after your first tap, pauses when the tab is hidden, and the 3-2-1-GO countdown has its own soft beeps.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

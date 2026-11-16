@@ -724,6 +724,7 @@ function paintSplashArt() {
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
     <button class="pill" id="adminBtn" type="button" hidden title="Admin dashboard"><svg class=ic><use href=#i-shield></use></svg> Admin</button>
     <button class="pill" id="searchBtn" type="button" title="Search (press /)" aria-label="Search"><svg class=ic><use href=#i-search></use></svg></button>
+    <button class="pill" id="musBtn" type="button" title="Background music on or off" aria-label="Music">Music: on</button>
     <button class="pill" id="sndBtn" type="button" title="Sound: off, soft or full" aria-label="Sound">Sound: soft</button>
     <button class="pill" id="acctBtn" type="button">Sign in</button>
     <button class="pill profilebtn" id="profileBtn" type="button" title="Your profile, rank and achievements" aria-label="Open your profile"></button>
@@ -767,7 +768,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 19:29 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 19:34 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -852,11 +853,45 @@ const Snd = (() => {
   const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
   const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
+  /* Generative background music: calm lobby loop and a slightly more driven game loop. Nothing is downloaded; it is played live. */
+  let mus = 1, mg = null, mode = "lobby", want = "lobby", timer = null, nextT = 0, step = 0, pend = null;
+  try { const v = localStorage.getItem("arena-music"); if (v != null) mus = +v; } catch (e) { /* storage unavailable */ }
+  const LOBBY = { bpm: 68, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
+  const GAME = { bpm: 88, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
+  function mnote(n, t0, dur, type, vol, att) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(midi(n), t0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + dur + 0.05); }
+  function mkick(t0, vol) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(42, t0 + 0.14); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + 0.25); }
+  function mhat(t0, vol) { const len = Math.floor(ctx.sampleRate * 0.05), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ctx.createBufferSource(); s.buffer = b; const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6500; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(mg); s.start(t0); }
+  function bar(m, bi, t0, spb) {
+    const P = m === "game" ? GAME : LOBBY, ch = P.chords[bi % 4], beat = spb, game = m === "game";
+    if (!game) ch.slice(1).forEach((n, i) => mnote(n + 12, t0 + i * 0.03, beat * 4.2, "sine", 0.022, 1.1));
+    else ch.slice(1).forEach((n) => mnote(n, t0, beat * 1.9, "triangle", 0.012, 0.05));
+    mnote(ch[0] - 12, t0, beat * (game ? 1.6 : 3.4), "sine", game ? 0.07 : 0.06, 0.03);
+    if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.07); mkick(t0 + beat * 2, 0.05); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.012)); }
+    else [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.006));
+    const eighth = beat / 2, n8 = 8;
+    for (let i = 0; i < n8; i++) {
+      const sw = i % 2 ? eighth * 0.12 : 0, tt = t0 + i * eighth + sw;
+      if (bi % 4 === 0 || bi % 4 === 2 && i % 2 === 0) { if (bi % 4 === 0 || Math.random() < 0.6) mnote(P.motif[i] + (bi % 8 >= 4 ? 0 : 0), tt, eighth * (game ? 1.4 : 2.6), game ? "triangle" : "sine", game ? 0.04 : 0.045, 0.006); }
+      else if (Math.random() < (game ? 0.42 : 0.3)) mnote(P.pent[Math.floor(Math.random() * P.pent.length)], tt, eighth * (game ? 1.2 : 2.4), game ? "triangle" : "sine", game ? 0.03 : 0.032, 0.006);
+    }
+  }
+  function sched() {
+    if (!ctx || !mg) return; const P = mode === "game" ? GAME : LOBBY, spb = 60 / P.bpm, now = ctx.currentTime;
+    if (nextT < now) nextT = now + 0.05;
+    while (nextT < now + 1.2) { bar(mode, step, nextT, spb); step++; nextT += spb * 4; }
+  }
+  function mStart() { if (!mus || level === 0 || !init()) return; if (!mg) { mg = ctx.createGain(); mg.gain.value = 0.0001; mg.connect(master); } if (!timer) { mode = want; nextT = ctx.currentTime + 0.1; step = 0; timer = setInterval(sched, 300); sched(); } mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.8); }
+  function mStop() { if (mg && ctx) { mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); } clearInterval(timer); timer = null; }
+  function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.6); }, 700); }
+  document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else if (level) ctx.resume(); });
   const vib = (p) => { try { if (level && navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } };
   return {
     get level() { return level; },
-    cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); return ["off", "soft", "full"][level]; },
-    unlock() { if (level) init(); },
+    cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
+    unlock() { if (level) { init(); mStart(); } },
+    get music() { return mus; }, mode(m) { mSet(m); },
+    toggleMusic() { mus = mus ? 0 : 1; try { localStorage.setItem("arena-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
+    count(n) { run((t) => { if (n === 0) { [72, 76, 79, 84].forEach((x, i) => note(x, t + i * 0.025, 0.7, "triangle", 0.06)); noise(t, 0.35, 800, 5000, 0.03, 0.8); } else note(n === 1 ? 69 : 67, t, 0.22, "sine", 0.08); }); },
     tick() { run((t) => noise(t, 0.035, 2600, 1800, 0.035, 2)); },
     hover() { run((t) => { note(84, t, 0.07, "sine", 0.02); note(91, t + 0.015, 0.06, "sine", 0.01); }); },
     lock() { vib(15); run((t) => { note(43, t, 0.22, "sine", 0.16, -5); noise(t, 0.08, 400, 120, 0.05); note(67, t + 0.06, 0.12, "triangle", 0.06); }); },
@@ -872,7 +907,8 @@ const Snd = (() => {
     flip() { run((t) => noise(t, 0.2, 800, 2400, 0.05, 1.5)); },
   };
 })();
-function paintSound() { $("#sndBtn").textContent = "Sound: " + ["off", "soft", "full"][Snd.level]; }
+function paintSound() { $("#sndBtn").textContent = "Sound: " + ["off", "soft", "full"][Snd.level]; const m = $("#musBtn"); if (m) m.textContent = "Music: " + (Snd.music && Snd.level ? "on" : "off"); }
+setInterval(() => Snd.mode(inMatch() || (Q.s && Q.s.phase === "run") ? "game" : "lobby"), 1500);
 
 /* ---------- ambient particles ---------- */
 const fx = $("#fx"), fctx = fx.getContext("2d");
@@ -2165,7 +2201,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-20", items: [["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-20", items: [["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -2988,7 +3024,7 @@ const Vs = {
     if (this.matched) return; this.matched = true;
     const e = this.mount("versus", `<div class="vsflash"></div><div class="vsvs"><div class="vsvsl"></div>${this.card(a, "l")}<div class="vsmid"><div class="vsx">VS</div></div>${this.card(b, "r")}</div><div class="vscount" id="vsCnt" aria-live="polite"></div>`);
     Snd.lock();
-    const cnt = (txt, at) => this.tm.push(setTimeout(() => { const n = $("#vsCnt"); if (n) n.innerHTML = `<b>${txt}</b>`; Snd.tick(); }, at));
+    const cnt = (txt, at) => this.tm.push(setTimeout(() => { const n = $("#vsCnt"); if (n) n.innerHTML = `<b>${txt}</b>`; Snd.count(txt === "GO" ? 0 : +txt); }, at));
     cnt("3", 1700); cnt("2", 2300); cnt("1", 2900); cnt("GO", 3500);
     this.tm.push(setTimeout(() => { Vs.matched = false; Vs.close(); if (done) done(); }, 4100));
   },
@@ -3127,6 +3163,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.scope) { Snd.tick(); go(b.dataset.scope); route(e); return; }
   if (b.dataset.lg) { Snd.tick(); go("lab-" + SLUG[b.dataset.lg]); route(e); return; }
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
+  if (b.id === "musBtn") { Snd.toggleMusic(); paintSound(); Snd.tick(); return; }
   if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
   if (b.id === "profileBtn" && !(Account.signedIn || Account.claude) && Account.available) { Snd.tick(); authForm("in"); return; }
   if (b.id === "profileBtn" || b.id === "openProfileJoin") { openProfile(); return; }

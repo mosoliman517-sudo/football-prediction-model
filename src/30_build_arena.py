@@ -184,12 +184,15 @@ import importlib.util
 _spec = importlib.util.spec_from_file_location("hero35", "src/35_fetch_hero_photos.py"); _h = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_h)
 hero = []
 for nm in _h.NAMES:
-    uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.png", 260)
+    uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.png", 520)
+    photo = False
+    if uri is None:                                     # retired legends that EA does not list use a Wikimedia Commons photo (a rectangle, not a cut-out)
+        uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.jpg", 700); photo = bool(uri)
     if uri:
-        hero.append({"n": nm, "img": uri})
+        hero.append({"n": nm, "img": uri, "photo": photo})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
 print(f"front page photos: {len(hero)}; quiz players: {len(quiz['players']) if quiz else 0}")
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "quiz": quiz}
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

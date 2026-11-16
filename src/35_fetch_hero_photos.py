@@ -44,7 +44,7 @@ def ea_portrait(name, path):
         ea = json.load(open("02_processed_data/ea_players.json", encoding="utf-8"))
     except FileNotFoundError:
         return False
-    want = norm(name)
+    want = norm({"Vinicius Junior": "Vini Jr."}.get(name, name))
     rows = [e for e in ea if want in (norm(e["common"]), norm(f"{e['first']} {e['last']}"))]
     if not rows:
         return False
@@ -52,7 +52,7 @@ def ea_portrait(name, path):
     r = requests.get(e["img"], headers=HEAD, timeout=40)
     if r.status_code != 200:
         return False
-    im = Image.open(io.BytesIO(r.content)).convert("RGBA"); im = im.crop(im.getbbox()); im.thumbnail((320, 320), Image.LANCZOS); im.save(path, "PNG", optimize=True)
+    im = Image.open(io.BytesIO(r.content)).convert("RGBA"); im = im.crop(im.getbbox()); im.thumbnail((512, 512), Image.LANCZOS); im.save(path, "PNG", optimize=True)
     return True
 
 
@@ -64,7 +64,7 @@ def main():
         path = f"site/logos/players/hero/{slug}.png"
         if ea_portrait(name, path):
             print(f"  {name:<24} EA portrait"); kept.append(name); continue
-        if os.path.exists(path):
+        if os.path.exists(path) or os.path.exists(path.replace(".png", ".jpg")):
             kept.append(name); continue
         rows = get("searchplayers.php?p=" + requests.utils.quote(name.replace(" ", "_"))).get("player") or []
         rows = [r for r in rows if r.get("strSport") == "Soccer" and r.get("strCutout") and norm(r.get("strPlayer", "")) == slug]

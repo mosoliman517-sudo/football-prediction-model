@@ -484,6 +484,11 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .lbx { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; } .lbrow.lobby { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface2); }
 .lbx .lbrow:not(.lobby) { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--surface2); } .lbx .lbrow.me { outline: 2px solid var(--accent); } .rkbig { font-size: 44px; }
 @media (max-width: 560px) { .lbrow.lobby { grid-template-columns: 1fr auto; } .lbrow.lobby > div:nth-child(2) { grid-column: 1; } }
+.buzzers { position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 6; padding: 8px 0 2px; background: linear-gradient(transparent, var(--bg) 40%); }
+.answerbox { scroll-margin-bottom: 120px; }
+#qSug:empty, #tSug:empty, #rSug:empty { display: none; }
+.card:has(.buzzers) { overflow: visible; }
+@media (max-width: 560px) { .answerbox { position: sticky; bottom: max(78px, calc(env(safe-area-inset-bottom, 0px) + 78px)); z-index: 7; max-height: 42vh; overflow: auto; box-shadow: 0 -14px 30px -18px #000c; } .buzzers { bottom: max(8px, env(safe-area-inset-bottom, 0px)); } }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -531,7 +536,7 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 16:04 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 16:19 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -1774,6 +1779,17 @@ const POSICON = { Goalkeeper: "🧤", Defender: "🛡️", Midfield: "⚙️", A
 const faceOf = (name) => { const h = (DATA.hero || []).find((x) => x.img && qnorm(x.n) === qnorm(name)); return h ? h.img : null; };
 const photoUrl = (p) => p.im ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(p.im)}?width=240` : p.iu || null;
 const playerPic = (p, cls = "xl") => { const f = faceOf(p.n), c = clubBadgeFor(p.club, cls), u = f ? null : photoUrl(p), under = f ? `<span class="badge ${cls} hface"><img src="${f}" alt=""></span>` : c || badge(p.n, cls); return `<span class="ppic">${under}${u ? `<img class="pimg" src="${u}" alt="${esc(p.n)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${flagOf(p.nat) ? `<i class="pflag">${flagOf(p.nat)}</i>` : ""}</span>`; };
+const lev = (a, b) => { const m = a.length, n = b.length; if (Math.abs(m - n) > 3) return 9; let prev = Array.from({ length: n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; };
+/* what Enter should submit: an exact match, the only suggestion, the only name that starts with what was typed, or a single name within a letter or two (typos) */
+function resolveGuess(typed, items, key) {
+  const n = qnorm(typed); if (n.length < 3) return null;
+  const s = suggestions(typed, items, key), exact = s.find((x) => qnorm(key(x)) === n); if (exact) return exact;
+  if (s.length === 1) return s[0];
+  const starts = s.filter((x) => qnorm(key(x)).startsWith(n)); if (starts.length === 1 && n.length >= 4) return starts[0];
+  const tol = n.length >= 9 ? 2 : n.length >= 5 ? 1 : 0; if (!tol) return null;
+  let best = null, bd = 99, tie = false; for (const x of items) { const d = lev(n, qnorm(key(x))); if (d < bd) { bd = d; best = x; tie = false; } else if (d === bd) tie = true; }
+  return bd <= tol && !tie ? best : null;
+}
 function stopQuiz() { if (Q.timer) { clearInterval(Q.timer); Q.timer = null; } }
 const Q = { timer: null, s: null };
 
@@ -1841,17 +1857,17 @@ function tickQuiz() {
 }
 function buzz(who) {
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || S_.locked[who]) return;
-  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) { i.value = ""; setTimeout(() => { i.value = ""; i.focus(); }, 0); }
+  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) { i.value = ""; setTimeout(() => { i.value = ""; i.focus(); i.scrollIntoView({ block: "center", behavior: "smooth" }); }, 0); }
 }
 function submitAnswer(pickId) {
   const S_ = Q.s, d = QDEF[S_.game], a = d.ans(S_.r); if (!S_ || !S_.paused) return;
   const typed = ($("#qIn") && $("#qIn").value) || ""; let ok = false;
-  if (a.kind === "player") { const p = S_.r.p; if (pickId != null) ok = pickId === a.id; else { const t = qnorm(typed); ok = t === qnorm(p.n) || (t.length >= 3 && t === qnorm(p.n.split(" ").slice(-1)[0]) && surnameCount[t] === 1); if (!ok) { const s = suggestions(typed, playerPool(S_.scope === "ALL" ? "ALL" : "ALL"), (x) => x.n); if (s.length === 1) ok = s[0].id === a.id; } } }
-  else { const f = QZ.clubs[a.name] || {}; const t = qnorm(typed); ok = (pickId != null ? pickId === a.name : t === qnorm(a.name) || t === qnorm(f.tm || "")); if (!ok && pickId == null) { const s = suggestions(typed, clubList(S_.scope), (x) => x.n); if (s.length === 1) ok = s[0].n === a.name; } }
+  if (a.kind === "player") { const p = S_.r.p; if (pickId != null) ok = pickId === a.id; else { const t = qnorm(typed); ok = t === qnorm(p.n) || (t.length >= 3 && t === qnorm(p.n.split(" ").slice(-1)[0]) && surnameCount[t] === 1); if (!ok) { const m = resolveGuess(typed, QZ.players, (x) => x.n); if (m) ok = m.id === a.id; } } }
+  else { const f = QZ.clubs[a.name] || {}; const t = qnorm(typed); ok = (pickId != null ? pickId === a.name : t === qnorm(a.name) || t === qnorm(f.tm || "")); if (!ok && pickId == null) { const m = resolveGuess(typed, clubList(S_.scope), (x) => x.n); if (m) ok = m.n === a.name; } }
   if (ok) endRound(S_.buzzed); else wrongGuess(false);
 }
 function wrongGuess(timedOut) {
-  const S_ = Q.s, who = S_.buzzed; S_.scores[who] -= 150; if (S_.mode === "duo") S_.locked[who] = true; S_.paused = false; S_.buzzed = null; Snd.wrong(); toast(timedOut ? "Out of time: -150" : "Not him: -150");
+  const S_ = Q.s, who = S_.buzzed; S_.scores[who] -= 150; if (S_.mode === "duo") S_.locked[who] = true; S_.paused = false; S_.buzzed = null; Snd.wrong(); toast(timedOut ? "Out of time: -150" : "Not it: -150");
   if (S_.mode === "duo" ? S_.locked[0] && S_.locked[1] : true) { if (S_.mode === "duo") endRound(null); else { S_.paused = false; renderQuiz(); } } else renderQuiz();
 }
 function endRound(winner) {
@@ -1899,13 +1915,13 @@ function renderQuiz() {
   }
   const buzzed = S_.paused;
   const buzzers = duo ? `<div class="buzzers"><button class="buzz p1" id="qB0" type="button" ${S_.locked[0] || buzzed ? "disabled" : ""}>Player 1<small>key A</small></button><button class="buzz p2" id="qB1" type="button" ${S_.locked[1] || buzzed ? "disabled" : ""}>Player 2<small>key L</small></button></div>` : `<div class="buzzers"><button class="buzz p1 wide" id="qB0" type="button" ${buzzed ? "disabled" : ""}>BUZZ<small>space bar</small></button></div>`;
-  const answer = buzzed ? `<div class="answerbox"><div class="row"><b>${duo ? who[S_.buzzed] : "Your answer"}</b><span class="num fine" id="qClock">${Math.ceil(S_.answerLeft)}s</span></div><div class="row"><input id="qIn" autocomplete="off" placeholder="${QDEF[S_.game].unit === "club" ? "Type the club" : "Type the player"}" aria-label="Your answer"><button class="btn" id="qGuess" type="button">Guess</button></div><div id="qSug" class="sugs"></div></div>` : "";
+  const answer = buzzed ? `<div class="answerbox"><div class="row"><b>${duo ? who[S_.buzzed] : "Your answer"}</b><span class="num fine" id="qClock">${Math.ceil(S_.answerLeft)}s</span></div><div class="row"><input id="qIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="${QDEF[S_.game].unit === "club" ? "Type the club" : "Type the player"}" aria-label="Your answer"><button class="btn" id="qGuess" type="button">Guess</button></div><div id="qSug" class="sugs"></div></div>` : "";
   $("#room").innerHTML = `<div class="card">${head}${hud}<div class="meter"><i id="qMeter" style="width:${(100 * (1 - S_.elapsed / S_.total)).toFixed(1)}%"></i></div><div class="row" style="justify-content:space-between"><span class="fine">Worth <b class="num" id="qWorth">${worth()}</b> points now</span></div><div id="qClues" class="clues">${cluesHTML()}</div>${answer}${buzzers}</div>`;
 }
 function paintSuggestions() {
   const S_ = Q.s, box = $("#qSug"), q = $("#qIn").value; if (!box) return;
   const isClub = QDEF[S_.game].unit === "club", list = isClub ? suggestions(q, clubList(S_.scope), (x) => x.n) : suggestions(q, QZ.players, (x) => x.n);
-  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join("");
+  box.innerHTML = list.map((x) => isClub ? `<button type="button" class="sug" data-sug="${esc(x.n)}">${S_.game === "blur" ? "" : badge(x.n, "sm")}${esc(x.n)}</button>` : `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join("");
 }
 document.addEventListener("input", (e) => { if (e.target.id === "qIn") paintSuggestions(); });
 document.addEventListener("keydown", (e) => {
@@ -2033,12 +2049,12 @@ function renderRoulette() {
   if (r.phase === "done") { const w = r.wins[0] > r.wins[1] ? 0 : 1; $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}<div class="rcard on"><div class="label">Match over</div><div class="verdicts" style="margin-top:8px">${r.wins.map((s, i) => `<div class="vd ${w === i ? "ok" : "no"}"><span class="label">${who[i]}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${who[w]} wins!</b><button class="btn" id="rAgain" type="button">Play again</button></div></div></div>`; return; }
   const head = `<div class="qhud"><span class="label">Round ${r.round} of ${r.rounds}</span>${r.wins.map((s, i) => `<span class="num qscore"><small>${who[i]}</small> <b>${s}</b></span>`).join("")}</div><div class="row" style="gap:14px;margin:6px 0">${badge(r.club, "xl")}<div><h3 style="font-size:30px">${esc(r.club)}</h3><div class="fine">Players who have played for this club</div></div></div><div class="sugs" style="margin:8px 0">${r.names.map((n) => `<span class="sug">${esc(n)}</span>`).join("") || '<span class="fine">No names yet</span>'}</div>`;
   if (r.phase === "reveal") { const left = QZ.players.filter((p) => playedFor(p, r.club) && !r.used.includes(p.id)).slice(0, 8).map((p) => p.n); $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="rcard on"><b style="font-size:20px">${who[1 - r.loser]} wins the round</b><div class="fine">${who[r.loser]}: ${esc(r.why)}.</div>${left.length ? `<div class="fine" style="margin-top:6px">Still available: ${esc(left.join(", "))}</div>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "rFinish" : "rNext"}" type="button">${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "See the result" : "Next round"}</button></div></div>`; return; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="answerbox"><div class="row"><b>${who[r.turn]}, name a player</b></div><div class="row"><input id="rIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="rGuess" type="button">Play</button></div><div id="rSug" class="sugs"></div>${r.msg ? `<div class="fine">${esc(r.msg)}</div>` : ""}</div></div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="answerbox"><div class="row"><b>${who[r.turn]}, name a player</b></div><div class="row"><input id="rIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="rGuess" type="button">Play</button></div><div id="rSug" class="sugs"></div>${r.msg ? `<div class="fine">${esc(r.msg)}</div>` : ""}</div></div>`;
   const i = $("#rIn"); if (i) i.focus();
 }
 function rouSubmit(pickId) {
   const r = S.rou; let p = null;
-  if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { const typed = $("#rIn").value, s = suggestions(typed, QZ.players, (x) => x.n); p = s.length === 1 || (s[0] && qnorm(s[0].n) === qnorm(typed)) ? s[0] : null; }
+  if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { p = resolveGuess($("#rIn").value, QZ.players, (x) => x.n); }
   if (!p) { r.msg = "Pick a player from the suggestions."; renderRoulette(); return; }
   if (r.used.includes(p.id)) { rouLose(r.turn, `${p.n} was already named`); return; }
   if (!playedFor(p, r.club)) { rouLose(r.turn, `${p.n} never played for ${r.club}`); return; }
@@ -2095,7 +2111,7 @@ function renderTTT() {
     const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
   const cells = t.cells.map((v, i) => `<button type="button" class="tcell ${v === 0 ? "x" : v === 1 ? "o" : ""} ${win && win.line.includes(i) ? "win" : ""}" data-tc="${i}" ${v != null || t.phase !== "play" || (t.mode === "solo" && t.turn === 1) ? "disabled" : ""}>${v != null ? `<b>${mark[v]}</b>${t.pl && t.pl[i] ? playerPic(t.pl[i], "sm") : ""}<small>${esc(t.names && t.names[i] || "")}</small>` : ""}</button>`).join("");
   const status = t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins!`) : `${who[t.turn]} (${mark[t.turn]}) to play`;
-  const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
+  const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
   $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">${status}</span></div>
     <div class="tgrid"><div class="tcorner"></div>${g.cols.map(catHead).join("")}${[0, 1, 2].map((r) => catHead(g.rows[r], "rowh") + [0, 1, 2].map((c) => cells.split("</button>").slice(0, 9)[r * 3 + c] + "</button>").join("")).join("")}</div>
     ${t.msg ? `<div class="fine" style="margin-top:8px">${esc(t.msg)}</div>` : ""}${panel}${t.phase === "over" ? `<div class="row" style="margin-top:12px"><button class="btn" id="ttAgain" type="button">Play again</button><button class="btn ghost" id="ttCard" type="button">Make a result card</button></div>` : ""}</div>`;
@@ -2103,7 +2119,7 @@ function renderTTT() {
 }
 function tttSubmit(pickId) {
   const t = S.ttt, g = t.grid, r = g.rows[Math.floor(t.sel / 3)], c = g.cols[t.sel % 3]; let p = null;
-  if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { const typed = $("#tIn").value, s = suggestions(typed, g.pool, (x) => x.n); p = s.length === 1 || (s[0] && qnorm(s[0].n) === qnorm(typed)) ? s[0] : null; }
+  if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { p = resolveGuess($("#tIn").value, g.pool, (x) => x.n); }
   if (!p) { t.msg = "Pick a player from the suggestions."; renderTTT(); return; }
   if (t.used.has(p.id)) { t.msg = `${p.n} is already on the board. Turn lost.`; Snd.wrong(); endTurn(); return; }
   if (r.test(p) && c.test(p)) { t.cells[t.sel] = t.turn; (t.names || (t.names = {}))[t.sel] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[t.sel] = p; t.used.add(p.id); t.msg = `${p.n} fits. Square claimed.`; Snd.right(); } else { t.msg = `${p.n} does not fit both. Turn lost.`; Snd.wrong(); }

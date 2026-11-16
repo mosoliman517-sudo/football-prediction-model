@@ -20,7 +20,8 @@ NAMES = ["Erling Haaland", "Mohamed Salah", "Bukayo Saka", "Cole Palmer", "Bruno
          "Harry Kane", "Jamal Musiala", "Michael Olise", "Florian Wirtz", "Lamine Yamal", "Kylian Mbappe", "Vinicius Junior", "Jude Bellingham", "Pedri", "Robert Lewandowski",
          "Raphinha", "Federico Valverde", "Lautaro Martinez", "Rafael Leao", "Nico Paz", "Khvicha Kvaratskhelia", "Ousmane Dembele", "Desire Doue", "Bradley Barcola", "Achraf Hakimi",
          "Victor Osimhen", "Alexander Isak",
-         "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Andres Iniesta", "Sergio Aguero", "Sergi Roberto"]      # the last six are the legends used on the loading screens
+         "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Andres Iniesta", "Sergio Aguero", "Sergi Roberto",
+         "Zinedine Zidane", "Marco van Basten", "Dennis Bergkamp", "Ole Gunnar Solskjaer", "Wayne Rooney"]      # the last six are the legends used on the loading screens
 norm = lambda s: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", str(s).translate(str.maketrans({"ø": "o", "Ø": "O", "æ": "ae", "ð": "d", "ł": "l", "đ": "d", "ß": "ss"}))).encode("ascii", "ignore").decode().lower())
 
 

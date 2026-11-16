@@ -489,8 +489,41 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 #qSug:empty, #tSug:empty, #rSug:empty { display: none; }
 .card:has(.buzzers) { overflow: visible; }
 @media (max-width: 560px) { .answerbox { position: sticky; bottom: max(78px, calc(env(safe-area-inset-bottom, 0px) + 78px)); z-index: 7; max-height: 42vh; overflow: auto; box-shadow: 0 -14px 30px -18px #000c; } .buzzers { bottom: max(8px, env(safe-area-inset-bottom, 0px)); } }
+
+/* ---- loading screens ---- */
+.splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; overflow: hidden; transition: opacity .6s ease, visibility .6s; color: #fff; font-family: var(--sans, system-ui); }
+.splash.out { opacity: 0; visibility: hidden; pointer-events: none; }
+.sp-art { position: absolute; inset: 0; z-index: 0; } .splash > *:not(.sp-art) { position: relative; z-index: 1; }
+.sp-brand { font: 800 clamp(40px, 9vw, 84px) var(--display, system-ui); letter-spacing: -.02em; text-shadow: 0 6px 30px #0008; } .sp-brand b { color: #ffd34e; }
+.sp-tip { max-width: 520px; font-size: 17px; line-height: 1.45; opacity: .92; min-height: 50px; }
+.sp-bar { width: min(360px, 70vw); height: 8px; border-radius: 99px; background: #ffffff26; overflow: hidden; } .sp-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd34e, #7cf5c8); border-radius: 99px; animation: spbar 1.9s cubic-bezier(.3, .8, .3, 1) forwards; }
+@keyframes spbar { to { width: 100%; } }
+.sp-meta { display: flex; gap: 10px; align-items: center; font: 700 12px var(--mono, monospace); letter-spacing: .08em; text-transform: uppercase; opacity: .9; flex-wrap: wrap; justify-content: center; }
+.sp-rar { padding: 3px 10px; border-radius: 99px; background: #ffffff22; } .sp-rar.r-uncommon { background: #2fbf71; } .sp-rar.r-rare { background: #2f7bff; } .sp-rar.r-legendary { background: linear-gradient(90deg, #ffb300, #ff4d9d); animation: pulse 1.2s ease-in-out infinite; }
+#spNew { color: #ffd34e; } .sp-skip { background: none; border: 0; color: #ffffff99; font: 600 12px var(--mono, monospace); cursor: pointer; margin-top: 6px; }
+@keyframes pulse { 50% { transform: scale(1.08); } }
+.t-pitch { background: repeating-linear-gradient(90deg, #14602f 0 70px, #176b34 70px 140px); } .t-pitch .sp-art::before { content: ""; position: absolute; left: 50%; top: 50%; width: 260px; height: 260px; margin: -130px; border: 4px solid #ffffff55; border-radius: 50%; } .t-pitch .sp-art::after { content: "⚽"; position: absolute; bottom: 14%; left: -10%; font-size: 54px; animation: roll 2.6s linear infinite; } @keyframes roll { to { left: 108%; transform: rotate(900deg); } }
+.t-lights { background: radial-gradient(circle at 50% 120%, #1a2a6c, #0b1033 70%); } .t-lights .sp-art::before { content: ""; position: absolute; left: 50%; top: -30%; width: 160%; height: 160%; margin-left: -80%; background: conic-gradient(from 0deg at 50% 0, transparent 0 20deg, #ffffff22 25deg 35deg, transparent 40deg 70deg, #ffffff22 75deg 85deg, transparent 90deg 130deg, #ffffff22 135deg 145deg, transparent 150deg); animation: sweep 6s ease-in-out infinite alternate; transform-origin: 50% 0; } @keyframes sweep { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } } .t-lights .sp-art::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#fff 1px, transparent 1.5px); background-size: 38px 38px; opacity: .25; animation: twinkle 3s ease-in-out infinite; } @keyframes twinkle { 50% { opacity: .08; } }
+.t-board { background: #1f3b2d; } .t-board .sp-art { background: repeating-linear-gradient(0deg, transparent 0 39px, #ffffff10 39px 40px), repeating-linear-gradient(90deg, transparent 0 39px, #ffffff10 39px 40px); } .t-board .sp-art::before { content: "✕   ○   ✕\A ○   ➜   ✕\A ✕   ○   ○"; white-space: pre; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; font: 700 64px/1.3 var(--display, system-ui); color: #ffffff26; animation: chalk 3s ease-in-out infinite alternate; } @keyframes chalk { to { transform: scale(1.06) rotate(-1deg); color: #ffffff40; } }
+.t-trophy { background: radial-gradient(circle at 50% 40%, #6b4a00, #1a1203 70%); } .t-trophy .sp-art::before { content: ""; position: absolute; left: 50%; top: 40%; width: 900px; height: 900px; margin: -450px; background: conic-gradient(#ffd34e44, transparent 12deg, #ffd34e44 24deg, transparent 36deg, #ffd34e44 48deg, transparent 60deg, #ffd34e44 72deg, transparent 84deg, #ffd34e44 96deg, transparent 108deg, #ffd34e44 120deg, transparent 132deg, #ffd34e44 144deg, transparent 156deg, #ffd34e44 168deg, transparent 180deg, #ffd34e44 192deg, transparent 204deg, #ffd34e44 216deg, transparent 228deg, #ffd34e44 240deg, transparent 252deg, #ffd34e44 264deg, transparent 276deg, #ffd34e44 288deg, transparent 300deg, #ffd34e44 312deg, transparent 324deg, #ffd34e44 336deg, transparent 348deg); animation: spin 18s linear infinite; mask-image: radial-gradient(circle, #000 5%, transparent 60%); } .t-trophy .sp-art::after { content: "🏆"; position: absolute; left: 50%; top: 14%; transform: translateX(-50%); font-size: 90px; animation: bob 2s ease-in-out infinite; } @keyframes spin { to { transform: rotate(360deg); } } @keyframes bob { 50% { transform: translateX(-50%) translateY(-12px) scale(1.06); } }
+.t-glitch { background: #07040f; } .t-glitch .sp-art { background: repeating-linear-gradient(0deg, #ffffff08 0 2px, transparent 2px 4px); } .t-glitch .sp-art::before { content: ""; position: absolute; left: 0; right: 0; height: 18%; top: 20%; background: linear-gradient(90deg, #00f5ff33, #ff00c833); animation: scan 2.4s steps(14) infinite; } @keyframes scan { to { top: 90%; } } .t-glitch .sp-brand { animation: glitch 1.1s steps(2) infinite; text-shadow: 3px 0 #ff00c8, -3px 0 #00f5ff; } @keyframes glitch { 25% { transform: translate(3px, -2px); } 50% { transform: translate(-4px, 2px) skewX(6deg); } 75% { transform: translate(2px, 1px); } }
+@media (prefers-reduced-motion: reduce) { .splash * , .splash *::before, .splash *::after { animation: none !important; } .sp-bar i { width: 100%; } }
+.av { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 35%, var(--surface2)), var(--surface2)); border: 2px solid var(--line); flex: none; font-weight: 800; }
+.av img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; } .av img.avc { object-fit: contain; padding: 14%; background: #fff; } .av-xl { width: 96px; height: 96px; font-size: 48px; } .av-sm { width: 40px; height: 40px; font-size: 20px; } .av-xs { width: 22px; height: 22px; font-size: 12px; margin-right: 4px; } .av-md { width: 56px; height: 56px; font-size: 28px; } .avl { font: 800 1em var(--display); }
+.pfhead { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; } .pfid { flex: 1; min-width: 220px; } .pfid h1 { font-size: clamp(28px, 5vw, 44px); } .pfchips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; } .chip2 { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; background: var(--surface2); border: 1px solid var(--line); font-size: 13px; font-weight: 700; } .chip2 b { color: var(--accent); }
+.pfgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; } #profilePage { display: flex; flex-direction: column; gap: 14px; } #profilePage h3 { font-size: 20px; margin-bottom: 8px; } .pfl { display: block; margin: 14px 0 6px; font: 700 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.avgrid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 190px; overflow: auto; padding: 4px; } .avopt { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface2); font-size: 24px; cursor: pointer; overflow: hidden; padding: 0; display: inline-flex; align-items: center; justify-content: center; transition: transform .15s ease, border-color .2s; } .avopt:hover { transform: scale(1.1); border-color: var(--accent); } .avopt.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); } .avopt img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; } .avopt img.avc { padding: 10%; background: #fff; }
+#profilePage input, #profilePage select { padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 15px var(--sans, system-ui); min-width: 0; flex: 1; width: 100%; } .frow { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface2); }
+.elochart { width: 100%; height: auto; color: var(--ink); } .splgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; } .splc { border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); background: var(--surface2); opacity: .55; filter: grayscale(.8); } .splc.on { opacity: 1; filter: none; border-color: var(--accent); } .splc small { font: 700 11px var(--mono); text-transform: uppercase; } .splc small.r-rare { color: #5b9bff; } .splc small.r-legendary { color: #ffb300; } .splc small.r-uncommon { color: #38d27c; }
 </style>
 
+<div id="splash" class="splash t-pitch" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div>
+<script>
+/* loading screens: five themes, some rarer than others; the page records which you have seen (see finishSplash) */
+const SPLASHES = [{ id: "pitch", name: "Night Match", rar: "Common", w: 40 }, { id: "lights", name: "Floodlights", rar: "Common", w: 30 }, { id: "board", name: "Tactics Board", rar: "Uncommon", w: 16 }, { id: "trophy", name: "Golden Hour", rar: "Rare", w: 10 }, { id: "glitch", name: "Glitch FC", rar: "Legendary", w: 4 }];
+const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as the clues arrive.", "Hard counts 1.4x and Elite ball knowledge counts 2x on your solo scores.", "In two-player mode, player 1 buzzes with A and player 2 with L.", "Public Ranked lobbies change your Elo; private code rooms never do.", "Press Enter to submit: near matches and typos are accepted.", "Elite asks only about the obscure players and the smaller clubs.", "Club roulette: a wrong name, a repeat or a timeout loses the round.", "Tic-tac-toe has categories for managers, league titles and cup winners.", "Every badge in Badge blur is checked by eye. Names are not hidden, so look at the shapes.", "Your progress saves to your account automatically after every round.", "There are four loading screens you will not see every time. Collect them all.", "The model has never seen the matches you predict. Can you beat it?", "Where did they finish? gets harder fast on Elite: you get one place of margin.", "Invite a friend with a link: create a room and copy it.", "Friends see your Elo and your favourite player and team.", "Come back every day: streaks fill the calendar on your profile.", "Easy only asks about superstars and the biggest clubs.", "Market value: write your number and the closest guess wins the round.", "Spot the upset: the model's least likely result is hiding in five real matches.", "Daily 5 is the same for everyone today. Compare with a friend.", "A wrong buzz costs 150 points, so be sure.", "Unlock achievements for the odd things: night owl, hat-trick, speed demon.", "You can change your profile picture to any star player or club badge.", "Data about players stops in July 2026, so some recent transfers are missing."];
+(function () { let r = Math.random() * 100, pick = SPLASHES[0]; for (const s of SPLASHES) { if (r < s.w) { pick = s; break; } r -= s.w; } window.__sp = pick; window.__spT0 = performance.now(); const el = document.getElementById("splash"); el.className = "splash t-" + pick.id; document.getElementById("spName").textContent = pick.name; const rr = document.getElementById("spRar"); rr.textContent = pick.rar; rr.className = "sp-rar r-" + pick.rar.toLowerCase(); document.getElementById("spTip").textContent = SPLASH_TIPS[Math.floor(Math.random() * SPLASH_TIPS.length)]; })();
+</script>
 <canvas id="fx" aria-hidden="true"></canvas>
 <div class="wash" id="wash" aria-hidden="true"></div>
 <div class="wrap">
@@ -525,6 +558,7 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
     <div class="worlds" id="worlds"></div>
   </section>
 
+  <section id="profilePage" hidden></section>
   <section id="league" hidden>
     <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
     <div class="lhead">
@@ -536,7 +570,7 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 16:19 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 16:25 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -720,13 +754,14 @@ function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette"];
 function route(ev) {
   const h = location.hash.slice(1);
-  stopReplay(); stopTheatre(); resetGames();
+  stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
   const jm = /^join-([A-Za-z]{4})-([a-z]+)$/.exec(h);
   if (jm) { const gm = jm[2] === "number" ? "value" : jm[2]; S.mode = "games"; S.room = "play"; S.game = GAME_IDS.includes(gm) ? gm : null; openLeague("ALL", ev); if (S.game) setTimeout(() => { openOnline(jm[2]); joinRoomCode(jm[1].toUpperCase()); }, 150); return; }
   if (h === "") return showHome(ev);
   if (h === "lab") return showLab(ev);
+  if (h === "profile") return showProfile(ev);
   let mode = null, rest = h;
   if (h === "games") { mode = "games"; rest = "all-leagues"; } else if (h.startsWith("games-")) { mode = "games"; rest = h.slice(6); } else if (h.startsWith("lab-")) { mode = "lab"; rest = h.slice(4); }
   const slug = Object.keys(BYSLUG).find((x) => rest === x || rest.startsWith(x + "-"));
@@ -1363,6 +1398,27 @@ const ACH = [
   ["captain", "Captain's armband", "Reach the Captain rank"],
   ["quizmaster", "Quizmaster", "Score 3,500 or more in a solo quiz"],
   ["tttwin", "Three in a row", "Beat the computer at football tic-tac-toe"],
+  ["splash_all", "Loading screen collector", "See all five loading screens"],
+  ["splash_rare", "Lucky load", "See a rare or legendary loading screen"],
+  ["splash_leg", "Glitch in the matrix", "See the legendary loading screen"],
+  ["first_buzz", "First buzz", "Get your first quiz answer right"],
+  ["speed", "Speed demon", "Answer a quiz in the first few seconds (950 points or more)"],
+  ["elite_win", "Elite mind", "Get a quiz answer right on Elite ball knowledge"],
+  ["hat3", "Hat-trick", "Three right in a row in a solo streak"],
+  ["streak10q", "Perfect ten", "Ten right in a row in a solo streak"],
+  ["night", "Night owl", "Play between midnight and 5am"],
+  ["early", "Early bird", "Play between 5am and 7am"],
+  ["social", "Friendly", "Add a friend"],
+  ["avatar", "Looking sharp", "Pick a profile picture"],
+  ["fav", "True colours", "Pick a favourite player and a favourite team"],
+  ["ranked_first", "Ranked debut", "Finish your first ranked match"],
+  ["ranked_win", "Winner winner", "Win a ranked match"],
+  ["ranked5", "Regular", "Finish five ranked matches"],
+  ["elo1200", "Rising", "Reach 1200 Elo"],
+  ["alldiff", "Every level", "Play a ballknowledge game on all four difficulty levels"],
+  ["rounds100", "Century", "Play 100 games"],
+  ["squad", "The whole squad", "Play all eight ballknowledge originals"],
+  ["curious", "Know thyself", "Open your profile"],
 ];
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const weekId = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = t.getUTCFullYear(), w = Math.ceil(((t - new Date(Date.UTC(y, 0, 1))) / 864e5 + 1) / 7); return y * 100 + w; };
@@ -1376,7 +1432,17 @@ function toast(html, kind = "") {
   const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t); setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3700);
 }
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
+const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette"];
+function award(id) { const p = prof(); if (p.ach[id]) return; unlock(p, id); saveProf(p); }
+function trackPlay(label) {
+  const p = prof(); label = label === "Write your number" ? "Market value" : label; p.rounds = (p.rounds || 0) + 1; p.played = { ...(p.played || {}) }; p.diffs = { ...(p.diffs || {}) };
+  if (BK_LABELS.includes(label)) { p.played[label] = 1; p.diffs[S.diff] = 1; }
+  const hr = new Date().getHours(); if (hr < 5) unlock(p, "night"); else if (hr < 7) unlock(p, "early");
+  if (p.rounds >= 100) unlock(p, "rounds100"); if (BK_LABELS.every((l) => p.played[l])) unlock(p, "squad"); if (["easy", "medium", "hard", "elite"].every((d) => p.diffs[d])) unlock(p, "alldiff");
+  saveProf(p);
+}
 function reward(xp, label, mutate) {
+  trackPlay(label);
   const p = prof(), before = levelOf(p.xp).i; p.xp += xp; p.days[todayKey()] = (p.days[todayKey()] || 0) + 1;
   if (mutate) mutate(p);
   const st = dayStreak(p); if (st >= 3) unlock(p, "flame3"); if (st >= 7) unlock(p, "flame7");
@@ -1412,13 +1478,22 @@ function afterUpset(ok, prob, streak, lg) { reward(10 + (ok ? 15 + 5 * Math.min(
 function afterTable(d) { const beat = d.youErr < d.modErr; reward(60 + (beat ? 40 : 0) + (d.youErr < d.lastErr ? 20 : 0), "Guess the table", (p) => { mark(p, d.lg, d.season); if (beat) unlock(p, "table"); }); Board.submit({ game: "table", league: d.lg, score: beat ? 1 : 0 }); }
 function afterHol(ok, streak, lg) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, lg, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
 
-function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; const a = $("#acctBtn"); if (a) { a.hidden = !!(Account.signedIn || Account.claude); a.textContent = Account.available ? "Sign in" : "Account"; } }
+function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `${p.avatar ? avatarHTML(p.avatar, "xs", p.nick) : ""}<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; const a = $("#acctBtn"); if (a) { a.hidden = !!(Account.signedIn || Account.claude); a.textContent = Account.available ? "Sign in" : "Account"; } }
 function calendarHTML(p) {
   const weeks = 12, today = new Date(), dow = (today.getUTCDay() + 6) % 7, cells = [];
   for (let w = weeks - 1; w >= 0; w--) for (let d = 0; d < 7; d++) { const off = w * 7 + (dow - d); const dt = new Date(today.getTime() - off * 864e5), key = dt.toISOString().slice(0, 10), n = off < 0 ? null : p.days[key] || 0; cells.push(`<i class="cal ${n == null ? "fut" : n === 0 ? "" : n < 3 ? "l1" : n < 6 ? "l2" : "l3"}" title="${key}: ${n || 0} games"></i>`); }
   return `<div class="calgrid">${cells.join("")}</div>`;
 }
-function openProfile() {
+function finishSplash() {
+  const sp = $("#splash"); if (!sp) return; const cur = window.__sp || { id: "pitch", rar: "Common" }, p = prof(); p.splashes = { ...(p.splashes || {}) }; const fresh = !p.splashes[cur.id]; p.splashes[cur.id] = (p.splashes[cur.id] || 0) + 1;
+  const n = Object.keys(p.splashes).length; if (fresh) { const el = $("#spNew"); if (el) el.textContent = `New! ${n} of ${SPLASHES.length} collected`; }
+  if (cur.rar === "Rare" || cur.rar === "Legendary") unlock(p, "splash_rare"); if (cur.rar === "Legendary") unlock(p, "splash_leg"); if (n >= SPLASHES.length) unlock(p, "splash_all"); saveProf(p);
+  const hide = () => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); };
+  $("#spSkip").addEventListener("click", hide); sp.addEventListener("click", hide);
+  setTimeout(hide, Math.max(300, 2100 - (performance.now() - (window.__spT0 || 0))));
+}
+function openProfile() { Snd.tick(); go("profile"); }
+function openProfileOld() {
   const p = prof(), lv = levelOf(p.xp), st = dayStreak(p), pl = allPlays(), t = totals(pl), won = Object.keys(p.ach).length;
   const pct2 = lv.to ? Math.min(100, ((p.xp - lv.from) / (lv.to - lv.from)) * 100) : 100;
   const ach = ACH.map(([id, n, d]) => `<div class="achv ${p.ach[id] ? "on" : ""}" title="${esc(d)}"><b>${p.ach[id] ? "★" : "☆"}</b><span>${esc(n)}</span><small>${esc(d)}</small></div>`).join("");
@@ -1528,7 +1603,7 @@ const Ranked = {
   stopLobby(quiet) { if (this.lt) { clearInterval(this.lt); this.lt = null; if (!quiet) this.rpc("lobby_close"); } },
   async report(mid, opp, res) {
     const before = this.elo; await this.rpc("report_match", { p_match: mid, p_opp: opp, p_result: res });
-    setTimeout(async () => { const now = await this.refresh(); if (now !== before) toast(`Rating ${now} (${now > before ? "+" : ""}${now - before})`); else if (res !== "draw") toast("Waiting for your opponent to confirm the result"); }, 2500);
+    setTimeout(async () => { const now = await this.refresh(); if (now !== before || res === "draw") { toast(`Rating ${now} (${now >= before ? "+" : ""}${now - before})`); award("ranked_first"); if (res === "win") award("ranked_win"); if (this.games >= 5) award("ranked5"); if (now >= 1200) award("elo1200"); } else toast("Waiting for your opponent to confirm the result"); }, 2500);
   },
 };
 function rankedEnd(ref, sc) {
@@ -1580,6 +1655,59 @@ async function renderBoards() {
   const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
   if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
   body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : '<div class="fine">No ranked matches yet. Play one in Ranked and be the first on the board.</div>';
+}
+
+
+/* ================= Profile page ================= */
+const AVATARS = ["⚽", "🥅", "🧤", "🏆", "👑", "🔥", "🦁", "🐐", "🎯", "🧠", "⚡", "🌟"];
+function avatarHTML(av, size = "md", nick = "") {
+  let inner = `<span class="avl">${esc((nick || "?")[0].toUpperCase())}</span>`;
+  if (av && av.startsWith("e:")) inner = `<span class="ave">${esc(av.slice(2))}</span>`;
+  else if (av && av.startsWith("h:")) { const h = (DATA.hero || []).find((x) => x.n === av.slice(2)); if (h) inner = `<img src="${h.img}" alt="">`; }
+  else if (av && av.startsWith("c:") && CREST[av.slice(2)]) inner = `<img class="avc" src="${CREST[av.slice(2)]}" alt="">`;
+  return `<span class="av av-${size}">${inner}</span>`;
+}
+function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); }
+function showProfile(ev) {
+  S.code = null; S.mode = null; setTheme("HOME", ev); $("#home").hidden = true; $("#lobby").hidden = true; $("#league").hidden = true; $("#profilePage").hidden = false; window.scrollTo(0, 0);
+  award("curious"); renderProfilePage();
+}
+function eloChart(rows) {
+  if (!rows || rows.length < 1) return '<div class="fine">No ranked matches yet. Play one in Ranked and your rating history will draw itself here.</div>';
+  const pts = [1000].concat(rows.map((r) => r.elo)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 320, H = 110, x = (i) => (pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * (W - 20) + 10), y = (v) => H - 14 - ((v - lo) / (hi - lo || 1)) * (H - 28);
+  const d = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" "), last = pts[pts.length - 1];
+  return `<svg class="elochart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history"><line x1="10" x2="${W - 10}" y1="${y(1000)}" y2="${y(1000)}" stroke="currentColor" stroke-opacity=".2" stroke-dasharray="3 4"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${i === pts.length - 1 ? 5 : 3}" fill="${i === pts.length - 1 ? "var(--accent)" : "var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}<text x="${W - 10}" y="12" text-anchor="end" font-size="11" fill="currentColor" opacity=".7">peak ${Math.max(...pts)} · now ${last}</text></svg>`;
+}
+async function renderProfilePage() {
+  const el = $("#profilePage"); if (!el) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p), won = Object.keys(p.ach).length, pct2 = lv.to ? Math.min(100, ((p.xp - lv.from) / (lv.to - lv.from)) * 100) : 100, signed = Account.signedIn && Board.mode === "rest";
+  const seen = p.splashes || {}, spl = SPLASHES.map((s) => `<div class="splc ${seen[s.id] ? "on" : ""} t-${s.id}"><b>${seen[s.id] ? esc(s.name) : "???"}</b><small class="r-${s.rar.toLowerCase()}">${s.rar}</small><span class="fine">${seen[s.id] ? `seen ${seen[s.id]}x` : "not seen yet"}</span></div>`).join("");
+  const ach = ACH.map(([id, n, d]) => `<div class="achv ${p.ach[id] ? "on" : ""}" title="${esc(d)}"><b>${p.ach[id] ? "★" : "☆"}</b><span>${esc(n)}</span><small>${esc(d)}</small></div>`).join("");
+  const favP = p.favP ? QZ.players.find((x) => x.id === +p.favP) : null;
+  const avs = AVATARS.map((e) => `<button type="button" class="avopt ${p.avatar === "e:" + e ? "on" : ""}" data-av="e:${e}" aria-label="Avatar ${e}">${e}</button>`).join("") + (DATA.hero || []).filter((h) => h.img).map((h) => `<button type="button" class="avopt ${p.avatar === "h:" + h.n ? "on" : ""}" data-av="h:${esc(h.n)}" aria-label="${esc(h.n)}"><img src="${h.img}" alt=""></button>`).join("") + (p.favT && CREST[p.favT] ? `<button type="button" class="avopt ${p.avatar === "c:" + p.favT ? "on" : ""}" data-av="c:${esc(p.favT)}" aria-label="${esc(p.favT)} badge"><img class="avc" src="${CREST[p.favT]}" alt=""></button>` : "");
+  const teams = Object.keys(QZ.clubs).filter((n) => CREST[n]).sort();
+  el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Profile</span></div></nav>
+  <div class="card pfhead">${avatarHTML(p.avatar, "xl", p.nick)}<div class="pfid"><h1>${esc(p.nick || "Guest")}</h1><div class="label">${esc(lv.name)} · ${p.xp} XP${lv.next ? ` · next: ${esc(lv.next)} at ${lv.to}` : " · top rank"}</div><div class="xpbar"><i style="width:${pct2}%"></i></div>
+    <div class="pfchips"><span class="chip2"><b class="num" id="pfElo">${signed ? Ranked.elo : "–"}</b> Elo</span><span class="chip2"><b class="num">${st}</b> day streak</span><span class="chip2"><b class="num">${won}/${ACH.length}</b> achievements</span>${favP ? `<span class="chip2">⭐ ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}</div></div></div>
+  <div class="pfgrid"><div class="card"><h3>Edit profile</h3>
+    ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
+    <label class="pfl">Profile picture</label><div class="avgrid">${avs}</div>
+    <label class="pfl">Favourite player</label><div class="row"><input id="pfPlayer" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${favP ? esc(favP.n) : "Search a player"}" aria-label="Favourite player">${favP ? '<button class="btn ghost" id="pfPlayerClear" type="button">Clear</button>' : ""}</div><div id="pfPSug" class="sugs"></div>
+    <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></div>
+  <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
+  <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx"><div class="fine">Loading…</div></div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
+  <div class="card"><h3>Loading screens <span class="fine">${Object.keys(seen).length} of ${SPLASHES.length} collected</span></h3><div class="splgrid">${spl}</div></div>
+  <div class="card"><h3>Achievements <span class="fine">${won} of ${ACH.length}</span></h3><div class="achgrid">${ach}</div></div>
+  <div class="card"><h3>Streak calendar</h3>${calendarHTML(p)}<div class="fine">Each square is a day; brighter means more games. Last 12 weeks.</div></div>
+  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button></div></div>`;
+  if (!signed) return;
+  Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) e.textContent = Ranked.elo; });
+  Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
+  paintFriends();
+}
+async function paintFriends() {
+  const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
+  if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
+  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b> <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "⭐ " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div>`).join("") : '<div class="fine">No friends yet. Add someone by their display name.</div>';
 }
 
 /* ================= Challenge a friend ================= */
@@ -1679,7 +1807,7 @@ addEventListener("pagehide", () => { Account.flush(); });
 function mergeProgress(cloud) {
   const mine = store.items; let changed = false;
   Object.entries(cloud || {}).forEach(([k, v]) => {
-    if (k === "profile") { const a = prof(), b = v || {}; const m = { ...a, ...b, xp: Math.max(a.xp || 0, b.xp || 0), ach: { ...(b.ach || {}), ...a.ach }, leagues: { ...(b.leagues || {}), ...a.leagues }, seasons: { ...(b.seasons || {}), ...a.seasons }, nick: a.nick || b.nick || "", board: a.board || b.board || false, days: {} }; new Set([...Object.keys(a.days), ...Object.keys(b.days || {})]).forEach((d) => { m.days[d] = Math.max(a.days[d] || 0, (b.days || {})[d] || 0); }); mine.profile = m; changed = true; }
+    if (k === "profile") { const a = prof(), b = v || {}; const m = { ...a, ...b, xp: Math.max(a.xp || 0, b.xp || 0), ach: { ...(b.ach || {}), ...a.ach }, splashes: { ...(b.splashes || {}), ...(a.splashes || {}) }, played: { ...(b.played || {}), ...(a.played || {}) }, diffs: { ...(b.diffs || {}), ...(a.diffs || {}) }, rounds: Math.max(a.rounds || 0, b.rounds || 0), avatar: a.avatar || b.avatar, favP: a.favP || b.favP, favT: a.favT || b.favT, leagues: { ...(b.leagues || {}), ...a.leagues }, seasons: { ...(b.seasons || {}), ...a.seasons }, nick: a.nick || b.nick || "", board: a.board || b.board || false, days: {} }; new Set([...Object.keys(a.days), ...Object.keys(b.days || {})]).forEach((d) => { m.days[d] = Math.max(a.days[d] || 0, (b.days || {})[d] || 0); }); mine.profile = m; changed = true; }
     else if (!(k in mine)) { mine[k] = v; changed = true; }
   });
   if (changed) { saveLocal(); paintScore(); paintProfileBtn(); }
@@ -1873,7 +2001,7 @@ function wrongGuess(timedOut) {
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
   if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
-  S_.result = { winner, pts }; S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
+  S_.result = { winner, pts }; if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 function finishQuiz() {
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") rankedEnd(S_, S_.scores);
@@ -2001,7 +2129,7 @@ function numItem(scope) {
   const [n, f] = rnd(Object.entries(QZ.clubs).filter(([nm, fc]) => fc.value > 0 && (scope === "ALL" || fc.lg === scope))); return { type: "c", e: { n, f }, actual: f.value };
 }
 function renderValue() { if (S.num) return renderNumber(); if (S.vsolo) { S.vk = S.vk || rnd(["p", "c"]); return renderVH(S.vk); } renderNumber(); }
-function newNumber(mode) { S.num = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], phase: "setup" }; nextNumber(); }
+function newNumber(mode) { trackPlay("Market value"); S.num = { mode, scope: S.code, round: 0, rounds: 5, scores: mode === "duo" ? [0, 0] : [0], phase: "setup" }; nextNumber(); }
 function nextNumber() {
   const g = S.num; g.round++; g.item = numItem(g.scope); g.guesses = [null, null]; g.turn = 0; g.phase = "guess"; g.pts = [0, 0]; renderNumber();
 }
@@ -2039,7 +2167,7 @@ function rouClub() {
   const slice = S.diff === "easy" ? list.slice(0, th) : S.diff === "medium" ? list.slice(0, 2 * th) : S.diff === "hard" ? list.slice(th) : list.slice(2 * th);
   return rnd(slice.length ? slice : list)[0];
 }
-function newRoulette() { S.rou = { round: 0, rounds: 3, wins: [0, 0], phase: "play", used: [], names: [], msg: "" }; nextRoulette(); }
+function newRoulette() { trackPlay("Club roulette"); S.rou = { round: 0, rounds: 3, wins: [0, 0], phase: "play", used: [], names: [], msg: "" }; nextRoulette(); }
 function nextRoulette() { const r = S.rou; r.round++; r.club = rouClub(); r.used = []; r.names = []; r.turn = (r.round - 1) % 2; r.phase = "play"; r.msg = ""; renderRoulette(); }
 function renderRoulette() {
   const r = S.rou, who = ["Player 1", "Player 2"];
@@ -2097,7 +2225,7 @@ function tttGrid(scope) {
   }
   return null;
 }
-function newTTT(mode) {
+function newTTT(mode) { trackPlay("Football tic-tac-toe");
   const grid = tttGrid(S.code); if (!grid) { toast("Could not build a grid for this league. Try All leagues."); return; }
   S.ttt = { mode, grid, cells: Array(9).fill(null), used: new Set(), turn: 0, phase: "play", sel: null, winner: null, msg: "" }; renderTTT();
 }
@@ -2330,6 +2458,12 @@ document.addEventListener("click", (e) => {
   if (b.id === "rkCreate") { rankedStart($("#rkGame").value, $("#rkDiff").value, $("#rkVis").value === "pub"); return; }
   if (b.id === "rkJoinCode") { const c = ($("#rkCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } Snd.tick(); toast("Joining… the host's game appears when it connects"); resetGames(); S.rk = true; S.hubGroup = "ranked"; S.game = "ttt"; renderRoom(); openOnline("ttt"); joinRoomCode(c); return; }
   if (b.dataset.rkjoin) { const [c, g] = b.dataset.rkjoin.split("|"); Snd.tick(); rankedJoin(c, g); return; }
+  if (b.dataset.av) { const p = prof(); p.avatar = b.dataset.av; saveProf(p); award("avatar"); syncProfile(); renderProfilePage(); paintProfileBtn(); return; }
+  if (b.id === "pfPlayerClear") { const p = prof(); p.favP = ""; p.favPName = ""; saveProf(p); syncProfile(); renderProfilePage(); return; }
+  if (b.dataset.favp) { const x = QZ.players.find((q) => q.id === +b.dataset.favp); if (x) { const p = prof(); p.favP = x.id; p.favPName = x.n; if (p.favT) unlock(p, "fav"); saveProf(p); syncProfile(); renderProfilePage(); } return; }
+  if (b.id === "pfNickSave") { const v = ($("#pfNick").value || "").trim(), msg = $("#pfNickMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } Account.setNick(v).then((r) => { if (r && r.ok) { const p = prof(); p.nick = v; saveProf(p); renderProfilePage(); paintProfileBtn(); toast("Name saved"); } else $("#pfNickMsg").textContent = (r && r.error) || "That name is taken."; }); return; }
+  if (b.id === "pfFriendAdd") { const v = ($("#pfFriend").value || "").trim(), msg = $("#pfFriendMsg"); if (!v) return; Ranked.rpc("add_friend", { p_nick: v }).then((r) => { const m = { ok: "Added!", notfound: "Nobody has that display name.", self: "That is you.", already: "Already on your list.", full: "Your list is full (100).", auth: "Please sign in." }; msg.textContent = r === null ? "Could not reach the server (is schema_v3.sql installed?)." : m[r] || "Done."; if (r === "ok") { award("social"); $("#pfFriend").value = ""; paintFriends(); } }); return; }
+  if (b.dataset.unfriend) { Ranked.rpc("remove_friend", { p_nick: b.dataset.unfriend }).then(paintFriends); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
   if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
@@ -2441,11 +2575,13 @@ document.addEventListener("click", (e) => {
 function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; S.rou = null; }
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-diff]"); if (!b) return; S.diff = b.dataset.diff; try { localStorage.setItem("bk_diff", S.diff); } catch (err) { /* storage blocked */ } document.querySelectorAll("[data-diff]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.diff === S.diff)); const n = $("#diffNote"); if (n) n.textContent = DIFFNOTE[S.diff]; Snd.tick(); });
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
+document.addEventListener("input", (e) => { if (e.target.id === "pfPlayer") { const box = $("#pfPSug"), list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-favp="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")}</small></button>`).join(""); } });
 document.addEventListener("input", (e) => { if (e.target.id === "rIn") { const box = $("#rSug"); if (!box) return; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
 document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
 document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "rIn") { e.preventDefault(); if (Net.role === "host" && S.rou.turn === 1) return; rouSubmit(null); } else if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {
   const t = e.target;
+  if (t.id === "pfTeam") { const p = prof(); p.favT = t.value; if (p.favP && p.favT) unlock(p, "fav"); saveProf(p); syncProfile(); renderProfilePage(); return; }
   if (t.id === "styleSel") { S.style = t.value; }
   else if (t.id === "raceSeasonSel") { S.raceSeason = t.value; renderRace(); }
   else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }
@@ -2458,6 +2594,6 @@ document.addEventListener("dragend", () => { dragIx = null; });
 document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });
 addEventListener("hashchange", () => route());
 
-renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore(); route();
+renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore(); route(); setTimeout(finishSplash, 300);
 </script>
 </html>

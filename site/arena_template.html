@@ -515,6 +515,10 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .avgrid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 190px; overflow: auto; padding: 4px; } .avopt { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface2); font-size: 24px; cursor: pointer; overflow: hidden; padding: 0; display: inline-flex; align-items: center; justify-content: center; transition: transform .15s ease, border-color .2s; } .avopt:hover { transform: scale(1.1); border-color: var(--accent); } .avopt.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); } .avopt img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; } .avopt img.avc { padding: 10%; background: #fff; }
 #profilePage input, #profilePage select { padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 15px var(--sans, system-ui); min-width: 0; flex: 1; width: 100%; } .frow { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface2); }
 .elochart { width: 100%; height: auto; color: var(--ink); } .splgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; } .splc { border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); background: var(--surface2); opacity: .55; filter: grayscale(.8); } .splc.on { opacity: 1; filter: none; border-color: var(--accent); } .splc small { font: 700 11px var(--mono); text-transform: uppercase; } .splc small.r-rare { color: #5b9bff; } .splc small.r-legendary { color: #ffb300; } .splc small.r-uncommon { color: #38d27c; }
+.reactbar { display: flex; gap: 8px; justify-content: center; margin-top: 12px; } .reactbar[hidden] { display: none; } .reactbar button { min-width: 44px; height: 44px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface2); font: 800 18px var(--display); cursor: pointer; color: var(--ink); transition: transform .12s; } .reactbar button:hover { transform: translateY(-3px) scale(1.1); } .reactbar button:active { transform: scale(.9); }
+.floater { position: fixed; bottom: 12%; z-index: 9000; font: 800 42px var(--display); pointer-events: none; animation: floatup 1.8s ease-out forwards; } @keyframes floatup { from { opacity: 1; transform: translateY(0) scale(.6); } to { opacity: 0; transform: translateY(-46vh) scale(1.5) rotate(12deg); } }
+.tour { position: fixed; inset: 0; z-index: 9500; } .tour .dim { position: absolute; inset: 0; background: #000a; } .tour .ring { position: absolute; border-radius: 16px; box-shadow: 0 0 0 9999px #000a, 0 0 0 3px var(--accent), 0 0 30px var(--accent); pointer-events: none; transition: all .3s ease; }
+.tour .tcard { position: absolute; left: 50%; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 16px; box-shadow: 0 20px 60px #000c; } .tour .tcard b { font: 800 22px var(--display); } .tour .tcard p { color: var(--muted); margin: 6px 0 12px; }
 </style>
 
 <div id="splash" class="splash t-pitch" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div>
@@ -528,12 +532,12 @@ const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as
 <div class="wash" id="wash" aria-hidden="true"></div>
 <div class="wrap">
   <div class="bar">
-    <button class="brand" id="brand" type="button" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
+    <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill" id="acctBtn" type="button">Sign in</button>
-    <button class="pill profilebtn" id="profileBtn" type="button" aria-label="Your profile, rank and achievements"></button>
-    <button class="pill" id="sndBtn" type="button" aria-label="Sound">Sound: soft</button>
+    <button class="pill profilebtn" id="profileBtn" type="button" title="Your profile, rank and achievements" aria-label="Your profile, rank and achievements"></button>
+    <button class="pill" id="sndBtn" type="button" title="Sound: off, soft or full" aria-label="Sound">Sound: soft</button>
   </div>
 
   <section id="home" hidden>
@@ -568,6 +572,7 @@ const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as
     <div class="scope" id="scope" role="group" aria-label="Choose a league"></div>
     <nav class="rooms" id="rooms" role="tablist" aria-label="Rooms"></nav>
     <div id="room"></div>
+    <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
   <div class="foot">
@@ -654,17 +659,19 @@ const Snd = (() => {
   const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
   const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
+  const vib = (p) => { try { if (level && navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } };
   return {
     get level() { return level; },
     cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); return ["off", "soft", "full"][level]; },
     unlock() { if (level) init(); },
     tick() { run((t) => noise(t, 0.035, 2600, 1800, 0.035, 2)); },
     hover() { run((t) => note(88, t, 0.05, "sine", 0.018)); },
-    lock() { run((t) => { note(43, t, 0.22, "sine", 0.16, -5); noise(t, 0.08, 400, 120, 0.05); note(67, t + 0.06, 0.12, "triangle", 0.06); }); },
+    lock() { vib(15); run((t) => { note(43, t, 0.22, "sine", 0.16, -5); noise(t, 0.08, 400, 120, 0.05); note(67, t + 0.06, 0.12, "triangle", 0.06); }); },
     whoosh() { run((t) => noise(t, 0.42, 300, 3200, 0.06, 0.8)); },
-    right() { run((t) => [72, 76, 79].forEach((n, i) => note(n, t + i * 0.09, 0.45, "triangle", 0.075))); },
-    wrong() { run((t) => { note(64, t, 0.3, "sine", 0.07, -2); note(60, t + 0.16, 0.42, "sine", 0.06, -1); }); },
-    win() { run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); }); },
+    right() { vib(18); run((t) => [72, 76, 79].forEach((n, i) => note(n, t + i * 0.09, 0.45, "triangle", 0.075))); },
+    wrong() { vib([40, 50, 40]); run((t) => { note(64, t, 0.3, "sine", 0.07, -2); note(60, t + 0.16, 0.42, "sine", 0.06, -1); }); },
+    win() { vib([30, 40, 70]); run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); noise(t + 0.1, 1.3, 500, 1700, 0.035, 0.5); }); },
+    horn() { vib([60, 40, 120]); run((t) => { [55, 59, 62].forEach((n) => note(n, t, 0.9, "sawtooth", 0.035)); [67, 71, 74].forEach((n) => note(n, t + 0.02, 0.9, "square", 0.018)); noise(t + 0.15, 1.8, 450, 1500, 0.045, 0.45); }); },
     league(code) { run((t) => { const sc = SCALES[code], r = ROOT[code]; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code], 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
     back() { run((t) => { note(67, t, 0.22, "sine", 0.07); note(60, t + 0.11, 0.3, "sine", 0.07); }); },
     goal() { run((t) => { noise(t, 0.5, 400, 2600, 0.07, 0.7); [67, 71, 74, 79].forEach((n, i) => note(n, t + 0.05 + i * 0.07, 0.5, "triangle", 0.07)); }); },
@@ -840,10 +847,10 @@ function paintScore() {
   if (!S.code) return;
   const sb = $("#scorebox"); sb.hidden = !(S.mode === "games" && S.room === "play" && (S.game ? MODEL_IDS.includes(S.game) : S.hubGroup === "model"));
   const pl = playsOf(S.code), t = totals(pl), st = streaks(pl);
-  $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
+  $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points, you vs the model"], [`${t.yr} v ${t.mr}`, `right results, you vs the model`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboard"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
+  const rooms = S.mode === "games" ? [["play", "🎮 Games"], ["boards", "🏆 Leaderboard"]] : S.code === "ALL" ? [["review", "📊 How good is it?"], ["about", "💡 How it works"]] : [["race", "🏁 Title race"], ["replay", "⏪ Replay a season"], ["review", "📊 How good is it?"], ["about", "💡 How it works"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
 function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); paintScore(); renderCrumbs(); }
@@ -859,7 +866,7 @@ function renderCall() {
   const form = clubMs.slice(-5).map((r) => { const m = r.m, own = m[1] === st.club ? m[3] - m[4] : m[4] - m[3]; return own > 0 ? "W" : own === 0 ? "D" : "L"; });
   const clubFresh = freshPool(c).filter((r) => r.m[1] === st.club || r.m[2] === st.club);
   const starCard = `<div class="starwatch">${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : badge(st.club)}<div><div class="label">Star to watch</div><h3>${esc(st.name)}</h3><div class="row" style="gap:8px">${badge(st.club, "sm")}<span class="fine">${esc(st.role)} · ${esc(st.club)}</span></div><div class="fine">The model got ${recent.filter((r) => hit(r.m)).length} of the last ${recent.length} ${esc(st.club)} matches right</div><div style="margin-top:6px">${formHTML(form)}</div></div><button class="btn" id="goStar" type="button" ${clubFresh.length ? "" : "disabled"}>Call a ${esc(st.club)} match</button></div>`;
-  $("#room").innerHTML = (c === "ALL" ? "" : starCard) + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match appears with the result hidden. Lock in your call, then see the model's call and what really happened. One point for the right result, two more for the exact score.</p>
+  $("#room").innerHTML = (c === "ALL" ? "" : starCard) + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match, result hidden. Lock in your call, then see the model's call and the real score. Right result: 1 point. Exact score: 2 more.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
     <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last ten years, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
@@ -985,7 +992,7 @@ function paintReplay(first) {
   const zone = (i) => (i < 4 ? "z-top" : i < 7 ? "z-eu" : i >= N - 3 ? "z-bot" : "");
   const real = `<div class="tcol"><div class="label" style="margin-bottom:6px">Real table</div><table><thead><tr><th>#</th><th>Club</th><th>Pts</th><th title="Places above (up) or below (down) where the model's table has the club">vs model</th></tr></thead><tbody>${tab.map((q, i) => { const mv = first || n === 0 ? 0 : prev.indexOf(q.t) - i, d = n === 0 ? 0 : mrank[q.t] - (i + 1); return `<tr class="${zone(i)} ${mv ? "moved" : ""}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}<span class="cn">${esc(q.t)}</span>${mv ? `<span class="${mv > 0 ? "up" : "down"} num">${mv > 0 ? "▲" : "▼"}${Math.abs(mv)}</span>` : ""}</td><td class="num"><b>${q.pts}</b></td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d === 0 ? "=" : (d > 0 ? "▲" : "▼") + Math.abs(d)}</td></tr>`; }).join("")}</tbody></table></div>`;
   const model = `<div class="tcol"><div class="label" style="margin-bottom:6px">Model table <span style="text-transform:none;letter-spacing:0">(expected points)</span></div><table><thead><tr><th>#</th><th>Club</th><th>xPts</th><th title="Real points minus expected points: positive means the club has got more than the model expected">luck</th></tr></thead><tbody>${mod.map((q, i) => { const lk = q.pts - q.x; return `<tr class="${zone(i)}"><td class="num">${i + 1}</td><td>${badge(q.t, "sm")}<span class="cn">${esc(q.t)}</span></td><td class="num"><b>${q.x.toFixed(1)}</b></td><td class="num ${n === 0 ? "" : lk > 0.5 ? "up" : lk < -0.5 ? "down" : ""}">${n === 0 ? "" : (lk > 0 ? "+" : "") + lk.toFixed(1)}</td></tr>`; }).join("")}</tbody></table></div>`;
-  $("#rpTable").innerHTML = `<div class="tpair">${real}${model}</div><p class="fine" style="margin-top:8px">Left: the real table. Right: what the table would look like if every match had gone exactly as the model's probabilities said. "luck" is real points minus expected points.</p>`;
+  $("#rpTable").innerHTML = `<div class="tpair">${real}${model}</div><p class="fine" style="margin-top:8px">Left: the real table. Right: the table if every match had followed the model's odds.</p>`;
   $("#rpPlay").textContent = S.replay.timer ? "Pause" : (r >= R ? "Replay" : "Play");
 }
 function stopReplay() { if (S.replay.timer) { clearInterval(S.replay.timer); S.replay.timer = null; } }
@@ -1016,13 +1023,13 @@ function renderRace() {
   const N = rows.length, heat = S.raceHeat ? [...rows].sort((a, b) => a.mean - b.mean).reverse().slice(0, Math.min(10, N)) : [];
   const seasonOpts = [live.season, ...pasts].map((x) => `<option value="${x}" ${x === S.raceSeason ? "selected" : ""}>${x}${x === live.season ? " (live)" : ""}</option>`).join("");
   const asof = isLive ? `As of ${fmtDate(live.as_of)}: ${live.played} matches played, ${live.remaining} to go, ${live.n_sims.toLocaleString()} simulated finishes.` : `Odds after matchday ${S.raceCp} of ${P.rounds}, using the model's real pre-match probabilities for the matches still to come (optimistic: they used form that had not happened yet at that point). ${fin ? "The last column is how the season really ended." : ""}`;
-  $("#room").innerHTML = `<div class="card"><h2>Title race</h2><p class="sub">The model plays out the rest of the season thousands of times, match by match, and counts how often each club finishes where. ${asof}</p>
+  $("#room").innerHTML = `<div class="card"><h2>Title race</h2><p class="sub">The model plays out the rest of the season thousands of times and counts where each club finishes.</p>
     <div class="ctl" style="margin-top:12px"><select id="raceSeasonSel" aria-label="Season">${seasonOpts}</select>
       ${isLive ? "" : `<span class="seg" role="group" aria-label="Checkpoint">${["10", "19", "28"].map((k) => `<button type="button" class="pill" data-cp="${k}" aria-pressed="${S.raceCp === k}" style="${S.raceCp === k ? "border-color:var(--accent);color:var(--accent)" : ""}">After MD ${k}</button>`).join(" ")}</span>`}
       <button type="button" class="pill" id="heatBtn" aria-pressed="${S.raceHeat}">${S.raceHeat ? "Show the odds table" : "Show finishing positions"}</button></div>
     <div class="tiles" style="margin-top:14px">${card("Title favourites", top, "title", "var(--accent)")}${card(`Fighting for the last Europe place (top ${euN})`, euCut, "eu", "var(--away)")}${card(`Relegation, most at risk (bottom ${relN})`, danger, "drop", "var(--bad)")}</div>
     ${S.raceHeat ? `<div class="heatwrap"><div class="heat" style="--n:${N}">${heat.map((r) => `<div class="hrow"><span class="hn">${badge(r.team, "sm")}${esc(r.team)}</span>${r.dist.map((v, k) => `<span class="hc" style="--a:${Math.min(1, v * 2.6).toFixed(2)}" title="${esc(r.team)} finishes ${k + 1}: ${pct(v)}">${v >= 0.05 ? Math.round(v * 100) : ""}</span>`).join("")}</div>`).join("")}<div class="hrow hhead"><span></span>${rows.map((_, k) => `<span class="hc">${k + 1}</span>`).join("")}</div></div><p class="fine">Cell: chance (%) of finishing in that position. Top ${Math.min(10, N)} clubs by expected points.</p></div>` : `<div class="tablewrap"><table class="race"><thead><tr><th>Now</th><th>Club</th><th>Pts</th><th style="text-align:left">Expected final points (10th to 90th percentile)</th><th>Title</th><th>Europe</th><th>Drop</th>${fin ? "<th>Real</th>" : ""}</tr></thead><tbody>${rows.map((r) => `<tr><td class="num">${r.now}</td><td>${badge(r.team, "sm")}${esc(r.team)}</td><td class="num">${r.pts}<span class="fine"> (${r.played})</span></td><td style="text-align:left"><div class="rng"><i style="left:${((r.p10 - minP) / span * 100).toFixed(1)}%;width:${Math.max(2, (r.p90 - r.p10) / span * 100).toFixed(1)}%"></i><b style="left:${((r.mean - minP) / span * 100).toFixed(1)}%"></b></div><span class="num fine">${r.mean.toFixed(0)}</span></td>${cell(r.title, "var(--accent)")}${cell(r.eu, "var(--away)")}${cell(r.drop, "var(--bad)")}${fin ? `<td class="num"><b>${fin[r.team]}</b></td>` : ""}</tr>`).join("")}</tbody></table></div>`}
-    <p class="fine" style="margin-top:10px">These are probabilities from a model that has never seen injuries, transfers or news, and a real title race has more late surprises than a simulation. Ties on points are split by goal difference then goals scored.</p></div>`;
+    <p class="fine" style="margin-top:10px">These odds come from a model that can't see injuries, transfers or news, so real title races have more late twists. Ties on points are split by goal difference, then goals scored.</p></div>`;
 }
 
 
@@ -1150,7 +1157,7 @@ function statsCard(c, m) {
 
 /* ================= The games hub ================= */
 const GAMES = [
-  { id: "call", name: "Call it", tag: "One real match. Lock your call, watch the model's match play out minute by minute, then see what really happened." },
+  { id: "call", name: "Call it", tag: "One real match. Lock in your call, watch the model's match play out, then see what really happened." },
   { id: "daily", name: "Daily 5", tag: "The same five matches for everyone today. Beat the model and share your result." },
   { id: "matchday", name: "Matchday", tag: "Call a whole round at once and watch the results land one by one." },
   { id: "upset", name: "Spot the upset", tag: "Five real results. Which one did the model think was least likely?" },
@@ -1241,7 +1248,7 @@ function renderMatchday() {
   const c = S.code;
   if (!S.md) {
     const free = mdList(c).filter((x) => !store.items[mdKey(x.c, x.season, x.n)]);
-    $("#room").innerHTML = `<div class="card">${gamesBar("Matchday")}<p class="sub">A whole round of real matches. Pick a result for each, lock them all, and the real scores land one by one against the model's calls.</p>
+    $("#room").innerHTML = `<div class="card">${gamesBar("Matchday")}<p class="sub">A whole round of real matches. Pick a result for each, lock them in, and watch the real scores land one by one.</p>
       <div class="row" style="margin-top:14px"><button class="btn" id="mdRandom" type="button" ${free.length ? "" : "disabled"}>Random matchday</button>
       <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
       <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${c === "ALL" ? "all five leagues and ten seasons" : poolSeasons(c).length + " seasons"}.</p></div>`;
@@ -1319,7 +1326,7 @@ function renderTableGame() {
   const c = S.tab ? S.tab.c : S.code, L = lgOf(c);
   if (!S.tab) {
     const choices = tabChoices(S.code), done = (x) => store.items[tabKey(x.c, x.season)];
-    $("#room").innerHTML = `<div class="card">${gamesBar("Guess the table")}<p class="sub">Predict a whole season's final table. You start from last season's table and move clubs up or down; drag a row or use the arrows. The model's table is simply the points it expected from its pre-match probabilities over the whole season. Whoever is closer wins. Fair warning: just repeating last season is a hard baseline to beat.</p>
+    $("#room").innerHTML = `<div class="card">${gamesBar("Guess the table")}<p class="sub">Rebuild a final table. Start from last season's, then drag clubs up or down (or use the arrows). Closest to the real table wins. Tip: repeating last year is a tough baseline to beat.</p>
       <div class="row" style="margin-top:14px"><select id="tbSeason" aria-label="Season">${choices.slice().reverse().map((x) => `<option value="${x.c}|${x.season}">${S.code === "ALL" ? lgOf(x.c).name + " " : ""}${x.season}${done(x) ? " ✓" : ""}</option>`).join("")}</select><button class="btn" id="tbGo" type="button">Start</button><button class="btn ghost" id="tbRandom" type="button">Surprise me</button></div></div>`;
     return;
   }
@@ -1484,11 +1491,25 @@ function calendarHTML(p) {
   for (let w = weeks - 1; w >= 0; w--) for (let d = 0; d < 7; d++) { const off = w * 7 + (dow - d); const dt = new Date(today.getTime() - off * 864e5), key = dt.toISOString().slice(0, 10), n = off < 0 ? null : p.days[key] || 0; cells.push(`<i class="cal ${n == null ? "fut" : n === 0 ? "" : n < 3 ? "l1" : n < 6 ? "l2" : "l3"}" title="${key}: ${n || 0} games"></i>`); }
   return `<div class="calgrid">${cells.join("")}</div>`;
 }
+
+/* ---------- first-time tour ---------- */
+const TOUR = [["Welcome to ballknowledge", "Quiz yourself on players and clubs, or try to beat a prediction model. Here's a 20-second look around.", null], ["Games", "ballknowledge originals, Beat the Model and Ranked all live here.", "#doors .door:nth-child(1)"], ["Our model", "Title-race odds, season replays and how the model works.", "#doors .door:nth-child(2)"], ["Your profile", "Pick a picture, add friends, and see your Elo and achievements.", "#profileBtn"], ["Sound", "Tap to cycle through off, soft and full sound.", "#sndBtn"]];
+function startTour() {
+  let i = 0; const old = $("#tour"); if (old) old.remove();
+  const el = document.createElement("div"); el.id = "tour"; el.className = "tour"; document.body.appendChild(el);
+  const end = () => { el.remove(); try { localStorage.setItem("bk_tour", "1"); } catch (e) { /* blocked */ } };
+  const show = () => {
+    const [h, txt, sel] = TOUR[i], tgt = sel && $(sel), r = tgt ? tgt.getBoundingClientRect() : null;
+    el.innerHTML = `${r ? `<i class="ring" style="left:${r.left - 6}px;top:${r.top - 6}px;width:${r.width + 12}px;height:${r.height + 12}px"></i>` : '<i class="dim"></i>'}<div class="tcard" style="${r && r.top > innerHeight / 2 ? "top:16px" : "bottom:16px"}"><b>${esc(h)}</b><p>${esc(txt)}</p><div class="row"><span class="fine">${i + 1} of ${TOUR.length}</span><span class="spacer"></span><button type="button" class="btn ghost" data-tour="skip">Skip</button>${i ? '<button type="button" class="btn ghost" data-tour="back">Back</button>' : ""}<button type="button" class="btn" data-tour="next">${i === TOUR.length - 1 ? "Done" : "Next"}</button></div></div>`;
+    el.querySelectorAll("[data-tour]").forEach((b) => b.addEventListener("click", () => { Snd.tick(); const a = b.dataset.tour; if (a === "skip") end(); else if (a === "back") { i--; show(); } else if (i === TOUR.length - 1) end(); else { i++; show(); } }));
+  };
+  show();
+}
 function finishSplash() {
   const sp = $("#splash"); if (!sp) return; const cur = window.__sp || { id: "pitch", rar: "Common" }, p = prof(); p.splashes = { ...(p.splashes || {}) }; const fresh = !p.splashes[cur.id]; p.splashes[cur.id] = (p.splashes[cur.id] || 0) + 1;
   const n = Object.keys(p.splashes).length; if (fresh) { const el = $("#spNew"); if (el) el.textContent = `New! ${n} of ${SPLASHES.length} collected`; }
   if (cur.rar === "Rare" || cur.rar === "Legendary") unlock(p, "splash_rare"); if (cur.rar === "Legendary") unlock(p, "splash_leg"); if (n >= SPLASHES.length) unlock(p, "splash_all"); saveProf(p);
-  const hide = () => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); };
+  const hide = () => { sp.classList.add("out"); setTimeout(() => { sp.remove(); try { if (!localStorage.getItem("bk_tour") && !location.hash.replace("#", "")) startTour(); } catch (e) { /* blocked */ } }, 700); };
   $("#spSkip").addEventListener("click", hide); sp.addEventListener("click", hide);
   setTimeout(hide, Math.max(300, 2100 - (performance.now() - (window.__spT0 || 0))));
 }
@@ -1508,8 +1529,8 @@ function openProfileOld() {
     <div class="row" style="margin-top:16px"><button class="btn" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="modalClose" type="button">Close</button></div>`);
 }
 function boardSettingsHTML(p) {
-  if (Board.mode === "none") return `<p class="fine">Global leaderboards switch on when the online database is connected (see the README). Until then your results stay on this device.</p>`;
-  if (!Account.signedIn) return `<p class="fine">Leaderboards need an account, so scores belong to a real person. Sign in or create a free account above to join.</p>`;
+  if (Board.mode === "none") return `<p class="fine">The leaderboard needs the online database, which isn't connected in this build. Your results stay on this device.</p>`;
+  if (!Account.signedIn) return `<p class="fine">Sign in or create a free account to appear on the leaderboard.</p>`;
   return `<p class="fine">Your display name, shown in lobbies and on the leaderboard. Your progress saves to your account automatically.</p><div class="row"><input id="nickIn" maxlength="16" placeholder="Nickname (3 to 16 letters or numbers)" value="${esc(p.nick || "")}" aria-label="Nickname"><button class="btn" id="nickSave" type="button">${p.nick ? "Update nickname" : "Save nickname"}</button>${p.board ? '<button class="btn ghost" id="nickLeave" type="button">Stop sharing scores</button>' : ""}</div><div class="fine" id="nickMsg"></div>`;
 }
 function modal(html) {
@@ -1623,7 +1644,7 @@ function renderRanked() {
   if (!Account.signedIn) { $("#room").innerHTML = `<div class="card"><h2>Ranked</h2><p class="sub">Play real opponents, win Elo and climb the leaderboard. You need a free account so your rating belongs to you.</p><div class="row" style="margin-top:12px"><button class="btn" id="rkSign" type="button">Create an account or sign in</button></div></div>`; return; }
   const p = prof();
   $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Ranked</h2><span class="rkbadge"><b class="num">${Ranked.elo}</b><small>Elo · ${Ranked.games} played · ${Ranked.wins} won</small></span></div>
-    <p class="sub">Open a public lobby and anyone can hop in; the result moves both ratings. Or make it private with a code for friends (no rating change).</p>
+    <p class="sub">Open a public lobby and anyone can join, and the result moves both ratings. Or go private with a code for friends (no rating change).</p>
     <div class="rkform"><label>Game<select id="rkGame">${RK_GAMES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label><label>Difficulty<select id="rkDiff">${DIFFS.map(([v, n]) => `<option value="${v}" ${v === S.diff ? "selected" : ""}>${n}</option>`).join("")}</select></label>
     <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn" id="rkCreate" type="button">Create lobby</button></div>
     <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
@@ -1698,7 +1719,7 @@ async function renderProfilePage() {
   <div class="card"><h3>Loading screens <span class="fine">${Object.keys(seen).length} of ${SPLASHES.length} collected</span></h3><div class="splgrid">${spl}</div></div>
   <div class="card"><h3>Achievements <span class="fine">${won} of ${ACH.length}</span></h3><div class="achgrid">${ach}</div></div>
   <div class="card"><h3>Streak calendar</h3>${calendarHTML(p)}<div class="fine">Each square is a day; brighter means more games. Last 12 weeks.</div></div>
-  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button></div></div>`;
+  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button></div></div>`;
   if (!signed) return;
   Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) e.textContent = Ranked.elo; });
   Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
@@ -1724,7 +1745,7 @@ function renderChallenge() {
   const c = S.code;
   if (S.cur) return renderPlay();
   if (!S.chal) {
-    $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Create a challenge: five matches from the last ten years, the same for you and anyone you send the link to. Play them, then compare scores.</p>
+    $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Five matches from the last ten years, the same for you and everyone you send the link to. Play them, then compare scores.</p>
       <div class="row" style="margin-top:14px"><button class="btn" id="chNew" type="button">Create a challenge</button></div>
       <div class="row" style="margin-top:14px"><input id="chCode" maxlength="10" placeholder="Got a code? Type it here" aria-label="Challenge code"><button class="btn ghost" id="chJoin" type="button">Play it</button></div></div>`;
     return;
@@ -1814,9 +1835,9 @@ function mergeProgress(cloud) {
 }
 function accountHTML() {
   if (Account.claude) return `<p class="fine">Signed in with your claude.ai account: your progress is saved privately and follows you automatically.</p>`;
-  if (!Account.available) return `<p class="fine">You are playing as a guest: your progress is saved in this browser. Accounts (so progress follows you across devices) switch on when the online database is connected; the README has the short setup.</p>`;
+  if (!Account.available) return `<p class="fine">You're playing as a guest. Your progress is saved in this browser.</p>`;
   if (Account.signedIn) return `<div class="row"><span>Signed in as <b>${esc(Account.session.user.email)}</b></span><button class="btn ghost" id="acctOut" type="button">Sign out</button></div><div class="fine" id="acctMsg">${esc(Account.status || "Your progress is saved online automatically.")}</div>`;
-  return `<p class="fine">You are playing as a guest: your progress is saved in this browser. Create a free account to keep it across devices and to appear on the global leaderboards.</p><div class="row"><button class="btn" id="acctIn" type="button">Sign in</button><button class="btn ghost" id="acctNew" type="button">Create an account</button></div>`;
+  return `<p class="fine">You're playing as a guest, so your progress stays in this browser. A free account keeps it on every device and puts you on the leaderboard.</p><div class="row"><button class="btn" id="acctIn" type="button">Sign in</button><button class="btn ghost" id="acctNew" type="button">Create an account</button></div>`;
 }
 function authForm(mode) {
   const up = mode === "up";
@@ -2007,7 +2028,7 @@ function finishQuiz() {
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") rankedEnd(S_, S_.scores);
   if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
   if (S_.mode === "solo") { const sc = Math.round(Math.max(0, S_.scores[0]) * DIFFX[S.diff]); reward(30 + Math.round(sc / 100), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: sc }); }
-  renderQuiz(); if (best > 0) { Snd.win(); confetti(); }
+  renderQuiz(); if (best > 0) { Snd.horn(); confetti(); }
 }
 const answerOf = (S_) => { const d = QDEF[S_.game]; return d.ans(S_.r); };
 function answerCard(S_) {
@@ -2068,7 +2089,7 @@ function nextFinish() {
 const ordn = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function renderFinish() {
   const f = S.fin;
-  if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A club and a season appear. Slide to where you think it finished in the table; the closer you are, the more you score.", [
+  if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A club and a season appear. Slide to where you think it finished. The closer you are, the more you score.", [
     { id: "finStart", t: "Solo streak", d: "Keep going while you are within a few places (fewer on harder levels). The first bigger miss ends the run." },
     { id: "finDuo", t: "Two players, one device", d: "Five clubs. You each slide in turn without seeing the other's guess. Closest scores most." },
     { id: "finOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
@@ -2137,7 +2158,7 @@ const numPts = (guess, actual) => Math.max(0, Math.round(1000 * (1 - Math.abs(Ma
 function renderNumber() {
   const g = S.num; if (!g) { $("#room").innerHTML = modeIntro("Market value", "Transfermarkt puts a market value on every player and every squad. How well do you know the numbers?", [
     { id: "nmSolo", t: "Solo: higher or lower", d: "Two players or two squads. Pick the more valuable. Keep the streak alive." },
-    { id: "nmDuo", t: "Two players, one device", d: "Write your number: a player or club appears and you each type a value in millions. Closest scores most over five rounds." },
+    { id: "nmDuo", t: "Two players, one device", d: "Write your number. A player or club appears, and you each type a value in millions. The closest guess scores most over five rounds." },
     { id: "nmOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
     const duo = g.mode === "duo", who = ["Player 1", "Player 2"], it = g.item;
   if (g.phase === "done") { const best = Math.max(...g.scores), w = duo ? (g.scores[0] === g.scores[1] ? -1 : g.scores[0] > g.scores[1] ? 0 : 1) : 0; $("#room").innerHTML = `<div class="card">${gamesBar("Write your number")}<div class="rcard on"><div class="label">Final score</div><div class="verdicts" style="margin-top:8px">${g.scores.map((s, i) => `<div class="vd ${w === i || !duo ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (w < 0 ? "A draw." : who[w] + " wins!") : best >= 3500 ? "Market whisperer." : "Not bad."}</b><button class="btn" id="nmAgain" type="button">Play again</button><button class="btn ghost" id="nmCard" type="button">Make a result card</button></div></div></div>`; return; }
@@ -2171,7 +2192,7 @@ function newRoulette() { trackPlay("Club roulette"); S.rou = { round: 0, rounds:
 function nextRoulette() { const r = S.rou; r.round++; r.club = rouClub(); r.used = []; r.names = []; r.turn = (r.round - 1) % 2; r.phase = "play"; r.msg = ""; renderRoulette(); }
 function renderRoulette() {
   const r = S.rou, who = ["Player 1", "Player 2"];
-  if (!r) { $("#room").innerHTML = modeIntro("Club roulette", "A club appears. You take turns naming players who have played for it, no repeats. A wrong name, a repeat or running out of time loses the round. First to win two rounds takes the match.", [
+  if (!r) { $("#room").innerHTML = modeIntro("Club roulette", "A club appears. Take turns naming players who played for it, with no repeats. A wrong name, a repeat or a timeout loses the round. First to win two rounds takes the match.", [
     { id: "rDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "rOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
   if (r.phase === "done") { const w = r.wins[0] > r.wins[1] ? 0 : 1; $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}<div class="rcard on"><div class="label">Match over</div><div class="verdicts" style="margin-top:8px">${r.wins.map((s, i) => `<div class="vd ${w === i ? "ok" : "no"}"><span class="label">${who[i]}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${who[w]} wins!</b><button class="btn" id="rAgain" type="button">Play again</button></div></div></div>`; return; }
@@ -2233,7 +2254,7 @@ const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8],
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
 function catHead(c, cls = "") { return `<div class="tcat ${cls}">${c.icon || ""}<span>${esc(c.label)}</span></div>`; }
 function renderTTT() {
-  const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Each row and column is a football category. Claim a square by naming a player who fits both its row and its column. A player can only be used once, and a wrong answer loses your turn. Three in a row wins.", [
+  const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Every row and column is a football category. Name a player who fits both to claim the square. No repeats, and a wrong answer loses your turn. Three in a row wins.", [
     { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "ttOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
     const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
@@ -2319,21 +2340,24 @@ const Net = {
   },
   linked() { return (this.mq || []).filter((q) => q.open).length; },
   paintStatus() {
+    const rb = $("#reactBar"); if (rb) rb.hidden = !(this.role && (this.started || this.welcomed));
     const el = $("#roomStatus"); if (!el || !this.role) return;
     if (this.role === "host") { if (this.started) { el.textContent = "Player 2 is in. Good luck!"; return; } const link = inviteLink(this.code, this.game); el.innerHTML = `Room <b class="num" style="font-size:22px">${this.code}</b> ${this.linked() ? "is open" : "is connecting…"}. Send the code, or this link, to your friend:<div class="row" style="margin-top:6px"><input id="inviteBox" readonly value="${esc(link)}" style="flex:1;min-width:0;font:600 13px var(--mono);padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn" id="roomCopy" type="button">Copy link</button></div>`; return; }
     if (this.welcomed) { el.textContent = "Connected. Waiting for the game to appear…"; return; }
     const secs = Math.round((Date.now() - this.since) / 1000);
     el.textContent = !this.linked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${this.code}. Check the code, and that your friend has created the room and is still on that screen.` : `Looking for room ${this.code}…`;
   },
-  close() { if (this.role === "host" && Ranked.lt) Ranked.stopLobby(); this.ranked = false; this.guest = null; this.lastRef = null; if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
+  close() { const rb = $("#reactBar"); if (rb) rb.hidden = true; if (this.role === "host" && Ranked.lt) Ranked.stopLobby(); this.ranked = false; this.guest = null; this.lastRef = null; if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
   recv(m) {
     if (!m || m.from === this.role) return; if (m.i) { if (this.seen && this.seen.has(m.i)) return; if (this.seen) { this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); } }
     if (this.role === "host") {
       if (m.k === "hello") { this.guest = { uid: m.uid, nick: m.nick }; this.send({ k: "welcome", ranked: !!this.ranked }); if (!Net.started) startOnline(); else this.push(true); }
+      else if (m.k === "react") floatReact(m.e);
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
       if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
+      if (m.k === "react") floatReact(m.e);
       if (m.k === "welcome" && m.ranked) this.ranked = true;
       if (m.k === "result" && this.ranked && Account.signedIn) { Ranked.report(m.mid, m.hostUid, m.guestRes); }
       if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
@@ -2353,6 +2377,7 @@ const Net = {
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
 function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.rou && S.rou.phase === "play") return S.rou.turn === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
+function floatReact(e) { const s = document.createElement("span"); s.className = "floater"; s.textContent = e; s.style.left = 12 + Math.random() * 76 + "%"; document.body.appendChild(s); setTimeout(() => s.remove(), 1900); }
 function startOnline() {
   Ranked.stopLobby(); Net.started = true; const g = Net.game;
   if (QDEF[g]) { newQuiz(g, "duo", S.code); Q.s.mode = "duo"; Q.s.scores = [0, 0]; nextRound(); }
@@ -2362,7 +2387,7 @@ function startOnline() {
 const inviteLink = (code, game) => `${location.origin}${location.pathname}#join-${code}-${game}`;
 function openOnline(game) {
   const box = $("#roomBox"); if (!box) return; Net.game = game;
-  box.innerHTML = `<div class="rcard on" style="margin-top:14px"><b>Two devices</b><p class="fine">Create a room and send your friend the link (or the 4-letter code), or join theirs. It works over the internet, so you can be anywhere.</p><div class="row"><button class="btn" id="roomMake" type="button">Create a room</button><input id="roomCode" maxlength="4" placeholder="CODE" aria-label="Room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono, monospace);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="roomJoin" type="button">Join</button></div><div id="roomStatus" class="fine" style="margin-top:10px"></div></div>`;
+  box.innerHTML = `<div class="rcard on" style="margin-top:14px"><b>Two devices</b><p class="fine">Create a room and send your friend the link or the 4-letter code. Or join theirs. It works over the internet, so you can be anywhere.</p><div class="row"><button class="btn" id="roomMake" type="button">Create a room</button><input id="roomCode" maxlength="4" placeholder="CODE" aria-label="Room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono, monospace);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="roomJoin" type="button">Join</button></div><div id="roomStatus" class="fine" style="margin-top:10px"></div></div>`;
 }
 function makeRoom() { const code = newRoomCode(); Net.role = "host"; Net.started = false; Net.open(code); Net.role = "host"; Net.paintStatus(); Snd.lock(); }
 function joinRoomCode(c) { Net.role = "guest"; Net.open(c); Net.role = "guest"; const hello = () => Net.send({ k: "hello", uid: Account.signedIn ? Account.session.user.id : null, nick: prof().nick || "" }); hello(); Net.hi = setInterval(() => { if (Net.role === "guest" && !Net.welcomed) hello(); }, 2500); Net.paintStatus(); Snd.tick(); }
@@ -2371,6 +2396,7 @@ function paintGuestBanner() { if (!$("#guestBar")) { const r = $("#room"); r.ins
 function applyRemote(m) {
   const sel = m.id ? "#" + CSS.escape(m.id) : m.da ? `[data-${m.da}="${CSS.escape(m.dv)}"]` : null; if (!sel) return; const el = document.querySelector("#room " + sel); if (!el) return;
   const guestOk = () => {
+    if (["qAgain", "finAgain", "nmAgain", "ttAgain", "rAgain"].includes(m.id)) return true;
     if (m.id === "qB1" || m.id === "nmLock" || m.id === "tGuess" || m.id === "qGuess" || m.id === "tCancel") { /* checked below */ }
     if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") { if (m.id === "qB1") return true; if (m.id === "qGuess" || m.da === "sug") return Q.s.buzzed === 1; return false; }
     if (S.rou) return (m.id === "rGuess" || m.da === "sug") && S.rou.turn === 1 && S.rou.phase === "play";
@@ -2432,7 +2458,7 @@ async function renderBoard() {
   const rows = [...LB.rows].sort((a, b) => b.edge - a.edge || b.right - a.right).slice(0, 10); let names = {};
   try { if (LB.user && typeof LB.user.profiles === "function") names = await LB.user.profiles(rows.map((r) => r.id)); } catch (e) { /* generic names */ }
   const me = lbJoined(), pl = myTotals();
-  el.innerHTML = `<h3 style="font-size:20px;margin:18px 0 4px">Leaderboard</h3><span class="fine">Points ahead of the model across every league you play. Joining is optional; only your totals and display name show, never your picks.</span>
+  el.innerHTML = `<h3 style="font-size:20px;margin:18px 0 4px">Leaderboard</h3><span class="fine">Points ahead of the model across every league you play.</span>
     <div class="lb">${rows.length ? rows.map((r, i) => `<div class="lbrow ${r.id === LB.uid ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc((names[r.id] && names[r.id].name) || "Someone")}${r.id === LB.uid ? " (you)" : ""}</span><span class="num">${r.edge >= 0 ? "+" : ""}${r.edge} · ${r.right}/${r.played}</span></div>`).join("") : '<div class="fine">No one is on the board yet.</div>'}</div>
     <div class="row" style="margin-top:10px"><button class="btn ${me ? "ghost" : ""}" id="lbToggle" type="button" ${me || pl.played ? "" : "disabled"}>${me ? "Leave the leaderboard" : "Join the leaderboard"}</button>${!me && !pl.played ? '<span class="fine">Play a match first.</span>' : ""}</div>`;
 }
@@ -2464,6 +2490,8 @@ document.addEventListener("click", (e) => {
   if (b.id === "pfNickSave") { const v = ($("#pfNick").value || "").trim(), msg = $("#pfNickMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } Account.setNick(v).then((r) => { if (r && r.ok) { const p = prof(); p.nick = v; saveProf(p); renderProfilePage(); paintProfileBtn(); toast("Name saved"); } else $("#pfNickMsg").textContent = (r && r.error) || "That name is taken."; }); return; }
   if (b.id === "pfFriendAdd") { const v = ($("#pfFriend").value || "").trim(), msg = $("#pfFriendMsg"); if (!v) return; Ranked.rpc("add_friend", { p_nick: v }).then((r) => { const m = { ok: "Added!", notfound: "Nobody has that display name.", self: "That is you.", already: "Already on your list.", full: "Your list is full (100).", auth: "Please sign in." }; msg.textContent = r === null ? "Could not reach the server (is schema_v3.sql installed?)." : m[r] || "Done."; if (r === "ok") { award("social"); $("#pfFriend").value = ""; paintFriends(); } }); return; }
   if (b.dataset.unfriend) { Ranked.rpc("remove_friend", { p_nick: b.dataset.unfriend }).then(paintFriends); return; }
+  if (b.dataset.react) { Snd.tick(); floatReact(b.dataset.react); Net.send({ k: "react", e: b.dataset.react }); return; }
+  if (b.id === "tourBtn") { startTour(); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
   if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
@@ -2518,7 +2546,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "qOnline" || b.id === "nmOnline" || b.id === "ttOnline") { openOnline(b.id === "qOnline" ? Q.s.game : b.id === "nmOnline" ? "number" : "ttt"); return; }
   if (b.id === "qNext") { Snd.tick(); nextRound(); return; }
   if (b.id === "qFinish") { finishQuiz(); return; }
-  if (b.id === "qAgain") { newQuiz(Q.s.game, "solo", S.code); return; }
+  if (b.id === "qAgain") { const m = Q.s.mode, g = Q.s.game; newQuiz(g, m, S.code); if (m === "duo") { Q.s.scores = [0, 0]; nextRound(); } return; }
   if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `ballknowledge, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
   if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }

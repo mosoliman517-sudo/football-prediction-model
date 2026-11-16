@@ -11,7 +11,7 @@ small online database. It is free and takes about ten minutes.
 3. **Authentication > Providers > Email**: leave email sign-in on. For the simplest sign-up, turn **Confirm email** off; leave it
    on if you want people to confirm their address first (the page handles both).
 4. **Authentication > URL configuration**: set the Site URL to your public address
-   (for example `https://mosoliman517-sudo.github.io/football-prediction-model/`) so password-reset emails come back to it.
+   (for example `https://moballknowledge.vercel.app`) so password-reset emails come back to it.
 5. **Project settings > API**: copy the **Project URL** and the **anon public** key. Never use or paste the `service_role` key.
 6. Create `site/board_config.json`:
    ```json

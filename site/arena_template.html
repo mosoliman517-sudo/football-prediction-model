@@ -447,6 +447,37 @@ button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-hi
 .diffbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 @media (hover: none) { .buzz small { display: none; } .gcard:hover, .mode:hover, .holc:hover { transform: none; } }
 @media (max-width: 560px) { .chip, .room, .pill, .btn { min-height: 44px; } .hub { grid-template-columns: 1fr; } .modes { grid-template-columns: 1fr; } .card { padding: 14px; } .buzz { padding: 26px 10px; } .holc { padding: 16px 10px; } .gcard { min-height: 0; } }
+
+/* ---- navigation, chooser, polish ---- */
+.crumbs { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.back { flex: none; background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--ink); border: 1px solid var(--line); border-radius: 99px; padding: 9px 16px; font-weight: 800; cursor: pointer; transition: transform .15s, border-color .2s; } .back:hover { border-color: var(--accent); transform: translateX(-2px); }
+.trail { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; white-space: nowrap; } .trail::-webkit-scrollbar { display: none; } .trail i { color: var(--muted); font-style: normal; }
+.crumb { background: none; border: 0; color: var(--muted); font: 700 13px var(--mono); letter-spacing: .04em; cursor: pointer; padding: 6px 4px; border-radius: 8px; } button.crumb:hover { color: var(--accent); } .crumb.cur { color: var(--ink); cursor: default; }
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.gpick { text-align: left; border: 1px solid var(--line); border-radius: 28px; padding: 26px; cursor: pointer; display: flex; flex-direction: column; gap: 12px; min-height: 280px; color: var(--ink); background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface) 65%); position: relative; overflow: hidden; animation: rise .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); transition: transform .2s ease, border-color .2s ease, box-shadow .3s ease; }
+.gpick::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, #ffffff18 50%, transparent 60%); transform: translateX(-120%); transition: transform .7s ease; pointer-events: none; }
+.gpick:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 30px 60px -30px var(--glow); } .gpick:hover::after { transform: translateX(120%); } .gpick:active { transform: scale(.985); }
+.gpick .gname { font-size: 34px; } .gpick .gtag { font-size: 15px; } .gpick .gfaces { margin-bottom: 4px; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+#room > .card, #room > .hub, #room > .groups, #room > h2, #room > p { animation: rise .45s cubic-bezier(.2, .8, .2, 1) both; }
+.btn { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, var(--accent2))); box-shadow: 0 10px 24px -12px var(--glow), inset 0 1px 0 #ffffff55; } .btn.ghost { background: color-mix(in srgb, var(--surface) 65%, transparent); box-shadow: none; }
+.btn:focus-visible, .chip:focus-visible, .mode:focus-visible, .gcard:focus-visible, .gpick:focus-visible, .back:focus-visible, .pill:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.card { background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, #fff 4%), color-mix(in srgb, var(--surface) 86%, transparent)); box-shadow: 0 30px 60px -44px #000c, inset 0 1px 0 #ffffff10; border-radius: 26px; }
+.gcard { transition: transform .2s ease, border-color .2s ease, box-shadow .3s ease; } .gcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, #ffffff12 50%, transparent 60%); transform: translateX(-120%); transition: transform .7s ease; pointer-events: none; } .gcard:hover::after { transform: translateX(120%); }
+h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; color: var(--accent); }
+/* tic-tac-toe: every square and header the same size */
+.tgrid { grid-template-columns: minmax(66px, 100px) repeat(3, minmax(0, 1fr)); }
+.tcell { min-width: 0; min-height: 0; overflow: hidden; padding: 2px; } .tcell small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.tcat { min-width: 0; min-height: 62px; overflow: hidden; font-size: 12px; line-height: 1.15; word-break: break-word; }
+.tcorner { min-height: 62px; } .tcat.rowh { contain: size; min-height: 0; } .tcat:not(.rowh) { height: 64px; min-height: 0; } .tcell { aspect-ratio: 1 / 1; width: 100%; }
+@media (max-width: 560px) { .tgrid { grid-template-columns: minmax(56px, 82px) repeat(3, minmax(0, 1fr)); gap: 5px; } .back { padding: 8px 12px; } .gpick { padding: 20px; min-height: 0; } .gpick .gname { font-size: 28px; } .tcat { min-height: 54px; font-size: 10.5px; } }
+/* phones held sideways */
+@media (max-height: 520px) and (orientation: landscape) {
+  .wrap { gap: 6px; } .lhead { display: none; } .byline { display: none; } .chip, .room, .back, .pill { padding: 5px 12px; min-height: 0; font-size: 12px; } .scope, .rooms { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px 0; } .chip, .room { flex: none; } .brand { padding: 0; } .lhead h1 { font-size: 26px; } .lhead p, .lhead .label, .scorebox { display: none; } .lid img.emblem, .lid .emblem { width: 34px; height: 34px; }
+  .rooms { position: static; padding: 2px 0; } .card { padding: 12px; border-radius: 18px; } .hub, .groups { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; } .gcard, .gpick { min-height: 0; padding: 12px; } .gpick .gname { font-size: 24px; }
+  .gfaces .badge, .gfaces .hface { width: 40px; height: 40px; } .bar { gap: 6px; } .brand { font-size: 16px; } #home .hero h1, .hero h1 { font-size: 34px; } .holpair { grid-template-columns: 1fr auto 1fr; } .holc { padding: 10px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .tgrid { max-width: 420px; } .clue { padding: 6px 10px; } .buzz { padding: 12px; } .modes { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -456,6 +487,7 @@ button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-hi
     <button class="brand" id="brand" type="button" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
+    <button class="pill" id="acctBtn" type="button">Sign in</button>
     <button class="pill profilebtn" id="profileBtn" type="button" aria-label="Your profile, rank and achievements"></button>
     <button class="pill" id="sndBtn" type="button" aria-label="Sound">Sound: soft</button>
   </div>
@@ -474,6 +506,7 @@ button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-hi
   </section>
 
   <section id="lobby" hidden>
+    <nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>
     <div class="hero">
       <h1><em>Our model</em></h1>
       <p>Pick a league to see what the model predicts: title-race odds, a season replay with the model's table beside the real one, how it compares with the bookmakers, and how it all works.</p>
@@ -482,6 +515,7 @@ button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-hi
   </section>
 
   <section id="league" hidden>
+    <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
     <div class="lhead">
       <div class="flag" id="lFlag" aria-hidden="true"></div><div class="lid"><span id="lEmblem"></span><div><div class="label" id="lKicker"></div><h1 id="lName"></h1><p id="lTag"></p></div></div>
       <div class="scorebox" id="scorebox"></div>
@@ -689,7 +723,7 @@ function route(ev) {
   const lg = BYSLUG[slug], tail = rest.slice(slug.length + 1);
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; } }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" ? tail : null; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
@@ -708,7 +742,7 @@ function openLeague(code, ev) {
   const L = lgOf(code), p = PAL[code];
   $("#lKicker").textContent = `${S.mode === "games" ? "Games" : "Our model"} · ${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = S.mode === "games" ? "Pick a game, or switch leagues above." : L.tag;
   $("#lFlag").style.background = FLAG[code]; $("#lEmblem").innerHTML = emblem(code, "sm");
-  paintScore(); renderScope(); renderRooms(); renderRoom(); if (changing) window.scrollTo(0, 0);
+  paintScore(); renderScope(); renderRooms(); renderRoom(); renderCrumbs(); if (changing) window.scrollTo(0, 0);
 }
 function renderScope() {
   const prefix = S.mode === "games" ? "games-" : "lab-";
@@ -758,7 +792,7 @@ function totals(plays) {
 const renderBoardsIfOpen = () => { if (S.room === "boards") renderBoards(); };
 function paintScore() {
   if (!S.code) return;
-  const sb = $("#scorebox"); sb.hidden = !(S.mode === "games" && (!S.game || ["call", "daily", "matchday", "upset", "table", "hol", "challenge"].includes(S.game)) && S.room === "play");
+  const sb = $("#scorebox"); sb.hidden = !(S.mode === "games" && S.room === "play" && (S.game ? MODEL_IDS.includes(S.game) : S.hubGroup === "model"));
   const pl = playsOf(S.code), t = totals(pl), st = streaks(pl);
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
@@ -766,7 +800,7 @@ function renderRooms() {
   const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboards"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
-function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); paintScore(); }
+function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); paintScore(); renderCrumbs(); }
 
 /* ---------- Call it ---------- */
 function freshPool(c) { return allMatches(c).filter((r) => !store.items[`p_${r.c}_${r.season}_${r.i}`]); }
@@ -1102,19 +1136,44 @@ const QUIZ_GAMES = [
 ];
 let heroQueue = [];
 const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
+const MODEL_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge"];
+const gameName = (id) => ([...GAMES, ...QUIZ_GAMES].find((g) => g.id === id) || {}).name || "";
 function renderHub() {
   heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
-  const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`;
-  $("#room").innerHTML = `<h2 class="sec">Predict the match</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`
-    + (QUIZ_GAMES.length ? `<h2 class="sec" style="margin-top:28px">Ball knowledge</h2><p class="secsub">Players, clubs, careers and market values ${where}. Clues start hard and get easier; the faster you answer, the more you score.</p><div class="hub">${QUIZ_GAMES.map((g, k) => card(g, k + GAMES.length)).join("")}</div>` : "");
+  const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
+  if (g === "model") { $("#room").innerHTML = `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; return; }
+  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge games</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
+  $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Two kinds of games, ${where}.</p><div class="groups">
+    <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge games</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
+    <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button></div>`;
 }
+function renderCrumbs() {
+  const el = $("#crumbs"); if (!el || !S.code) return; const items = [["Menu", "menu"]];
+  if (S.mode === "games") { items.push(["Games", "games"]); if (S.hubGroup) items.push([S.hubGroup === "bk" ? "ballknowledge" : "Beat the Model", "group"]); if (S.game) items.push([gameName(S.game) || "Game", null]); else if (S.room === "boards") items.push(["Leaderboards", null]); }
+  else { items.push(["Our model", "lobby"]); items.push([lgOf(S.code).name, null]); }
+  el.innerHTML = `<button class="back" id="backBtn" type="button">← Back</button><div class="trail">${items.map(([n, k], i) => (k && i < items.length - 1 ? `<button type="button" class="crumb" data-crumb="${k}">${esc(n)}</button>` : `<span class="crumb cur">${esc(n)}</span>`)).join("<i>›</i>")}</div>`;
+}
+function crumbGo(k) {
+  Snd.back();
+  if (k === "menu") go(""); else if (k === "lobby") go("lab"); else if (k === "games") { S.hubGroup = null; go("games-" + SLUG[S.code]); } else if (k === "group") { resetGames(); S.game = null; S.room = "play"; renderRoom(); }
+}
+function goBack() {
+  Snd.back();
+  if (S.mode !== "games") { go("lab"); return; }
+  if (S.room === "boards") { S.room = "play"; renderRooms(); renderRoom(); return; }
+  if (S.game) { resetGames(); S.game = null; S.chal = null; S.cur = null; renderRoom(); return; }
+  if (S.hubGroup) { S.hubGroup = null; go("games-" + SLUG[S.code]); return; }
+  go("");
+}
+
 const modeIntro = (title, blurb, opts) => `<div class="card">${gamesBar(title)}<p class="sub">${blurb}</p>${diffBar()}<div class="modes">${opts.map((o) => `<button class="mode" id="${o.id}" type="button"><b>${o.t}</b><span>${o.d}</span></button>`).join("")}</div><div id="roomBox"></div></div>`;
-const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">All games</button><h2 style="font-size:24px">${title}</h2></div>`;
+const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">← Back</button><h2 style="font-size:24px">${title}</h2></div>`;
 function renderPlayRoom() {
   stopTheatre();
+  if (S.game) S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk";
   if (!S.game) return renderHub();
   stopQuiz();
   if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
@@ -1340,7 +1399,7 @@ function afterUpset(ok, prob, streak, lg) { reward(10 + (ok ? 15 + 5 * Math.min(
 function afterTable(d) { const beat = d.youErr < d.modErr; reward(60 + (beat ? 40 : 0) + (d.youErr < d.lastErr ? 20 : 0), "Guess the table", (p) => { mark(p, d.lg, d.season); if (beat) unlock(p, "table"); }); Board.submit({ game: "table", league: d.lg, score: beat ? 1 : 0 }); }
 function afterHol(ok, streak, lg) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, lg, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
 
-function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; }
+function paintProfileBtn() { const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p); b.innerHTML = `<span class="num">${esc(lv.name)}</span><span class="flame" ${st ? "" : "hidden"}>${st}d</span>`; const a = $("#acctBtn"); if (a) { a.hidden = !!(Account.signedIn || Account.claude); a.textContent = Account.available ? "Sign in" : "Account"; } }
 function calendarHTML(p) {
   const weeks = 12, today = new Date(), dow = (today.getUTCDay() + 6) % 7, cells = [];
   for (let w = weeks - 1; w >= 0; w--) for (let d = 0; d < 7; d++) { const off = w * 7 + (dow - d); const dt = new Date(today.getTime() - off * 864e5), key = dt.toISOString().slice(0, 10), n = off < 0 ? null : p.days[key] || 0; cells.push(`<i class="cal ${n == null ? "fut" : n === 0 ? "" : n < 3 ? "l1" : n < 6 ? "l2" : "l3"}" title="${key}: ${n || 0} games"></i>`); }
@@ -1968,7 +2027,7 @@ function newTTT(mode) {
 }
 const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
-function catHead(c) { return `<div class="tcat">${c.icon || ""}<span>${esc(c.label)}</span></div>`; }
+function catHead(c, cls = "") { return `<div class="tcat ${cls}">${c.icon || ""}<span>${esc(c.label)}</span></div>`; }
 function renderTTT() {
   const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Each row and column is a football category. Claim a square by naming a player who fits both its row and its column. A player can only be used once, and a wrong answer loses your turn. Three in a row wins.", [
     { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
@@ -1978,7 +2037,7 @@ function renderTTT() {
   const status = t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins!`) : `${who[t.turn]} (${mark[t.turn]}) to play`;
   const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
   $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">${status}</span></div>
-    <div class="tgrid"><div class="tcorner"></div>${g.cols.map(catHead).join("")}${[0, 1, 2].map((r) => catHead(g.rows[r]) + [0, 1, 2].map((c) => cells.split("</button>").slice(0, 9)[r * 3 + c] + "</button>").join("")).join("")}</div>
+    <div class="tgrid"><div class="tcorner"></div>${g.cols.map(catHead).join("")}${[0, 1, 2].map((r) => catHead(g.rows[r], "rowh") + [0, 1, 2].map((c) => cells.split("</button>").slice(0, 9)[r * 3 + c] + "</button>").join("")).join("")}</div>
     ${t.msg ? `<div class="fine" style="margin-top:8px">${esc(t.msg)}</div>` : ""}${panel}${t.phase === "over" ? `<div class="row" style="margin-top:12px"><button class="btn" id="ttAgain" type="button">Play again</button><button class="btn ghost" id="ttCard" type="button">Make a result card</button></div>` : ""}</div>`;
   const i = $("#tIn"); if (i) i.focus();
 }
@@ -2189,6 +2248,10 @@ async function initStore() {
 document.addEventListener("pointerdown", () => Snd.unlock(), { once: true });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "backBtn") { goBack(); return; }
+  if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
+  if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
+  if (b.id === "acctBtn") { Snd.tick(); Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.door) { Snd.tick(); go(b.dataset.door); route(e); return; }
   if (b.dataset.scope) { Snd.tick(); go(b.dataset.scope); route(e); return; }
   if (b.dataset.lg) { Snd.tick(); go("lab-" + SLUG[b.dataset.lg]); route(e); return; }
@@ -2217,7 +2280,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "chCard") { challengeCard(S.code, S.chal.code); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); resetGames(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
-  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
+  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
   if (b.id === "gamesBack") { Snd.back(); resetGames(); S.game = null; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
   if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }

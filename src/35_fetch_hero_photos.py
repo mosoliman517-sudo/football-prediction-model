@@ -21,7 +21,7 @@ NAMES = ["Erling Haaland", "Mohamed Salah", "Bukayo Saka", "Cole Palmer", "Bruno
          "Raphinha", "Federico Valverde", "Lautaro Martinez", "Rafael Leao", "Nico Paz", "Khvicha Kvaratskhelia", "Ousmane Dembele", "Desire Doue", "Bradley Barcola", "Achraf Hakimi",
          "Victor Osimhen", "Alexander Isak",
          "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Andres Iniesta", "Sergio Aguero", "Sergi Roberto"]      # the last six are the legends used on the loading screens
-norm = lambda s: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower())
+norm = lambda s: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", str(s).translate(str.maketrans({"ø": "o", "Ø": "O", "æ": "ae", "ð": "d", "ł": "l", "đ": "d", "ß": "ss"}))).encode("ascii", "ignore").decode().lower())
 
 
 def get(path):
@@ -37,12 +37,33 @@ def get(path):
     return {}
 
 
+def ea_portrait(name, path):
+    """EA's published portrait (the most recent photo available), from the list saved by src/41_fetch_ea_portraits.py; returns True if saved."""
+    import json
+    try:
+        ea = json.load(open("02_processed_data/ea_players.json", encoding="utf-8"))
+    except FileNotFoundError:
+        return False
+    want = norm(name)
+    rows = [e for e in ea if want in (norm(e["common"]), norm(f"{e['first']} {e['last']}"))]
+    if not rows:
+        return False
+    e = max(rows, key=lambda x: x["ovr"] or 0)
+    r = requests.get(e["img"], headers=HEAD, timeout=40)
+    if r.status_code != 200:
+        return False
+    im = Image.open(io.BytesIO(r.content)).convert("RGBA"); im = im.crop(im.getbbox()); im.thumbnail((320, 320), Image.LANCZOS); im.save(path, "PNG", optimize=True)
+    return True
+
+
 def main():
     os.makedirs("site/logos/players/hero", exist_ok=True)
     kept = []
     for name in NAMES:
         slug = norm(name)
         path = f"site/logos/players/hero/{slug}.png"
+        if ea_portrait(name, path):
+            print(f"  {name:<24} EA portrait"); kept.append(name); continue
         if os.path.exists(path):
             kept.append(name); continue
         rows = get("searchplayers.php?p=" + requests.utils.quote(name.replace(" ", "_"))).get("player") or []

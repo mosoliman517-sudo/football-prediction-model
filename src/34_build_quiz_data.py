@@ -24,6 +24,7 @@ JUNK = re.compile(r"retired|without club|career break|unknown|\bu1[5-9]\b|\bu2[0
 
 
 def norm(s):
+    s = str(s).translate(str.maketrans({"ø": "o", "Ø": "O", "æ": "ae", "Æ": "AE", "ð": "d", "ł": "l", "Ł": "L", "đ": "d", "ß": "ss"}))
     s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower()
     s = re.sub(r"[^a-z0-9 ]", " ", s)
     stop = {"fc", "afc", "cf", "ac", "as", "ss", "us", "sc", "sv", "vfl", "vfb", "tsg", "club", "calcio", "de", "the", "football", "futbol", "1", "1899", "05", "04", "1846", "bc", "ud", "cd", "rc", "sd", "ssc", "olympique", "real", "1907", "1909", "1913"}
@@ -265,6 +266,29 @@ def main():
         if x:
             q["aw"], q["tn"] = x["aw"], [k for k in x["tn"] if k in ("WC14", "WC18", "EU16")]
     print("players with awards:", sum(1 for q in players if q.get("aw")), "; with a tournament:", sum(1 for q in players if q.get("tn")))
+    # EA's published player list (src/41): match by birth date and name, then the page shows EA's portrait (the most recent photo we can get)
+    try:
+        ea = json.load(open("02_processed_data/ea_players.json", encoding="utf-8"))
+    except FileNotFoundError:
+        ea = []
+    by_birth = {}
+    for e in ea:
+        if e["birth"]:
+            by_birth.setdefault(e["birth"], []).append(e)
+    def eaname(e):
+        return [norm(e["common"]), norm(f"{e['first']} {e['last']}")] if e["common"] else [norm(f"{e['first']} {e['last']}")]
+    for q in players:
+        cands = by_birth.get(q["dob"], []); want = norm(q["n"]); best, bs = None, 0
+        for e in cands:
+            for nm in eaname(e):
+                sc = difflib.SequenceMatcher(None, want, nm).ratio()
+                if want and nm and (want.split()[-1] == nm.split()[-1] or want in nm or nm in want):
+                    sc = max(sc, 0.8)
+                if sc > bs:
+                    best, bs = e, sc
+        if best is not None and bs >= 0.75:
+            q["ea"] = best["id"]
+    print("players with an EA portrait:", sum(1 for q in players if q.get("ea")), "of", len(players))
     print("players with a TheSportsDB photo:", sum(1 for q in players if q.get("iu")))
     print("players with a Commons photo:", sum(1 for q in players if q.get("im")))
     json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)

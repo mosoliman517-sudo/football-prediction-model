@@ -678,6 +678,8 @@ function route(ev) {
   stopReplay(); stopTheatre(); resetGames();
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
+  const jm = /^join-([A-Za-z]{4})-([a-z]+)$/.exec(h);
+  if (jm) { const gm = jm[2] === "number" ? "value" : jm[2]; S.mode = "games"; S.room = "play"; S.game = GAME_IDS.includes(gm) ? gm : null; openLeague("ALL", ev); if (S.game) setTimeout(() => { openOnline(jm[2]); joinRoomCode(jm[1].toUpperCase()); }, 150); return; }
   if (h === "") return showHome(ev);
   if (h === "lab") return showLab(ev);
   let mode = null, rest = h;
@@ -1608,12 +1610,18 @@ function suggestions(q, items, key) {
 /* ---------- difficulty, turn timers ---------- */
 const DIFFS = [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"], ["elite", "Elite ball knowledge"]];
 const DIFFX = { easy: 0.6, medium: 1, hard: 1.4, elite: 2 };
-const DIFFNOTE = { easy: "Famous names, slower clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and big clubs. Scores count 1x.", hard: "Squad players and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Anyone and anything, fast clues, almost no margin. Scores count 2x." };
+const DIFFNOTE = { easy: "Superstars and the biggest clubs only, slow clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and top clubs. Scores count 1x.", hard: "Regular first-teamers and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Deep cuts: the obscure players and smaller clubs only, fast clues, almost no margin. Scores count 2x." };
 const TLIM = { easy: 30, medium: 20, hard: 14, elite: 9 };
 try { S.diff = localStorage.getItem("bk_diff"); } catch (e) { /* storage blocked */ }
 if (!DIFFX[S.diff]) S.diff = "medium";
-const playerOK = (p) => S.diff === "easy" ? (p.val >= 40e6 || p.peak >= 80e6) : S.diff === "medium" ? (p.val >= 12e6 || p.peak >= 45e6) : S.diff === "hard" ? p.val >= 3e6 : true;
-const clubOK = (n) => { const v = (QZ.clubs[n] || {}).value || 0; return S.diff === "easy" ? v >= 4e8 : S.diff === "medium" ? v >= 1.5e8 : S.diff === "hard" ? v > 0 : true; };
+const fameOf = (p) => Math.max(p.peak || 0, p.val || 0);
+const FAME = (() => { const s = QZ.players.slice().sort((a, b) => fameOf(b) - fameOf(a)), m = new Map(); s.forEach((p, i) => m.set(p.id, i)); return m; })();
+const clubRank = (() => { const s = Object.entries(QZ.clubs).filter(([, f]) => f.value > 0).sort((a, b) => b[1].value - a[1].value), m = {}; s.forEach(([n], i) => { m[n] = i; }); return m; })();
+/* what to ask about: easy is the very famous, elite is the obscure (players ranked below 1,500 by peak value, clubs outside the top 60 by squad value) */
+const playerOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 120 : S.diff === "medium" ? r < 450 : S.diff === "hard" ? r < 1400 : r >= 1400; };
+/* what may appear as an answer or category pool: everything at least as famous as the level, and elite allows anyone */
+const poolOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 350 : S.diff === "medium" ? r < 900 : S.diff === "hard" ? r < 1800 : true; };
+const clubOK = (n) => { const r = clubRank[n]; return S.diff === "easy" ? r < 8 : S.diff === "medium" ? r < 25 : S.diff === "hard" ? r < 60 : (r === undefined || r >= 60); };
 const clueSpeed = () => ({ easy: 1.35, medium: 1, hard: 0.8, elite: 0.6 })[S.diff];
 const finTol = () => ({ easy: 4, medium: 3, hard: 2, elite: 1 })[S.diff];
 const pickWith = (make, ok) => { let x; for (let k = 0; k < 60; k++) { x = make(); if (ok(x)) return x; } return x; };
@@ -1945,7 +1953,7 @@ function tttCategories(pool, scope) {
   return cats;
 }
 function tttGrid(scope) {
-  const pool = playerPool(scope, playerOK), cats = tttCategories(pool, scope), minCell = { easy: 3, medium: 4, hard: 4, elite: 2 }[S.diff];
+  const pool = playerPool(scope, poolOK), cats = tttCategories(pool, scope), minCell = { easy: 3, medium: 4, hard: 4, elite: 2 }[S.diff];
   for (let t = 0; t < 600; t++) {
     const pick = shuffle(cats).slice(0, 6), rows = pick.slice(0, 3), cols = pick.slice(3);
     if (new Set(pick.map((c) => c.id)).size < 6 || rows.every((c) => c.fam === rows[0].fam) && rows[0].fam === "pos") continue;
@@ -2004,33 +2012,65 @@ function finishTTT() { const t = S.ttt; const won = t.mode === "solo" && t.winne
    back only their clicks and typed text, which the host applies if it is genuinely the guest's turn. So there is no second copy of the game
    logic to keep in step. Two transports: a BroadcastChannel (two tabs of the same browser, used for testing and offline) and Supabase
    Realtime broadcast (two devices, when the build has a database). */
+/* A tiny MQTT-over-WebSocket client: public brokers relay the messages between two devices, so rooms need no account or database. */
+function mqttConnect(url, topic, onMsg) {
+  const enc = new TextEncoder(), dec = new TextDecoder(), st = { open: false, ws: null, ping: null }; let buf = new Uint8Array(0);
+  const str = (s) => { const b = enc.encode(s); return [b.length >> 8, b.length & 255, ...b]; };
+  const rl = (n) => { const o = []; do { let d = n % 128; n = Math.floor(n / 128); if (n) d |= 128; o.push(d); } while (n); return o; };
+  const pkt = (hdr, body) => { const b = Uint8Array.from(body); return Uint8Array.from([hdr, ...rl(b.length), ...b]); };
+  const cat = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+  let ws; try { ws = new WebSocket(url, "mqtt"); } catch (e) { return st; }
+  st.ws = ws; ws.binaryType = "arraybuffer";
+  ws.onopen = () => {
+    ws.send(pkt(0x10, [...str("MQTT"), 4, 2, 0, 60, ...str("bk" + Math.random().toString(36).slice(2, 10))]));
+    ws.send(pkt(0x82, [0, 1, ...str(topic), 0]));
+    st.ping = setInterval(() => { try { ws.send(Uint8Array.from([0xC0, 0])); } catch (e) { /* closed */ } }, 30000);
+  };
+  ws.onmessage = (ev) => {
+    buf = cat(buf, new Uint8Array(ev.data));
+    while (buf.length >= 2) {
+      let i = 1, mul = 1, len = 0, b; do { if (i >= buf.length) return; b = buf[i++]; len += (b & 127) * mul; mul *= 128; } while (b & 128);
+      if (buf.length < i + len) return;
+      const hdr = buf[0], body = buf.slice(i, i + len); buf = buf.slice(i + len);
+      if (hdr >> 4 === 2) st.open = true;
+      else if (hdr >> 4 === 3) { const tl = (body[0] << 8) | body[1], off = 2 + tl + (((hdr >> 1) & 3) ? 2 : 0); try { onMsg(JSON.parse(dec.decode(body.slice(off)))); } catch (e) { /* not ours */ } }
+    }
+  };
+  ws.onclose = ws.onerror = () => { st.open = false; clearInterval(st.ping); };
+  st.send = (obj) => { if (!st.open) return; const tb = str(topic), pb = enc.encode(JSON.stringify(obj)); try { ws.send(pkt(0x30, [...tb, ...pb])); } catch (e) { /* closed */ } };
+  st.close = () => { clearInterval(st.ping); try { ws.close(); } catch (e) { /* ignore */ } st.open = false; };
+  return st;
+}
+const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt", "wss://test.mosquitto.org:8081"];
 const Net = {
   role: null, code: null, bc: null, ws: null, hb: null, obs: null, last: "", guestOn: false, game: null, t: 0,
   send(m) {
-    m.from = this.role; try { if (this.bc) this.bc.postMessage(m); } catch (e) { /* closed */ }
-    if (this.ws && this.ws.readyState === 1) { try { this.ws.send(JSON.stringify({ topic: "realtime:btm-" + this.code, event: "broadcast", payload: { type: "broadcast", event: "m", payload: m }, ref: String(++this.t) })); } catch (e) { /* offline */ } }
+    m.from = this.role; m.i = Math.random().toString(36).slice(2); try { if (this.bc) this.bc.postMessage(m); } catch (e) { /* closed */ }
+    (this.mq || []).forEach((q) => q.send(m));
   },
   open(code) {
-    this.close(); this.code = code;
+    this.close(); this.code = code; this.seen = new Set(); this.welcomed = false; this.since = Date.now();
     try { this.bc = new BroadcastChannel("btm-" + code); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
-    if (Board.cfg && Board.cfg.url) {
-      try {
-        const u = Board.cfg.url.replace(/^http/, "ws") + "/realtime/v1/websocket?apikey=" + encodeURIComponent(Board.cfg.key) + "&vsn=1.0.0";
-        const ws = new WebSocket(u); this.ws = ws;
-        ws.onopen = () => { ws.send(JSON.stringify({ topic: "realtime:btm-" + code, event: "phx_join", payload: { config: { broadcast: { self: false, ack: false }, presence: { key: "" } } }, ref: "1" })); this.hb = setInterval(() => { try { ws.send(JSON.stringify({ topic: "phoenix", event: "heartbeat", payload: {}, ref: String(++this.t) })); } catch (e) { /* closed */ } }, 25000); if (this.role === "guest") this.send({ k: "hello" }); };
-        ws.onmessage = (e) => { try { const d = JSON.parse(e.data); if (d.event === "broadcast" && d.payload && d.payload.payload) this.recv(d.payload.payload); } catch (err) { /* ignore */ } };
-        ws.onerror = () => { /* the BroadcastChannel still works */ };
-      } catch (e) { this.ws = null; }
-    }
+    this.mq = BROKERS.map((u) => mqttConnect(u, "ballknowledge/v1/" + code, (m) => this.recv(m)));
+    this.sti = setInterval(() => this.paintStatus(), 1000);
   },
-  close() { if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } if (this.ws) { try { this.ws.close(); } catch (e) { /* ignore */ } } clearInterval(this.hb); if (this.obs) this.obs.disconnect(); this.bc = this.ws = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
+  linked() { return (this.mq || []).filter((q) => q.open).length; },
+  paintStatus() {
+    const el = $("#roomStatus"); if (!el || !this.role) return;
+    if (this.role === "host") { if (this.started) { el.textContent = "Player 2 is in. Good luck!"; return; } const link = inviteLink(this.code, this.game); el.innerHTML = `Room <b class="num" style="font-size:22px">${this.code}</b> ${this.linked() ? "is open" : "is connecting…"}. Send the code, or this link, to your friend:<div class="row" style="margin-top:6px"><input id="inviteBox" readonly value="${esc(link)}" style="flex:1;min-width:0;font:600 13px var(--mono);padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn" id="roomCopy" type="button">Copy link</button></div>`; return; }
+    if (this.welcomed) { el.textContent = "Connected. Waiting for the game to appear…"; return; }
+    const secs = Math.round((Date.now() - this.since) / 1000);
+    el.textContent = !this.linked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${this.code}. Check the code, and that your friend has created the room and is still on that screen.` : `Looking for room ${this.code}…`;
+  },
+  close() { if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
   recv(m) {
-    if (!m || m.from === this.role) return;
+    if (!m || m.from === this.role) return; if (m.i) { if (this.seen && this.seen.has(m.i)) return; if (this.seen) { this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); } }
     if (this.role === "host") {
       if (m.k === "hello") { this.send({ k: "welcome" }); if (!Net.started) startOnline(); else this.push(true); }
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
+      if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
       if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
@@ -2054,12 +2094,14 @@ function startOnline() {
   else if (g === "roulette") newRoulette(); else if (g === "finish") newFinish("duo"); else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
   Net.watch(); Net.push(true); toast("Player 2 joined. You are Player 1.");
 }
+const inviteLink = (code, game) => `${location.origin}${location.pathname}#join-${code}-${game}`;
 function openOnline(game) {
   const box = $("#roomBox"); if (!box) return; Net.game = game;
-  box.innerHTML = `<div class="rcard on" style="margin-top:14px"><b>Online room</b><p class="fine">Create a room and send the 4-letter code to a friend, or join theirs. ${Board.cfg ? "" : "This build has no database, so rooms only connect two tabs of the same browser."}</p><div class="row"><button class="btn" id="roomMake" type="button">Create a room</button><input id="roomCode" maxlength="4" placeholder="CODE" aria-label="Room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono, monospace);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="roomJoin" type="button">Join</button></div><div id="roomStatus" class="fine" style="margin-top:8px"></div></div>`;
+  box.innerHTML = `<div class="rcard on" style="margin-top:14px"><b>Two devices</b><p class="fine">Create a room and send your friend the link (or the 4-letter code), or join theirs. It works over the internet, so you can be anywhere.</p><div class="row"><button class="btn" id="roomMake" type="button">Create a room</button><input id="roomCode" maxlength="4" placeholder="CODE" aria-label="Room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono, monospace);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="roomJoin" type="button">Join</button></div><div id="roomStatus" class="fine" style="margin-top:10px"></div></div>`;
 }
-function makeRoom() { const code = newRoomCode(); Net.role = "host"; Net.started = false; Net.open(code); Net.role = "host"; $("#roomStatus").innerHTML = `Room <b class="num" style="font-size:22px">${code}</b>. Waiting for player 2 to join with this code.`; Snd.lock(); }
-function joinRoom() { const c = ($("#roomCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } Net.role = "guest"; Net.open(c); Net.role = "guest"; Net.send({ k: "hello" }); $("#roomStatus").textContent = `Joining ${c}…`; Snd.tick(); }
+function makeRoom() { const code = newRoomCode(); Net.role = "host"; Net.started = false; Net.open(code); Net.role = "host"; Net.paintStatus(); Snd.lock(); }
+function joinRoomCode(c) { Net.role = "guest"; Net.open(c); Net.role = "guest"; Net.send({ k: "hello" }); Net.hi = setInterval(() => { if (Net.role === "guest" && !Net.welcomed) Net.send({ k: "hello" }); }, 2500); Net.paintStatus(); Snd.tick(); }
+function joinRoom() { const c = ($("#roomCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } joinRoomCode(c); }
 function paintGuestBanner() { if (!$("#guestBar")) { const r = $("#room"); r.insertAdjacentHTML("afterbegin", `<div id="guestBar" class="fine" style="margin-bottom:8px">You are Player 2 in room ${esc(Net.code)}. <button class="btn ghost" id="roomLeave" type="button">Leave</button></div>`); } }
 function applyRemote(m) {
   const sel = m.id ? "#" + CSS.escape(m.id) : m.da ? `[data-${m.da}="${CSS.escape(m.dv)}"]` : null; if (!sel) return; const el = document.querySelector("#room " + sel); if (!el) return;
@@ -2079,6 +2121,7 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest && e.target.closest("button"); if (!b) return;
   if (b.id === "roomMake") { e.stopImmediatePropagation(); makeRoom(); return; }
   if (b.id === "roomJoin") { e.stopImmediatePropagation(); joinRoom(); return; }
+  if (b.id === "roomCopy") { e.stopImmediatePropagation(); const v = ($("#inviteBox") || {}).value || ""; try { navigator.clipboard.writeText(v).then(() => toast("Link copied"), () => { $("#inviteBox").select(); toast("Press copy on the selected link"); }); } catch (err) { $("#inviteBox").select(); } return; }
   if (b.id === "roomLeave") { e.stopImmediatePropagation(); Net.close(); S.game = null; renderRoom(); return; }
   if (Net.role === "guest" && b.closest("#room")) {
     e.stopImmediatePropagation(); e.preventDefault(); const ds = Object.keys(b.dataset).find((k) => ["tc", "sug"].includes(k));

@@ -545,6 +545,14 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .splrow { margin-top: 10px; } .splgrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin-top: 6px; }
 .searchov { position: fixed; inset: 0; z-index: 9400; background: #000b; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 14px 14px; } .searchbox { width: min(560px, 100%); background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 14px; box-shadow: 0 30px 80px #000c; display: grid; gap: 10px; }
 .searchbox input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--ink); font: 600 18px var(--sans, system-ui); } .searchres { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow: auto; } .sres { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 9px 10px; border-radius: 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; } .sres.on, .sres:hover { background: color-mix(in srgb, var(--accent) 20%, var(--surface2)); } .sres small { color: var(--muted); } .sic { display: inline-flex; justify-content: center; font-size: 20px; }
+.skel { height: 48px; border-radius: 14px; background: linear-gradient(90deg, var(--surface2) 25%, color-mix(in srgb, var(--surface2) 78%, var(--ink)) 37%, var(--surface2) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; } @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+.wrap { zoom: var(--zoom, 1); }
+:root[data-mode="light"][data-league] { --bg: #f2f4fb; --surface: #ffffff; --surface2: #e9edf7; --ink: #12172b; --muted: #55607f; --line: #cfd6e6; --on-accent: #ffffff; color-scheme: light; }
+:root[data-mode="light"] .stadium { opacity: .16; } :root[data-mode="light"] #fx { opacity: .3; } :root[data-mode="light"] .card, :root[data-mode="light"] .gpick, :root[data-mode="light"] .gcard { box-shadow: 0 10px 30px -18px #2a3358aa; } :root[data-mode="light"] .gpick { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, #fff), #fff 65%); }
+:root[data-mode="light"] .holc.ans .holv { color: #11803c; }
+:root[data-contrast="high"][data-league] { --muted: color-mix(in srgb, var(--ink) 85%, var(--bg)); --line: color-mix(in srgb, var(--ink) 55%, transparent); } :root[data-contrast="high"] .card { border-width: 2px; } :root[data-contrast="high"] .chip, :root[data-contrast="high"] .btn.ghost { border-width: 2px; }
+:root[data-motion="reduced"] *, :root[data-motion="reduced"] *::before, :root[data-motion="reduced"] *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; scroll-behavior: auto !important; }
+.rflair { font-size: 15px; } .lbrow.hrow { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface2); } .up { color: var(--ok); } .down { color: var(--bad); }
 </style>
 
 <div id="splash" class="splash k-star" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-foot"><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div></div>
@@ -589,6 +597,7 @@ function paintSplashArt() {
   sp.className = "splash k-" + kind; window.__spCur = cur; document.getElementById("spName").textContent = cur.name;
   const rr = document.getElementById("spRar"); rr.textContent = cur.rar; rr.className = "sp-rar r-" + cur.rar.toLowerCase();
 }
+(function () { try { const d = document.documentElement, g = (k) => localStorage.getItem(k); const th = g("bk_theme") || "dark"; d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th); if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); } catch (e) { /* storage blocked */ } })();
 (function () { const r = Math.random(); window.__sp = { kind: r < 0.6 ? "star" : r < 0.85 ? "legend" : r < 0.96 ? "rare" : "legendary", r2: Math.random() }; window.__spT0 = performance.now(); document.getElementById("spTip").textContent = SPLASH_TIPS[Math.floor(Math.random() * SPLASH_TIPS.length)]; })();
 </script>
 <div id="stadium" class="stadium" aria-hidden="true"></div>
@@ -691,7 +700,7 @@ function emblem(c, cls = "") {
   return `<svg class="emblem ${cls}" viewBox="0 0 100 100" role="img" aria-label="${esc(L.name)} emblem" style="color:var(--c-accent,var(--accent))"><circle cx="50" cy="50" r="46" fill="var(--c-bg,var(--bg))" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/>${motif}<text x="50" y="82" text-anchor="middle" font-size="15" font-weight="800" fill="var(--c-ink,var(--ink))" style="font-family:var(--c-display,var(--display));letter-spacing:.06em">${INITIALS[c]}</text></svg>`;
 }
 const OUTNAME = { H: "Home", D: "Draw", A: "Away" }, OUTCOL = { H: "var(--home)", D: "var(--draw)", A: "var(--away)" };
-const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const REDUCED = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || document.documentElement.getAttribute("data-motion") === "reduced";
 
 /* ---------- sound: small synthesised palette, three levels ---------- */
 const Snd = (() => {
@@ -822,12 +831,21 @@ const formHTML = (f) => `<span class="form">${f.map((x) => `<i class="${x}">${x}
 /* ---------- team colours and stadium backdrop ---------- */
 const TEAMCOL = DATA.colors || {};
 function teamTheme() {
-  const root = document.documentElement, p = prof(), c = p.favT && p.teamTheme !== false ? TEAMCOL[p.favT] : null;
+  const root = document.documentElement, p = prof(), light = root.getAttribute("data-mode") === "light", c = p.favT && p.teamTheme !== false ? TEAMCOL[p.favT] : null;
   ["--accent", "--accent2", "--glow", "--on-accent"].forEach((k) => root.style.removeProperty(k));
-  if (!c) return;
-  const lum = (h) => { const n = parseInt(h.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); };
-  root.style.setProperty("--accent", c[0]); root.style.setProperty("--accent2", c[1] || c[0]); root.style.setProperty("--glow", c[0]); root.style.setProperty("--on-accent", lum(c[0]) > 150 ? "#101010" : "#ffffff");
+  const pal = PAL[root.getAttribute("data-league") || "E0"] || PAL.E0, base = c || (light ? [pal.accent, pal.accent2] : null); if (!base) return;
+  const lum = (h) => { const n = parseInt(h.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); }, dark = (h) => `color-mix(in srgb, ${h} 58%, #000)`;
+  const a0 = light ? dark(base[0]) : base[0], a1 = light ? dark(base[1] || base[0]) : (base[1] || base[0]);
+  root.style.setProperty("--accent", a0); root.style.setProperty("--accent2", a1); root.style.setProperty("--glow", base[0]); root.style.setProperty("--on-accent", light ? "#ffffff" : lum(base[0]) > 150 ? "#101010" : "#ffffff");
 }
+function applyAppearance() {
+  const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bk_theme") || "dark";
+  d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
+  if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
+  if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
+  d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); teamTheme();
+}
+try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if ((localStorage.getItem("bk_theme") || "dark") === "auto") applyAppearance(); }); } catch (e) { /* old browser */ }
 function paintStadium(code) {
   const el = $("#stadium"); if (!el) return; const r = mulberry(hash("stadium" + code)), W = 1200, H = 360;
   const towers = [150, 420, 780, 1050].map((x, i) => `<g><rect x="${x}" y="${70 + (i % 2) * 20}" width="8" height="${H - 90 - (i % 2) * 20}" fill="#0b0f1a"/><g class="lamp" style="animation-delay:${i * 0.7}s"><circle cx="${x + 4}" cy="${64 + (i % 2) * 20}" r="46" fill="url(#glow)"/><rect x="${x - 22}" y="${54 + (i % 2) * 20}" width="52" height="14" rx="3" fill="#fff7d6"/></g></g>`).join("");
@@ -1539,6 +1557,8 @@ function toast(html, kind = "") {
   const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t); setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3700);
 }
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
+const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join("");
+const emptyState = (icon, title, text) => `<div class="fxempty"><span>${icon}</span><b>${title}</b><div class="fine">${text}</div></div>`;
 const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette"];
 function award(id) { const p = prof(); if (p.ach[id]) return; unlock(p, id); saveProf(p); }
 function trackPlay(label) {
@@ -1714,6 +1734,9 @@ const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "poi
 
 /* ================= Ranked: Elo, public lobbies, leaderboard ================= */
 const RK_GAMES = [["who", "Who am I?"], ["career", "Career path"], ["club", "Name that club"], ["blur", "Badge blur"], ["finish", "Where did they finish?"], ["number", "Market value"], ["ttt", "Football tic-tac-toe"], ["roulette", "Club roulette"]];
+const RANKS = [[1400, "Legend", "👑"], [1250, "Diamond", "💎"], [1150, "Platinum", "💠"], [1050, "Gold", "🥇"], [950, "Silver", "🥈"], [0, "Bronze", "🥉"]];
+const rankOf = (elo) => { const r = RANKS.find(([min]) => elo >= min) || RANKS[RANKS.length - 1]; return { name: r[1], icon: r[2] }; };
+const rankTag = (elo) => `<span class="rflair" title="${rankOf(elo).name}">${rankOf(elo).icon}</span>`;
 const rkName = (g) => (RK_GAMES.find((x) => x[0] === g) || [, g])[1];
 const Ranked = {
   elo: 1000, games: 0, wins: 0, lt: null, list: null, timer: null,
@@ -1724,16 +1747,16 @@ const Ranked = {
   async refresh() { const r = await this.rpc("my_rating"); if (r && r[0]) { this.elo = r[0].elo; this.games = r[0].games; this.wins = r[0].wins; } return this.elo; },
   startLobby(code, game, diff) { this.stopLobby(true); const go = () => this.rpc("lobby_ping", { p_code: code, p_game: game, p_diff: diff }); go(); this.lt = setInterval(go, 15000); },
   stopLobby(quiet) { if (this.lt) { clearInterval(this.lt); this.lt = null; if (!quiet) this.rpc("lobby_close"); } },
-  async report(mid, opp, res) {
-    const before = this.elo; await this.rpc("report_match", { p_match: mid, p_opp: opp, p_result: res });
+  async report(mid, opp, res, game) {
+    const before = this.elo; await this.rpc("report_match", { p_match: mid, p_opp: opp, p_result: res, p_game: game || null });
     setTimeout(async () => { const now = await this.refresh(); if (now !== before || res === "draw") { toast(`Rating ${now} (${now >= before ? "+" : ""}${now - before})`); award("ranked_first"); if (res === "win") award("ranked_win"); if (this.games >= 5) award("ranked5"); if (now >= 1200) award("elo1200"); } else toast("Waiting for your opponent to confirm the result"); }, 2500);
   },
 };
 function rankedEnd(ref, sc) {
   if (Net.role !== "host" || !Net.ranked || !Net.guest || !Net.guest.uid || Net.lastRef === ref || !Account.signedIn) return; Net.lastRef = ref;
   const mid = `${Net.code}-${Date.now().toString(36)}`, hostRes = sc[0] > sc[1] ? "win" : sc[0] < sc[1] ? "loss" : "draw";
-  Net.send({ k: "result", mid, hostUid: Account.session.user.id, guestRes: hostRes === "win" ? "loss" : hostRes === "loss" ? "win" : "draw" });
-  Ranked.report(mid, Net.guest.uid, hostRes);
+  Net.send({ k: "result", mid, game: Net.game, hostUid: Account.session.user.id, guestRes: hostRes === "win" ? "loss" : hostRes === "loss" ? "win" : "draw" });
+  Ranked.report(mid, Net.guest.uid, hostRes, Net.game);
 }
 async function ensureNick() {
   if (!Account.signedIn || Board.mode !== "rest") return; const p = prof(); if (p.nick) return;
@@ -1745,20 +1768,20 @@ function renderRanked() {
   if (Board.mode !== "rest") { $("#room").innerHTML = `<div class="card"><h2>Ranked</h2><p class="sub">Ranked play needs the online database, which is not connected in this build.</p></div>`; return; }
   if (!Account.signedIn) { $("#room").innerHTML = `<div class="card"><h2>Ranked</h2><p class="sub">Play real opponents, win Elo and climb the leaderboard. You need a free account so your rating belongs to you.</p><div class="row" style="margin-top:12px"><button class="btn" id="rkSign" type="button">Create an account or sign in</button></div></div>`; return; }
   const p = prof();
-  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Ranked</h2><span class="rkbadge"><b class="num">${Ranked.elo}</b><small>Elo · ${Ranked.games} played · ${Ranked.wins} won</small></span></div>
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Ranked</h2><span class="rkbadge"><b class="num">${Ranked.elo}</b><small>${rankOf(Ranked.elo).icon} ${rankOf(Ranked.elo).name} · ${Ranked.games} played · ${Ranked.wins} won</small></span></div>
     <p class="sub">Open a public lobby and anyone can join, and the result moves both ratings. Or go private with a code for friends (no rating change).</p>
     <div class="rkform"><label>Game<select id="rkGame">${RK_GAMES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label><label>Difficulty<select id="rkDiff">${DIFFS.map(([v, n]) => `<option value="${v}" ${v === S.diff ? "selected" : ""}>${n}</option>`).join("")}</select></label>
     <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn" id="rkCreate" type="button">Create lobby</button></div>
     <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
-    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx"><div class="fine">Looking for lobbies…</div></div></div>`;
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx">${skelRows(3)}</div></div>`;
   paintLobbies(); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); }, 4000);
-  Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>Elo · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
+  Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>${rankOf(Ranked.elo).icon} ${rankOf(Ranked.elo).name} · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
 }
 async function paintLobbies() {
   const rows = await Ranked.rpc("open_lobbies"), box = $("#rkList"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Could not load lobbies. Check your connection.</div>'; return; }
   const me = prof().nick, list = rows.filter((r) => r.nick !== me || true);
-  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div><b>${esc(r.nick)}</b> <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : '<div class="fine">No open lobbies right now. Create one and wait for someone to hop in.</div>';
+  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div>${avatarHTML(r.avatar, "xs", r.nick)}<b>${esc(r.nick)}</b> ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : emptyState("🪑", "No open lobbies", "Create one above and wait for someone to hop in.");
   const st = $("#rkStamp"); if (st) st.textContent = "updates every few seconds";
 }
 function rankedStart(game, diff, pub) {
@@ -1767,17 +1790,22 @@ function rankedStart(game, diff, pub) {
   if (pub) Ranked.startLobby(Net.code, game, diff);
   const el = $("#roomStatus"); if (el && pub) el.insertAdjacentHTML("afterend", '<div class="fine" style="margin-top:6px">Listed in Ranked lobbies. Anyone can join; the result changes both ratings.</div>');
 }
+function challengeModal(nick) {
+  modal(`<h2 style="font-size:24px">Challenge ${esc(nick)}</h2><p class="fine">Pick a game. A private room opens and the invite link is copied, ready to send. This match does not change your Elo.</p>
+    <div class="rkform"><label>Game<select id="chGame">${RK_GAMES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label><label>Difficulty<select id="chDiff">${DIFFS.map(([v, n]) => `<option value="${v}" ${v === S.diff ? "selected" : ""}>${n}</option>`).join("")}</select></label></div>
+    <div class="row" style="margin-top:14px"><button class="btn" id="chGo" data-nick="${esc(nick)}" type="button">Create room and copy link</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
+}
 function rankedJoin(code, game) {
   resetGames(); S.rk = true; S.game = game === "number" ? "value" : game; S.hubGroup = "ranked"; renderRoom(); openOnline(game); joinRoomCode(code); Net.ranked = true;
 }
 async function renderBoards() {
   const p = prof();
-  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Leaderboard</h2><span class="fine">Ranked by Elo</span></div><div id="bBody" class="lbx" style="margin-top:10px"><div class="fine">Loading…</div></div></div>`;
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Leaderboard</h2><span class="fine">Ranked by Elo</span></div><div id="bBody" class="lbx" style="margin-top:10px">${skelRows(5)}</div></div>`;
   const body = $("#bBody");
   if (Board.mode !== "rest") { body.innerHTML = '<div class="fine">The leaderboard needs the online database.</div>'; return; }
   const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
   if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
-  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : '<div class="fine">No ranked matches yet. Play one in Ranked and be the first on the board.</div>';
+  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("🏆", "No ranked matches yet", "Play one in Ranked and be the first on the board.");
 }
 
 
@@ -1843,8 +1871,8 @@ async function renderLive() {
   $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
     <p class="sub">Predict the next real matches before kickoff. The model plays too, and its score is pinned to the top of the board.</p>
     ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to lock your picks and join the board.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
-    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist"><div class="fine">Loading fixtures…</div></div></div>
-    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">🏆 Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx"><div class="fine">Loading…</div></div></div>`;
+    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist">${skelRows(3)}</div></div>
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">🏆 Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx">${skelRows(3)}</div></div>`;
   await loadLive(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
   Live.tick = setInterval(paintCountdown, 1000);
 }
@@ -1882,7 +1910,7 @@ function paintLiveBoard(rows, model) {
   const mine = rows.find((r) => r.nick === me);
   const head = mine && model && model.played ? `<div class="fine" style="margin-bottom:6px">You: <b class="num">${mine.correct}/${mine.played}</b> · Model: <b class="num">${model.correct}/${model.played}</b>${mine.correct > model.correct ? " · you're ahead!" : mine.correct === model.correct ? " · level with the model" : ""}</div>` : "";
   if (mine && model && mine.played >= 3 && mine.correct > model.correct) award("beatmodel");
-  box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : '<div class="fine" style="margin-top:6px">No finished predictions yet. Lock a pick and check back after the match.</div>');
+  box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : emptyState("🔮", "No finished predictions yet", "Lock a pick and check back after the match."));
 }
 
 
@@ -1925,12 +1953,17 @@ function avatarHTML(av, size = "md", nick = "") {
   return `<span class="av av-${size}">${inner}</span>`;
 }
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); }
+function appearanceHTML() {
+  const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "dark"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
+  return `<label class="pfl">Theme</label>${seg("theme", [["dark", "🌙 Dark"], ["light", "☀️ Light"], ["auto", "🖥️ Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
+  <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bk_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
+}
 function showProfile(ev) {
   S.code = null; S.mode = null; setTheme("HOME", ev); $("#home").hidden = true; $("#lobby").hidden = true; $("#league").hidden = true; $("#profilePage").hidden = false; window.scrollTo(0, 0);
   award("curious"); renderProfilePage();
 }
 function eloChart(rows) {
-  if (!rows || rows.length < 1) return '<div class="fine">No ranked matches yet. Play one in Ranked and your rating history will draw itself here.</div>';
+  if (!rows || rows.length < 1) return emptyState("📈", "No rating history yet", "Play a ranked match and your Elo will draw itself here.");
   const pts = [1000].concat(rows.map((r) => r.elo)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 320, H = 110, x = (i) => (pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * (W - 20) + 10), y = (v) => H - 14 - ((v - lo) / (hi - lo || 1)) * (H - 28);
   const d = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" "), last = pts[pts.length - 1];
   return `<svg class="elochart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history"><line x1="10" x2="${W - 10}" y1="${y(1000)}" y2="${y(1000)}" stroke="currentColor" stroke-opacity=".2" stroke-dasharray="3 4"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${i === pts.length - 1 ? 5 : 3}" fill="${i === pts.length - 1 ? "var(--accent)" : "var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}<text x="${W - 10}" y="12" text-anchor="end" font-size="11" fill="currentColor" opacity=".7">peak ${Math.max(...pts)} · now ${last}</text></svg>`;
@@ -1944,28 +1977,33 @@ async function renderProfilePage() {
   const teams = Object.keys(QZ.clubs).filter((n) => CREST[n]).sort();
   el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Profile</span></div></nav>
   <div class="card pfhead">${avatarHTML(p.avatar, "xl", p.nick)}<div class="pfid"><h1>${esc(p.nick || "Guest")}</h1><div class="label">${esc(lv.name)} · ${p.xp} XP${lv.next ? ` · next: ${esc(lv.next)} at ${lv.to}` : " · top rank"}</div><div class="xpbar"><i style="width:${pct2}%"></i></div>
-    <div class="pfchips"><span class="chip2"><b class="num" id="pfElo">${signed ? Ranked.elo : "–"}</b> Elo</span><span class="chip2"><b class="num">${st}</b> day streak</span><span class="chip2"><b class="num">${won}/${ACH.length}</b> achievements</span>${favP ? `<span class="chip2">⭐ ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}</div></div></div>
+    <div class="pfchips"><span class="chip2"><b class="num" id="pfElo">${signed ? Ranked.elo : "–"}</b> Elo ${signed ? rankTag(Ranked.elo) + " " + rankOf(Ranked.elo).name : ""}</span><span class="chip2"><b class="num">${st}</b> day streak</span><span class="chip2"><b class="num">${won}/${ACH.length}</b> achievements</span>${favP ? `<span class="chip2">⭐ ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}</div></div></div>
   <div class="pfgrid"><div class="card"><h3>Edit profile</h3>
     ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
     <label class="pfl">Profile picture</label><div class="avgrid">${avs}</div>
     <label class="pfl">Favourite player</label><div class="row"><input id="pfPlayer" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${favP ? esc(favP.n) : "Search a player"}" aria-label="Favourite player">${favP ? '<button class="btn ghost" id="pfPlayerClear" type="button">Clear</button>' : ""}</div><div id="pfPSug" class="sugs"></div>
     <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : ""}</div>
   <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
-  <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx"><div class="fine">Loading…</div></div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
+  <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx">${skelRows(2)}</div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
+  <div class="card"><h3>Appearance</h3>${appearanceHTML()}</div>
   <div class="card"><h3>Your strengths</h3>${statsRadarHTML()}</div>
   <div class="card"><h3>Loading screens <span class="fine">${nSeen} of ${cat.length} collected</span></h3>${spl}</div>
   <div class="card"><h3>Achievements <span class="fine">${won} of ${ACH.length}</span></h3><div class="achgrid">${ach}</div></div>
   <div class="card"><h3>Streak calendar</h3>${calendarHTML(p)}<div class="fine">Each square is a day; brighter means more games. Last 12 weeks.</div></div>
-  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button><button class="btn" data-go="album" type="button">📒 Sticker album</button></div></div>`;
+  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="pfShare" type="button">Share my profile card</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button><button class="btn" data-go="album" type="button">📒 Sticker album</button></div></div>`;
   if (!signed) return;
   Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) e.textContent = Ranked.elo; });
-  Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
+  Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) + historyList(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
   paintFriends();
+}
+function historyList(rows) {
+  if (!rows || !rows.length) return ""; const ago = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? `${Math.max(1, m)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
+  return `<div class="label" style="margin-top:12px">Recent matches</div><div class="lbx">${rows.slice(-8).reverse().map((r) => `<div class="lbrow hrow"><b>${r.delta > 0 ? "✅" : r.delta < 0 ? "❌" : "➖"}</b><span>${r.opp_nick ? "vs " + esc(r.opp_nick) : "Ranked match"}<small class="fine"> ${r.game ? esc(rkName(r.game)) : ""}</small></span><span class="num ${r.delta >= 0 ? "up" : "down"}">${r.delta > 0 ? "+" : ""}${r.delta}</span><span class="fine">${ago(r.at)}</span></div>`).join("")}</div>`;
 }
 async function paintFriends() {
   const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
-  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b> <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "⭐ " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div>`).join("") : '<div class="fine">No friends yet. Add someone by their display name.</div>';
+  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b> ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "⭐ " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button">⚔️ Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("🤝", "No friends yet", "Add someone by their display name.");
 }
 
 /* ================= Challenge a friend ================= */
@@ -2610,7 +2648,7 @@ const Net = {
       if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
       if (m.k === "react") floatReact(m.e);
       if (m.k === "welcome" && m.ranked) this.ranked = true;
-      if (m.k === "result" && this.ranked && Account.signedIn) { Ranked.report(m.mid, m.hostUid, m.guestRes); }
+      if (m.k === "result" && this.ranked && Account.signedIn) { Ranked.report(m.mid, m.hostUid, m.guestRes, m.game); }
       if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
@@ -2749,6 +2787,10 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
   if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
+  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
+  if (b.dataset.chal) { Snd.tick(); challengeModal(b.dataset.chal); return; }
+  if (b.id === "chGo") { const g = $("#chGame").value, d = $("#chDiff").value, nick = b.dataset.nick; closeModal(); rankedStart(g, d, false); const link = inviteLink(Net.code, g), msg = `${nick}, join my ballknowledge room: ${link}`; try { navigator.clipboard.writeText(msg).then(() => toast("Invite link copied. Send it to " + esc(nick))); } catch (e) { toast("Copy the link from the room screen"); } try { if (navigator.share) navigator.share({ title: "ballknowledge", text: msg, url: link }).catch(() => {}); } catch (e) { /* not supported */ } return; }
+  if (b.id === "pfShare") { const p = prof(), lv = levelOf(p.xp), signed = Account.signedIn && Board.mode === "rest", fav = QZ.players.find((x) => x.id === +p.favP); showCard("record", { lg: p.favT ? (QZ.clubs[p.favT] || {}).lg || "ALL" : "ALL", title: p.nick || "My profile", big: signed ? `${Ranked.elo} Elo` : lv.name, sub: `${signed ? rankOf(Ranked.elo).name + " · " : ""}${lv.name} · ${p.xp} XP`, tiles: [[`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"], [String(dayStreak(p)), "day streak"], [String(Object.keys(p.stickers || {}).length), "stickers"]], line: fav ? `Favourite player: ${fav.n}${p.favT ? " · " + p.favT : ""}` : p.favT ? `Favourite team: ${p.favT}` : "Think you know more football than me?", share: `My ballknowledge profile: ${signed ? Ranked.elo + " Elo, " : ""}${Object.keys(p.ach).length} achievements. Think you know more?` }); return; }
   if (b.id === "searchBtn") { openSearch(); return; }
   if (b.id === "lvStay") { closeModal(); return; }
   if (b.id === "lvLeave") { closeModal(); const cb = window.__leaveCb; window.__leaveCb = null; resetGames(); Q.s = null; if (cb) cb(); return; }
@@ -2892,5 +2934,5 @@ document.addEventListener("mouseout", (e) => { if (!e.relatedTarget || !lastHov 
 addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e.returnValue = ""; } });
 addEventListener("hashchange", () => route());
 
-renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore(); route(); setTimeout(finishSplash, 300);
+renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore().then(() => { paintProfileBtn(); paintScore(); }); route(); setTimeout(finishSplash, 300);
 </script>

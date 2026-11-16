@@ -543,6 +543,8 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .clubgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; } .clubcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface2); cursor: pointer; color: var(--ink); overflow: hidden; transition: transform .15s ease, border-color .2s; } .clubcard:hover { transform: translateY(-3px); border-color: var(--accent); } .clubcard b { font-size: 13px; text-align: center; } .clubcard small { color: var(--muted); } .clubcard i { position: absolute; left: 0; bottom: 0; height: 4px; width: var(--w); background: var(--accent); } .clubcard.done { border-color: #ffb300; box-shadow: 0 0 18px -6px #ffb300; }
 .stk .era { font: 700 11px var(--mono); padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 18%, var(--surface)); } .stk.team { grid-column: span 1; }
 .splrow { margin-top: 10px; } .splgrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin-top: 6px; }
+.searchov { position: fixed; inset: 0; z-index: 9400; background: #000b; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 14px 14px; } .searchbox { width: min(560px, 100%); background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 14px; box-shadow: 0 30px 80px #000c; display: grid; gap: 10px; }
+.searchbox input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--ink); font: 600 18px var(--sans, system-ui); } .searchres { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow: auto; } .sres { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 9px 10px; border-radius: 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; } .sres.on, .sres:hover { background: color-mix(in srgb, var(--accent) 20%, var(--surface2)); } .sres small { color: var(--muted); } .sic { display: inline-flex; justify-content: center; font-size: 20px; }
 </style>
 
 <div id="splash" class="splash k-star" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-foot"><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div></div>
@@ -598,6 +600,7 @@ function paintSplashArt() {
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album">📒</button>
+    <button class="pill" id="searchBtn" type="button" title="Search (press /)" aria-label="Search">🔍</button>
     <button class="pill" id="sndBtn" type="button" title="Sound: off, soft or full" aria-label="Sound">Sound: soft</button>
     <button class="pill" id="acctBtn" type="button">Sign in</button>
     <button class="pill profilebtn" id="profileBtn" type="button" title="Your profile, rank and achievements" aria-label="Open your profile"></button>
@@ -839,7 +842,10 @@ function setTheme(code, ev) {
   wash.style.setProperty("--wx", ev.clientX + "px"); wash.style.setProperty("--wy", ev.clientY + "px"); wash.style.setProperty("--wash", p.bg);
   wash.classList.remove("go"); void wash.offsetWidth; wash.classList.add("go"); setTimeout(apply, 280);
 }
-function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
+function inMatch() { return !!((Net.role && Net.started) || (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") || (S.ttt && S.ttt.mode === "duo" && S.ttt.phase === "play") || (S.rou && S.rou.phase === "play") || (S.fin && S.fin.mode === "duo" && S.fin.phase !== "done") || (S.num && S.num.mode === "duo" && S.num.phase !== "done")); }
+function leaveModal(cb) { window.__leaveCb = cb; modal(`<h2 style="font-size:24px">Leave this match?</h2><p class="fine">${Net.role && Net.ranked ? "Leaving a ranked match ends it, and your opponent may be awarded the win." : "Your match will end."}</p><div class="row" style="margin-top:14px"><button class="btn" id="lvStay" type="button">Stay</button><button class="btn ghost" id="lvLeave" type="button">Leave</button></div>`); }
+function go(slug) { if (inMatch() && location.hash.replace("#", "") !== slug) { leaveModal(() => { Q.s = null; S.ttt = S.rou = S.fin = S.num = null; Net.close(); go0(slug); }); return; } go0(slug); }
+function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette"];
 function route(ev) {
   const h = location.hash.slice(1);
@@ -1301,6 +1307,7 @@ function crumbGo(k) {
   if (k === "menu") go(""); else if (k === "lobby") go("lab"); else if (k === "games") { S.hubGroup = null; go("games-" + SLUG[S.code]); } else if (k === "group") { resetGames(); S.game = null; S.room = "play"; renderRoom(); }
 }
 function goBack() {
+  if (inMatch() && !window.__leaving) { leaveModal(() => { window.__leaving = true; goBack(); window.__leaving = false; }); return; }
   Snd.back();
   if (S.mode !== "games") { go("lab"); return; }
   if (S.room === "boards") { S.room = "play"; renderRooms(); renderRoom(); return; }
@@ -1878,6 +1885,36 @@ function paintLiveBoard(rows, model) {
   box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : '<div class="fine" style="margin-top:6px">No finished predictions yet. Lock a pick and check back after the match.</div>');
 }
 
+
+/* ================= Search everything ================= */
+function searchItems(q) {
+  const n = qnorm(q), out = [];
+  const pages = [["Menu", "⌂", () => go("")], ["Games", "🎮", () => go("games")], ["ballknowledge originals", "🧠", () => go("games-all-leagues-bk")], ["Beat the Model", "🆚", () => go("games-all-leagues-model")], ["Ranked", "🏆", () => go("games-all-leagues-ranked")], ["Live predictions", "🔴", () => go("games-all-leagues-live")], ["Our model", "📊", () => go("lab")], ["Time machine", "⏳", () => go("lab-premier-league-replay")], ["Title race", "🏁", () => go("lab-premier-league-race")], ["How the model works", "💡", () => go("lab-all-leagues-about")], ["Leaderboard", "🥇", () => go("games-all-leagues-boards")], ["My profile", "👤", () => go("profile")], ["Appearance and settings", "🎨", () => go("profile")], ["Sticker album", "📒", () => go("album")], ["Replay the tour", "🧭", () => startTour()]];
+  pages.forEach(([name, ic, fn]) => { if (!n || qnorm(name).includes(n)) out.push({ ic, name, sub: "Page", fn }); });
+  [...GAMES, ...QUIZ_GAMES].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "🎲", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
+  if (n.length >= 2) {
+    Object.keys(QZ.clubs).filter((c) => CREST[c] && qnorm(c).includes(n)).slice(0, 4).forEach((c) => out.push({ ic: badge(c, "sm"), name: c, sub: "Club in the sticker album", fn: () => { S.alb = { lg: QZ.clubs[c].lg, club: c, more: 1 }; go("album"); renderAlbum && S.alb && setTimeout(renderAlbum, 50); } }));
+    suggestions(q, QZ.players, (x) => x.n).forEach((p) => out.push({ ic: avatarHTML("", "xs", p.n[0]), name: p.n, sub: `Player · ${p.club || ""}`, fn: () => playerCard(p) }));
+  }
+  return out.slice(0, 12);
+}
+function openSearch() {
+  if ($("#search")) return; const el = document.createElement("div"); el.id = "search"; el.className = "searchov"; el.innerHTML = `<div class="searchbox" role="dialog" aria-label="Search"><input id="searchIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search games, pages, players, clubs…" aria-label="Search"><div id="searchRes" class="searchres"></div><div class="fine">↑ ↓ to move · Enter to open · Esc to close</div></div>`; document.body.appendChild(el);
+  let sel = 0, items = [];
+  const paint = () => { items = searchItems($("#searchIn").value); sel = Math.min(sel, Math.max(0, items.length - 1)); $("#searchRes").innerHTML = items.length ? items.map((x, i) => `<button type="button" class="sres ${i === sel ? "on" : ""}" data-sr="${i}"><span class="sic">${x.ic}</span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small></button>`).join("") : '<div class="fine" style="padding:12px">Nothing found. Try a game, a player or a club.</div>'; };
+  const go_ = (i) => { const x = items[i]; if (!x) return; closeSearch(); Snd.tick(); setTimeout(x.fn, 30); };
+  el.addEventListener("click", (e) => { const b = e.target.closest("[data-sr]"); if (b) go_(+b.dataset.sr); else if (e.target === el) closeSearch(); });
+  $("#searchIn").addEventListener("input", () => { sel = 0; paint(); });
+  $("#searchIn").addEventListener("keydown", (e) => { if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(items.length - 1, sel + 1); paint(); } else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); } else if (e.key === "Enter") { e.preventDefault(); go_(sel); } else if (e.key === "Escape") closeSearch(); });
+  paint(); $("#searchIn").focus();
+}
+function closeSearch() { const el = $("#search"); if (el) el.remove(); }
+function playerCard(p) {
+  const era = (p.cr || []).map(([c, a, b]) => `<span class="chip2">${CREST[c] ? badge(c, "sm") : ""} ${esc(c)} <small class="num">${eraOf(a, b)}</small></span>`).join("");
+  modal(`<div class="row" style="gap:16px">${playerPic(p, "xl")}<div><h2 style="font-size:28px">${esc(p.n)}</h2><div class="fine">${POSICON[p.pos] || ""} ${esc(p.sub || p.pos)} · ${flagOf(p.nat)} ${esc(p.nat)} · ${ageOf(p)} yrs</div><div class="fine">${esc(p.club || "")} · ${euro(p.val)}${p.caps ? ` · ${p.caps} caps` : ""}</div></div></div><div class="pfchips" style="margin-top:12px">${era}</div><div class="row" style="margin-top:14px"><button class="btn" data-favp="${p.id}" type="button">⭐ Make favourite</button><button class="btn ghost" id="modalClose" type="button">Close</button></div>`);
+}
+addEventListener("keydown", (e) => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || "") && !e.metaKey && !e.ctrlKey) { e.preventDefault(); openSearch(); } });
+
 /* ================= Profile page ================= */
 const AVATARS = ["⚽", "🥅", "🧤", "🏆", "👑", "🔥", "🦁", "🐐", "🎯", "🧠", "⚡", "🌟"];
 function avatarHTML(av, size = "md", nick = "") {
@@ -2192,7 +2229,7 @@ const QDEF = {
 function newQuiz(game, mode, scope) { Q.s = { game, mode, scope, round: 0, scores: mode === "duo" ? [0, 0] : [0], log: [], phase: "intro" }; renderQuiz(); }
 function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
-  if (S_.round === 0) { S_.streak = 0; S_.over = false; }
+  if (S_.round === 0) { S_.streak = 0; S_.over = false; clearResume(); }
   S_.round++; const uk = S_.game + S.diff + S_.scope; S.seenQ = S.seenQ || {}; if (!S.seenQ[uk] || S.seenQ[uk].size > 150) S.seenQ[uk] = new Set(); S_.used = S.seenQ[uk]; S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
   S_.cs = d.clueS * clueSpeed(); S_.total = S_.clues.length * S_.cs + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
@@ -2223,9 +2260,13 @@ function wrongGuess(timedOut) {
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
   if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
-  S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
+  if (S_.mode === "solo") { if (winner != null) saveResume(S_.game, S_.scope, S_.scores[0], S_.streak, S_.round); else clearResume(); } S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
-function finishQuiz() {
+const RESUME_KEY = "bk_resume";
+const getResume = (game, scope) => { try { const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null"); return r && r.game === game && r.scope === scope && r.diff === S.diff && Date.now() - r.at < 3 * 864e5 ? r : null; } catch (e) { return null; } };
+const saveResume = (game, scope, score, streak, round) => { try { localStorage.setItem(RESUME_KEY, JSON.stringify({ game, scope, diff: S.diff, score, streak, round, at: Date.now() })); } catch (e) { /* blocked */ } };
+const clearResume = () => { try { localStorage.removeItem(RESUME_KEY); } catch (e) { /* blocked */ } };
+function finishQuiz() { clearResume();
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") rankedEnd(S_, S_.scores);
   if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
   if (S_.mode === "solo") { const sc = Math.round(Math.max(0, S_.scores[0]) * DIFFX[S.diff]); reward(30 + Math.round(sc / 100), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: sc }); }
@@ -2250,6 +2291,7 @@ function renderQuiz() {
   if (S_.phase === "intro") {
     const clue = S_.game === "blur" ? "A club badge starts blurred and sharpens." : "Clues start hard and get easier.";
     $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above.${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
+      ...(getResume(S_.game, S_.scope) ? [{ id: "qResume", t: `Resume your streak (${getResume(S_.game, S_.scope).streak}, ${getResume(S_.game, S_.scope).score} pts)`, d: "Pick up where you stopped." }] : []),
       { id: "qSolo", t: "Solo streak", d: "Keep going for as long as you can. The run ends the first time a round runs out of time." },
       { id: "qDuo", t: "Two players, one device", d: "Five rounds. Race to buzz: A for player 1, L for player 2. The first right answer takes the points." },
       { id: "qOnline", t: "Two players, two devices", d: "The same race, from two phones or computers, with a four-letter room code." }]); return;
@@ -2501,33 +2543,37 @@ function finishTTT() { const t = S.ttt; if (t.mode === "duo") rankedEnd(t, t.win
    logic to keep in step. Two transports: a BroadcastChannel (two tabs of the same browser, used for testing and offline) and Supabase
    Realtime broadcast (two devices, when the build has a database). */
 /* A tiny MQTT-over-WebSocket client: public brokers relay the messages between two devices, so rooms need no account or database. */
-function mqttConnect(url, topic, onMsg) {
-  const enc = new TextEncoder(), dec = new TextDecoder(), st = { open: false, ws: null, ping: null }; let buf = new Uint8Array(0);
+function mqttConnect(url, topic, onMsg, onState) {
+  const enc = new TextEncoder(), dec = new TextDecoder(), st = { open: false, ws: null, ping: null, stopped: false, tries: 0 }; let buf = new Uint8Array(0);
   const str = (s) => { const b = enc.encode(s); return [b.length >> 8, b.length & 255, ...b]; };
   const rl = (n) => { const o = []; do { let d = n % 128; n = Math.floor(n / 128); if (n) d |= 128; o.push(d); } while (n); return o; };
   const pkt = (hdr, body) => { const b = Uint8Array.from(body); return Uint8Array.from([hdr, ...rl(b.length), ...b]); };
   const cat = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
-  let ws; try { ws = new WebSocket(url, "mqtt"); } catch (e) { return st; }
-  st.ws = ws; ws.binaryType = "arraybuffer";
-  ws.onopen = () => {
-    ws.send(pkt(0x10, [...str("MQTT"), 4, 2, 0, 60, ...str("bk" + Math.random().toString(36).slice(2, 10))]));
-    ws.send(pkt(0x82, [0, 1, ...str(topic), 0]));
-    st.ping = setInterval(() => { try { ws.send(Uint8Array.from([0xC0, 0])); } catch (e) { /* closed */ } }, 30000);
-  };
-  ws.onmessage = (ev) => {
-    buf = cat(buf, new Uint8Array(ev.data));
-    while (buf.length >= 2) {
-      let i = 1, mul = 1, len = 0, b; do { if (i >= buf.length) return; b = buf[i++]; len += (b & 127) * mul; mul *= 128; } while (b & 128);
-      if (buf.length < i + len) return;
-      const hdr = buf[0], body = buf.slice(i, i + len); buf = buf.slice(i + len);
-      if (hdr >> 4 === 2) st.open = true;
-      else if (hdr >> 4 === 3) { const tl = (body[0] << 8) | body[1], off = 2 + tl + (((hdr >> 1) & 3) ? 2 : 0); try { onMsg(JSON.parse(dec.decode(body.slice(off)))); } catch (e) { /* not ours */ } }
-    }
-  };
-  ws.onclose = ws.onerror = () => { st.open = false; clearInterval(st.ping); };
-  st.send = (obj) => { if (!st.open) return; const tb = str(topic), pb = enc.encode(JSON.stringify(obj)); try { ws.send(pkt(0x30, [...tb, ...pb])); } catch (e) { /* closed */ } };
-  st.close = () => { clearInterval(st.ping); try { ws.close(); } catch (e) { /* ignore */ } st.open = false; };
-  return st;
+  function connect() {
+    let ws; try { ws = new WebSocket(url, "mqtt"); } catch (e) { retry(); return; }
+    st.ws = ws; ws.binaryType = "arraybuffer"; buf = new Uint8Array(0);
+    ws.onopen = () => {
+      ws.send(pkt(0x10, [...str("MQTT"), 4, 2, 0, 60, ...str("bk" + Math.random().toString(36).slice(2, 10))]));
+      ws.send(pkt(0x82, [0, 1, ...str(topic), 0]));
+      st.ping = setInterval(() => { try { ws.send(Uint8Array.from([0xC0, 0])); } catch (e) { /* closed */ } }, 30000);
+    };
+    ws.onmessage = (ev) => {
+      buf = cat(buf, new Uint8Array(ev.data));
+      while (buf.length >= 2) {
+        let i = 1, mul = 1, len = 0, b; do { if (i >= buf.length) return; b = buf[i++]; len += (b & 127) * mul; mul *= 128; } while (b & 128);
+        if (buf.length < i + len) return;
+        const hdr = buf[0], body = buf.slice(i, i + len); buf = buf.slice(i + len);
+        if (hdr >> 4 === 2) { st.open = true; st.tries = 0; if (onState) onState(true); }
+        else if (hdr >> 4 === 3) { const tl = (body[0] << 8) | body[1], off = 2 + tl + (((hdr >> 1) & 3) ? 2 : 0); try { onMsg(JSON.parse(dec.decode(body.slice(off)))); } catch (e) { /* not ours */ } }
+      }
+    };
+    ws.onclose = () => { const was = st.open; st.open = false; clearInterval(st.ping); if (was && onState) onState(false); retry(); };
+    ws.onerror = () => { /* onclose follows */ };
+  }
+  function retry() { if (st.stopped) return; st.tries++; setTimeout(() => { if (!st.stopped) connect(); }, Math.min(8000, 800 * st.tries)); }
+  st.send = (obj) => { if (!st.open) return; const tb = str(topic), pb = enc.encode(JSON.stringify(obj)); try { st.ws.send(pkt(0x30, [...tb, ...pb])); } catch (e) { /* closed */ } };
+  st.close = () => { st.stopped = true; clearInterval(st.ping); try { st.ws.close(); } catch (e) { /* ignore */ } st.open = false; };
+  connect(); return st;
 }
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt", "wss://test.mosquitto.org:8081"];
 const Net = {
@@ -2539,9 +2585,10 @@ const Net = {
   open(code) {
     this.close(); this.code = code; this.seen = new Set(); this.welcomed = false; this.since = Date.now();
     try { this.bc = new BroadcastChannel("btm-" + code); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
-    this.mq = BROKERS.map((u) => mqttConnect(u, "ballknowledge/v1/" + code, (m) => this.recv(m)));
+    this.mq = BROKERS.map((u) => mqttConnect(u, "ballknowledge/v1/" + code, (m) => this.recv(m), (up) => this.onLink(up)));
     this.sti = setInterval(() => this.paintStatus(), 1000);
   },
+  onLink(up) { this.paintStatus(); if (up && this.role === "guest" && this.welcomed) { this.send({ k: "hello", uid: Account.signedIn ? Account.session.user.id : null, nick: prof().nick || "" }); toast("Reconnected"); } else if (!up && this.role && (this.started || this.welcomed) && !this.linked()) toast("Connection lost. Reconnecting…"); },
   linked() { return (this.mq || []).filter((q) => q.open).length; },
   paintStatus() {
     const rb = $("#reactBar"); if (rb) rb.hidden = !(this.role && (this.started || this.welcomed));
@@ -2702,6 +2749,9 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
   if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
+  if (b.id === "searchBtn") { openSearch(); return; }
+  if (b.id === "lvStay") { closeModal(); return; }
+  if (b.id === "lvLeave") { closeModal(); const cb = window.__leaveCb; window.__leaveCb = null; resetGames(); Q.s = null; if (cb) cb(); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
   if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
@@ -2752,6 +2802,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "tbLock") { lockTable(); return; }
   if (b.id === "tbAgain") { S.tab = null; renderTableGame(); return; }
   if (b.dataset.hol) { answerHol(b.dataset.hol); return; }
+  if (b.id === "qResume") { const r = getResume(Q.s.game, Q.s.scope); Q.s.mode = "solo"; Q.s.scores = [r ? r.score : 0]; Q.s.round = r ? r.round : 0; Q.s.streak = r ? r.streak : 0; Q.s.over = false; Snd.tick(); nextRound(); return; }
   if (b.id === "qSolo" || b.id === "qDuo") { const m = b.id === "qSolo" ? "solo" : "duo"; Q.s.mode = m; Q.s.scores = m === "duo" ? [0, 0] : [0]; Snd.tick(); nextRound(); return; }
   if (b.id === "qOnline" || b.id === "nmOnline" || b.id === "ttOnline") { openOnline(b.id === "qOnline" ? Q.s.game : b.id === "nmOnline" ? "number" : "ttt"); return; }
   if (b.id === "qNext") { Snd.tick(); nextRound(); return; }
@@ -2838,6 +2889,7 @@ document.addEventListener("mouseover", (e) => {
   lastHov = el; const n = performance.now(); if (n - lastHovT < 60) return; lastHovT = n; Snd.hover();
 });
 document.addEventListener("mouseout", (e) => { if (!e.relatedTarget || !lastHov || !lastHov.contains(e.relatedTarget)) lastHov = null; });
+addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e.returnValue = ""; } });
 addEventListener("hashchange", () => route());
 
 renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore(); route(); setTimeout(finishSplash, 300);

@@ -27,7 +27,7 @@ import core_features
 LEAGUES = {"E0": "Premier League", "D1": "Bundesliga", "SP1": "La Liga", "I1": "Serie A", "F1": "Ligue 1"}
 COLS = ["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR", "HS", "AS", "HST", "AST", "AvgH", "AvgD", "AvgA", "B365H", "B365D", "B365A"]
 CODE = {"A": 0, "D": 1, "H": 2}
-FIRST_TEST = 2017          # test seasons start with 2017-18 (three seasons of history before it)
+FIRST_TEST = 2001          # test seasons start with 2001-02 (one season of history; the first few seasons are less accurate and the page says so)
 LIVE = 2026                # 2026-27, still being played: predicted for the page, left out of the benchmark summary
 
 

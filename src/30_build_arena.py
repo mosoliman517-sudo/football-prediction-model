@@ -198,7 +198,10 @@ if PUBLIC:
         foot = ("<span>Club and league names belong to their owners. The coloured discs and emblems are original drawings, not official crests or logos, and no third-party artwork or photographs are used. "
                 "This is an independent student project, not affiliated with any league, club or player." + CREDIT + "</span>")
     html = html.replace(old_foot, foot)
-    html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + html + "</html>"
+    pwa = ('<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="apple-touch-icon.png">' if PUBLIC else "")
+    html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + pwa + html + "</html>"
+    if PUBLIC:
+        html = html.replace("</html>", '<script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></html>')
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
 open(OUT, "w").write(html)
 print(f"Wrote {OUT} ({len(html) / 1e6:.2f} MB)")

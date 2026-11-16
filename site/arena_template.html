@@ -1713,7 +1713,7 @@ const TAGFLAG = { ENG: "gbeng", SCT: "gbsct", WLS: "gbwls" };
 const flagOf = (nat) => { const c = FLAGISO[nat]; if (!c) return ""; if (TAGFLAG[c]) return String.fromCodePoint(0x1F3F4, ...[...TAGFLAG[c]].map((ch) => 0xE0000 + ch.charCodeAt(0)), 0xE007F); return String.fromCodePoint(...[...c].map((ch) => 127397 + ch.charCodeAt(0))); };
 const POSICON = { Goalkeeper: "🧤", Defender: "🛡️", Midfield: "⚙️", Attack: "⚽" };
 const faceOf = (name) => { const h = (DATA.hero || []).find((x) => x.img && qnorm(x.n) === qnorm(name)); return h ? h.img : null; };
-const photoUrl = (p) => p.im ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(p.im)}?width=240` : null;
+const photoUrl = (p) => p.im ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(p.im)}?width=240` : p.iu || null;
 const playerPic = (p, cls = "xl") => { const f = faceOf(p.n), c = clubBadgeFor(p.club, cls), u = f ? null : photoUrl(p), under = f ? `<span class="badge ${cls} hface"><img src="${f}" alt=""></span>` : c || badge(p.n, cls); return `<span class="ppic">${under}${u ? `<img class="pimg" src="${u}" alt="${esc(p.n)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${flagOf(p.nat) ? `<i class="pflag">${flagOf(p.nat)}</i>` : ""}</span>`; };
 function stopQuiz() { if (Q.timer) { clearInterval(Q.timer); Q.timer = null; } }
 const Q = { timer: null, s: null };

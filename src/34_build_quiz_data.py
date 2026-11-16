@@ -221,6 +221,14 @@ def main():
     for q in players:
         if str(q["id"]) in photos:
             q["im"] = photos[str(q["id"])]
+    try:
+        tsdb = json.load(open("02_processed_data/player_photos_tsdb.json", encoding="utf-8"))
+    except FileNotFoundError:
+        tsdb = {}
+    for q in players:
+        if not q.get("im") and tsdb.get(str(q["id"])):
+            q["iu"] = tsdb[str(q["id"])]
+    print("players with a TheSportsDB photo:", sum(1 for q in players if q.get("iu")))
     print("players with a Commons photo:", sum(1 for q in players if q.get("im")))
     json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
     print("Saved 02_processed_data/quiz_data.json")

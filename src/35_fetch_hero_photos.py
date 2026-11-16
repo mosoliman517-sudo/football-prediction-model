@@ -19,7 +19,8 @@ HEAD = {"User-Agent": "beat-the-model-student-project/1.0"}
 NAMES = ["Erling Haaland", "Mohamed Salah", "Bukayo Saka", "Cole Palmer", "Bruno Fernandes", "Declan Rice", "Martin Odegaard", "Virgil van Dijk", "Phil Foden", "Rodri",
          "Harry Kane", "Jamal Musiala", "Michael Olise", "Florian Wirtz", "Lamine Yamal", "Kylian Mbappe", "Vinicius Junior", "Jude Bellingham", "Pedri", "Robert Lewandowski",
          "Raphinha", "Federico Valverde", "Lautaro Martinez", "Rafael Leao", "Nico Paz", "Khvicha Kvaratskhelia", "Ousmane Dembele", "Desire Doue", "Bradley Barcola", "Achraf Hakimi",
-         "Victor Osimhen", "Alexander Isak"]
+         "Victor Osimhen", "Alexander Isak",
+         "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Andres Iniesta", "Sergio Aguero", "Sergi Roberto"]      # the last six are the legends used on the loading screens
 norm = lambda s: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower())
 
 

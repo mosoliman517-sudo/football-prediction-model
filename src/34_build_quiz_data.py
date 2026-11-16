@@ -214,6 +214,34 @@ def main():
             if int(cid) in by_id:
                 alias[str(nm)] = by_id[int(cid)]
     print(f"club spellings mapped: {len(alias)}")
+    # club stints for the sticker album: [arena club, first year, last year (0 = still there)] for every club the player has been at that the arena knows.
+    # A first stint with no recorded start begins at 17 (the earliest we can say); years come from transfer dates, so they are approximate.
+    for q in players:
+        cr = []
+        by = int(q["dob"][:4]) if q["dob"] else 1990
+        for a_, b_, cid in stints.get(q["id"], []):
+            try:
+                ours = by_id.get(int(cid))
+            except (TypeError, ValueError):
+                ours = None
+            if not ours:
+                continue
+            y0 = by + 17 if a_.year < 1950 else a_.year
+            y1 = 0 if b_.year > 2090 else b_.year
+            if y1 and y1 < y0:
+                y1 = y0
+            if cr and cr[-1][0] == ours and cr[-1][2] in (y0, y0 - 1, 0):
+                cr[-1][2] = y1
+            else:
+                cr.append([ours, y0, y1])
+        q["cr"] = cr
+    for q in players:                                   # manual corrections (src/quiz_overrides.json) also close the old stint and open the new one
+        o = ov.get(q["n"])
+        if o and by_id.get(int(o["club_id"])) and not (q["cr"] and q["cr"][-1][0] == by_id[int(o["club_id"])]):
+            if q["cr"] and q["cr"][-1][2] == 0:
+                q["cr"][-1][2] = 2026
+            q["cr"].append([by_id[int(o["club_id"])], 2026, 0])
+    print("players with club stints:", sum(1 for q in players if q.get("cr")), "; stints:", sum(len(q["cr"]) for q in players))
     try:
         photos = json.load(open("02_processed_data/player_photos.json", encoding="utf-8"))
     except FileNotFoundError:

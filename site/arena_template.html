@@ -526,6 +526,14 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; } .stk { position: relative; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; border: 2px solid var(--line); background: var(--surface2); min-height: 150px; } .stk b { font-size: 13px; } .stk small { color: var(--muted); display: flex; gap: 4px; align-items: center; } .stk i { font: 700 10px var(--mono); text-transform: uppercase; font-style: normal; letter-spacing: .08em; }
 .stk.off { opacity: .5; border-style: dashed; justify-content: center; } .stk .q { font: 800 40px var(--display); color: var(--muted); } .stk.rare { border-color: #4a8cff; } .stk.epic { border-color: #b66cff; box-shadow: 0 0 18px -6px #b66cff; } .stk.legend { border-color: #ffb300; box-shadow: 0 0 22px -4px #ffb300; background: linear-gradient(160deg, #ffb30022, var(--surface2)); } .stk.on { animation: rise .4s ease both; }
 #albumPage { display: flex; flex-direction: column; gap: 14px; }
+.livedot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 0 0 #ff3b3b88; animation: livepulse 1.6s infinite; vertical-align: middle; } @keyframes livepulse { 70% { box-shadow: 0 0 0 12px #ff3b3b00; } 100% { box-shadow: 0 0 0 0 #ff3b3b00; } }
+.fxlist { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; } .fxday { font: 800 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+.fx { display: grid; gap: 8px; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface2); } .fx.islive { border-color: #ff3b3b; box-shadow: 0 0 24px -10px #ff3b3b; }
+.fxteams { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; font-weight: 800; font-size: 17px; } .fxh { display: flex; justify-content: flex-end; align-items: center; gap: 8px; text-align: right; } .fxa { display: flex; align-items: center; gap: 8px; } .fxv { color: var(--muted); font-weight: 600; }
+.fxmeta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; } .livetag { background: #ff3b3b; color: #fff; padding: 2px 8px; border-radius: 99px; font: 800 11px var(--mono); animation: pulse 1.2s ease-in-out infinite; }
+.fxpicks { display: flex; gap: 8px; } .fxpicks .mp { flex: 1; min-height: 44px; } .fxinfo { display: grid; gap: 2px; font-size: 14px; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); } .fxres { display: flex; gap: 14px; align-items: center; font-weight: 700; } .fxres b { font-size: 20px; }
+.fxempty { text-align: center; padding: 28px 12px; display: grid; gap: 6px; } .fxempty span { font-size: 42px; } .lbrow.modelrow { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; padding: 12px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 16%, var(--surface2)); border: 2px solid var(--accent); font-weight: 800; }
+@media (max-width: 560px) { .fxteams { font-size: 15px; } }
 </style>
 
 <div id="splash" class="splash t-pitch" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div>
@@ -804,7 +812,7 @@ function route(ev) {
   const lg = BYSLUG[slug], tail = rest.slice(slug.length + 1);
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" ? tail : null; S.rk = tail === "ranked"; } }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" ? tail : null; S.rk = tail === "ranked"; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
@@ -1226,16 +1234,18 @@ function renderHub() {
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
   if (g === "ranked") { renderRanked(); return; }
+  if (g === "live") { renderLive(); return; }
   if (g === "model") { $("#room").innerHTML = `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; return; }
   if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
   $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Two kinds of games, ${where}.</p><div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
-    <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig">🏆</span></div><div class="gname">Ranked</div><div class="gtag">Public lobbies against real players. Win Elo, climb the leaderboard, or open a private room for friends.</div><span class="dgo">Play online</span></button></div>`;
+    <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig">🏆</span></div><div class="gname">Ranked</div><div class="gtag">Public lobbies against real players. Win Elo, climb the leaderboard, or open a private room for friends.</div><span class="dgo">Play online</span></button>
+    <button type="button" class="gpick" data-group="live" style="--d:240ms"><div class="gfaces"><span class="rkbig">🔴</span></div><div class="gname">Live predictions</div><div class="gtag">Predict the next real fixtures before kickoff. The model plays along, and its score is pinned on the leaderboard.</div><span class="dgo">Live</span></button></div>`;
 }
 function renderCrumbs() {
   const el = $("#crumbs"); if (!el || !S.code) return; const items = [["Menu", "menu"]];
-  if (S.mode === "games") { items.push(["Games", "games"]); if (S.hubGroup) items.push([S.hubGroup === "bk" ? "ballknowledge originals" : S.hubGroup === "ranked" ? "Ranked" : "Beat the Model", "group"]); if (S.game) items.push([gameName(S.game) || "Game", null]); else if (S.room === "boards") items.push(["Leaderboard", null]); }
+  if (S.mode === "games") { items.push(["Games", "games"]); if (S.hubGroup) items.push([S.hubGroup === "bk" ? "ballknowledge originals" : S.hubGroup === "ranked" ? "Ranked" : S.hubGroup === "live" ? "Live" : "Beat the Model", "group"]); if (S.game) items.push([gameName(S.game) || "Game", null]); else if (S.room === "boards") items.push(["Leaderboard", null]); }
   else { items.push(["Our model", "lobby"]); items.push([lgOf(S.code).name, null]); }
   el.innerHTML = `<button class="back" id="backBtn" type="button">← Back</button><div class="trail">${items.map(([n, k], i) => (k && i < items.length - 1 ? `<button type="button" class="crumb" data-crumb="${k}">${esc(n)}</button>` : `<span class="crumb cur">${esc(n)}</span>`)).join("<i>›</i>")}</div>`;
 }
@@ -1454,6 +1464,9 @@ const ACH = [
   ["rounds100", "Century", "Play 100 games"],
   ["squad", "The whole squad", "Play all eight ballknowledge originals"],
   ["curious", "Know thyself", "Open your profile"],
+  ["pred1", "On the record", "Lock your first live prediction"],
+  ["pred10", "Pundit", "Lock 10 live predictions"],
+  ["beatmodel", "Out-predicted the model", "Finish ahead of the model on the live board (3 or more picks)"],
   ["sticker1", "First sticker", "Collect your first sticker"],
   ["page", "Page complete", "Fill a whole sticker page (12 players)"],
   ["stick50", "Swapper", "Collect 50 different stickers"],
@@ -1744,6 +1757,59 @@ function renderAlbum() {
   <div class="row" style="justify-content:space-between;margin:10px 0"><b>${esc(lgOf(a.lg).name)} · page ${a.pg + 1} of ${pages}</b><span class="fine">${got} of ${list.length} collected</span></div>
   <div class="stickers">${slice.map((x) => { const r = FAME.get(x.id); return st[x.id] ? `<div class="stk on ${rar(r)}">${playerPic(x, "md")}<b>${esc(x.n)}</b><small>${clubBadgeFor(x.club, "sm")} ${esc(x.pos)}</small><i>${rar(r)}${st[x.id] > 1 ? " · x" + st[x.id] : ""}</i></div>` : `<div class="stk off"><span class="q">?</span><b>#${a.pg * 12 + slice.indexOf(x) + 1}</b><small>${esc(x.pos)}</small></div>`; }).join("")}</div>
   <div class="row" style="margin-top:12px;justify-content:center"><button class="btn ghost" data-alb="pg|-1" type="button" ${a.pg ? "" : "disabled"}>← Previous</button><button class="btn ghost" data-alb="pg|1" type="button" ${a.pg < pages - 1 ? "" : "disabled"}>Next →</button></div></div>`;
+}
+
+
+/* ================= Live predictions ================= */
+const Live = { lg: "all", days: 30, timer: null, tick: null, fx: [], board: null };
+const LIVE_PERIODS = [[7, "This week"], [30, "30 days"], [365, "This season"]];
+const fmtKick = (iso) => new Date(iso).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+function countdown(ms) { if (ms <= 0) return "kicking off"; const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m % 60}m` : `${m}m`; }
+async function renderLive() {
+  clearInterval(Live.timer); clearInterval(Live.tick); const signed = Account.signedIn && Board.mode === "rest";
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
+    <p class="sub">Predict the next real matches before kickoff. The model plays too, and its score is pinned to the top of the board.</p>
+    ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to lock your picks and join the board.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
+    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist"><div class="fine">Loading fixtures…</div></div></div>
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">🏆 Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx"><div class="fine">Loading…</div></div></div>`;
+  await loadLive(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  Live.tick = setInterval(paintCountdown, 1000);
+}
+function paintCountdown() {
+  const nx = Live.fx.find((f) => new Date(f.kickoff) > Date.now()), el = $("#lvNext"); if (el) el.textContent = nx ? `Next kickoff in ${countdown(new Date(nx.kickoff) - Date.now())}` : "";
+  document.querySelectorAll("[data-kick]").forEach((e) => { const ms = new Date(e.dataset.kick) - Date.now(); e.textContent = ms > 0 ? `kickoff in ${countdown(ms)}` : ""; });
+}
+async function loadLive() {
+  const list = $("#lvList"); if (!list) return;
+  if (Board.mode !== "rest") { list.innerHTML = '<div class="fine">Live predictions need the online database, which is not connected in this build.</div>'; return; }
+  const fx = await Ranked.rpc("open_fixtures", { p_league: Live.lg }); if (!$("#lvList")) return;
+  if (!fx) { list.innerHTML = '<div class="fine">Live predictions need the latest database update (schema_v4.sql).</div>'; return; }
+  Live.fx = fx; paintFixtures(); paintCountdown();
+  const [rows, ms] = await Promise.all([Ranked.rpc("fixture_board", { p_league: Live.lg, p_days: Live.days }), Ranked.rpc("model_score", { p_league: Live.lg, p_days: Live.days })]); if (!$("#lvBoard")) return;
+  paintLiveBoard(rows || [], ms && ms[0]);
+}
+function paintFixtures() {
+  const list = $("#lvList"); if (!list) return; const signed = Account.signedIn, now = Date.now();
+  if (!Live.fx.length) { list.innerHTML = '<div class="fxempty"><span>📅</span><b>No fixtures yet</b><div class="fine">The next round appears here as soon as it is published, usually a few days before kickoff.</div></div>'; return; }
+  let lastDay = "";
+  list.innerHTML = Live.fx.map((f) => {
+    const ko = new Date(f.kickoff), open = ko > now, day = ko.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }), head = day !== lastDay ? `<div class="fxday">${esc(day)}</div>` : ""; lastDay = day;
+    const live = !open && !f.res && now - ko < 2.5 * 3600 * 1000, show = f.p_h != null;
+    const picks = ["H", "D", "A"].map((k) => `<button type="button" class="mp" data-k="${k}" data-lvp="${esc(f.id)}|${k}" aria-pressed="${f.my_pick === k}" aria-label="${OUTNAME[k]}" ${open ? "" : "disabled"}>${k}</button>`).join("");
+    let extra = "";
+    if (show) { const pc = (v) => Math.round(v * 100), n = (f.crowd_h || 0) + (f.crowd_d || 0) + (f.crowd_a || 0), cp = (v) => (n ? Math.round((v / n) * 100) : 0), mk = (k) => ({ H: f.home, D: "Draw", A: f.away })[k];
+      extra = `<div class="fxinfo"><div>🤖 <b>The model:</b> ${esc(mk(f.model_pick))} <span class="fine num">${pc(f.p_h)}% · ${pc(f.p_d)}% · ${pc(f.p_a)}%</span></div>${n ? `<div class="fine">👥 The crowd (${n}): <span class="num">${cp(f.crowd_h || 0)}% · ${cp(f.crowd_d || 0)}% · ${cp(f.crowd_a || 0)}%</span></div>` : ""}</div>`; }
+    if (f.res) { const you = f.my_pick ? (f.my_pick === f.res ? "✓" : "✗") : "–", mo = f.model_pick ? (f.model_pick === f.res ? "✓" : "✗") : "–"; extra += `<div class="fxres"><b class="num">${f.hg}-${f.ag}</b><span>You ${you}</span><span>Model ${mo}</span></div>`; }
+    return `${head}<div class="fx ${live ? "islive" : ""}"><div class="fxteams"><span class="fxh">${esc(f.home)}${badge(f.home, "sm")}</span><span class="fxv">v</span><span class="fxa">${badge(f.away, "sm")}${esc(f.away)}</span></div><div class="fxmeta"><span>${esc(lgOf(f.league).name)} · ${esc(fmtKick(f.kickoff))}</span>${live ? '<b class="livetag">LIVE</b>' : ""}<span class="fine" data-kick="${esc(f.kickoff)}"></span></div><div class="fxpicks">${picks}</div>${extra}</div>`;
+  }).join("");
+}
+function paintLiveBoard(rows, model) {
+  const box = $("#lvBoard"); if (!box) return; const me = prof().nick, pc = (c, p) => (p ? Math.round((c / p) * 100) : 0);
+  const mrow = `<div class="lbrow modelrow"><b>🤖</b><span>The Model <small class="fine">plays along</small></span><span class="num">${model ? model.correct : 0}/${model ? model.played : 0}</span><span class="fine num">${model ? pc(model.correct, model.played) : 0}%</span></div>`;
+  const mine = rows.find((r) => r.nick === me);
+  const head = mine && model && model.played ? `<div class="fine" style="margin-bottom:6px">You: <b class="num">${mine.correct}/${mine.played}</b> · Model: <b class="num">${model.correct}/${model.played}</b>${mine.correct > model.correct ? " · you're ahead!" : mine.correct === model.correct ? " · level with the model" : ""}</div>` : "";
+  if (mine && model && mine.played >= 3 && mine.correct > model.correct) award("beatmodel");
+  box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : '<div class="fine" style="margin-top:6px">No finished predictions yet. Lock a pick and check back after the match.</div>');
 }
 
 /* ================= Profile page ================= */
@@ -2566,6 +2632,10 @@ document.addEventListener("click", (e) => {
   if (b.id === "tourBtn") { startTour(); return; }
   if (b.dataset.go) { Snd.tick(); go(b.dataset.go); return; }
   if (b.dataset.alb) { const [k, v] = b.dataset.alb.split("|"); if (k === "lg") { S.alb = { lg: v, pg: 0 }; } else S.alb.pg = Math.max(0, S.alb.pg + +v); Snd.tick(); renderAlbum(); return; }
+  if (b.dataset.lvlg) { Live.lg = b.dataset.lvlg; Snd.tick(); renderLive(); return; }
+  if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
+  if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
+  if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
   if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }

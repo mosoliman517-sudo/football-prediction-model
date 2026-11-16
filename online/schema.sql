@@ -72,7 +72,7 @@ create or replace function public.leaderboard(p_game text, p_league text, p_peri
 returns table (nick text, value numeric, plays int)
 language sql stable security definer set search_path = public as $$
   select p.nick,
-         case when r.game in ('upset','hol','pvalue','cvalue') then max(r.score) else sum(r.score) end as value,
+         case when p_game in ('upset','hol','pvalue','cvalue') then max(r.score) else sum(r.score) end as value,
          count(*)::int as plays
   from public.results r join public.profiles p on p.user_id = r.user_id
   where r.game = p_game

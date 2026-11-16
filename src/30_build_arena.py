@@ -29,7 +29,7 @@ TEMPLATE = "site/arena_template.html"
 PUBLIC = "--public" in sys.argv         # public build: a standalone page in docs/ for GitHub Pages
 ARTWORK = "--no-artwork" not in sys.argv   # the official badges, logos and photos from site/logos/ are included unless --no-artwork is given
 OUT = os.environ.get("ARENA_OUT", "docs/index.html" if PUBLIC else "site/arena.html")
-KEEP_FROM = 2017          # seasons shipped to the page for the games: every walk-forward season (2017-18 on) plus the live one. The replay and title race show only the last three finished seasons and the live one (chosen in the page).
+KEEP_FROM = 2001          # seasons shown in the arena (2001-02 on; the model needs one season of history first)
 META = {
     "E0": ("Premier League", "England", "Twenty clubs, the loudest league on earth."),
     "D1": ("Bundesliga", "Germany", "Goals, standing terraces and a title that usually has an owner."),
@@ -49,6 +49,15 @@ STARS = {
 LOGO_DIR = "site/logos"      # optional: drop E0 / D1 / SP1 / I1 / F1 .svg|.png|.webp files here to use official logos (git-ignored)
 
 d = pd.read_csv(SRC)
+# the older football-data files are incomplete for some seasons (for example Ligue 1 2002-03 has 191 of 380 matches), and a partial season would give
+# wrong tables, so a season is kept only if it has at least 97% of its fixtures (the live season is always kept)
+_n = d.groupby(["league", "season"]).size()
+_t = d.groupby(["league", "season"]).apply(lambda x: len(set(x["home"]) | set(x["away"])), include_groups=False)
+_live = d["season"].max()
+_full = {k for k, n in _n.items() if k[1] == _live or n >= 0.97 * _t[k] * (_t[k] - 1)}
+_dropped = sorted(k for k in _n.index if k not in _full)
+d = d[[(a, b) in _full for a, b in zip(d["league"], d["season"])]]
+print("incomplete seasons left out:", ", ".join(f"{a} {b}-{str(b + 1)[2:]}" for a, b in _dropped) or "none")
 d["season_lab"] = d["season"].map(lambda s: f"{s}-{str(s + 1)[2:]}")
 P = d[["p_a", "p_d", "p_h"]].to_numpy()
 y = d["res"].map({"A": 0, "D": 1, "H": 2}).to_numpy()

@@ -897,7 +897,7 @@ function renderCall() {
   $("#room").innerHTML = (c === "ALL" ? "" : starCard) + `<div class="card">${gamesBar("Call it")}<p class="sub">A real match, result hidden. Lock in your call, then see the model's call and the real score. Right result: 1 point. Exact score: 2 more.</p>
     <div class="row" style="margin-top:14px"><button class="btn" id="goRandom" type="button" ${fresh.length ? "" : "disabled"}>Surprise me</button>
     <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
-    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from the last ten years, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
+    <p class="fine" style="margin-top:10px">${fresh.length.toLocaleString()} unplayed matches from 2001 on, so you may remember some of them. Locked results can't be replayed, so the record stays honest.</p></div>`;
 }
 function open(c, season, i, onDone, key) { S.cur = { c, season, i, m: lgOf(c).seasons[season].matches[i], onDone: onDone || null, key: key || `p_${c}_${season}_${i}` }; S.pick = null; S.score = [0, 0]; S.useScore = true; S.busy = false; renderRoom(); }
 function renderPlay() {
@@ -973,7 +973,7 @@ function renderDaily() {
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.c}|${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button><button class="btn ghost" id="dailyCard" type="button">Make a result card</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from the last ten years, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from 2001 on, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
@@ -1279,7 +1279,7 @@ function renderMatchday() {
     $("#room").innerHTML = `<div class="card">${gamesBar("Matchday")}<p class="sub">A whole round of real matches. Pick a result for each, lock them in, and watch the real scores land one by one.</p>
       <div class="row" style="margin-top:14px"><button class="btn" id="mdRandom" type="button" ${free.length ? "" : "disabled"}>Random matchday</button>
       <label class="fine">Model plays <select id="styleSel"><option value="accuracy" ${S.style === "accuracy" ? "selected" : ""}>Max Accuracy</option><option value="balanced" ${S.style === "balanced" ? "selected" : ""}>Balanced</option></select></label></div>
-      <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${c === "ALL" ? "all five leagues and ten seasons" : poolSeasons(c).length + " seasons"}.</p></div>`;
+      <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${c === "ALL" ? "all five leagues and 25 seasons" : poolSeasons(c).length + " seasons"}.</p></div>`;
     return;
   }
   const { c: mc, season, n, per, picks, locked } = S.md, ms = lgOf(mc).seasons[season].matches.slice((n - 1) * per, n * per), done = store.items[mdKey(mc, season, n)];
@@ -1813,7 +1813,7 @@ function renderChallenge() {
   const c = S.code;
   if (S.cur) return renderPlay();
   if (!S.chal) {
-    $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Five matches from the last ten years, the same for you and everyone you send the link to. Play them, then compare scores.</p>
+    $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Five matches from 2001 on, the same for you and everyone you send the link to. Play them, then compare scores.</p>
       <div class="row" style="margin-top:14px"><button class="btn" id="chNew" type="button">Create a challenge</button></div>
       <div class="row" style="margin-top:14px"><input id="chCode" maxlength="10" placeholder="Got a code? Type it here" aria-label="Challenge code"><button class="btn ghost" id="chJoin" type="button">Play it</button></div></div>`;
     return;
@@ -2512,7 +2512,7 @@ function renderReview() {
   const c = S.code, sm = DATA.summary[c], L = lgOf(c), pl = playsOf(c), t = totals(pl), f = DATA.profiles.accuracy, agg = {};
   lgs(c).forEach((lg) => Object.entries(lgOf(lg).seasons).forEach(([sn, S_]) => { const a = agg[sn] || (agg[sn] = { s: sn, live: S_.live, n: 0, mo: 0, mk: 0, hm: 0 }); S_.matches.forEach((m) => { a.n++; const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h]; if ("ADH"[adj.indexOf(Math.max(...adj))] === m[5]) a.mo++; if (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5]) a.mk++; if (m[5] === "H") a.hm++; }); }));
   const rows = Object.values(agg).sort((x, y) => (x.s < y.s ? -1 : 1)).map((a) => ({ s: a.s, live: a.live, n: a.n, mo: a.mo / a.n, mk: a.mk / a.n, hm: a.hm / a.n }));
-  $("#room").innerHTML = `<div class="card"><h2>How good is the model?</h2><p class="sub">Across ${sm.n.toLocaleString()} ${esc(L.name)} matches since 2017-18, each predicted only from earlier seasons: the model gets <b>${pct(sm.pooled_acc, 1)}</b> of results right, the bookmakers <b>${pct(sm.market_acc, 1)}</b>, and always picking the home team <b>${pct(sm.home_acc, 1)}</b>. Football is noisy, so around half is a good score and a point or two is a real gap.</p>
+  $("#room").innerHTML = `<div class="card"><h2>How good is the model?</h2><p class="sub">Across ${sm.n.toLocaleString()} ${esc(L.name)} matches since 2001-02, each predicted only from earlier seasons: the model gets <b>${pct(sm.pooled_acc, 1)}</b> of results right, the bookmakers <b>${pct(sm.market_acc, 1)}</b>, and always picking the home team <b>${pct(sm.home_acc, 1)}</b>. Football is noisy, so around half is a good score and a point or two is a real gap.</p>
     <div class="bars">${rows.map((r) => `<div class="brow"><span class="num">${r.s}${r.live ? " live" : ""}</span><div class="tracks"><div class="t"><div class="tr"><i style="width:${r.mo * 100}%;background:var(--accent)"></i></div><span class="num">${pct(r.mo)}</span></div><div class="t"><div class="tr"><i style="width:${r.mk * 100}%;background:var(--accent2)"></i></div><span class="num">${pct(r.mk)}</span></div><div class="t"><div class="tr"><i style="width:${r.hm * 100}%;background:var(--muted)"></i></div><span class="num">${pct(r.hm)}</span></div></div></div>`).join("")}</div>
     <div class="row fine" style="margin-top:10px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent)"></i> model (Max Accuracy)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent2)"></i> bookmakers</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></i> always Home</span></div>
     <div class="tiles"><div class="tile"><b class="num">${t.n ? `${t.you} v ${t.mod}` : "–"}</b><small>your points v the model, ${esc(L.name)}</small></div><div class="tile"><b class="num">${t.n ? `${t.yr} v ${t.mr}` : "–"}</b><small>results right, of ${t.n}</small></div><div class="tile"><b class="num">${pct(DATA.profiles.balanced.bench.D)}</b><small>draws found by the Balanced style (Max Accuracy: ${pct(DATA.profiles.accuracy.bench.D)})</small></div></div>

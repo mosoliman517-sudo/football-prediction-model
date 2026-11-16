@@ -491,7 +491,7 @@ button, .chip, .mode, .gcard, .door { touch-action: manipulation; -webkit-tap-hi
     <div id="room"></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 04:07 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 16 Nov 2026 04:12 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -1610,7 +1610,7 @@ function suggestions(q, items, key) {
 /* ---------- difficulty, turn timers ---------- */
 const DIFFS = [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"], ["elite", "Elite ball knowledge"]];
 const DIFFX = { easy: 0.6, medium: 1, hard: 1.4, elite: 2 };
-const DIFFNOTE = { easy: "Superstars and the biggest clubs only, slow clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and top clubs. Scores count 1x.", hard: "Regular first-teamers and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Deep cuts: the obscure players and smaller clubs only, fast clues, almost no margin. Scores count 2x." };
+const DIFFNOTE = { easy: "Superstars and the biggest clubs, slow clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and top clubs. Scores count 1x.", hard: "Regular first-teamers and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Deep cuts: the obscure players and smaller clubs only, fast clues, almost no margin. Scores count 2x." };
 const TLIM = { easy: 30, medium: 20, hard: 14, elite: 9 };
 try { S.diff = localStorage.getItem("bk_diff"); } catch (e) { /* storage blocked */ }
 if (!DIFFX[S.diff]) S.diff = "medium";
@@ -1618,10 +1618,10 @@ const fameOf = (p) => Math.max(p.peak || 0, p.val || 0);
 const FAME = (() => { const s = QZ.players.slice().sort((a, b) => fameOf(b) - fameOf(a)), m = new Map(); s.forEach((p, i) => m.set(p.id, i)); return m; })();
 const clubRank = (() => { const s = Object.entries(QZ.clubs).filter(([, f]) => f.value > 0).sort((a, b) => b[1].value - a[1].value), m = {}; s.forEach(([n], i) => { m[n] = i; }); return m; })();
 /* what to ask about: easy is the very famous, elite is the obscure (players ranked below 1,500 by peak value, clubs outside the top 60 by squad value) */
-const playerOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 120 : S.diff === "medium" ? r < 450 : S.diff === "hard" ? r < 1400 : r >= 1400; };
+const playerOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 260 : S.diff === "medium" ? r < 750 : S.diff === "hard" ? r < 1700 : r >= 1300; };
 /* what may appear as an answer or category pool: everything at least as famous as the level, and elite allows anyone */
-const poolOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 350 : S.diff === "medium" ? r < 900 : S.diff === "hard" ? r < 1800 : true; };
-const clubOK = (n) => { const r = clubRank[n]; return S.diff === "easy" ? r < 8 : S.diff === "medium" ? r < 25 : S.diff === "hard" ? r < 60 : (r === undefined || r >= 60); };
+const poolOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 550 : S.diff === "medium" ? r < 1200 : S.diff === "hard" ? r < 2100 : true; };
+const clubOK = (n) => { const r = clubRank[n]; return S.diff === "easy" ? r < 14 : S.diff === "medium" ? r < 34 : S.diff === "hard" ? r < 75 : (r === undefined || r >= 50); };
 const clueSpeed = () => ({ easy: 1.35, medium: 1, hard: 0.8, elite: 0.6 })[S.diff];
 const finTol = () => ({ easy: 4, medium: 3, hard: 2, elite: 1 })[S.diff];
 const pickWith = (make, ok) => { let x; for (let k = 0; k < 60; k++) { x = make(); if (ok(x)) return x; } return x; };
@@ -1708,7 +1708,7 @@ function newQuiz(game, mode, scope) { Q.s = { game, mode, scope, round: 0, score
 function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
   if (S_.round === 0) { S_.streak = 0; S_.over = false; }
-  S_.round++; S_.used = S_.used || new Set(); S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
+  S_.round++; const uk = S_.game + S.diff + S_.scope; S.seenQ = S.seenQ || {}; if (!S.seenQ[uk] || S.seenQ[uk].size > 150) S.seenQ[uk] = new Set(); S_.used = S.seenQ[uk]; S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
   S_.cs = d.clueS * clueSpeed(); S_.total = S_.clues.length * S_.cs + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
 const worth = () => { const S_ = Q.s; return Math.max(100, Math.round(1000 * (1 - S_.elapsed / S_.total))); };

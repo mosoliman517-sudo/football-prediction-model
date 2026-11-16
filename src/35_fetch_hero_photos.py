@@ -74,6 +74,30 @@ def ea_portrait(name, path):
     return True
 
 
+def newer_photo(name, path_png):
+    """If a clearly newer photo than EA's FC25 portrait exists (Transfermarkt or a dated Commons photo, from docs/data/photos.json), use it as a framed photo instead."""
+    import json
+    try:
+        q = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8"))["players"]
+        ph = json.load(open("docs/data/photos.json", encoding="utf-8"))["p"]
+    except (FileNotFoundError, KeyError):
+        return False
+    pl = [p for p in q if norm(p["n"]) == norm(name)]
+    if not pl or str(pl[0]["id"]) not in ph:
+        return False
+    url, src, when = ph[str(pl[0]["id"])]
+    if src not in ("tm", "cm") or when <= "2024-07":
+        return False
+    r = requests.get(url, headers=HEAD, timeout=60)
+    if r.status_code != 200:
+        return False
+    im = Image.open(io.BytesIO(r.content)).convert("RGB"); im.thumbnail((700, 900), Image.LANCZOS)
+    im.save(path_png.replace(".png", ".jpg"), quality=90)
+    if os.path.exists(path_png):
+        os.remove(path_png)
+    return True
+
+
 def main():
     os.makedirs("site/logos/players/hero", exist_ok=True)
     kept = []
@@ -83,7 +107,8 @@ def main():
         if fpl_portrait(name, path):
             print(f"  {name:<24} Premier League photo (current season)"); kept.append(name); continue
         if ea_portrait(name, path):
-            print(f"  {name:<24} EA portrait"); kept.append(name); continue
+            newer = newer_photo(name, path)
+            print(f"  {name:<24} {'newer photo than EA (framed)' if newer else 'EA portrait'}"); kept.append(name); continue
         if os.path.exists(path) or os.path.exists(path.replace(".png", ".jpg")):
             kept.append(name); continue
         rows = get("searchplayers.php?p=" + requests.utils.quote(name.replace(" ", "_"))).get("player") or []

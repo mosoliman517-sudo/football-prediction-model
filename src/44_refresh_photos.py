@@ -4,6 +4,7 @@ refreshed without rebuilding the site; .github/workflows/weekly_refresh.yml runs
 
 Sources, newest first:
   fpl   the Premier League's official photo from the fantasy game feed (current season; Premier League players only)
+  cm    Wikimedia Commons photo, dated by the date in its file name (only when the name carries one)
   tm    Transfermarkt's portrait, dated by the timestamp inside its file name (the 'big' 300 x 390 size)
   ea    EA SPORTS FC portrait (FC25, about July 2024), from src/41
 Wikimedia Commons / TheSportsDB photos (src/37, src/38) are older still and stay as last-resort fallbacks inside the page.
@@ -38,6 +39,16 @@ def main():
         m = re.search(r"/portrait/\w+/(\d+)-(\d{9,10})\.", u or "")
         if m:
             cand[p["id"]].append((datetime.fromtimestamp(int(m.group(2)), timezone.utc), "tm", u.replace("/portrait/header/", "/portrait/big/")))
+    months = {m: i + 1 for i, m in enumerate("January February March April May June July August September October November December".split())}
+    for p in q:                                                            # Wikimedia Commons, dated by the date in the file name (many recent national-team photos are named that way)
+        fn = p.get("im")
+        if not fn:
+            continue
+        m = re.search(r"(\d{1,2})\s+(" + "|".join(months) + r")\s+(20\d\d)", fn) or re.search(r"(20\d\d)", fn)
+        if not m:
+            continue
+        yr = int(m.group(m.lastindex if m.lastindex == 3 else 1)); mo = months[m.group(2)] if m.lastindex == 3 else 6
+        cand[p["id"]].append((datetime(yr, mo, 15, tzinfo=timezone.utc), "cm", "https://commons.wikimedia.org/wiki/Special:FilePath/" + requests.utils.quote(fn) + "?width=500"))
     try:                                                                   # Premier League official photos (current season)
         d = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/", headers=HEAD, timeout=60).json()
         teams = {t["id"]: norm(t["name"]) for t in d["teams"]}

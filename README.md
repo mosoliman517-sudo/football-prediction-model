@@ -24,6 +24,9 @@ Beat the Model is machine-learning forecasting of football results (Home, Draw o
 > python3 src/31_fetch_assets.py             # badges, logos, star photos into site/logos/ (git-ignored; slow, API throttled)
 python3 src/34_build_quiz_data.py          # players, club histories and club facts for the ball-knowledge games (Transfermarkt, CC0)
 python3 src/35_fetch_hero_photos.py        # ~30 star cutouts for the front-page collage (git-ignored, API throttled)
+python3 src/36_fetch_honours.py            # cup winners (Wikidata) for the trophy categories
+python3 src/37_fetch_player_photos.py     # Commons portrait file names for players (Wikidata)
+python3 src/38_fetch_player_photos_tsdb.py # second photo source for the rest (slow, resumable)
 > python3 src/30_build_arena.py              # private build: site/arena.html
 > python3 src/30_build_arena.py --public     # public build: docs/index.html (what GitHub Pages serves)
 > python3 src/30_build_arena.py --public --no-artwork   # same, with colour discs instead of third-party artwork
@@ -33,7 +36,7 @@ python3 src/35_fetch_hero_photos.py        # ~30 star cutouts for the front-page
 >
 > **Known limits:** the four newer leagues have no xG, squad-value or manager inputs and no real goalscorers; yellow cards are not forecast better than the league average; title-race odds assume today's form holds; the Champions League has no data source yet; accounts and leaderboards are built and tested against a stand-in for the database but not yet connected to a real one.
 >
-> **Next:** connect the online database; Champions League; real goalscorers for the four newer leagues; real lineups from the daily Fantasy snapshots.
+> **Next:** check real sign-up and leaderboards on the live site; finish the second photo lookup (script 38) and rebuild; Champions League; real goalscorers for the four newer leagues; real lineups from the daily Fantasy snapshots.
 
 ### Project diary
 
@@ -82,6 +85,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 **16 November, player photos for (almost) everyone.** `src/37_fetch_player_photos.py` asks Wikidata for a Wikimedia Commons portrait of each player, matched by Transfermarkt id: 2,116 of 2,796 players (76%) have one. Only the Commons file name is stored (`02_processed_data/player_photos.json`); the page loads a 240 pixel thumbnail from Commons when a player is shown, so no photographs sit in the repository or the page, and each is under its author's free licence (credited on the How it works page). They appear on answer cards, Market value, Write your number and tic-tac-toe squares; the 27 star cutouts keep priority, and players without a free photo show their club badge and country flag. Limits: the photos load from Wikimedia, so the private claude.ai preview (which blocks outside images) shows badges instead, and some Commons portraits are old or odd crops.
 
 **16 November, accounts and leaderboards connected.** The Supabase project is live: `online/schema.sql` ran (first attempt failed because the leaderboard function chose max or sum from a grouped column; it now uses the game name passed in), email sign-in is on with confirmation off, and the page uses the project's publishable key (the newer name for the anon key; safe to ship). Checked from outside the page without creating any account: the auth settings answer, sign-up is enabled, and the leaderboard function returns an empty list. In the page, the header button now reads Sign in and opens the Create an account form. Not yet checked: an actual sign-up, saved progress and a posted score, which need a real account.
+
+**16 November, status at the end of the day.** Live at https://moballknowledge.vercel.app (Vercel serves `docs/index.html`; also on GitHub Pages and as a private claude.ai artifact). Working: all games with four difficulty levels and turn timers, online rooms with invite links, the games chooser and breadcrumbs, phone portrait and landscape layouts, photos for 2,116 players from Wikimedia Commons plus about 90 more from TheSportsDB so far, and Supabase accounts and leaderboards (connected and checked without creating an account; a real sign-up still has to be tried by the owner). Still running when this was written: the second photo lookup (`src/38_fetch_player_photos_tsdb.py`, throttled to roughly one request every few seconds, resumable); re-run it, then `src/34_build_quiz_data.py` and a rebuild to add what it finds. Open: Supabase's Site URL must be set to the Vercel address so confirmation and reset emails link back to it; the GitHub repository is still named football-prediction-model.
 
 ### What is in the box
 

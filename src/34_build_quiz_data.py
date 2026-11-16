@@ -288,6 +288,13 @@ def main():
                     best, bs = e, sc
         if best is not None and bs >= 0.75:
             q["ea"] = best["id"]
+    try:                                                # newest available portrait per player (src/44_refresh_photos.py)
+        ph = json.load(open("docs/data/photos.json", encoding="utf-8"))["p"]
+    except (FileNotFoundError, KeyError):
+        ph = {}
+    for q in players:
+        if str(q["id"]) in ph:
+            q["ph"], q["pq"], q["pd"] = ph[str(q["id"])]
     print("players with an EA portrait:", sum(1 for q in players if q.get("ea")), "of", len(players))
     print("players with a TheSportsDB photo:", sum(1 for q in players if q.get("iu")))
     print("players with a Commons photo:", sum(1 for q in players if q.get("im")))

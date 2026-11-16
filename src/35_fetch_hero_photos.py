@@ -38,6 +38,23 @@ def get(path):
     return {}
 
 
+def fpl_portrait(name, path):
+    """The Premier League's official, current-season photo (fantasy game feed, 500 x 500 cut-out); True if saved."""
+    try:
+        d = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/", headers=HEAD, timeout=40).json()
+    except (requests.RequestException, ValueError):
+        return False
+    want = norm(name)
+    rows = [e for e in d["elements"] if want in (norm(f"{e['first_name']} {e['second_name']}"), norm(e["web_name"])) and e.get("photo")]
+    if not rows:
+        return False
+    r = requests.get(f"https://resources.premierleague.com/premierleague/photos/players/250x250/p{rows[0]['photo'].split('.')[0]}.png", headers=HEAD, timeout=40)
+    if r.status_code != 200:
+        return False
+    im = Image.open(io.BytesIO(r.content)).convert("RGBA"); im = im.crop(im.getbbox()); im.thumbnail((512, 512), Image.LANCZOS); im.save(path, "PNG", optimize=True)
+    return True
+
+
 def ea_portrait(name, path):
     """EA's published portrait (the most recent photo available), from the list saved by src/41_fetch_ea_portraits.py; returns True if saved."""
     import json
@@ -63,6 +80,8 @@ def main():
     for name in NAMES:
         slug = norm(name)
         path = f"site/logos/players/hero/{slug}.png"
+        if fpl_portrait(name, path):
+            print(f"  {name:<24} Premier League photo (current season)"); kept.append(name); continue
         if ea_portrait(name, path):
             print(f"  {name:<24} EA portrait"); kept.append(name); continue
         if os.path.exists(path) or os.path.exists(path.replace(".png", ".jpg")):

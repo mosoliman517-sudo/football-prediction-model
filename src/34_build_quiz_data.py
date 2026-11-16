@@ -228,6 +228,15 @@ def main():
     for q in players:
         if not q.get("im") and tsdb.get(str(q["id"])):
             q["iu"] = tsdb[str(q["id"])]
+    try:
+        aw = json.load(open("02_processed_data/awards.json", encoding="utf-8"))
+    except FileNotFoundError:
+        aw = {}
+    for q in players:
+        x = aw.get(str(q["id"]))
+        if x:
+            q["aw"], q["tn"] = x["aw"], [k for k in x["tn"] if k in ("WC14", "WC18", "EU16")]
+    print("players with awards:", sum(1 for q in players if q.get("aw")), "; with a tournament:", sum(1 for q in players if q.get("tn")))
     print("players with a TheSportsDB photo:", sum(1 for q in players if q.get("iu")))
     print("players with a Commons photo:", sum(1 for q in players if q.get("im")))
     json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)

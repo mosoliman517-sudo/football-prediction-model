@@ -81,6 +81,20 @@ for name, obj in (("balanced", lambda r: min(r[0], r[1], r[2])), ("accuracy", la
     profiles[name] = {"h": 1.0, "a": round(float(a), 3), "d": round(float(dr), 3), "bench": {"H": round(r[0], 4), "D": round(r[1], 4), "A": round(r[2], 4), "acc": round(r[3], 4)}}
     print(f"{name:<9} away x{a:.2f} draw x{dr:.2f} -> Home {r[0]:.0%} Draw {r[1]:.0%} Away {r[2]:.0%} accuracy {r[3]:.1%} (2024-26, all five leagues)")
 
+def crest_colours(path):
+    """Two dominant colours of a badge (skipping white, black and greys), for the 'site recolours to your team' option."""
+    if not os.path.exists(path):
+        return None
+    im = Image.open(path).convert("RGBA"); im.thumbnail((48, 48))
+    counts = {}
+    for r, g, b, a in im.getdata():
+        if a < 200 or (r > 222 and g > 222 and b > 222) or (r < 40 and g < 40 and b < 40) or max(r, g, b) - min(r, g, b) < 40:
+            continue
+        k = (r // 32 * 32 + 16, g // 32 * 32 + 16, b // 32 * 32 + 16); counts[k] = counts.get(k, 0) + 1
+    top = sorted(counts, key=lambda k: -counts[k])[:2]
+    return ["#%02x%02x%02x" % c for c in top] if top else None
+
+
 def webp_uri(path, max_px):
     """Official artwork (git-ignored, from src/31_fetch_assets.py) as a small WebP data URI; None if the file is absent."""
     if not ARTWORK or not os.path.exists(path):
@@ -121,6 +135,7 @@ def final_tables(lg):
         out[f"{sn}-{str(sn + 1)[2:]}"] = [[t, v[0], v[1], v[2], v[3], v[4], v[5], round(v[6], 1)] for t, v in rows]
     return out
 leagues = {}
+colours = {}
 for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     seasons = {}
     for lab, s in g.groupby("season_lab"):
@@ -142,6 +157,10 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
             u = "data:image/svg+xml;base64," + base64.b64encode(open(f"site/crests/{slug(c)}.svg", "rb").read()).decode()
         return u
     crests = {c: u for c in clubs if (u := crest(c))}
+    for c in clubs:
+        cc = crest_colours(f"{LOGO_DIR}/clubs/{lg}/{slug(c)}.png") if ARTWORK else None
+        if cc:
+            colours[c] = cc
     print(f"   logo {'yes' if logo else 'no'}, face {'yes' if star['face'] else 'no'}, crests {len(crests)}/{len(clubs)}" + (f"  missing: {[c for c in clubs if c not in crests]}" if len(crests) < len(clubs) else ""))
     leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "tables": final_tables(lg), "scorers": ({sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in scorers_all.items()} if lg == "E0" else None), "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
@@ -161,7 +180,7 @@ for nm in _h.NAMES:
         hero.append({"n": nm, "img": uri})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
 print(f"front page photos: {len(hero)}; quiz players: {len(quiz['players']) if quiz else 0}")
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "quiz": quiz}
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "quiz": quiz}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

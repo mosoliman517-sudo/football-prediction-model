@@ -519,6 +519,13 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .floater { position: fixed; bottom: 12%; z-index: 9000; font: 800 42px var(--display); pointer-events: none; animation: floatup 1.8s ease-out forwards; } @keyframes floatup { from { opacity: 1; transform: translateY(0) scale(.6); } to { opacity: 0; transform: translateY(-46vh) scale(1.5) rotate(12deg); } }
 .tour { position: fixed; inset: 0; z-index: 9500; } .tour .dim { position: absolute; inset: 0; background: #000a; } .tour .ring { position: absolute; border-radius: 16px; box-shadow: 0 0 0 9999px #000a, 0 0 0 3px var(--accent), 0 0 30px var(--accent); pointer-events: none; transition: all .3s ease; }
 .tour .tcard { position: absolute; left: 50%; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 16px; box-shadow: 0 20px 60px #000c; } .tour .tcard b { font: 800 22px var(--display); } .tour .tcard p { color: var(--muted); margin: 6px 0 12px; }
+.stadium { position: fixed; left: 0; right: 0; bottom: 0; height: 46vh; z-index: 0; pointer-events: none; opacity: .5; -webkit-mask-image: linear-gradient(transparent, #000 40%); mask-image: linear-gradient(transparent, #000 40%); } .stadium svg { width: 100%; height: 100%; display: block; }
+.stadium .lamp { animation: lamp 4s ease-in-out infinite; transform-box: fill-box; } @keyframes lamp { 50% { opacity: .6; } } .stadium .fan { animation: fan 2.4s ease-in-out infinite; } @keyframes fan { 50% { opacity: .25; transform: translateY(-2px); } } .stadium .flag { animation: wave 2.2s ease-in-out infinite; } @keyframes wave { 50% { transform: rotate(7deg); } }
+.wrap { position: relative; z-index: 1; } @media (prefers-reduced-motion: reduce) { .stadium * { animation: none !important; } }
+.radars { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; } .radar { width: 100%; height: auto; color: var(--ink); }
+.stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; } .stk { position: relative; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; border: 2px solid var(--line); background: var(--surface2); min-height: 150px; } .stk b { font-size: 13px; } .stk small { color: var(--muted); display: flex; gap: 4px; align-items: center; } .stk i { font: 700 10px var(--mono); text-transform: uppercase; font-style: normal; letter-spacing: .08em; }
+.stk.off { opacity: .5; border-style: dashed; justify-content: center; } .stk .q { font: 800 40px var(--display); color: var(--muted); } .stk.rare { border-color: #4a8cff; } .stk.epic { border-color: #b66cff; box-shadow: 0 0 18px -6px #b66cff; } .stk.legend { border-color: #ffb300; box-shadow: 0 0 22px -4px #ffb300; background: linear-gradient(160deg, #ffb30022, var(--surface2)); } .stk.on { animation: rise .4s ease both; }
+#albumPage { display: flex; flex-direction: column; gap: 14px; }
 </style>
 
 <div id="splash" class="splash t-pitch" role="status" aria-live="polite"><div class="sp-art" aria-hidden="true"></div><div class="sp-brand">ball<b>knowledge</b></div><div class="sp-tip" id="spTip">Loading…</div><div class="sp-bar"><i></i></div><div class="sp-meta"><span id="spName"></span><span id="spRar" class="sp-rar"></span><span id="spNew"></span></div><button type="button" class="sp-skip" id="spSkip">Tap to skip</button></div>
@@ -528,6 +535,7 @@ const SPLASHES = [{ id: "pitch", name: "Night Match", rar: "Common", w: 40 }, { 
 const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as the clues arrive.", "Hard counts 1.4x and Elite ball knowledge counts 2x on your solo scores.", "In two-player mode, player 1 buzzes with A and player 2 with L.", "Public Ranked lobbies change your Elo; private code rooms never do.", "Press Enter to submit: near matches and typos are accepted.", "Elite asks only about the obscure players and the smaller clubs.", "Club roulette: a wrong name, a repeat or a timeout loses the round.", "Tic-tac-toe has categories for managers, league titles and cup winners.", "Every badge in Badge blur is checked by eye. Names are not hidden, so look at the shapes.", "Your progress saves to your account automatically after every round.", "There are four loading screens you will not see every time. Collect them all.", "The model has never seen the matches you predict. Can you beat it?", "Where did they finish? gets harder fast on Elite: you get one place of margin.", "Invite a friend with a link: create a room and copy it.", "Friends see your Elo and your favourite player and team.", "Come back every day: streaks fill the calendar on your profile.", "Easy only asks about superstars and the biggest clubs.", "Market value: write your number and the closest guess wins the round.", "Spot the upset: the model's least likely result is hiding in five real matches.", "Daily 5 is the same for everyone today. Compare with a friend.", "A wrong buzz costs 150 points, so be sure.", "Unlock achievements for the odd things: night owl, hat-trick, speed demon.", "You can change your profile picture to any star player or club badge.", "Data about players stops in July 2026, so some recent transfers are missing."];
 (function () { let r = Math.random() * 100, pick = SPLASHES[0]; for (const s of SPLASHES) { if (r < s.w) { pick = s; break; } r -= s.w; } window.__sp = pick; window.__spT0 = performance.now(); const el = document.getElementById("splash"); el.className = "splash t-" + pick.id; document.getElementById("spName").textContent = pick.name; const rr = document.getElementById("spRar"); rr.textContent = pick.rar; rr.className = "sp-rar r-" + pick.rar.toLowerCase(); document.getElementById("spTip").textContent = SPLASH_TIPS[Math.floor(Math.random() * SPLASH_TIPS.length)]; })();
 </script>
+<div id="stadium" class="stadium" aria-hidden="true"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
 <div class="wash" id="wash" aria-hidden="true"></div>
 <div class="wrap">
@@ -535,6 +543,7 @@ const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
+    <button class="pill" data-go="album" type="button" title="Your sticker album">📒</button>
     <button class="pill" id="acctBtn" type="button">Sign in</button>
     <button class="pill profilebtn" id="profileBtn" type="button" title="Your profile, rank and achievements" aria-label="Your profile, rank and achievements"></button>
     <button class="pill" id="sndBtn" type="button" title="Sound: off, soft or full" aria-label="Sound">Sound: soft</button>
@@ -563,6 +572,7 @@ const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as
   </section>
 
   <section id="profilePage" hidden></section>
+  <section id="albumPage" hidden></section>
   <section id="league" hidden>
     <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
     <div class="lhead">
@@ -750,8 +760,25 @@ function formOf(c, team, before, n = 5) {
 const formHTML = (f) => `<span class="form">${f.map((x) => `<i class="${x}">${x}</i>`).join("") || '<span class="fine">no earlier matches</span>'}</span>`;
 
 /* ---------- theme + routing ---------- */
+
+/* ---------- team colours and stadium backdrop ---------- */
+const TEAMCOL = DATA.colors || {};
+function teamTheme() {
+  const root = document.documentElement, p = prof(), c = p.favT && p.teamTheme !== false ? TEAMCOL[p.favT] : null;
+  ["--accent", "--accent2", "--glow", "--on-accent"].forEach((k) => root.style.removeProperty(k));
+  if (!c) return;
+  const lum = (h) => { const n = parseInt(h.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); };
+  root.style.setProperty("--accent", c[0]); root.style.setProperty("--accent2", c[1] || c[0]); root.style.setProperty("--glow", c[0]); root.style.setProperty("--on-accent", lum(c[0]) > 150 ? "#101010" : "#ffffff");
+}
+function paintStadium(code) {
+  const el = $("#stadium"); if (!el) return; const r = mulberry(hash("stadium" + code)), W = 1200, H = 360;
+  const towers = [150, 420, 780, 1050].map((x, i) => `<g><rect x="${x}" y="${70 + (i % 2) * 20}" width="8" height="${H - 90 - (i % 2) * 20}" fill="#0b0f1a"/><g class="lamp" style="animation-delay:${i * 0.7}s"><circle cx="${x + 4}" cy="${64 + (i % 2) * 20}" r="46" fill="url(#glow)"/><rect x="${x - 22}" y="${54 + (i % 2) * 20}" width="52" height="14" rx="3" fill="#fff7d6"/></g></g>`).join("");
+  let crowd = ""; for (let k = 0; k < 170; k++) { const x = r() * W, y = 205 + r() * 150, col = r() < 0.3 ? "var(--accent)" : r() < 0.5 ? "var(--accent2)" : "#fff"; crowd += `<circle class="fan" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.6 + r() * 2).toFixed(1)}" fill="${col}" style="animation-delay:${(r() * 3).toFixed(2)}s;animation-duration:${(1.6 + r() * 2).toFixed(2)}s"/>`; }
+  let flags = ""; for (let k = 0; k < 9; k++) { const x = 40 + k * 135 + r() * 60; flags += `<g class="flag" style="animation-delay:${(r() * 2).toFixed(2)}s;transform-origin:${x}px 230px"><rect x="${x}" y="190" width="2" height="40" fill="#222"/><path d="M${x + 2} 190 l26 8 l-26 10z" fill="var(--accent)"/></g>`; }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><radialGradient id="glow"><stop offset="0" stop-color="#fff7d6" stop-opacity=".9"/><stop offset="1" stop-color="#fff7d6" stop-opacity="0"/></radialGradient></defs>${towers}<path d="M0 ${H} L0 230 Q300 160 600 190 Q900 160 ${W} 230 L${W} ${H}Z" fill="#0b0f1a" opacity=".92"/>${crowd}${flags}</svg>`;
+}
 function setTheme(code, ev) {
-  const root = document.documentElement, apply = () => { if (code) root.setAttribute("data-league", code); else root.setAttribute("data-league", "E0"); setParticleColours(code || "E0"); };
+  const root = document.documentElement, apply = () => { if (code) root.setAttribute("data-league", code); else root.setAttribute("data-league", "E0"); setParticleColours(code || "E0"); paintStadium(code || "E0"); teamTheme(); };
   if (REDUCED || !ev) { apply(); return; }
   const wash = $("#wash"), p = PAL[code || "E0"];
   wash.style.setProperty("--wx", ev.clientX + "px"); wash.style.setProperty("--wy", ev.clientY + "px"); wash.style.setProperty("--wash", p.bg);
@@ -761,7 +788,7 @@ function go(slug) { try { if (location.hash !== "#" + slug) history.replaceState
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette"];
 function route(ev) {
   const h = location.hash.slice(1);
-  stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; }
+  stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
   const jm = /^join-([A-Za-z]{4})-([a-z]+)$/.exec(h);
@@ -769,6 +796,7 @@ function route(ev) {
   if (h === "") return showHome(ev);
   if (h === "lab") return showLab(ev);
   if (h === "profile") return showProfile(ev);
+  if (h === "album") return showAlbum(ev);
   let mode = null, rest = h;
   if (h === "games") { mode = "games"; rest = "all-leagues"; } else if (h.startsWith("games-")) { mode = "games"; rest = h.slice(6); } else if (h.startsWith("lab-")) { mode = "lab"; rest = h.slice(4); }
   const slug = Object.keys(BYSLUG).find((x) => rest === x || rest.startsWith(x + "-"));
@@ -1426,6 +1454,10 @@ const ACH = [
   ["rounds100", "Century", "Play 100 games"],
   ["squad", "The whole squad", "Play all eight ballknowledge originals"],
   ["curious", "Know thyself", "Open your profile"],
+  ["sticker1", "First sticker", "Collect your first sticker"],
+  ["page", "Page complete", "Fill a whole sticker page (12 players)"],
+  ["stick50", "Swapper", "Collect 50 different stickers"],
+  ["stick150", "Panini pro", "Collect 150 different stickers"],
 ];
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const weekId = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = t.getUTCFullYear(), w = Math.ceil(((t - new Date(Date.UTC(y, 0, 1))) / 864e5 + 1) / 7); return y * 100 + w; };
@@ -1505,7 +1537,7 @@ function startTour() {
   };
   show();
 }
-function finishSplash() {
+function finishSplash() { paintStadium(document.documentElement.getAttribute("data-league") || "HOME"); teamTheme();
   const sp = $("#splash"); if (!sp) return; const cur = window.__sp || { id: "pitch", rar: "Common" }, p = prof(); p.splashes = { ...(p.splashes || {}) }; const fresh = !p.splashes[cur.id]; p.splashes[cur.id] = (p.splashes[cur.id] || 0) + 1;
   const n = Object.keys(p.splashes).length; if (fresh) { const el = $("#spNew"); if (el) el.textContent = `New! ${n} of ${SPLASHES.length} collected`; }
   if (cur.rar === "Rare" || cur.rar === "Legendary") unlock(p, "splash_rare"); if (cur.rar === "Legendary") unlock(p, "splash_leg"); if (n >= SPLASHES.length) unlock(p, "splash_all"); saveProf(p);
@@ -1679,6 +1711,41 @@ async function renderBoards() {
 }
 
 
+
+/* ================= Sticker album and personal stats ================= */
+let FAMELIST_ = null;
+const albumPlayers = (lg) => (FAMELIST_ || (FAMELIST_ = QZ.players.slice().sort((a, b) => FAME.get(a.id) - FAME.get(b.id)))).filter((p) => LG_OF_COMP[p.comp] === lg).slice(0, 240);
+function collectSticker(p) {
+  const pr = prof(); pr.stickers = { ...(pr.stickers || {}) }; const fresh = !pr.stickers[p.id]; pr.stickers[p.id] = (pr.stickers[p.id] || 0) + 1;
+  if (fresh) { toast(`🃏 New sticker: <b>${esc(p.n)}</b>`); const n = Object.keys(pr.stickers).length; unlock(pr, "sticker1"); if (n >= 50) unlock(pr, "stick50"); if (n >= 150) unlock(pr, "stick150"); const lg = LG_OF_COMP[p.comp], list = albumPlayers(lg), idx = list.findIndex((x) => x.id === p.id); if (idx >= 0) { const pg = Math.floor(idx / 12); if (list.slice(pg * 12, pg * 12 + 12).every((x) => pr.stickers[x.id])) unlock(pr, "page"); } }
+  saveProf(pr);
+}
+function track(game, ok, lg) { const p = prof(); p.acc = { ...(p.acc || {}) }; const a = p.acc[game] || { c: 0, n: 0 }; p.acc[game] = { c: a.c + (ok ? 1 : 0), n: a.n + 1 }; if (lg) { p.accL = { ...(p.accL || {}) }; const b = p.accL[lg] || { c: 0, n: 0 }; p.accL[lg] = { c: b.c + (ok ? 1 : 0), n: b.n + 1 }; } saveProf(p); }
+function radarSVG(items) {
+  const n = items.length, R = 78, C = 100, pt = (i, k) => { const a = (Math.PI * 2 * i) / n - Math.PI / 2; return [C + Math.cos(a) * R * k, C + Math.sin(a) * R * k]; };
+  const ring = (k) => items.map((_, i) => pt(i, k).map((v) => v.toFixed(1)).join(",")).join(" "), shape = items.map((it, i) => pt(i, Math.max(0.04, it.v)).map((v) => v.toFixed(1)).join(",")).join(" ");
+  return `<svg class="radar" viewBox="0 0 200 200" role="img" aria-label="Strengths"><g fill="none" stroke="currentColor" stroke-opacity=".18">${[0.33, 0.66, 1].map((k) => `<polygon points="${ring(k)}"/>`).join("")}${items.map((_, i) => `<line x1="${C}" y1="${C}" x2="${pt(i, 1)[0].toFixed(1)}" y2="${pt(i, 1)[1].toFixed(1)}"/>`).join("")}</g><polygon points="${shape}" fill="var(--accent)" fill-opacity=".35" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${items.map((it, i) => { const [x, y] = pt(i, 1.2); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="700" fill="currentColor">${esc(it.l)}</text>`; }).join("")}</svg>`;
+}
+function statsRadarHTML() {
+  const p = prof(), acc = p.acc || {}, accL = p.accL || {}, g = [["who", "Who am I?"], ["career", "Career"], ["club", "Clubs"], ["blur", "Badges"], ["finish", "Tables"], ["value", "Values"]], total = g.reduce((s, [k]) => s + (acc[k] ? acc[k].n : 0), 0);
+  if (total < 5) return '<div class="fine">Play a few rounds and your strengths will show up here.</div>';
+  const a = g.map(([k, l]) => ({ l, v: acc[k] && acc[k].n ? acc[k].c / acc[k].n : 0 })), b = ORDER.map((c) => ({ l: lgOf(c).name.replace("Premier League", "PL").replace("Bundesliga", "BL").replace("La Liga", "LL").replace("Serie A", "SA").replace("Ligue 1", "L1"), v: accL[c] && accL[c].n ? accL[c].c / accL[c].n : 0 }));
+  return `<div class="radars"><div><div class="fine">By game</div>${radarSVG(a)}</div><div><div class="fine">By league</div>${radarSVG(b)}</div></div>`;
+}
+function showAlbum(ev) {
+  S.code = null; S.mode = null; setTheme("HOME", ev); ["#home", "#lobby", "#league", "#profilePage"].forEach((s) => { $(s).hidden = true; }); $("#albumPage").hidden = false; window.scrollTo(0, 0); S.alb = S.alb || { lg: "E0", pg: 0 }; renderAlbum();
+}
+function renderAlbum() {
+  const el = $("#albumPage"), p = prof(), st = p.stickers || {}, a = S.alb, list = albumPlayers(a.lg), pages = Math.ceil(list.length / 12), have = Object.keys(st).length, slice = list.slice(a.pg * 12, a.pg * 12 + 12), got = list.filter((x) => st[x.id]).length;
+  const rar = (r) => (r < 40 ? "legend" : r < 120 ? "epic" : r < 400 ? "rare" : "common");
+  el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Sticker album</span></div></nav>
+  <div class="card"><div class="row" style="justify-content:space-between"><h2>📒 Sticker album</h2><span class="rkbadge"><b class="num">${have}</b><small>stickers collected</small></span></div><p class="sub">Get a player right in Who am I? or Career path and his sticker goes in your album.</p>
+  <div class="scope">${ORDER.map((c) => `<button type="button" class="chip" data-alb="lg|${c}" aria-pressed="${a.lg === c}">${esc(lgOf(c).name)}</button>`).join("")}</div>
+  <div class="row" style="justify-content:space-between;margin:10px 0"><b>${esc(lgOf(a.lg).name)} · page ${a.pg + 1} of ${pages}</b><span class="fine">${got} of ${list.length} collected</span></div>
+  <div class="stickers">${slice.map((x) => { const r = FAME.get(x.id); return st[x.id] ? `<div class="stk on ${rar(r)}">${playerPic(x, "md")}<b>${esc(x.n)}</b><small>${clubBadgeFor(x.club, "sm")} ${esc(x.pos)}</small><i>${rar(r)}${st[x.id] > 1 ? " · x" + st[x.id] : ""}</i></div>` : `<div class="stk off"><span class="q">?</span><b>#${a.pg * 12 + slice.indexOf(x) + 1}</b><small>${esc(x.pos)}</small></div>`; }).join("")}</div>
+  <div class="row" style="margin-top:12px;justify-content:center"><button class="btn ghost" data-alb="pg|-1" type="button" ${a.pg ? "" : "disabled"}>← Previous</button><button class="btn ghost" data-alb="pg|1" type="button" ${a.pg < pages - 1 ? "" : "disabled"}>Next →</button></div></div>`;
+}
+
 /* ================= Profile page ================= */
 const AVATARS = ["⚽", "🥅", "🧤", "🏆", "👑", "🔥", "🦁", "🐐", "🎯", "🧠", "⚡", "🌟"];
 function avatarHTML(av, size = "md", nick = "") {
@@ -1713,13 +1780,14 @@ async function renderProfilePage() {
     ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
     <label class="pfl">Profile picture</label><div class="avgrid">${avs}</div>
     <label class="pfl">Favourite player</label><div class="row"><input id="pfPlayer" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${favP ? esc(favP.n) : "Search a player"}" aria-label="Favourite player">${favP ? '<button class="btn ghost" id="pfPlayerClear" type="button">Clear</button>' : ""}</div><div id="pfPSug" class="sugs"></div>
-    <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></div>
+    <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : ""}</div>
   <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
   <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx"><div class="fine">Loading…</div></div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
+  <div class="card"><h3>Your strengths</h3>${statsRadarHTML()}</div>
   <div class="card"><h3>Loading screens <span class="fine">${Object.keys(seen).length} of ${SPLASHES.length} collected</span></h3><div class="splgrid">${spl}</div></div>
   <div class="card"><h3>Achievements <span class="fine">${won} of ${ACH.length}</span></h3><div class="achgrid">${ach}</div></div>
   <div class="card"><h3>Streak calendar</h3>${calendarHTML(p)}<div class="fine">Each square is a day; brighter means more games. Last 12 weeks.</div></div>
-  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button></div></div>`;
+  <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button><button class="btn" data-go="album" type="button">📒 Sticker album</button></div></div>`;
   if (!signed) return;
   Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) e.textContent = Ranked.elo; });
   Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
@@ -1949,6 +2017,7 @@ function playerClues(p) {
   if (p.h) cl.push(["Build", `${p.h} cm tall${p.foot ? `, ${p.foot}-footed` : ""}`]);
   cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
   if (p.end) cl.push(["Contract", `Contract runs until ${p.end}`]);
+  if ((p.aw || []).length) cl.push(["Awards", `Has won the ${p.aw.map((k) => ({ BDO: "Ballon d'Or", GS: "European Golden Shoe", PLGB: "Premier League Golden Boot", PFA: "PFA Players' Player of the Year", FIFA: "FIFA best player award", UEFA: "UEFA Player of the Year" })[k]).join(", ")}`, "🏅"]);
   if ((p.hn || []).length) cl.push(["Honours", `Has won the ${p.hn.map((k) => ({ UCL: "Champions League", UEL: "Europa League", FAC: "FA Cup", EFL: "League Cup", CDR: "Copa del Rey", DFB: "DFB-Pokal", COP: "Coppa Italia", CDF: "Coupe de France" })[k]).join(", ")}`, "🏆"]);
   if (p.val) cl.push(["Value", `Market value about ${euro(p.val)}${p.peak > p.val * 1.2 ? `, peak ${euro(p.peak)}` : ""}`]);
   if (p.caps) cl.push(["Caps", `${p.caps} international caps, ${p.ig} goal${p.ig === 1 ? "" : "s"}`]);
@@ -2022,7 +2091,7 @@ function wrongGuess(timedOut) {
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
   if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
-  S_.result = { winner, pts }; if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
+  S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 function finishQuiz() {
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") rankedEnd(S_, S_.scores);
@@ -2105,7 +2174,7 @@ function lockFinish() {
   const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
   if (duo && f.turn === 0) { f.turn = 1; c.guess = Math.ceil(c.n / 2); renderFinish(); return; }
   const n = duo ? 2 : 1; for (let i = 0; i < n; i++) { c.diffs[i] = Math.abs(c.guesses[i] - c.pos); c.pts[i] = Math.max(0, 1000 - 220 * c.diffs[i]); f.scores[i] += c.pts[i]; }
-  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) f.streak++; else f.over = true; }
+  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) f.streak++; else f.over = true; track("finish", best <= finTol(), c.lg); }
   f.phase = "reveal"; best === 0 ? (Snd.win(), confetti()) : best <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
 }
 function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "duo") rankedEnd(f, f.scores); if (f.mode === "solo") { const k = `best_finish_${f.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }, sc = Math.round(f.scores[0] * DIFFX[S.diff]); if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(sc / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: sc }); } renderFinish(); }
@@ -2137,7 +2206,7 @@ function renderVH(kind) {
   if (q.chosen != null) document.querySelectorAll(".holv").forEach((el) => { const end = +el.dataset.v, t0 = performance.now(); (function f(t) { const k = REDUCED ? 1 : Math.min(1, (t - t0) / 700); if (el.isConnected) el.textContent = euro(end * k); if (k < 1 && el.isConnected) requestAnimationFrame(f); })(t0); });
 }
 function answerVH(kind, k) {
-  const key = kind === "p" ? "pv" : "cv", q = S[key]; if (q.chosen != null) return; q.chosen = k; const ok = k === q.win; S.vStreak = ok ? (S.vStreak || 0) + 1 : 0;
+  const key = kind === "p" ? "pv" : "cv", q = S[key]; if (q.chosen != null) return; q.chosen = k; const ok = k === q.win; track("value", ok, null); S.vStreak = ok ? (S.vStreak || 0) + 1 : 0;
   const cur = store.items[`v_${S.code}`] || { best: 0 }; if (S.vStreak > cur.best) lockIn(`v_${S.code}`, { best: S.vStreak });
   reward(5 + (ok ? 5 + 2 * Math.min(S.vStreak, 10) : 0), "Market value", null); if (ok) Board.submit({ game: "pvalue", league: S.code === "ALL" ? "all" : S.code, score: S.vStreak });
   Snd.flip(); renderVH(kind); setTimeout(() => { ok ? (S.vStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.vStreak >= 5 && S.vStreak % 5 === 0) confetti(); }, 500);
@@ -2227,6 +2296,9 @@ function tttCategories(pool, scope) {
   Object.entries(HON).forEach(([k, label]) => { const f = (p) => (p.hn || []).includes(k); if (count(f) >= (k === "UCL" ? 20 : 12)) cats.push({ id: "hn:" + k, fam: "honour", label: `${label} (2016 on)`, icon: '<span class="cflag">🏆</span>', test: f }); });
   const starCount = {}; pool.forEach((p) => (p.tm || []).forEach((id) => { starCount[id] = (starCount[id] || 0) + 1; }));
   Object.entries(starCount).filter(([, n]) => n >= (scope === "ALL" ? 25 : 12)).forEach(([id]) => { const st = QZ.players.find((x) => x.id === +id); if (st) cats.push({ id: "tm:" + id, fam: "mate", label: `Played with ${st.n}`, icon: faceOf(st.n) ? `<span class="badge md hface"><img src="${faceOf(st.n)}" alt=""></span>` : '<span class="cflag">🤝</span>', test: (p) => (p.tm || []).includes(+id) }); });
+  const AWN = { BDO: "Ballon d'Or", GS: "European Golden Shoe", PLGB: "Premier League Golden Boot", PFA: "PFA Players' Player of the Year", FIFA: "FIFA best player award", UEFA: "UEFA Player of the Year" };
+  const wcWin = (p) => ((p.tn || []).includes("WC14") && p.nat === "Germany") || ((p.tn || []).includes("WC18") && p.nat === "France");
+  [["bdo", "Won the Ballon d'Or", (p) => (p.aw || []).includes("BDO"), 5], ["award", "Won a major individual award", (p) => (p.aw || []).length > 0, 25], ["wcwin", "Won the World Cup (2014 or 2018)", wcWin, 25], ["wc18", "Played at the 2018 World Cup", (p) => (p.tn || []).includes("WC18"), 50], ["eu16", "Played at Euro 2016", (p) => (p.tn || []).includes("EU16"), 40]].forEach(([id, label, f, min]) => { if (count(f) >= min) cats.push({ id: "aw:" + id, fam: "award", label, icon: '<span class="cflag">🏅</span>', test: f }); });
   const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) cats.push({ id: "ti:any", fam: "title", label: "Won a Big 5 league title", icon: '<span class="cflag">🏆</span>', test: anyT });
   const jm = (p) => oursSet(p).size >= 5 || p.hist.length >= 7; if (count(jm) >= 25) cats.push({ id: "journey", fam: "stat", label: "Played for 7 or more clubs", icon: '<span class="cflag">🧳</span>', test: (p) => p.hist.length >= 7 });
   Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "🌍"}</span>`, test: (p) => p.nat === n }));
@@ -2492,6 +2564,8 @@ document.addEventListener("click", (e) => {
   if (b.dataset.unfriend) { Ranked.rpc("remove_friend", { p_nick: b.dataset.unfriend }).then(paintFriends); return; }
   if (b.dataset.react) { Snd.tick(); floatReact(b.dataset.react); Net.send({ k: "react", e: b.dataset.react }); return; }
   if (b.id === "tourBtn") { startTour(); return; }
+  if (b.dataset.go) { Snd.tick(); go(b.dataset.go); return; }
+  if (b.dataset.alb) { const [k, v] = b.dataset.alb.split("|"); if (k === "lg") { S.alb = { lg: v, pg: 0 }; } else S.alb.pg = Math.max(0, S.alb.pg + +v); Snd.tick(); renderAlbum(); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
   if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
@@ -2609,7 +2683,8 @@ document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const b
 document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; if (e.target.id === "rIn") { e.preventDefault(); if (Net.role === "host" && S.rou.turn === 1) return; rouSubmit(null); } else if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {
   const t = e.target;
-  if (t.id === "pfTeam") { const p = prof(); p.favT = t.value; if (p.favP && p.favT) unlock(p, "fav"); saveProf(p); syncProfile(); renderProfilePage(); return; }
+  if (t.id === "pfTheme") { const p = prof(); p.teamTheme = t.checked; saveProf(p); teamTheme(); return; }
+  if (t.id === "pfTeam") { const p = prof(); p.favT = t.value; if (p.favP && p.favT) unlock(p, "fav"); saveProf(p); syncProfile(); teamTheme(); renderProfilePage(); return; }
   if (t.id === "styleSel") { S.style = t.value; }
   else if (t.id === "raceSeasonSel") { S.raceSeason = t.value; renderRace(); }
   else if (t.id === "seasonSel") { stopReplay(); S.season = t.value.replace(" (live)", ""); S.replay.round = 0; paintReplay(true); }

@@ -478,6 +478,12 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
   .gfaces .badge, .gfaces .hface { width: 40px; height: 40px; } .bar { gap: 6px; } .brand { font-size: 16px; } #home .hero h1, .hero h1 { font-size: 34px; } .holpair { grid-template-columns: 1fr auto 1fr; } .holc { padding: 10px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
   .tgrid { max-width: 420px; } .clue { padding: 6px 10px; } .buzz { padding: 12px; } .modes { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 }
+.rkbadge { display: flex; flex-direction: column; align-items: flex-end; } .rkbadge b { font-size: 34px; color: var(--accent); line-height: 1; } .rkbadge small { color: var(--muted); }
+.rkform { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: end; margin-top: 10px; } .rkform label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.rkform select { padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 15px var(--sans, system-ui); }
+.lbx { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; } .lbrow.lobby { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface2); }
+.lbx .lbrow:not(.lobby) { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--surface2); } .lbx .lbrow.me { outline: 2px solid var(--accent); } .rkbig { font-size: 44px; }
+@media (max-width: 560px) { .lbrow.lobby { grid-template-columns: 1fr auto; } .lbrow.lobby > div:nth-child(2) { grid-column: 1; } }
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -723,7 +729,7 @@ function route(ev) {
   const lg = BYSLUG[slug], tail = rest.slice(slug.length + 1);
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" ? tail : null; } }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" ? tail : null; S.rk = tail === "ranked"; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
@@ -797,7 +803,7 @@ function paintScore() {
   $("#scorebox").innerHTML = [[`${t.you} v ${t.mod}`, "points: you v model"], [`${t.yr} v ${t.mr}`, `right, of ${t.n}`], [`${st.cur}`, "streak"], [`${st.best}`, "best streak"]].map(([v, l]) => `<div><b class="num">${v}</b><small>${l}</small></div>`).join("");
 }
 function renderRooms() {
-  const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboards"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
+  const rooms = S.mode === "games" ? [["play", "Games"], ["boards", "Leaderboard"]] : S.code === "ALL" ? [["review", "How good is it?"], ["about", "How it works"]] : [["race", "Title race"], ["replay", "Replay a season"], ["review", "How good is it?"], ["about", "How it works"]];
   $("#rooms").innerHTML = rooms.map(([k, t]) => `<button type="button" class="room" role="tab" data-room="${k}" aria-selected="${S.room === k}">${t}</button>`).join("");
 }
 function renderRoom() { stopReplay(); if (S.room !== "play") stopQuiz(); if (S.room !== "play") stopTheatre(); ({ play: renderPlayRoom, race: renderRace, replay: renderReplay, boards: renderBoards, review: renderReview, about: renderAbout })[S.room](); paintScore(); renderCrumbs(); }
@@ -1144,15 +1150,17 @@ function renderHub() {
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
+  if (g === "ranked") { renderRanked(); return; }
   if (g === "model") { $("#room").innerHTML = `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; return; }
-  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge games</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
+  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
   $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Two kinds of games, ${where}.</p><div class="groups">
-    <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge games</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
-    <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button></div>`;
+    <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
+    <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
+    <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig">🏆</span></div><div class="gname">Ranked</div><div class="gtag">Public lobbies against real players. Win Elo, climb the leaderboard, or open a private room for friends.</div><span class="dgo">Play online</span></button></div>`;
 }
 function renderCrumbs() {
   const el = $("#crumbs"); if (!el || !S.code) return; const items = [["Menu", "menu"]];
-  if (S.mode === "games") { items.push(["Games", "games"]); if (S.hubGroup) items.push([S.hubGroup === "bk" ? "ballknowledge" : "Beat the Model", "group"]); if (S.game) items.push([gameName(S.game) || "Game", null]); else if (S.room === "boards") items.push(["Leaderboards", null]); }
+  if (S.mode === "games") { items.push(["Games", "games"]); if (S.hubGroup) items.push([S.hubGroup === "bk" ? "ballknowledge originals" : S.hubGroup === "ranked" ? "Ranked" : "Beat the Model", "group"]); if (S.game) items.push([gameName(S.game) || "Game", null]); else if (S.room === "boards") items.push(["Leaderboard", null]); }
   else { items.push(["Our model", "lobby"]); items.push([lgOf(S.code).name, null]); }
   el.innerHTML = `<button class="back" id="backBtn" type="button">← Back</button><div class="trail">${items.map(([n, k], i) => (k && i < items.length - 1 ? `<button type="button" class="crumb" data-crumb="${k}">${esc(n)}</button>` : `<span class="crumb cur">${esc(n)}</span>`)).join("<i>›</i>")}</div>`;
 }
@@ -1173,7 +1181,7 @@ const modeIntro = (title, blurb, opts) => `<div class="card">${gamesBar(title)}<
 const gamesBar = (title) => `<div class="row" style="margin-bottom:12px"><button class="btn ghost" id="gamesBack" type="button">← Back</button><h2 style="font-size:24px">${title}</h2></div>`;
 function renderPlayRoom() {
   stopTheatre();
-  if (S.game) S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk";
+  if (S.game) S.hubGroup = S.rk ? "ranked" : MODEL_IDS.includes(S.game) ? "model" : "bk";
   if (!S.game) return renderHub();
   stopQuiz();
   if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
@@ -1422,7 +1430,7 @@ function openProfile() {
 function boardSettingsHTML(p) {
   if (Board.mode === "none") return `<p class="fine">Global leaderboards switch on when the online database is connected (see the README). Until then your results stay on this device.</p>`;
   if (!Account.signedIn) return `<p class="fine">Leaderboards need an account, so scores belong to a real person. Sign in or create a free account above to join.</p>`;
-  return `<p class="fine">Pick a nickname to appear on the global boards. Only your nickname and your scores are shown, never your picks.</p><div class="row"><input id="nickIn" maxlength="16" placeholder="Nickname (3 to 16 letters or numbers)" value="${esc(p.nick || "")}" aria-label="Nickname"><button class="btn" id="nickSave" type="button">${p.board ? "Update nickname" : "Join the leaderboards"}</button>${p.board ? '<button class="btn ghost" id="nickLeave" type="button">Stop sharing scores</button>' : ""}</div><div class="fine" id="nickMsg"></div>`;
+  return `<p class="fine">Your display name, shown in lobbies and on the leaderboard. Your progress saves to your account automatically.</p><div class="row"><input id="nickIn" maxlength="16" placeholder="Nickname (3 to 16 letters or numbers)" value="${esc(p.nick || "")}" aria-label="Nickname"><button class="btn" id="nickSave" type="button">${p.nick ? "Update nickname" : "Save nickname"}</button>${p.board ? '<button class="btn ghost" id="nickLeave" type="button">Stop sharing scores</button>' : ""}</div><div class="fine" id="nickMsg"></div>`;
 }
 function modal(html) {
   let m = $("#modal"); if (!m) { m = document.createElement("div"); m.id = "modal"; m.className = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); document.body.appendChild(m); }
@@ -1489,7 +1497,7 @@ const Board = {
   init() { if (DATA.board && DATA.board.url && DATA.board.key) { this.mode = "rest"; this.cfg = DATA.board; } },
   headers() { return { apikey: this.cfg.key, Authorization: `Bearer ${this.cfg.key}`, "Content-Type": "application/json" }; },
   async submit(e) {
-    const p = prof(); if (this.mode !== "rest" || !p.board || !p.nick || !Account.signedIn) return;
+    const p = prof(); if (this.mode !== "rest" || !Account.signedIn) return; if (!p.nick) await ensureNick();
     const t = await Account.token(); if (!t) return;
     const row = { game: e.game, league: !e.league || e.league === "ALL" ? "all" : e.league, score: e.score, week: weekId(), day: e.day || todayKey(), code: e.code || null };
     try { await fetch(`${this.cfg.url}/rest/v1/results`, { method: "POST", headers: { ...Account.hdr(t), Prefer: "return=minimal" }, body: JSON.stringify(row) }); } catch (err) { /* offline: the score stays local */ }
@@ -1500,22 +1508,73 @@ const Board = {
   },
 };
 const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that club", "points"], ["blur", "Badge blur", "points"], ["finish", "Where did they finish?", "points"], ["pvalue", "Market value streak", "best streak"], ["number", "Write your number", "points"], ["ttt", "Tic-tac-toe", "wins"]];
-S.bgame = "xp"; S.bperiod = "week"; S.bscope = "league";
+
+/* ================= Ranked: Elo, public lobbies, leaderboard ================= */
+const RK_GAMES = [["who", "Who am I?"], ["career", "Career path"], ["club", "Name that club"], ["blur", "Badge blur"], ["finish", "Where did they finish?"], ["number", "Market value"], ["ttt", "Football tic-tac-toe"], ["roulette", "Club roulette"]];
+const rkName = (g) => (RK_GAMES.find((x) => x[0] === g) || [, g])[1];
+const Ranked = {
+  elo: 1000, games: 0, wins: 0, lt: null, list: null, timer: null,
+  async rpc(fn, args) {
+    if (Board.mode !== "rest") return null;
+    try { const t = await Account.token(); const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: t ? Account.hdr(t) : Board.headers(), body: JSON.stringify(args || {}) }); if (!r.ok) return null; const txt = await r.text(); return txt ? JSON.parse(txt) : true; } catch (e) { return null; }
+  },
+  async refresh() { const r = await this.rpc("my_rating"); if (r && r[0]) { this.elo = r[0].elo; this.games = r[0].games; this.wins = r[0].wins; } return this.elo; },
+  startLobby(code, game, diff) { this.stopLobby(true); const go = () => this.rpc("lobby_ping", { p_code: code, p_game: game, p_diff: diff }); go(); this.lt = setInterval(go, 15000); },
+  stopLobby(quiet) { if (this.lt) { clearInterval(this.lt); this.lt = null; if (!quiet) this.rpc("lobby_close"); } },
+  async report(mid, opp, res) {
+    const before = this.elo; await this.rpc("report_match", { p_match: mid, p_opp: opp, p_result: res });
+    setTimeout(async () => { const now = await this.refresh(); if (now !== before) toast(`Rating ${now} (${now > before ? "+" : ""}${now - before})`); else if (res !== "draw") toast("Waiting for your opponent to confirm the result"); }, 2500);
+  },
+};
+function rankedEnd(ref, sc) {
+  if (Net.role !== "host" || !Net.ranked || !Net.guest || !Net.guest.uid || Net.lastRef === ref || !Account.signedIn) return; Net.lastRef = ref;
+  const mid = `${Net.code}-${Date.now().toString(36)}`, hostRes = sc[0] > sc[1] ? "win" : sc[0] < sc[1] ? "loss" : "draw";
+  Net.send({ k: "result", mid, hostUid: Account.session.user.id, guestRes: hostRes === "win" ? "loss" : hostRes === "loss" ? "win" : "draw" });
+  Ranked.report(mid, Net.guest.uid, hostRes);
+}
+async function ensureNick() {
+  if (!Account.signedIn || Board.mode !== "rest") return; const p = prof(); if (p.nick) return;
+  const base = ((Account.session.user.email || "player").split("@")[0].replace(/[^A-Za-z0-9]/g, "").slice(0, 10) || "player").padEnd(3, "x");
+  for (let k = 0; k < 6; k++) { const n = k === 0 ? base : base + Math.floor(10 + Math.random() * 990), r = await Account.setNick(n); if (r && r.ok) { const q = prof(); q.nick = n; q.board = true; saveProf(q); return; } }
+}
+function renderRanked() {
+  clearInterval(Ranked.timer);
+  if (Board.mode !== "rest") { $("#room").innerHTML = `<div class="card"><h2>Ranked</h2><p class="sub">Ranked play needs the online database, which is not connected in this build.</p></div>`; return; }
+  if (!Account.signedIn) { $("#room").innerHTML = `<div class="card"><h2>Ranked</h2><p class="sub">Play real opponents, win Elo and climb the leaderboard. You need a free account so your rating belongs to you.</p><div class="row" style="margin-top:12px"><button class="btn" id="rkSign" type="button">Create an account or sign in</button></div></div>`; return; }
+  const p = prof();
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Ranked</h2><span class="rkbadge"><b class="num">${Ranked.elo}</b><small>Elo · ${Ranked.games} played · ${Ranked.wins} won</small></span></div>
+    <p class="sub">Open a public lobby and anyone can hop in; the result moves both ratings. Or make it private with a code for friends (no rating change).</p>
+    <div class="rkform"><label>Game<select id="rkGame">${RK_GAMES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label><label>Difficulty<select id="rkDiff">${DIFFS.map(([v, n]) => `<option value="${v}" ${v === S.diff ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn" id="rkCreate" type="button">Create lobby</button></div>
+    <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx"><div class="fine">Looking for lobbies…</div></div></div>`;
+  paintLobbies(); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); }, 4000);
+  Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>Elo · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
+}
+async function paintLobbies() {
+  const rows = await Ranked.rpc("open_lobbies"), box = $("#rkList"); if (!box) return;
+  if (!rows) { box.innerHTML = '<div class="fine">Could not load lobbies. Check your connection.</div>'; return; }
+  const me = prof().nick, list = rows.filter((r) => r.nick !== me || true);
+  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div><b>${esc(r.nick)}</b> <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : '<div class="fine">No open lobbies right now. Create one and wait for someone to hop in.</div>';
+  const st = $("#rkStamp"); if (st) st.textContent = "updates every few seconds";
+}
+function rankedStart(game, diff, pub) {
+  S.diff = diff; try { localStorage.setItem("bk_diff", diff); } catch (e) { /* blocked */ }
+  resetGames(); S.rk = true; S.game = game === "number" ? "value" : game; S.hubGroup = "ranked"; renderRoom(); openOnline(game); makeRoom(); Net.ranked = pub;
+  if (pub) Ranked.startLobby(Net.code, game, diff);
+  const el = $("#roomStatus"); if (el && pub) el.insertAdjacentHTML("afterend", '<div class="fine" style="margin-top:6px">Listed in Ranked lobbies. Anyone can join; the result changes both ratings.</div>');
+}
+function rankedJoin(code, game) {
+  resetGames(); S.rk = true; S.game = game === "number" ? "value" : game; S.hubGroup = "ranked"; renderRoom(); openOnline(game); joinRoomCode(code); Net.ranked = true;
+}
 async function renderBoards() {
-  const c = S.code, p = prof();
-  const seg = (items, key, cur) => `<div class="seg">${items.map(([v, t]) => `<button type="button" class="pill" data-b="${key}|${v}" aria-pressed="${cur === v}" style="${cur === v ? "border-color:var(--accent);color:var(--accent)" : ""}">${t}</button>`).join("")}</div>`;
-  const periods = [["week", "This week"], ["all", "All time"]].concat(S.bgame === "daily" ? [["day", "Today"]] : []);
-  if (S.bgame !== "daily" && S.bperiod === "day") S.bperiod = "week";
-  $("#room").innerHTML = `<div class="card"><h2>Leaderboards</h2><p class="sub">The weekly boards reset every Monday so newcomers can win; the all-time boards keep the legends. Scores come from the honest game results, but this is a friendly competition: nothing stops someone submitting made-up numbers, so treat the boards as fun, not proof.</p>
-    <div class="ctl" style="margin-top:12px">${seg(BOARD_GAMES.map(([v, t]) => [v, t]), "game", S.bgame)}</div>
-    <div class="ctl" style="margin-top:8px">${seg(periods, "period", S.bperiod)}${S.bgame !== "xp" && c !== "ALL" ? seg([["league", lgOf(c).name], ["all", "All leagues"]], "scope", S.bscope) : ""}</div><div id="bBody" class="lb" style="margin-top:12px"><div class="fine">Loading…</div></div>
-    <div class="row" style="margin-top:12px">${p.board ? '<span class="fine">You are sharing scores as <b>' + esc(p.nick) + "</b>.</span>" : '<button class="btn" id="openProfileJoin" type="button">Join the leaderboards</button>'}</div></div>`;
+  const p = prof();
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Leaderboard</h2><span class="fine">Ranked by Elo</span></div><div id="bBody" class="lbx" style="margin-top:10px"><div class="fine">Loading…</div></div></div>`;
   const body = $("#bBody");
-  if (Board.mode === "none") { body.innerHTML = `<div class="fine">The global boards are built but not switched on yet: they need a free score database (the README has a five-minute setup). Meanwhile your own results are saved on this device, and you can share them as picture cards.</div>`; return; }
-  const rows = await Board.top(S.bgame, S.bgame === "xp" || S.bscope === "all" || c === "ALL" ? "all" : c, S.bperiod, "");
-  if (!rows) { body.innerHTML = `<div class="fine">The leaderboard could not be reached. Try again in a moment.</div>`; return; }
-  const unit = (BOARD_GAMES.find((x) => x[0] === S.bgame) || [])[2] || "";
-  body.innerHTML = rows.length ? rows.slice(0, 25).map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${Number(r.value) > 0 && S.bgame === "call" ? "+" : ""}${Math.round(Number(r.value) * 10) / 10} <span class="fine">${esc(unit)}</span></span></div>`).join("") : `<div class="fine">No scores here yet. Be the first.</div>`;
+  if (Board.mode !== "rest") { body.innerHTML = '<div class="fine">The leaderboard needs the online database.</div>'; return; }
+  const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
+  if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
+  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${esc(r.nick)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : '<div class="fine">No ranked matches yet. Play one in Ranked and be the first on the board.</div>';
 }
 
 /* ================= Challenge a friend ================= */
@@ -1597,7 +1656,7 @@ const Account = {
   },
   async flush() { if (this.pushTimer) { clearTimeout(this.pushTimer); this.pushTimer = null; await this.push(); } },
   async signOut() { await this.flush(); try { if (this.session) await fetch(`${Board.cfg.url}/auth/v1/logout`, { method: "POST", headers: this.hdr(this.session.access_token) }); } catch (e) { /* offline */ } this.session = null; this.persist(); this.status = ""; paintProfileBtn(); },
-  async afterSignIn() { await this.pull(); await this.push(); paintProfileBtn(); paintScore(); },
+  async afterSignIn() { await this.pull(); await this.push(); paintProfileBtn(); paintScore(); ensureNick(); Ranked.refresh(); },
   async pull() {
     const t = await this.token(); if (!t) return;
     try { const r = await fetch(`${Board.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); if (rows[0] && rows[0].data) mergeProgress(rows[0].data); this.status = "Progress synced."; } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
@@ -1801,7 +1860,7 @@ function endRound(winner) {
   S_.result = { winner, pts }; S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 function finishQuiz() {
-  const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores);
+  const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") rankedEnd(S_, S_.scores);
   if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
   if (S_.mode === "solo") { const sc = Math.round(Math.max(0, S_.scores[0]) * DIFFX[S.diff]); reward(30 + Math.round(sc / 100), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: sc }); }
   renderQuiz(); if (best > 0) { Snd.win(); confetti(); }
@@ -1884,7 +1943,7 @@ function lockFinish() {
   const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) f.streak++; else f.over = true; }
   f.phase = "reveal"; best === 0 ? (Snd.win(), confetti()) : best <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
 }
-function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "solo") { const k = `best_finish_${f.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }, sc = Math.round(f.scores[0] * DIFFX[S.diff]); if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(sc / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: sc }); } renderFinish(); }
+function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "duo") rankedEnd(f, f.scores); if (f.mode === "solo") { const k = `best_finish_${f.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }, sc = Math.round(f.scores[0] * DIFFX[S.diff]); if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(sc / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: sc }); } renderFinish(); }
 
 /* ================= Market value games ================= */
 const ordinal2 = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
@@ -1954,7 +2013,7 @@ function lockNumber(timeout) {
   const n = g.mode === "duo" ? 2 : 1; for (let k = 0; k < n; k++) { g.pts[k] = g.guesses[k] ? numPts(g.guesses[k] * 1e6, g.item.actual) : 0; g.scores[k] += g.pts[k]; }
   g.phase = "reveal"; (Math.max(...g.pts) >= 800 ? (Snd.win(), confetti()) : Snd.right()); renderNumber();
 }
-function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "solo") { reward(25, "Write your number", null); } renderNumber(); }
+function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "duo") rankedEnd(g, g.scores); if (g.mode === "solo") { reward(25, "Write your number", null); } renderNumber(); }
 
 
 /* ================= Club roulette ================= */
@@ -2063,7 +2122,7 @@ function computerMove() {
   if (miss || !valid.length) { t.msg = "The computer could not think of one. Your turn."; Snd.wrong(); t.turn = 0; renderTTT(); return; }
   const p = rnd(valid.slice(0, Math.max(3, Math.ceil(valid.length / 2)))); t.cells[move] = 1; (t.names || (t.names = {}))[move] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[move] = p; t.used.add(p.id); t.msg = `The computer plays ${p.n}.`; Snd.tick(); endTurn();
 }
-function finishTTT() { const t = S.ttt; const won = t.mode === "solo" && t.winner && t.winner.who === 0; reward(20 + (won ? 40 : 0), "Football tic-tac-toe", (p) => { if (won) unlock(p, "tttwin"); }); if (won) Board.submit({ game: "ttt", league: S.code === "ALL" ? "all" : S.code, score: 1 }); }
+function finishTTT() { const t = S.ttt; if (t.mode === "duo") rankedEnd(t, t.winner === "draw" ? [0, 0] : t.winner.who === 0 ? [1, 0] : [0, 1]); const won = t.mode === "solo" && t.winner && t.winner.who === 0; reward(20 + (won ? 40 : 0), "Football tic-tac-toe", (p) => { if (won) unlock(p, "tttwin"); }); if (won) Board.submit({ game: "ttt", league: S.code === "ALL" ? "all" : S.code, score: 1 }); }
 
 
 
@@ -2122,15 +2181,17 @@ const Net = {
     const secs = Math.round((Date.now() - this.since) / 1000);
     el.textContent = !this.linked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${this.code}. Check the code, and that your friend has created the room and is still on that screen.` : `Looking for room ${this.code}…`;
   },
-  close() { if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
+  close() { if (this.role === "host" && Ranked.lt) Ranked.stopLobby(); this.ranked = false; this.guest = null; this.lastRef = null; if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
   recv(m) {
     if (!m || m.from === this.role) return; if (m.i) { if (this.seen && this.seen.has(m.i)) return; if (this.seen) { this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); } }
     if (this.role === "host") {
-      if (m.k === "hello") { this.send({ k: "welcome" }); if (!Net.started) startOnline(); else this.push(true); }
+      if (m.k === "hello") { this.guest = { uid: m.uid, nick: m.nick }; this.send({ k: "welcome", ranked: !!this.ranked }); if (!Net.started) startOnline(); else this.push(true); }
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
       if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
+      if (m.k === "welcome" && m.ranked) this.ranked = true;
+      if (m.k === "result" && this.ranked && Account.signedIn) { Ranked.report(m.mid, m.hostUid, m.guestRes); }
       if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
@@ -2149,7 +2210,7 @@ const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
 function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.rou && S.rou.phase === "play") return S.rou.turn === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
 function startOnline() {
-  Net.started = true; const g = Net.game;
+  Ranked.stopLobby(); Net.started = true; const g = Net.game;
   if (QDEF[g]) { newQuiz(g, "duo", S.code); Q.s.mode = "duo"; Q.s.scores = [0, 0]; nextRound(); }
   else if (g === "roulette") newRoulette(); else if (g === "finish") newFinish("duo"); else if (g === "number") newNumber("duo"); else if (g === "ttt") newTTT("duo");
   Net.watch(); Net.push(true); toast("Player 2 joined. You are Player 1.");
@@ -2160,7 +2221,7 @@ function openOnline(game) {
   box.innerHTML = `<div class="rcard on" style="margin-top:14px"><b>Two devices</b><p class="fine">Create a room and send your friend the link (or the 4-letter code), or join theirs. It works over the internet, so you can be anywhere.</p><div class="row"><button class="btn" id="roomMake" type="button">Create a room</button><input id="roomCode" maxlength="4" placeholder="CODE" aria-label="Room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono, monospace);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="roomJoin" type="button">Join</button></div><div id="roomStatus" class="fine" style="margin-top:10px"></div></div>`;
 }
 function makeRoom() { const code = newRoomCode(); Net.role = "host"; Net.started = false; Net.open(code); Net.role = "host"; Net.paintStatus(); Snd.lock(); }
-function joinRoomCode(c) { Net.role = "guest"; Net.open(c); Net.role = "guest"; Net.send({ k: "hello" }); Net.hi = setInterval(() => { if (Net.role === "guest" && !Net.welcomed) Net.send({ k: "hello" }); }, 2500); Net.paintStatus(); Snd.tick(); }
+function joinRoomCode(c) { Net.role = "guest"; Net.open(c); Net.role = "guest"; const hello = () => Net.send({ k: "hello", uid: Account.signedIn ? Account.session.user.id : null, nick: prof().nick || "" }); hello(); Net.hi = setInterval(() => { if (Net.role === "guest" && !Net.welcomed) hello(); }, 2500); Net.paintStatus(); Snd.tick(); }
 function joinRoom() { const c = ($("#roomCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } joinRoomCode(c); }
 function paintGuestBanner() { if (!$("#guestBar")) { const r = $("#room"); r.insertAdjacentHTML("afterbegin", `<div id="guestBar" class="fine" style="margin-bottom:8px">You are Player 2 in room ${esc(Net.code)}. <button class="btn ghost" id="roomLeave" type="button">Leave</button></div>`); } }
 function applyRemote(m) {
@@ -2249,9 +2310,13 @@ async function initStore() {
 document.addEventListener("pointerdown", () => Snd.unlock(), { once: true });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "rkSign") { Account.available ? authForm("up") : openProfile(); return; }
+  if (b.id === "rkCreate") { rankedStart($("#rkGame").value, $("#rkDiff").value, $("#rkVis").value === "pub"); return; }
+  if (b.id === "rkJoinCode") { const c = ($("#rkCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } Snd.tick(); toast("Joining… the host's game appears when it connects"); resetGames(); S.rk = true; S.hubGroup = "ranked"; S.game = "ttt"; renderRoom(); openOnline("ttt"); joinRoomCode(c); return; }
+  if (b.dataset.rkjoin) { const [c, g] = b.dataset.rkjoin.split("|"); Snd.tick(); rankedJoin(c, g); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
-  if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
+  if (b.dataset.group) { Snd.tick(); S.hubGroup = b.dataset.group; S.rk = b.dataset.group === "ranked"; S.game = null; go("games-" + SLUG[S.code] + "-" + b.dataset.group); return; }
   if (b.id === "acctBtn") { Snd.tick(); Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.door) { Snd.tick(); go(b.dataset.door); route(e); return; }
   if (b.dataset.scope) { Snd.tick(); go(b.dataset.scope); route(e); return; }
@@ -2337,7 +2402,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "rGuess") { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
   if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
   if (b.id === "rNext") { Snd.tick(); nextRoulette(); return; }
-  if (b.id === "rFinish") { S.rou.phase = "done"; Snd.win(); confetti(); renderRoulette(); return; }
+  if (b.id === "rFinish") { S.rou.phase = "done"; rankedEnd(S.rou, S.rou.wins); Snd.win(); confetti(); renderRoulette(); return; }
   if (b.id === "rAgain") { newRoulette(); return; }
   if (b.id === "ttAgain") { newTTT(S.ttt.mode); return; }
   if (b.id === "ttCard") { const t = S.ttt, w = t.winner === "draw" ? "Draw" : (t.mode === "solo" ? (t.winner.who === 0 ? "I won" : "Computer won") : `Player ${t.winner.who + 1} won`); showCard("quiz", { lg: S.code, title: "Football tic-tac-toe", big: w, sub: t.mode === "solo" ? "against the computer" : "two players", line: "Name a player who fits.", share: `ballknowledge, Football tic-tac-toe: ${w}.`, tiles: [[String(t.used.size), "players used"], [S.code === "ALL" ? "All 5" : S.code, "league"], [t.mode, "mode"]] }); return; }
@@ -2377,5 +2442,5 @@ document.addEventListener("dragend", () => { dragIx = null; });
 document.addEventListener("input", (e) => { if (e.target.id === "rpScrub") { stopReplay(); S.replay.round = +e.target.value; Snd.tick(); paintReplay(); } });
 addEventListener("hashchange", () => route());
 
-renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) Account.pull(); initStore(); route();
+renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); } initStore(); route();
 </script>

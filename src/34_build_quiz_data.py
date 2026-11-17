@@ -181,6 +181,21 @@ def main():
             if not q["hist"] or q["hist"][-1] != q["club"]:
                 q["hist"].append(q["club"])
     print("transfer fixes applied:", sum(1 for q in players if ov.get(q["n"])))
+    try:                                                # facts rebuilt from real matches (src/47_build_match_facts.py) replace the guesses made from squads and transfer dates above
+        mf = json.load(open("02_processed_data/match_facts.json", encoding="utf-8"))
+    except FileNotFoundError:
+        mf = None
+    if mf:
+        names = {int(k): v for k, v in cl["name"].items()}
+        for q in players:
+            f = mf["players"].get(str(q["id"]))
+            if f:
+                q["mg"], q["ti"], q["hn"] = f["mg"], f["ti"], f["hn"]
+                q["ap"] = [names[c] for c in f["ap"] if c in names]
+            else:
+                q["mg"], q["ti"], q["hn"], q["ap"] = [], [], [], []
+            q["tm"] = mf["tm"].get(str(q["id"]), [])
+        print("match facts applied:", sum(1 for q in players if q["ap"]), "players with appearances")
     players = [q for q in players if q["dob"] and q["pos"]]
     print(f"players: {len(players)} ({sum(q['active'] for q in players)} active); with a club history: {sum(1 for q in players if len(q['hist']) >= 2)}")
 

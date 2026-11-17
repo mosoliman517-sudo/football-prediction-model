@@ -15,6 +15,7 @@ def n(s):
 Q = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8"))
 P = {n(p["n"]): p for p in Q["players"]}
 ID = {p["id"]: p for p in Q["players"]}
+STARS = set(json.load(open("02_processed_data/match_facts.json", encoding="utf-8"))["stars"])   # "played with" categories exist only for these
 
 # (player, kind, value, should_be_true)
 FACTS = [
@@ -34,7 +35,7 @@ FACTS = [
     ("Robert Lewandowski", "ti", "D1", 1), ("Robert Lewandowski", "ti", "SP1", 1), ("Cristiano Ronaldo", "ti", "I1", 1), ("Lionel Messi", "ti", "F1", 1), ("Neymar", "ti", "F1", 1),
     ("Vinicius Junior", "ti", "SP1", 1), ("Vinicius Junior", "ti", "E0", 0),
     # cups and Europe (2016-17 on)
-    ("Mohamed Salah", "hn", "UCL", 1), ("Mohamed Salah", "hn", "FAC", 1), ("Mohamed Salah", "hn", "EFL", 1), ("Erling Haaland", "hn", "UCL", 1), ("Kevin De Bruyne", "hn", "UCL", 1),
+    ("Mohamed Salah", "hn", "UCL", 1), ("Mohamed Salah", "hn", "FAC", 1), ("Erling Haaland", "hn", "UCL", 1), ("Kevin De Bruyne", "hn", "UCL", 1),
     ("Luka Modrić", "hn", "UCL", 1), ("Harry Kane", "hn", "UCL", 0), ("Kylian Mbappé", "hn", "UCL", 0), ("Harry Kane", "hn", "FAC", 0),
     # awards (all time) and tournaments
     ("Lionel Messi", "aw", "BDO", 1), ("Luka Modrić", "aw", "BDO", 1), ("Cristiano Ronaldo", "aw", "BDO", 1), ("Karim Benzema", "aw", "BDO", 1), ("Rodri", "aw", "BDO", 1),
@@ -44,6 +45,13 @@ FACTS = [
     ("Lionel Messi", "tn", "EU16", 0), 
  ("Erling Haaland", "mate", "Kevin De Bruyne", 1), ("Erling Haaland", "mate", "Mohamed Salah", 0),
     ("Kylian Mbappé", "mate", "Erling Haaland", 0), ("Mohamed Salah", "mate", "Sadio Mané", 1),
+    # managers (2012-13 on) and teammates (20+ matches together)
+    ("Mohamed Salah", "mg", "Mourinho", 1), ("Mohamed Salah", "mg", "Spalletti", 1), ("Mohamed Salah", "mg", "Klopp", 1), ("Mohamed Salah", "mg", "Guardiola", 0),
+    ("Erling Haaland", "mg", "Guardiola", 1), ("Erling Haaland", "mg", "Favre", 1), ("Erling Haaland", "mg", "Klopp", 0), ("Harry Kane", "mg", "Pochettino", 1),
+    ("Harry Kane", "mg", "Tuchel", 1), ("Harry Kane", "mg", "Klopp", 0), ("Cristiano Ronaldo", "mg", "Zidane", 1), ("Cristiano Ronaldo", "mg", "Ancelotti", 1),
+    ("Lionel Messi", "mate", "Neymar", 1), ("Lionel Messi", "mate", "Luis Suárez", 1), ("Cristiano Ronaldo", "mate", "Gareth Bale", 1), ("Cristiano Ronaldo", "mate", "Toni Kroos", 1),
+    ("Mohamed Salah", "mate", "Sadio Mané", 1), ("Erling Haaland", "mate", "Kevin De Bruyne", 1), ("Erling Haaland", "mate", "Mohamed Salah", 0),
+    ("Lionel Messi", "hn", "UCL", 1), ("Neymar", "hn", "UCL", 1), ("Erling Haaland", "hn", "DFB", 1), ("Lionel Messi", "ti", "SP1", 1),
     # body and position
     ("Erling Haaland", "pos", "Attack", 1), ("Kevin De Bruyne", "pos", "Midfield", 1), ("Thibaut Courtois", "pos", "Goalkeeper", 1), ("Virgil van Dijk", "pos", "Defender", 1),
     ("Lionel Messi", "foot", "left", 1), ("Erling Haaland", "foot", "left", 1), ("Cristiano Ronaldo", "foot", "right", 1),
@@ -76,6 +84,8 @@ for name, kind, val, want in FACTS:
         got = bool(o) and o["id"] in (p.get("tm") or [])
         if not o:
             missing.add(val)
+            continue
+        if o["id"] not in STARS:
             continue
     elif kind == "pos":
         got = p["pos"] == val

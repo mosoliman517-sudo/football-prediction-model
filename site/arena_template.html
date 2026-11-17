@@ -656,6 +656,12 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .vsvsl { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 46%, #ffffff22 50%, transparent 54%); animation: vsStreak 1s ease-out .8s both; } @keyframes vsStreak { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @media (max-width: 640px) { .vsvs { grid-template-columns: 1fr; gap: 6px; } .vsmid { order: 0; } .vsc.l { order: -1; } .vsc { padding: 14px 12px; grid-template-columns: auto 1fr; justify-items: start; text-align: left; align-items: center; column-gap: 12px; } .vsc > * { grid-column: 2; } .vsc > span:first-child { grid-column: 1; grid-row: 1 / span 4; } .vsc .av { width: 72px; height: 72px; font-size: 36px; } .vsc .bdgs { min-height: 0; } .vsx { font-size: 48px; } .vscount { bottom: 5%; font-size: 52px; } }
 :root[data-motion="reduced"] .vso *, :root[data-motion="reduced"] .vso::before { animation-duration: .01s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; } @media (prefers-reduced-motion: reduce) { .vso *, .vso::before { animation-duration: .01s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; } }
+.tdraft { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } @media (max-width: 760px) { .tdraft { grid-template-columns: repeat(2, 1fr); } }
+.tdr { position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; padding: 14px 8px; min-height: 108px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface2); color: var(--ink); font: inherit; text-align: center; cursor: pointer; transition: border-color .15s, transform .15s; }
+.tdr:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); } .tdr b { font-size: 13px; line-height: 1.25; } .tdr small { color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.tdr .tdi { display: grid; place-items: center; min-height: 34px; } .tdr:disabled { cursor: default; } .tdr.taken { opacity: .6; } .tdr.taken.x { border-color: var(--accent); } .tdr.taken.o { border-color: var(--accent2, #5aa8ff); }
+.tdm { position: absolute; top: 6px; right: 8px; font: 800 15px var(--mono, monospace); font-style: normal; color: var(--accent); } .tdr.o .tdm { color: var(--accent2, #5aa8ff); }
+.tdsum { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; } @media (max-width: 560px) { .tdsum { grid-template-columns: 1fr; } }
 </style>
 
 <!--sprite--><svg width='0' height='0' style='position:absolute' aria-hidden='true' focusable='false'><defs><symbol id='i-trophy' viewBox='0 0 24 24'><path d='M8 4h8v5a4 4 0 0 1-8 0V4z M8 6H5v1a3 3 0 0 0 3 3 M16 6h3v1a3 3 0 0 1-3 3 M12 13v4 M8.5 20h7 M10 17h4'/></symbol><symbol id='i-album' viewBox='0 0 24 24'><path d='M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z M5 17a3 3 0 0 1 3-3h11'/></symbol><symbol id='i-hourglass' viewBox='0 0 24 24'><path d='M6 3h12 M6 21h12 M7 3c0 5 5 6 5 9s-5 4-5 9 M17 3c0 5-5 6-5 9s5 4 5 9'/></symbol><symbol id='i-flame' viewBox='0 0 24 24'><path d='M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4 0 2 1 3 2 3 0-3-1-5 1-9z'/></symbol><symbol id='i-chart' viewBox='0 0 24 24'><path d='M5 20v-6 M12 20V6 M19 20v-10 M3 20h18'/></symbol><symbol id='i-bulb' viewBox='0 0 24 24'><path d='M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z'/></symbol><symbol id='i-star' viewBox='0 0 24 24'><path d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/></symbol><symbol id='i-games' viewBox='0 0 24 24'><path d='M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5 2l-1-1H9l-1 1a3 3 0 0 1-5-2v-1a4 4 0 0 1 4-4z M8 11v3 M6.5 12.5h3 M16 12h.01 M18 13.5h.01'/></symbol><symbol id='i-flag' viewBox='0 0 24 24'><path d='M5 21V4 M5 4h12l-2 4 2 4H5'/></symbol><symbol id='i-live' viewBox='0 0 24 24'><path d='M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M7.5 7.5a6 6 0 0 0 0 9 M16.5 7.5a6 6 0 0 1 0 9 M4.5 4.5a10 10 0 0 0 0 15 M19.5 4.5a10 10 0 0 1 0 15'/></symbol><symbol id='i-crown' viewBox='0 0 24 24'><path d='M3 8l4 4 5-7 5 7 4-4-2 11H5z'/></symbol><symbol id='i-chip' viewBox='0 0 24 24'><path d='M7 7h10v10H7z M10 3v4 M14 3v4 M10 17v4 M14 17v4 M3 10h4 M3 14h4 M17 10h4 M17 14h4'/></symbol><symbol id='i-brain' viewBox='0 0 24 24'><path d='M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3 M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3 M12 4v16'/></symbol><symbol id='i-ball' viewBox='0 0 24 24'><path d='M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0 M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4z M12 3v5 M15.5 10.5L20 9 M14.2 14.5L17 18 M9.8 14.5L7 18 M8.5 10.5L4 9'/></symbol><symbol id='i-gloves' viewBox='0 0 24 24'><path d='M7 21v-8l-2-3a1.5 1.5 0 0 1 2.5-1.5L9 10V5a1.5 1.5 0 0 1 3 0v4 M12 9V4a1.5 1.5 0 0 1 3 0v5 M15 9V6a1.5 1.5 0 0 1 3 0v8c0 4-2 7-6 7H7'/></symbol><symbol id='i-handshake' viewBox='0 0 24 24'><path d='M3 12l4-4 4 2 3-2 4 3 3-1 M3 12l5 5 2-1 M8 17l2 2 M12 15l2 3 M21 12l-6 6-2-1'/></symbol><symbol id='i-medal' viewBox='0 0 24 24'><path d='M8 3h8l-2 6h-4z M12 9a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/></symbol><symbol id='i-search' viewBox='0 0 24 24'><path d='M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-4-4'/></symbol><symbol id='i-gem' viewBox='0 0 24 24'><path d='M6 4h12l4 5-10 12L2 9z M2 9h20 M9 4l-2 5 5 12 5-12-2-5'/></symbol><symbol id='i-seat' viewBox='0 0 24 24'><path d='M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5 M5 11h14v4H5z M7 15v5 M17 15v5'/></symbol><symbol id='i-stadium' viewBox='0 0 24 24'><path d='M3 14c0-3 4-5 9-5s9 2 9 5-4 5-9 5-9-2-9-5z M3 14v-3 M21 14v-3 M8 9.5V6 M16 9.5V6'/></symbol><symbol id='i-calendar' viewBox='0 0 24 24'><path d='M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4'/></symbol><symbol id='i-users' viewBox='0 0 24 24'><path d='M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M3 20c0-3 3-5 6-5s6 2 6 5 M17 11a2.5 2.5 0 1 0 0-5 M18 15c2 0 4 1.5 4 4'/></symbol><symbol id='i-fore' viewBox='0 0 24 24'><path d='M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M8 9c1-1.5 2.5-2 4-2 M7 20h10'/></symbol><symbol id='i-user' viewBox='0 0 24 24'><path d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 4-6 8-6s8 2 8 6'/></symbol><symbol id='i-palette' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 0 0 3-3c0-6-4-11-8-11z M8 10h.01 M12 7h.01 M16 10h.01'/></symbol><symbol id='i-compass' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M15 9l-2 6-4 .5 2-6z'/></symbol><symbol id='i-dice' viewBox='0 0 24 24'><path d='M5 5h14v14H5z M9 9h.01 M15 9h.01 M12 12h.01 M9 15h.01 M15 15h.01'/></symbol><symbol id='i-net' viewBox='0 0 24 24'><path d='M3 18V7h18v11 M3 7l3 11 M21 7l-3 11 M9 7v11 M15 7v11'/></symbol><symbol id='i-target' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 12h.01'/></symbol><symbol id='i-bolt' viewBox='0 0 24 24'><path d='M13 2L4 14h7l-1 8 9-12h-7z'/></symbol><symbol id='i-moon' viewBox='0 0 24 24'><path d='M20 14a8 8 0 1 1-10-10 6 6 0 0 0 10 10z'/></symbol><symbol id='i-sun' viewBox='0 0 24 24'><path d='M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5'/></symbol><symbol id='i-monitor' viewBox='0 0 24 24'><path d='M3 5h18v11H3z M8 20h8 M12 16v4'/></symbol><symbol id='i-trend' viewBox='0 0 24 24'><path d='M3 17l6-6 4 4 8-8 M15 7h6v6'/></symbol><symbol id='i-check' viewBox='0 0 24 24'><path d='M5 12l4 4 10-10'/></symbol><symbol id='i-cross' viewBox='0 0 24 24'><path d='M6 6l12 12 M18 6L6 18'/></symbol><symbol id='i-minus' viewBox='0 0 24 24'><path d='M6 12h12'/></symbol><symbol id='i-swords' viewBox='0 0 24 24'><path d='M4 4l10 10 M20 4L10 14 M4 20l4-4 M20 20l-4-4 M3 4h4v4 M21 4h-4v4'/></symbol><symbol id='i-timer' viewBox='0 0 24 24'><path d='M12 8v5l3 2 M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M10 2h4'/></symbol><symbol id='i-shield' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z'/></symbol><symbol id='i-gear' viewBox='0 0 24 24'><path d='M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1'/></symbol><symbol id='i-coach' viewBox='0 0 24 24'><path d='M4 5h16v10H4z M9 20l3-5 3 5 M8 9h8'/></symbol><symbol id='i-suitcase' viewBox='0 0 24 24'><path d='M4 8h16v12H4z M9 8V5h6v3'/></symbol><symbol id='i-globe' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18'/></symbol><symbol id='i-sprout' viewBox='0 0 24 24'><path d='M12 20v-8 M12 12c0-4-3-6-7-6 0 4 3 6 7 6z M12 14c0-3 2-5 6-5 0 3-2 5-6 5z'/></symbol><symbol id='i-ruler' viewBox='0 0 24 24'><path d='M3 16L16 3l5 5L8 21z M8 10l2 2 M11 7l2 2 M5 13l2 2'/></symbol><symbol id='i-boot' viewBox='0 0 24 24'><path d='M6 3h5v8l6 2c2 .7 3 2 3 4v2H5z M8 17h2 M12 17h2'/></symbol><symbol id='i-euro' viewBox='0 0 24 24'><path d='M16 7a6 6 0 1 0 0 10 M5 10h8 M5 14h8'/></symbol><symbol id='i-coin' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7v10 M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4'/></symbol><symbol id='i-cap' viewBox='0 0 24 24'><path d='M3 15c0-5 4-8 9-8 3 0 6 1 8 4v2H3z M3 15h18 M12 7c1.5 0 2-2 4-2'/></symbol><symbol id='i-rank' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M12 8l1.6 3.2 3.4.5-2.5 2.4.6 3.4L12 15.8 8.9 17.5l.6-3.4L7 11.7l3.4-.5z'/></symbol></defs></svg>
@@ -1012,7 +1018,7 @@ function setTheme(code, ev) {
   wash.style.setProperty("--wx", ev.clientX + "px"); wash.style.setProperty("--wy", ev.clientY + "px"); wash.style.setProperty("--wash", p.bg);
   wash.classList.remove("go"); void wash.offsetWidth; wash.classList.add("go"); setTimeout(apply, 280);
 }
-function inMatch() { return !!((Net.role && Net.started) || (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") || (S.ttt && S.ttt.mode === "duo" && S.ttt.phase === "play") || (S.rou && S.rou.phase === "play") || (S.fin && S.fin.mode === "duo" && S.fin.phase !== "done") || (S.num && S.num.mode === "duo" && S.num.phase !== "done")); }
+function inMatch() { return !!((Net.role && Net.started) || (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") || (S.ttt && S.ttt.mode === "duo" && S.ttt.phase !== "over") || (S.rou && S.rou.phase === "play") || (S.fin && S.fin.mode === "duo" && S.fin.phase !== "done") || (S.num && S.num.mode === "duo" && S.num.phase !== "done")); }
 function leaveModal(cb) { window.__leaveCb = cb; modal(`<h2 style="font-size:24px">Leave this match?</h2><p class="fine">${Net.role && Net.ranked ? "Leaving a ranked match ends it, and your opponent may be awarded the win." : "Your match will end."}</p><div class="row" style="margin-top:14px"><button class="btn" id="lvStay" type="button">Stay</button><button class="btn ghost" id="lvLeave" type="button">Leave</button></div>`); }
 function go(slug) { if (inMatch() && location.hash.replace("#", "") !== slug) { leaveModal(() => { Q.s = null; S.ttt = S.rou = S.fin = S.num = null; Net.close(); go0(slug); }); return; } go0(slug); }
 function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
@@ -2203,7 +2209,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-21", items: [["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-22", items: [["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -2451,7 +2457,7 @@ async function submitAuth(mode) {
 /* ================= Ball knowledge: shared data helpers ================= */
 const QZ = DATA.quiz || { players: [], clubs: {} };
 const LG_OF_COMP = { GB1: "E0", L1: "D1", ES1: "SP1", IT1: "I1", FR1: "F1" };
-const TODAY_MS = Date.parse("2026-11-15");
+const TODAY_MS = Date.now();
 const qnorm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const ageOf = (p) => Math.floor((TODAY_MS - Date.parse(p.dob)) / 31557600000);
 const euro = (v) => (v >= 1e8 ? `€${Math.round(v / 1e6)}m` : v >= 1e6 ? `€${(v / 1e6).toFixed(1).replace(/\.0$/, "")}m` : `€${Math.round(v / 1e3)}k`);
@@ -2802,6 +2808,7 @@ function rouSubmit(pickId) {
   const r = S.rou; let p = null;
   if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { p = resolveGuess($("#rIn").value, QZ.players, (x) => x.n); }
   if (!p) { r.msg = "Pick a player from the suggestions."; renderRoulette(); return; }
+  if (p.hist.length < 2) { r.msg = `We do not have ${p.n}'s career on record, so he cannot be used. Name someone else (no round lost).`; renderRoulette(); return; }
   if (r.used.includes(p.id)) { rouLose(r.turn, `${p.n} was already named`); return; }
   if (!playedFor(p, r.club)) { rouLose(r.turn, `${p.n} never played for ${r.club}`); return; }
   r.used.push(p.id); r.names.push(p.n); r.turn = 1 - r.turn; r.msg = ""; Snd.right(); renderRoulette();
@@ -2811,44 +2818,86 @@ function rouLose(who, why) { const r = S.rou; r.phase = "reveal"; r.loser = who;
 /* ================= Football tic-tac-toe ================= */
 const POSNAME = { Goalkeeper: "Goalkeepers", Defender: "Defenders", Midfield: "Midfielders", Attack: "Attackers" };
 const LGLABEL = { E0: "Plays in the Premier League", D1: "Plays in the Bundesliga", SP1: "Plays in La Liga", I1: "Plays in Serie A", F1: "Plays in Ligue 1" };
+/* Categories come in families (club, nationality, honours, ...). Every game offers twelve categories from twelve DIFFERENT families, one version of each,
+   and every pair of them is checked so that no two overlap (one inside the other) and every square has several correct answers. Players then draft: X picks
+   three rows and O picks three columns, taking turns. Any choice is safe because every pair was already checked. */
+const FAMNAME = { club: "Club", league: "League", nat: "Nationality", age: "Age", height: "Height", foot: "Foot", value: "Value", caps: "Country caps", letter: "Name", trophy: "Honour", award: "Award", mate: "Teammate", career: "Career", pos: "Position" };
+const CONT = {
+  "UEFA nation": ["Albania", "Armenia", "Austria", "Belgium", "Bosnia-Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "England", "Estonia", "Finland", "France", "Georgia", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Israel", "Italy", "Kosovo", "Latvia", "Lithuania", "Luxembourg", "Malta", "Moldova", "Montenegro", "Netherlands", "North Macedonia", "Northern Ireland", "Norway", "Poland", "Portugal", "Romania", "Russia", "Scotland", "Serbia", "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Türkiye", "Turkey", "Ukraine", "Wales"],
+  "African nation": ["Algeria", "Angola", "Benin", "Burkina Faso", "Burundi", "Cameroon", "Cape Verde", "Central African Republic", "Comoros", "Cote d'Ivoire", "DR Congo", "Egypt", "Equatorial Guinea", "Gabon", "Ghana", "Guinea", "Guinea-Bissau", "Kenya", "Libya", "Mali", "Mauritania", "Morocco", "Mozambique", "Niger", "Nigeria", "Senegal", "Sierra Leone", "South Africa", "The Gambia", "Togo", "Tunisia", "Zambia", "Zimbabwe"],
+  "South American nation": ["Argentina", "Brazil", "Chile", "Colombia", "Ecuador", "Paraguay", "Peru", "Uruguay", "Venezuela"],
+  "North or Central American nation": ["Canada", "Curacao", "Dominican Republic", "Guadeloupe", "Haiti", "Honduras", "Jamaica", "Mexico", "Panama", "Suriname", "United States"],
+  "Asian or Oceanian nation": ["Australia", "Bangladesh", "Indonesia", "Iraq", "Japan", "Jordan", "Korea, South", "Malaysia", "New Zealand", "Saudi Arabia", "Syria", "Uzbekistan"],
+};
+const ico = (n) => `<span class="cflag"><svg class=ic><use href=#i-${n}></use></svg></span>`;
+const careerClubs = (p) => new Set(p.hist.filter((h) => !/yth|youth|\bu\d\d\b|\bii\b|\bb$|\bc$|castilla|jugend|juvenil|primavera|reserve/i.test(h)).map((h) => qnorm(h)));
 function tttCategories(pool, scope) {
-  const cats = [], count = (f) => pool.filter(f).length;
-  const clubs = {}, nats = {}; pool.forEach((p) => { oursSet(p).forEach((c) => { clubs[c] = (clubs[c] || 0) + 1; }); nats[p.nat] = (nats[p.nat] || 0) + 1; });
-  const minC = scope === "ALL" ? 55 : 22;
-  Object.entries(clubs).filter(([c, n]) => n >= minC && CREST[c] && (scope === "ALL" || (QZ.clubs[c] || {}).lg === scope || n >= minC * 2)).forEach(([c]) => cats.push({ id: "club:" + c, fam: "club", label: c, club: c, icon: badge(c, "md"), test: (p) => playedFor(p, c) }));
-  const NOTABLE = ["guardiola", "klopp", "ancelotti", "mourinho", "conte", "simeone", "tuchel", "arteta", "xavi", "zidane", "allegri", "pochettino", "emery", "flick", "nagelsmann", "luisenrique", "inzaghi", "tenhag", "slot", "sarri", "spalletti", "kompany", "lopetegui", "dezerbi", "amorim", "postecoglou", "howe", "gasperini", "xabialonso", "mancini", "pioli", "favre", "ranieri", "tedesco", "marcorose", "terzic", "glasner", "kovac"], mc = {};
-  pool.forEach((p) => (p.mg || []).forEach((m) => { mc[m] = (mc[m] || 0) + 1; }));
-  Object.entries(mc).filter(([m, n]) => n >= (scope === "ALL" ? 18 : 9) && NOTABLE.some((k) => qnorm(m).includes(k))).forEach(([m]) => cats.push({ id: "mg:" + m, fam: "mgr", label: `Played under ${m}`, icon: '<span class="cflag"><svg class=ic><use href=#i-coach></use></svg></span>', test: (p) => (p.mg || []).includes(m) }));
-  Object.keys(LGLABEL).forEach((lg) => { const f = (p) => (p.ti || []).includes(lg); if (count(f) >= 14) cats.push({ id: "ti:" + lg, fam: "title", label: `Won the ${lgOf(lg).name} (2017 on)`, icon: '<span class="cflag"><svg class=ic><use href=#i-trophy></use></svg></span>', test: f }); });
-  const HON = { UCL: "Won the Champions League", UEL: "Won the Europa League", FAC: "Won the FA Cup", EFL: "Won the League Cup", CDR: "Won the Copa del Rey", DFB: "Won the DFB-Pokal", COP: "Won the Coppa Italia", CDF: "Won the Coupe de France" };
-  Object.entries(HON).forEach(([k, label]) => { const f = (p) => (p.hn || []).includes(k); if (count(f) >= (k === "UCL" ? 20 : 12)) cats.push({ id: "hn:" + k, fam: "honour", label: `${label} (2016 on)`, icon: '<span class="cflag"><svg class=ic><use href=#i-trophy></use></svg></span>', test: f }); });
+  const F = {}, add = (c) => { (F[c.fam] || (F[c.fam] = [])).push(c); }, count = (f) => pool.filter(f).length, big = scope === "ALL";
+  const clubs = {}, nats = {}; pool.forEach((p) => { oursSet(p).forEach((c) => { clubs[c] = (clubs[c] || 0) + 1; }); if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
+  const minC = big ? 45 : 20;
+  Object.entries(clubs).filter(([c, n]) => n >= minC && CREST[c] && (big || (QZ.clubs[c] || {}).lg === scope || n >= minC * 2)).forEach(([c]) => add({ id: "club:" + c, fam: "club", label: `Played for ${c}`, icon: badge(c, "md"), tags: [(QZ.clubs[c] || {}).lg].filter(Boolean), test: (p) => playedFor(p, c) }));
+  if (big) Object.keys(LGLABEL).forEach((lg) => add({ id: "lg:" + lg, fam: "league", label: LGLABEL[lg], icon: emblem(lg, "sm"), tags: [lg], test: (p) => LG_OF_COMP[p.comp] === lg }));
+  Object.entries(nats).filter(([n, v]) => v >= (big ? 35 : 14)).forEach(([n]) => add({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "<svg class=ic><use href=#i-globe></use></svg>"}</span>`, test: (p) => p.nat === n }));
+  Object.entries(CONT).forEach(([name, list]) => { const f = (p) => list.includes(p.nat); if (count(f) >= (big ? 60 : 25)) add({ id: "cont:" + name, fam: "nat", label: `From a${/^[AEIOU]/.test(name) ? "n" : ""} ${name}`, icon: ico("globe"), test: f }); });
+  /* honours: league titles come from match records (2017-18 on), cups from the winners lists (2016-17 on); a player counts if the club was his at the start of that season */
+  Object.keys(LGLABEL).forEach((lg) => { const f = (p) => (p.ti || []).includes(lg); if (count(f) >= (big ? 14 : 8)) add({ id: "ti:" + lg, fam: "trophy", label: `Won the ${lgOf(lg).name} (2017-18 on)`, icon: ico("trophy"), tags: [lg], test: f }); });
+  const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) add({ id: "ti:any", fam: "trophy", label: "Won a Big 5 league title (2017-18 on)", icon: ico("trophy"), test: anyT });
+  const HON = { UCL: ["Won the Champions League", null], UEL: ["Won the Europa League", null], FAC: ["Won the FA Cup", "E0"], EFL: ["Won the League Cup", "E0"], CDR: ["Won the Copa del Rey", "SP1"], DFB: ["Won the DFB-Pokal", "D1"], COP: ["Won the Coppa Italia", "I1"], CDF: ["Won the Coupe de France", "F1"] };
+  Object.entries(HON).forEach(([k, [label, lg]]) => { const f = (p) => (p.hn || []).includes(k); if (count(f) >= (k === "UCL" ? 20 : 10)) add({ id: "hn:" + k, fam: "trophy", label: `${label} (2016-17 on)`, icon: ico("trophy"), tags: lg ? [lg] : [], test: f }); });
+  [["bdo", "Won the Ballon d'Or", (p) => (p.aw || []).includes("BDO"), 5, "medal"], ["wc14", "At the 2014 World Cup", (p) => (p.tn || []).includes("WC14"), 50, "globe"], ["wc18", "At the 2018 World Cup", (p) => (p.tn || []).includes("WC18"), 50, "globe"]].forEach(([id, label, f, min, ic]) => { if (count(f) >= min) add({ id: "aw:" + id, fam: "award", label, icon: ico(ic), test: f }); });
+  /* teammates: stars and everyone who shared a club with them for a year or more */
   const starCount = {}; pool.forEach((p) => (p.tm || []).forEach((id) => { starCount[id] = (starCount[id] || 0) + 1; }));
-  Object.entries(starCount).filter(([, n]) => n >= (scope === "ALL" ? 25 : 12)).forEach(([id]) => { const st = QZ.players.find((x) => x.id === +id); if (st) cats.push({ id: "tm:" + id, fam: "mate", label: `Played with ${st.n}`, icon: faceOf(st.n) ? `<span class="badge md hface"><img src="${faceOf(st.n)}" alt=""></span>` : '<span class="cflag"><svg class=ic><use href=#i-handshake></use></svg></span>', test: (p) => (p.tm || []).includes(+id) }); });
-  const AWN = { BDO: "Ballon d'Or", GS: "European Golden Shoe", PLGB: "Premier League Golden Boot", PFA: "PFA Players' Player of the Year", FIFA: "FIFA best player award", UEFA: "UEFA Player of the Year" };
-  const wcWin = (p) => ((p.tn || []).includes("WC14") && p.nat === "Germany") || ((p.tn || []).includes("WC18") && p.nat === "France");
-  [["bdo", "Won the Ballon d'Or", (p) => (p.aw || []).includes("BDO"), 5], ["award", "Won a major individual award", (p) => (p.aw || []).length > 0, 25], ["wcwin", "Won the World Cup (2014 or 2018)", wcWin, 25], ["wc18", "Played at the 2018 World Cup", (p) => (p.tn || []).includes("WC18"), 50], ["eu16", "Played at Euro 2016", (p) => (p.tn || []).includes("EU16"), 40]].forEach(([id, label, f, min]) => { if (count(f) >= min) cats.push({ id: "aw:" + id, fam: "award", label, icon: '<span class="cflag"><svg class=ic><use href=#i-medal></use></svg></span>', test: f }); });
-  const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) cats.push({ id: "ti:any", fam: "title", label: "Won a Big 5 league title", icon: '<span class="cflag"><svg class=ic><use href=#i-trophy></use></svg></span>', test: anyT });
-  const jm = (p) => oursSet(p).size >= 5 || p.hist.length >= 7; if (count(jm) >= 25) cats.push({ id: "journey", fam: "stat", label: "Played for 7 or more clubs", icon: '<span class="cflag"><svg class=ic><use href=#i-suitcase></use></svg></span>', test: (p) => p.hist.length >= 7 });
-  Object.entries(nats).filter(([n, v]) => n && v >= (scope === "ALL" ? 60 : 24)).forEach(([n]) => cats.push({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "<svg class=ic><use href=#i-globe></use></svg>"}</span>`, test: (p) => p.nat === n }));
-  const fixed = [["age30", "stat", "Aged 30 or over", (p) => ageOf(p) >= 30, "<svg class=ic><use href=#i-hourglass></use></svg>"], ["age23", "stat", "Aged 23 or under", (p) => ageOf(p) <= 23, "<svg class=ic><use href=#i-sprout></use></svg>"], ["tall", "stat", "190 cm or taller", (p) => p.h >= 190, "<svg class=ic><use href=#i-ruler></use></svg>"], ["left", "stat", "Left-footed", (p) => p.foot === "left", "<svg class=ic><use href=#i-boot></use></svg>"], ["val50", "val", "Worth €50m or more", (p) => p.val >= 50e6, "<svg class=ic><use href=#i-euro></use></svg>"], ["val10", "val", "Worth under €10m", (p) => p.val > 0 && p.val < 10e6, "<svg class=ic><use href=#i-coin></use></svg>"], ["caps50", "val", "50 or more caps", (p) => p.caps >= 50, "<svg class=ic><use href=#i-cap></use></svg>"]];
-  fixed.forEach(([id, fam, label, test, ico]) => { if (count(test) >= 25) cats.push({ id, fam, label, icon: `<span class="cflag">${ico}</span>`, test }); });
-  Object.keys(POSNAME).forEach((k) => cats.push({ id: "pos:" + k, fam: "pos", label: POSNAME[k], icon: `<span class="cflag">${POSICON[k]}</span>`, test: (p) => p.pos === k }));
-  if (scope === "ALL") Object.keys(LGLABEL).forEach((lg) => cats.push({ id: "lg:" + lg, fam: "lg", label: LGLABEL[lg], icon: emblem(lg, "sm"), test: (p) => LG_OF_COMP[p.comp] === lg }));
-  return cats;
+  Object.entries(starCount).filter(([, n]) => n >= (big ? 25 : 12)).forEach(([id]) => { const st = QZ.players.find((x) => x.id === +id); if (st) add({ id: "tm:" + id, fam: "mate", label: `Played with ${st.n}`, icon: faceOf(st.n) ? `<span class="badge md hface"><img src="${faceOf(st.n)}" alt=""></span>` : ico("handshake"), test: (p) => (p.tm || []).includes(+id) }); });
+  /* career */
+  [["clubs6", "Played for 6 or more clubs", (p) => careerClubs(p).size >= 6, "suitcase"], ["leagues2", "Played in 2 or more of the Big 5 leagues", (p) => new Set([...oursSet(p)].map((c) => (QZ.clubs[c] || {}).lg).filter(Boolean)).size >= 2, "compass"], ["leagues3", "Played in 3 or more of the Big 5 leagues", (p) => new Set([...oursSet(p)].map((c) => (QZ.clubs[c] || {}).lg).filter(Boolean)).size >= 3, "compass"]].forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "cr:" + id, fam: "career", label, icon: ico(ic), test: f }); });
+  /* age, build, foot, value, caps, name */
+  [["age30", "Aged 30 or over", (p) => ageOf(p) >= 30, "hourglass"], ["age23", "Aged 23 or under", (p) => ageOf(p) <= 23, "sprout"], ["b80", "Born in the 1980s", (p) => p.dob >= "1980" && p.dob < "1990", "calendar"], ["b90", "Born in the 1990s", (p) => p.dob >= "1990" && p.dob < "2000", "calendar"], ["b00", "Born in the 2000s", (p) => p.dob >= "2000" && p.dob < "2010", "calendar"]].forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "age:" + id, fam: "age", label, icon: ico(ic), test: f }); });
+  [["tall", "190 cm or taller", (p) => p.h >= 190, "ruler"], ["tall195", "195 cm or taller", (p) => p.h >= 195, "ruler"], ["short", "Under 176 cm", (p) => p.h > 0 && p.h < 176, "ruler"]].forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "h:" + id, fam: "height", label, icon: ico(ic), test: f }); });
+  [["left", "Left-footed", (p) => p.foot === "left", "boot"], ["both", "Two-footed", (p) => p.foot === "both", "boot"]].forEach(([id, label, f, ic]) => { if (count(f) >= (id === "both" ? 18 : 25)) add({ id: "foot:" + id, fam: "foot", label, icon: ico(ic), test: f }); });
+  [["val50", "Worth €50m or more", (p) => p.val >= 50e6, "euro"], ["val10", "Worth under €10m", (p) => p.val > 0 && p.val < 10e6, "coin"], ["peak100", "Once worth €100m or more", (p) => p.peak >= 100e6, "gem"]].forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "val:" + id, fam: "value", label, icon: ico(ic), test: f }); });
+  [["caps50", "50 or more caps", (p) => p.caps >= 50, "cap"], ["caps100", "100 or more caps", (p) => p.caps >= 100, "cap"]].forEach(([id, label, f, ic]) => { if (count(f) >= 15) add({ id: "caps:" + id, fam: "caps", label, icon: ico(ic), test: f }); });
+  const ln = {}; pool.forEach((p) => { const L = qnorm(p.n)[0]; if (L) ln[L] = (ln[L] || 0) + 1; });
+  Object.entries(ln).filter(([L, n]) => /[a-z]/.test(L) && n >= (big ? 110 : 40)).forEach(([L]) => add({ id: "L:" + L, fam: "letter", label: `Name starts with ${L.toUpperCase()}`, icon: `<span class="cflag"><b>${L.toUpperCase()}</b></span>`, test: (p) => qnorm(p.n)[0] === L }));
+  /* position: the four groups and the exact roles */
+  Object.keys(POSNAME).forEach((k) => add({ id: "pos:" + k, fam: "pos", label: POSNAME[k], icon: `<span class="cflag">${POSICON[k]}</span>`, test: (p) => p.pos === k }));
+  ["Centre-Back", "Left-Back", "Right-Back", "Defensive Midfield", "Central Midfield", "Attacking Midfield", "Left Winger", "Right Winger", "Centre-Forward"].forEach((s) => { if (count((p) => p.sub === s) >= 40) add({ id: "sub:" + s, fam: "pos", label: s + "s", icon: ico(/Back|Centre-Back/.test(s) ? "shield" : /Midfield/.test(s) ? "gear" : "ball"), test: (p) => p.sub === s }); });
+  return F;
 }
-function tttGrid(scope) {
-  const pool = playerPool(scope, poolOK), cats = tttCategories(pool, scope), minCell = { easy: 3, medium: 4, hard: 4, elite: 2 }[S.diff];
-  for (let t = 0; t < 600; t++) {
-    const pick = shuffle(cats).slice(0, 6), rows = pick.slice(0, 3), cols = pick.slice(3);
-    if (new Set(pick.map((c) => c.id)).size < 6 || rows.every((c) => c.fam === rows[0].fam) && rows[0].fam === "pos") continue;
-    const sets = rows.map((r) => cols.map((c) => pool.filter((p) => r.test(p) && c.test(p))));
-    if (sets.every((row) => row.every((s) => s.length >= minCell))) return { rows, cols, pool, counts: sets.map((row) => row.map((s) => s.length)) };
+/* Twelve categories, one per family, every pair compatible. Returns null if none could be built. */
+function tttOptions(scope) {
+  const pool = playerPool(scope, (p) => poolOK(p) && p.hist.length >= 2 && p.pos && p.nat), F = tttCategories(pool, scope), K = { easy: 3, medium: 4, hard: 4, elite: 2 }[S.diff] || 3, cache = new Map();
+  const mask = (c) => { if (!c.m) { c.m = new Uint8Array(pool.length); c.n = 0; for (let i = 0; i < pool.length; i++) if (c.test(pool[i])) { c.m[i] = 1; c.n++; } } return c.m; };
+  const compat = (a, b) => {
+    if (a.fam === b.fam) return false; if (a.tags && b.tags && a.tags.some((t) => b.tags.includes(t))) return false;
+    const k = a.id < b.id ? a.id + "|" + b.id : b.id + "|" + a.id; if (cache.has(k)) return cache.get(k);
+    const ma = mask(a), mb = mask(b); let x = 0; for (let i = 0; i < pool.length; i++) if (ma[i] && mb[i]) x++;
+    const ok = x >= K + 1 && x <= 0.7 * Math.min(a.n, b.n); cache.set(k, ok); return ok;
+  };
+  const fams = Object.keys(F).filter((f) => F[f].length); let best = [];
+  for (let t = 0; t < 40 && best.length < 12; t++) {
+    const chosen = [];
+    shuffle(fams).forEach((f) => { if (chosen.length >= 12) return; const c = shuffle(F[f]).slice(0, 8).find((x) => chosen.every((y) => compat(x, y))); if (c) chosen.push(c); });
+    if (chosen.length > best.length) best = chosen;
   }
-  return null;
+  if (best.length < 8) return null;
+  return { pool, opts: shuffle(best) };
 }
+const TTT_ORDER = [0, 1, 0, 1, 0, 1];
 function newTTT(mode) { trackPlay("Football tic-tac-toe");
-  const grid = tttGrid(S.code); if (!grid) { toast("Could not build a grid for this league. Try All leagues."); return; }
-  S.ttt = { mode, grid, cells: Array(9).fill(null), used: new Set(), turn: 0, phase: "play", sel: null, winner: null, msg: "" }; renderTTT();
+  let o = tttOptions(S.code); const was = S.diff, order = ["easy", "medium", "hard", "elite"];
+  for (let i = order.indexOf(was) + 1; !o && i < order.length; i++) { S.diff = order[i]; o = tttOptions(S.code); if (o) toast("Not enough easy players in this league, so the grid uses a wider pool."); }
+  S.diff = was; if (!o) { toast("Could not build categories for this league. Try All leagues."); return; }
+  S.ttt = { mode, pool: o.pool, opts: o.opts, picks: [[], []], step: 0, grid: null, cells: Array(9).fill(null), used: new Set(), turn: 0, phase: "draft", sel: null, winner: null, msg: "" }; renderTTT(); draftCpu();
+}
+function draftPick(id) {
+  const t = S.ttt; if (!t || t.phase !== "draft") return; const c = t.opts.find((x) => x.id === id); if (!c || t.picks[0].includes(c) || t.picks[1].includes(c)) return;
+  t.picks[TTT_ORDER[t.step]].push(c); t.step++; Snd.lock();
+  if (t.step >= 6) { const rows = t.picks[0], cols = t.picks[1]; t.grid = { rows, cols, pool: t.pool, counts: rows.map((r) => cols.map((c2) => t.pool.filter((p) => r.test(p) && c2.test(p)).length)) }; t.phase = "play"; t.turn = 0; t.msg = "Grid ready. X goes first."; renderTTT(); return; }
+  t.turn = TTT_ORDER[t.step]; renderTTT(); draftCpu();
+}
+function draftCpu() {
+  const t = S.ttt; if (!t || t.phase !== "draft" || t.mode !== "solo" || t.turn !== 1) return;
+  setTimeout(() => { if (!S.ttt || S.ttt !== t || t.phase !== "draft" || t.turn !== 1) return; const free = t.opts.filter((x) => !t.picks[0].includes(x) && !t.picks[1].includes(x)); draftPick(rnd(free).id); }, REDUCED ? 0 : 900);
 }
 const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
@@ -2857,7 +2906,9 @@ function renderTTT() {
   const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Every row and column is a football category. Name a player who fits both to claim the square. No repeats, and a wrong answer loses your turn. Three in a row wins.", [
     { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "ttOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
-    const g = t.grid, who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"], win = t.winner ? tttWin(t.cells) : null;
+    const who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"];
+  if (t.phase === "draft") { renderDraft(t, who, mark); return; }
+  const g = t.grid, win = t.winner ? tttWin(t.cells) : null;
   const cells = t.cells.map((v, i) => `<button type="button" class="tcell ${v === 0 ? "x" : v === 1 ? "o" : ""} ${win && win.line.includes(i) ? "win" : ""}" data-tc="${i}" ${v != null || t.phase !== "play" || (t.mode === "solo" && t.turn === 1) ? "disabled" : ""}>${v != null ? `<b>${mark[v]}</b>${t.pl && t.pl[i] ? playerPic(t.pl[i], "sm") : ""}<small>${esc(t.names && t.names[i] || "")}</small>` : ""}</button>`).join("");
   const status = t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins!`) : `${who[t.turn]} (${mark[t.turn]}) to play`;
   const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who is ${esc(g.rows[Math.floor(t.sel / 3)].label)} and ${esc(g.cols[t.sel % 3].label)}</b></div><div class="row"><input id="tIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
@@ -2866,12 +2917,23 @@ function renderTTT() {
     ${t.msg ? `<div class="fine" style="margin-top:8px">${esc(t.msg)}</div>` : ""}${panel}${t.phase === "over" ? `<div class="row" style="margin-top:12px"><button class="btn" id="ttAgain" type="button">Play again</button><button class="btn ghost" id="ttCard" type="button">Make a result card</button></div>` : ""}</div>`;
   const i = $("#tIn"); if (i) i.focus();
 }
+function renderDraft(t, who, mark) {
+  const done = (c) => (t.picks[0].includes(c) ? 0 : t.picks[1].includes(c) ? 1 : -1), locked = t.mode === "solo" && t.turn === 1;
+  const left = 3 - t.picks[t.turn].length, role = t.turn === 0 ? "a row" : "a column";
+  const tiles = t.opts.map((c) => { const d = done(c); return `<button type="button" class="tdr ${d >= 0 ? "taken " + (d ? "o" : "x") : ""}" data-dr="${esc(c.id)}" ${d >= 0 || locked ? "disabled" : ""}><span class="tdi">${c.icon || ""}</span><b>${esc(c.label)}</b><small>${esc(FAMNAME[c.fam] || "")}</small>${d >= 0 ? `<i class="tdm">${mark[d]}</i>` : ""}</button>`; }).join("");
+  const chips = (i) => t.picks[i].map((c) => `<span class="chip2">${esc(c.label)}</span>`).join("") || '<span class="fine">none yet</span>';
+  $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">Pick the categories</span></div>
+    <p class="sub" style="margin:6px 0 12px"><b>${who[t.turn]} (${mark[t.turn]})</b>: pick ${role}${locked ? "…" : ""} (${left} left to pick). Take turns. X's three picks become the rows, O's three the columns. Every pick works with every other one, so every square can be won.</p>
+    <div class="tdraft">${tiles}</div>
+    <div class="tdsum"><div><span class="label">Rows (X)</span><div class="row" style="gap:6px;margin-top:4px">${chips(0)}</div></div><div><span class="label">Columns (O)</span><div class="row" style="gap:6px;margin-top:4px">${chips(1)}</div></div></div></div>`;
+}
+function factsOf(p) { return [p.nat, p.sub || p.pos, p.club ? "now at " + p.club : "", `${careerClubs(p).size} clubs on record`].filter(Boolean).join(" · "); }
 function tttSubmit(pickId) {
   const t = S.ttt, g = t.grid, r = g.rows[Math.floor(t.sel / 3)], c = g.cols[t.sel % 3]; let p = null;
   if (pickId != null) p = QZ.players.find((x) => x.id === +pickId); else { p = resolveGuess($("#tIn").value, g.pool, (x) => x.n); }
   if (!p) { t.msg = "Pick a player from the suggestions."; renderTTT(); return; }
   if (t.used.has(p.id)) { t.msg = `${p.n} is already on the board. Turn lost.`; Snd.wrong(); endTurn(); return; }
-  if (r.test(p) && c.test(p)) { t.cells[t.sel] = t.turn; (t.names || (t.names = {}))[t.sel] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[t.sel] = p; t.used.add(p.id); t.msg = `${p.n} fits. Square claimed.`; Snd.right(); } else { t.msg = `${p.n} does not fit both. Turn lost.`; Snd.wrong(); }
+  if (r.test(p) && c.test(p)) { t.cells[t.sel] = t.turn; (t.names || (t.names = {}))[t.sel] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[t.sel] = p; t.used.add(p.id); t.msg = `${p.n} fits. Square claimed.`; Snd.right(); } else { const bad = [r, c].filter((x) => !x.test(p)).map((x) => x.label); t.msg = `${p.n} does not fit "${bad.join('" or "')}". Turn lost. (${factsOf(p)})`; Snd.wrong(); }
   t.sel = null; endTurn();
 }
 function endTurn() {
@@ -3044,6 +3106,7 @@ function applyRemote(m) {
     if (S.rou) return (m.id === "rGuess" || m.da === "sug") && S.rou.turn === 1 && S.rou.phase === "play";
     if (S.fin && S.fin.mode === "duo") return m.id === "finLock" && S.fin.turn === 1 && S.fin.phase === "ask";
     if (S.num && S.num.mode === "duo") return m.id === "nmLock" ? S.num.turn === 1 && S.num.phase === "guess" : false;
+    if (S.ttt && S.ttt.mode === "duo" && S.ttt.phase === "draft") return m.da === "dr" && S.ttt.turn === 1;
     if (S.ttt && S.ttt.mode === "duo") { if (m.da === "tc") return S.ttt.turn === 1 && S.ttt.sel == null; if (m.id === "tGuess" || m.id === "tCancel" || m.da === "sug") return S.ttt.turn === 1 && S.ttt.sel != null; }
     return false;
   };
@@ -3240,6 +3303,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "ttSolo") { newTTT("solo"); Snd.tick(); return; }
   if (b.id === "ttDuo") { newTTT("duo"); Snd.tick(); return; }
   if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
+  if (b.dataset.dr != null && b.dataset.dr !== "") { const t = S.ttt; if (!t || t.phase !== "draft") return; if (Net.role === "host" && !Net.applying && t.turn === 1) return; if (t.mode === "solo" && t.turn === 1) return; draftPick(b.dataset.dr); return; }
   if (b.id === "tCancel") { S.ttt.sel = null; renderTTT(); return; }
   if (b.id === "tGuess") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
   if (b.dataset.sug != null && b.closest("#tSug")) { tttSubmit(b.dataset.sug); return; }

@@ -67,7 +67,7 @@ def main():
         h = hist.get(r.player_id, [])
         active = int(r.last_season) >= 2025
         players.append({
-            "id": int(r.player_id), "n": r.name, "nat": r.country_of_citizenship if isinstance(r.country_of_citizenship, str) else "", "bc": r.country_of_birth if isinstance(r.country_of_birth, str) else "",
+            "id": int(r.player_id), "n": r.name, "nat": ({"Turkey": "Türkiye"}.get(r.country_of_citizenship, r.country_of_citizenship)) if isinstance(r.country_of_citizenship, str) else "", "bc": r.country_of_birth if isinstance(r.country_of_birth, str) else "",
             "city": r.city_of_birth if isinstance(r.city_of_birth, str) else "", "dob": r.dob.strftime("%Y-%m-%d") if pd.notna(r.dob) else "", "pos": r.position if isinstance(r.position, str) else "",
             "sub": r.sub_position if isinstance(r.sub_position, str) else "", "foot": r.foot if isinstance(r.foot, str) else "", "h": int(r.height_in_cm) if pd.notna(r.height_in_cm) else 0,
             "caps": int(r.international_caps) if pd.notna(r.international_caps) else 0, "ig": int(r.international_goals) if pd.notna(r.international_goals) else 0,

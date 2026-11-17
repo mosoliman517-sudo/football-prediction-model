@@ -200,7 +200,7 @@ for nm in _h.NAMES:
         hero.append({"n": nm, "img": uri, "photo": photo, "card": _cards.get(_h.norm(nm))})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
 print(f"front page photos: {len(hero)}; quiz players: {len(quiz['players']) if quiz else 0}")
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz}
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": (json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else [])}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

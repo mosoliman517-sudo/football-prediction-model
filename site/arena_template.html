@@ -1481,13 +1481,26 @@ function renderHub() {
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
   if (g === "ranked") { renderRanked(); return; }
   if (g === "live") { renderLive(); return; }
-  if (g === "model") { $("#room").innerHTML = `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; return; }
+  if (g === "model") { $("#room").innerHTML = weeklyCardHTML() + `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; weeklyBoard(); weeklyChampionCheck(); return; }
   if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
   $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Two kinds of games, ${where}.</p><div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="gname">Ranked</div><div class="gtag">Public lobbies against real players. Win Elo, climb the leaderboard, or open a private room for friends.</div><span class="dgo">Play online</span></button>
     <button type="button" class="gpick" data-group="live" style="--d:240ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Live predictions</div><div class="gtag">Predict the next real fixtures before kickoff. The model plays along, and its score is pinned on the leaderboard.</div><span class="dgo">Live</span></button></div>`;
+}
+function weeklyCardHTML() {
+  const wk = "wk" + weekId(), done = store.items[`xpc_${wk}`];
+  return `<div class="card wkcard" style="margin-bottom:14px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h3 style="margin:2px 0 4px">Five matches, the same for everyone this week</h3><div class="fine">All five leagues. Best score takes the week, and the winner earns the Weekly champion badge.</div></div><button class="btn" id="wkPlay" type="button">${done ? "See your result" : "Play"}</button></div><div id="wkBoard" class="lb" style="margin-top:10px"></div></div>`;
+}
+async function weeklyBoard() {
+  const rows = await Board.top("challenge", "all", "all", "wk" + weekId()), el = $("#wkBoard"); if (!el) return;
+  el.innerHTML = rows && rows.length ? rows.slice(0, 5).map((r, i) => `<div class="lbrow"><b class="num">${i + 1}</b><span>${esc(r.nick)}</span><span class="num">${Math.round(Number(r.value))}/5</span></div>`).join("") : '<div class="fine">Nobody has finished yet. Be first.</div>';
+}
+async function weeklyChampionCheck() {
+  const last = "wk" + weekId(new Date(Date.now() - 7 * 864e5)), key = `wkchk_${last}`; if (store.items[key] || !Account.signedIn || Board.mode !== "rest") return;
+  const rows = await Board.top("challenge", "all", "all", last); if (!rows) return; lockIn(key, 1);
+  if (rows.length >= 3 && prof().nick && rows[0].nick === prof().nick) award("wk_win");
 }
 function renderCrumbs() {
   paintHowto();
@@ -1720,14 +1733,16 @@ const ACH = [
   ["page", "Team page complete", "Collect a club's badge and its 12 best-known players"],
   ["stick50", "Swapper", "Collect 50 different stickers"],
   ["stick150", "Panini pro", "Collect 150 different stickers"],
+  ["wk_play", "Weekly regular", "Finish a weekly tournament"],
+  ["wk_win", "Weekly champion", "Finish first in a weekly tournament"],
 ];
 /* Badge difficulty: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary. Every unlocked achievement can be equipped as a badge. */
 const TIERS = [["Common", "#9aa3b2"], ["Uncommon", "#4ade80"], ["Rare", "#38bdf8"], ["Epic", "#c084fc"], ["Legendary", "#fbbf24"]];
 const ACH_TIER = { curious: 0, avatar: 0, fav: 0, social: 0, first_call: 0, first_buzz: 0, sticker1: 0, pred1: 0, ranked_first: 0, early: 0, night: 0, flame3: 0,
   draw: 1, sharp: 1, upset: 1, streak5: 1, hat3: 1, dailybeat: 1, splash_10: 1, splash_rare: 1, pred10: 1, tttwin: 1, friend: 1, table: 1, hol5: 1, decade: 1, alldiff: 1,
   speed: 2, md9: 2, daily5: 2, flame7: 2, globe: 2, ranked_win: 2, elo1200: 2, ranked5: 2, rounds100: 2, stick50: 2, page: 2, squad: 2, giant: 2,
-  elite_win: 3, streak10: 3, streak10q: 3, beatmodel: 3, quizmaster: 3, captain: 3, splash_leg: 3, stick150: 4, splash_all: 4 };
-const ACH_ICON = { first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", owner: "crown", admin: "shield" };
+  elite_win: 3, streak10: 3, streak10q: 3, beatmodel: 3, quizmaster: 3, captain: 3, splash_leg: 3, stick150: 4, splash_all: 4, wk_play: 1, wk_win: 4 };
+const ACH_ICON = { first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", wk_play: "calendar", wk_win: "trophy", owner: "crown", admin: "shield" };
 const ROLE_BADGES = { owner: ["Owner", "Owns ballknowledge. Only the owner can wear this."], admin: ["Admin", "Looks after ballknowledge. Only admins can wear this."] };
 const badgeName = (id) => ROLE_BADGES[id] ? ROLE_BADGES[id][0] : ((ACH.find((a) => a[0] === id) || [])[1] || "");
 const badgeTier = (id) => ROLE_BADGES[id] ? 5 : ACH_TIER[id] != null ? ACH_TIER[id] : 0;
@@ -1792,7 +1807,7 @@ function afterDaily(c, st, key) {
 function afterChallenge(c, code, st) {
   const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
   if (store.items[`xpc_${code}`]) return; lockIn(`xpc_${code}`, { you, mod, c });
-  reward(40 + 10 * you + (you > mod ? 25 : 0), "Challenge", (p) => { unlock(p, "friend"); if (you === 5) unlock(p, "daily5"); });
+  reward(40 + 10 * you + (you > mod ? 25 : 0), "Challenge", (p) => { unlock(p, "friend"); if (/^wk\d{6}$/.test(code)) unlock(p, "wk_play"); if (you === 5) unlock(p, "daily5"); });
   Board.submit({ game: "challenge", league: c, score: you, code });
 }
 function afterMatchday(it) { reward(20 + 4 * it.you + (it.you > it.mod ? 20 : 0), "Matchday", (p) => { mark(p, it.lg, it.season); if (it.you >= 9) unlock(p, "md9"); }); Board.submit({ game: "matchday", league: it.lg, score: it.you }); }
@@ -2226,7 +2241,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-23", items: [["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-24", items: [["Nine and nine", "New: Starting XI, Rapid fire and Bracket buster. Tic-tac-toe has Best of 3, wrong answers can be reported, and there is a Weekly tournament with a Weekly champion badge."], ["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -2355,8 +2370,9 @@ function seededFixtures(c, seedStr) {
 const chalState = (c, code) => { const f = seededFixtures(c, `chal-${c}-${code}`), items = f.map((x) => store.items[`x_${code}_${x.c}_${x.season}_${x.i}`]); return { f, items, n: items.filter(Boolean).length }; };
 const chalLink = (c, code) => `${location.href.split("#")[0]}#challenge-${SHORT[c]}-${code}`;
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+const chalC = () => (S.chal && S.chal.c) || S.code;
 function renderChallenge() {
-  const c = S.code;
+  const c = chalC();
   if (S.cur) return renderPlay();
   if (!S.chal) {
     $("#room").innerHTML = `<div class="card">${gamesBar("Challenge a friend")}<p class="sub">Five matches from 2001 on, the same for you and everyone you send the link to. Play them, then compare scores.</p>
@@ -2385,7 +2401,7 @@ function challengeCard(c, code) {
 
 function afterPlayHook(it) {
   const k = S.cur && S.cur.onDone;
-  if (k === "chal") { if (S.chal) { const st = chalState(S.code, S.chal.code); if (st.n === 5) afterChallenge(S.code, S.chal.code, st); } }
+  if (k === "chal") { if (S.chal) { const st = chalState(chalC(), S.chal.code); if (st.n === 5) afterChallenge(chalC(), S.chal.code, st); } }
   else if (k) { const key = todayKey(), st = dailyState(S.code, key); if (st.n === 5) afterDaily(S.code, st, key); }
   else afterCall(it);
 }
@@ -3379,11 +3395,12 @@ document.addEventListener("click", (e) => {
   if (b.id === "dailyCard") { dailyCard(); return; }
   if (b.id === "mdCard") { const it = store.items[mdKey(S.md.c, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
   if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
+  if (b.id === "wkPlay") { Snd.tick(); resetGames(); S.game = "challenge"; S.hubGroup = "model"; S.cur = null; S.chal = { code: "wk" + weekId(), c: "ALL", weekly: true }; renderRoom(); return; }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
   if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }
   if (b.dataset.cfix) { const [lg, sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(lg, sn, +i, "chal", `x_${S.chal.code}_${lg}_${sn}_${i}`); return; }
-  if (b.id === "chCopy") { copyChallenge(S.code, S.chal.code); return; }
-  if (b.id === "chCard") { challengeCard(S.code, S.chal.code); return; }
+  if (b.id === "chCopy") { copyChallenge(chalC(), S.chal.code); return; }
+  if (b.id === "chCard") { challengeCard(chalC(), S.chal.code); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); resetGames(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
   if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }

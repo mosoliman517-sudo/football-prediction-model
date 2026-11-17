@@ -19,7 +19,8 @@ import unicodedata
 import pandas as pd
 
 BIG = {"GB1": "E0", "L1": "D1", "ES1": "SP1", "IT1": "I1", "FR1": "F1"}
-AS_OF = "2026-08-01"
+import datetime
+AS_OF = datetime.date.today().isoformat()      # transfers dated after today are future-dated placeholders in the dataset
 JUNK = re.compile(r"retired|without club|career break|unknown|\bu1[5-9]\b|\bu2[0-3]\b|youth|jugend|juvenil|primavera|reserve|\bii$|\bb$|\bsub-|academy|sin equipo", re.I)
 
 

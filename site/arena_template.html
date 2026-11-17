@@ -68,6 +68,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .pill { background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid var(--line); border-radius: 99px; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 13px; backdrop-filter: blur(6px); transition: transform .15s ease, border-color .15s ease; }
 .pill:hover { border-color: var(--accent); transform: translateY(-1px); }
 .pill:active { transform: translateY(1px) scale(.98); }
+.vtag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--muted); font: 600 11px var(--mono); letter-spacing: .04em; cursor: pointer; white-space: nowrap; } .vtag b { color: var(--accent); text-transform: uppercase; letter-spacing: .1em; font-weight: 800; } .vtag:hover { border-color: var(--accent); }
 .byline { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 
 /* lobby */
@@ -736,6 +737,7 @@ function paintSplashArt() {
 <div class="wrap">
   <div class="bar">
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
+    <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.0 beta, see what is new"><b>Beta</b> v0.9.0</button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
@@ -3395,6 +3397,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "dailyCard") { dailyCard(); return; }
   if (b.id === "mdCard") { const it = store.items[mdKey(S.md.c, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
   if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
+  if (b.id === "vtag") { showWhatsNew(); return; }
   if (b.id === "wkPlay") { Snd.tick(); resetGames(); S.game = "challenge"; S.hubGroup = "model"; S.cur = null; S.chal = { code: "wk" + weekId(), c: "ALL", weekly: true }; renderRoom(); return; }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
   if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }

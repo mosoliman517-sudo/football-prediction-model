@@ -1,0 +1,1826 @@
+{
+ "Daley Blind": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Girona FC"
+ },
+ "Casemiro": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "since": "2026-07-22",
+  "was": "Manchester United"
+ },
+ "Axel Witsel": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "since": "2026-08-01",
+  "was": "Girona FC"
+ },
+ "Robert Lewandowski": {
+  "club": "Chicago Fire FC",
+  "club_id": null,
+  "since": "2026-06-29",
+  "was": "FC Barcelona"
+ },
+ "Alexis Sánchez": {
+  "club": "CF Montréal",
+  "club_id": null,
+  "since": "2026-08-11",
+  "was": "Sevilla FC"
+ },
+ "Yann Sommer": {
+  "club": "Club Brugge K.V.",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Inter Milan"
+ },
+ "Matteo Darmian": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "since": "2026-10-01",
+  "was": "Inter Milan"
+ },
+ "Péter Gulácsi": {
+  "club": "Villarreal CF",
+  "club_id": 1050,
+  "since": "2026-08-03",
+  "was": "RB Leipzig"
+ },
+ "Pierre-Emerick Aubameyang": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-07-01",
+  "was": "Olympique Marseille"
+ },
+ "David Alaba": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "since": "2026-09-01",
+  "was": "Real Madrid"
+ },
+ "Jordan Henderson": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-08-03",
+  "was": "Brentford FC"
+ },
+ "Danny Welbeck": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-08-01",
+  "was": "Brighton & Hove Albion"
+ },
+ "Nemanja Gudelj": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "since": "2026-08-30",
+  "was": "Sevilla FC"
+ },
+ "Marc-André ter Stegen": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "FC Barcelona"
+ },
+ "Niclas Füllkrug": {
+  "club": "SV Werder Bremen",
+  "club_id": 86,
+  "since": "2026-08-01",
+  "was": "West Ham United"
+ },
+ "Aïssa Mandi": {
+  "club": "Levante UD",
+  "club_id": 3368,
+  "since": "2026-07-16",
+  "was": "LOSC Lille"
+ },
+ "Sergi Roberto": {
+  "club": "LA Galaxy",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Como 1907"
+ },
+ "Stefan Ortega": {
+  "club": "Olympiacos F.C.",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Manchester City"
+ },
+ "Stephan El Shaarawy": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "since": "2026-09-02",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Romelu Lukaku": {
+  "club": "Fenerbahçe Istanbul",
+  "club_id": null,
+  "since": "2026-08-12",
+  "was": "SSC Napoli"
+ },
+ "Thomas Meunier": {
+  "club": "Sunderland AFC",
+  "club_id": 289,
+  "since": "2026-07-01",
+  "was": "LOSC Lille"
+ },
+ "Sam Johnstone": {
+  "club": "Celtic F.C.",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Wolverhampton Wanderers"
+ },
+ "Stefan de Vrij": {
+  "club": "Panathinaikos F.C.",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Inter Milan"
+ },
+ "Emiliano Martínez": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-08-01",
+  "was": "Aston Villa"
+ },
+ "Juan Jesus": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "since": "2026-08-01",
+  "was": "SSC Napoli"
+ },
+ "Callum Wilson": {
+  "club": "Brentford FC",
+  "club_id": 1148,
+  "since": "2026-07-09",
+  "was": "West Ham United"
+ },
+ "Lucas Digne": {
+  "club": "Paris Saint-Germain",
+  "club_id": 583,
+  "since": "2026-08-09",
+  "was": "Aston Villa"
+ },
+ "Álvaro Morata": {
+  "club": "CD Leganés",
+  "club_id": 1244,
+  "since": "2026-08-28",
+  "was": "Como 1907"
+ },
+ "Bertrand Traoré": {
+  "club": "Wolverhampton Wanderers",
+  "club_id": 543,
+  "since": "2026-09-07",
+  "was": "Sunderland AFC"
+ },
+ "Marten de Roon": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "since": "2026-08-01",
+  "was": "Atalanta BC"
+ },
+ "Nicola Leali": {
+  "club": "Hellas Verona",
+  "club_id": 276,
+  "since": "2026-07-11",
+  "was": "Genoa CFC"
+ },
+ "Daniel Carvajal": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "since": "2026-10-13",
+  "was": "Real Madrid"
+ },
+ "Leandro Trossard": {
+  "club": "Beşiktaş J.K.",
+  "club_id": null,
+  "since": "2026-07-15",
+  "was": "Arsenal FC"
+ },
+ "Mohamed Salah": {
+  "club": "Trabzonspor",
+  "club_id": null,
+  "since": "2026-08-06",
+  "was": "Liverpool FC"
+ },
+ "Leon Goretzka": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-08-01",
+  "was": "Bayern Munich"
+ },
+ "Filip Kostić": {
+  "club": "PSV Eindhoven",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Juventus FC"
+ },
+ "Djibril Sidibé": {
+  "club": "Le Mans F.C.",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "FC Toulouse"
+ },
+ "Berat Djimsiti": {
+  "club": "Al-Diriyah Club",
+  "club_id": null,
+  "since": "2026-08-10",
+  "was": "Atalanta BC"
+ },
+ "Leander Dendoncker": {
+  "club": "HNK Hajduk Split",
+  "club_id": null,
+  "since": "2026-09-03",
+  "was": "Real Oviedo"
+ },
+ "Matt Doherty": {
+  "club": "Sheffield United",
+  "club_id": 350,
+  "since": "2026-07-20",
+  "was": "Wolverhampton Wanderers"
+ },
+ "Nathan Aké": {
+  "club": "Fenerbahçe Istanbul",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Manchester City"
+ },
+ "Michy Batshuayi": {
+  "club": "Abha",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Eintracht Frankfurt"
+ },
+ "James Ward-Prowse": {
+  "club": "Southampton FC",
+  "club_id": 180,
+  "since": "2026-08-28",
+  "was": "West Ham United"
+ },
+ "Seko Fofana": {
+  "club": "FC Porto",
+  "club_id": null,
+  "since": "2026-08-26",
+  "was": "Stade Rennais FC"
+ },
+ "Clément Lenglet": {
+  "club": "S.L. Benfica",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Atlético de Madrid"
+ },
+ "Valentino Lazaro": {
+  "club": "Al Ain FC",
+  "club_id": null,
+  "since": "2026-07-13",
+  "was": "Torino FC"
+ },
+ "John Stones": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "since": "2026-07-30",
+  "was": "Manchester City"
+ },
+ "Julian Brandt": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-07-31",
+  "was": "Borussia Dortmund"
+ },
+ "Mahmoud Dahoud": {
+  "club": "United Football Club",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Eintracht Frankfurt"
+ },
+ "Alejandro Grimaldo": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "since": "2026-07-01",
+  "was": "Bayer 04 Leverkusen"
+ },
+ "Alexander Nübel": {
+  "club": "Beşiktaş J.K.",
+  "club_id": null,
+  "since": "2026-07-08",
+  "was": "VfB Stuttgart"
+ },
+ "Alessio Romagnoli": {
+  "club": "Al Sadd Sports Club",
+  "club_id": null,
+  "since": "2026-09-03",
+  "was": "Società Sportiva Lazio S.p.A."
+ },
+ "Jamie Vardy": {
+  "club": "Burnley FC",
+  "club_id": 1132,
+  "since": "2026-09-01",
+  "was": "US Cremonese"
+ },
+ "Caleb Ekuban": {
+  "club": "Hellas Verona",
+  "club_id": 276,
+  "since": "2026-09-01",
+  "was": "Genoa CFC"
+ },
+ "Haris Tabakovic": {
+  "club": "FC Red Bull Salzburg",
+  "club_id": null,
+  "since": "2026-07-11",
+  "was": "Borussia Mönchengladbach"
+ },
+ "Chancel Mbemba": {
+  "club": "Al-Diriyah Club",
+  "club_id": null,
+  "since": "2026-08-06",
+  "was": "LOSC Lille"
+ },
+ "Adama Traoré": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-08-01",
+  "was": "West Ham United"
+ },
+ "Thomas Lemar": {
+  "club": "Elche CF",
+  "club_id": 1531,
+  "since": "2026-09-01",
+  "was": "Girona FC"
+ },
+ "Dominik Livakovic": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "since": "2026-08-01",
+  "was": "Girona FC"
+ },
+ "Ruslan Malinovskyi": {
+  "club": "Trabzonspor",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Genoa CFC"
+ },
+ "Alberto Moreno": {
+  "club": "RCD Mallorca",
+  "club_id": 237,
+  "since": "2026-08-24",
+  "was": "Como 1907"
+ },
+ "Djibril Sow": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "since": "2026-08-01",
+  "was": "Sevilla FC"
+ },
+ "Thilo Kehrer": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "AS Monaco"
+ },
+ "Gerónimo Rulli": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "since": "2026-08-01",
+  "was": "Olympique Marseille"
+ },
+ "Thomas Partey": {
+  "club": "Al-Shabab Football Club",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Villarreal CF"
+ },
+ "Antonio Sanabria": {
+  "club": "S.C. Internacional",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "US Cremonese"
+ },
+ "Michel Aebischer": {
+  "club": "1.FC Union Berlin",
+  "club_id": 89,
+  "since": "2026-08-01",
+  "was": "Pisa Sporting Club"
+ },
+ "Breel Embolo": {
+  "club": "Atlanta United FC",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Stade Rennais FC"
+ },
+ "Duje Caleta-Car": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "since": "2026-09-01",
+  "was": "Real Sociedad"
+ },
+ "Bernardo Silva": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "since": "2026-06-01",
+  "was": "Manchester City"
+ },
+ "Glen Kamara": {
+  "club": "Queens Park Rangers",
+  "club_id": 1039,
+  "since": "2026-08-03",
+  "was": "Stade Rennais FC"
+ },
+ "Cedric Itten": {
+  "club": "SV Werder Bremen",
+  "club_id": 86,
+  "since": "2026-07-01",
+  "was": "Fortuna Düsseldorf"
+ },
+ "Salih Özcan": {
+  "club": "Beşiktaş J.K.",
+  "club_id": null,
+  "since": "2026-07-09",
+  "was": "Borussia Dortmund"
+ },
+ "Saša Lukić": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "since": "2026-08-01",
+  "was": "Fulham FC"
+ },
+ "Youri Tielemans": {
+  "club": "Manchester United",
+  "club_id": 985,
+  "since": "2026-07-14",
+  "was": "Aston Villa"
+ },
+ "Matt Targett": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-07-23",
+  "was": "Newcastle United"
+ },
+ "José María Giménez": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-09-01",
+  "was": "Atlético de Madrid"
+ },
+ "Zeki Çelik": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-07-01",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Enes Ünal": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "since": "2026-08-01",
+  "was": "AFC Bournemouth"
+ },
+ "Aarón Martín": {
+  "club": "Racing de Santander",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Genoa CFC"
+ },
+ "Vedat Muriqi": {
+  "club": "Fenerbahçe Istanbul",
+  "club_id": null,
+  "since": "2026-06-01",
+  "was": "RCD Mallorca"
+ },
+ "João Palhinha": {
+  "club": "S.L. Benfica",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Tosin Adarabioyo": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Johan Mojica": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "since": "2026-08-13",
+  "was": "RCD Mallorca"
+ },
+ "Kevin Danso": {
+  "club": "Sunderland AFC",
+  "club_id": 289,
+  "since": "2026-09-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Maximilian Wöber": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "since": "2026-07-22",
+  "was": "SV Werder Bremen"
+ },
+ "Viktor Tsygankov": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-08-27",
+  "was": "Girona FC"
+ },
+ "Issa Diop": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "since": "2026-07-22",
+  "was": "Fulham FC"
+ },
+ "Angeliño": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-08-01",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Harry Wilson": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "since": "2026-07-08",
+  "was": "Fulham FC"
+ },
+ "Iñaki Peña": {
+  "club": "Panathinaikos F.C.",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "FC Barcelona"
+ },
+ "Luca Zidane": {
+  "club": "CD Leganés",
+  "club_id": 1244,
+  "since": "2026-08-01",
+  "was": "Granada CF"
+ },
+ "Manuel Akanji": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "since": "2026-07-01",
+  "was": "Manchester City"
+ },
+ "Marc Cucurella": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "since": "2026-06-15",
+  "was": "Chelsea FC"
+ },
+ "Baptiste Santamaria": {
+  "club": "PAOK FC",
+  "club_id": null,
+  "since": "2026-07-13",
+  "was": "Valencia CF"
+ },
+ "Guglielmo Vicario": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-08-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Eric Bailly": {
+  "club": "Columbus Crew",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Real Oviedo"
+ },
+ "Ellyes Skhiri": {
+  "club": "1. FC Köln",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Eintracht Frankfurt"
+ },
+ "Hee-chan Hwang": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "since": "2026-09-01",
+  "was": "Wolverhampton Wanderers"
+ },
+ "Taiwo Awoniyi": {
+  "club": "Coventry City F.C.",
+  "club_id": null,
+  "since": "2026-08-17",
+  "was": "Nottingham Forest"
+ },
+ "Eray Cömert": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "since": "2026-07-29",
+  "was": "Valencia CF"
+ },
+ "Albert Gudmundsson": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "since": "2026-09-01",
+  "was": "ACF Fiorentina"
+ },
+ "Andrea Pinamonti": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "since": "2026-08-27",
+  "was": "US Sassuolo"
+ },
+ "Ben Chilwell": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "since": "2026-09-01",
+  "was": "RC Strasbourg Alsace"
+ },
+ "Dani Ceballos": {
+  "club": "Real Betis Balompié",
+  "club_id": 150,
+  "since": "2026-09-01",
+  "was": "Real Madrid"
+ },
+ "Denzel Dumfries": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "since": "2026-07-01",
+  "was": "Inter Milan"
+ },
+ "Dennis Hadzikadunic": {
+  "club": "HNK Hajduk Split",
+  "club_id": null,
+  "since": "2026-08-17",
+  "was": "UC Sampdoria"
+ },
+ "Ollie Watkins": {
+  "club": "Al Hilal SFC",
+  "club_id": null,
+  "since": "2026-08-30",
+  "was": "Aston Villa"
+ },
+ "Diego Carlos": {
+  "club": "Parma Calcio 1913",
+  "club_id": 130,
+  "since": "2026-09-01",
+  "was": "Como 1907"
+ },
+ "Altay Bayındır": {
+  "club": "Celta de Vigo",
+  "club_id": 940,
+  "since": "2026-08-07",
+  "was": "Manchester United"
+ },
+ "Mërgim Vojvoda": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "since": "2026-07-18",
+  "was": "Como 1907"
+ },
+ "Alex Král": {
+  "club": "F.C. Copenhagen",
+  "club_id": null,
+  "since": "2026-07-16",
+  "was": "1.FC Union Berlin"
+ },
+ "Reiss Nelson": {
+  "club": "Feyenoord Rotterdam",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Brentford FC"
+ },
+ "Fran García": {
+  "club": "Real Betis Balompié",
+  "club_id": 150,
+  "since": "2026-07-08",
+  "was": "Real Madrid"
+ },
+ "Hamza Choudhury": {
+  "club": "Sheffield United",
+  "club_id": 350,
+  "since": "2026-08-31",
+  "was": "Leicester City"
+ },
+ "Axel Tuanzebe": {
+  "club": "AJ Auxerre",
+  "club_id": 290,
+  "since": "2026-09-01",
+  "was": "Burnley FC"
+ },
+ "Artem Dovbyk": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "since": "2026-07-30",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Christopher Nkunku": {
+  "club": "RB Leipzig",
+  "club_id": 23826,
+  "since": "2026-08-01",
+  "was": "AC Milan"
+ },
+ "Malang Sarr": {
+  "club": "Neom SC",
+  "club_id": null,
+  "since": "2026-07-22",
+  "was": "RC Lens"
+ },
+ "Kamil Grabara": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-08-01",
+  "was": "VfL Wolfsburg"
+ },
+ "Kalvin Phillips": {
+  "club": "Sheffield United",
+  "club_id": 350,
+  "since": "2026-08-11",
+  "was": "Manchester City"
+ },
+ "Romain Del Castillo": {
+  "club": "Club Atlético Osasuna",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Stade Brestois 29"
+ },
+ "Cristian Romero": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "since": "2026-08-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Rafael Leão": {
+  "club": "Galatasaray S.K.",
+  "club_id": null,
+  "since": "2026-08-29",
+  "was": "AC Milan"
+ },
+ "Rodri": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "since": "2026-08-01",
+  "was": "Manchester City"
+ },
+ "Mitchel Bakker": {
+  "club": "N.E.C.",
+  "club_id": null,
+  "since": "2026-10-08",
+  "was": "Atalanta BC"
+ },
+ "Rafa Mir": {
+  "club": "Aris Thessaloniki F.C.",
+  "club_id": null,
+  "since": "2026-08-04",
+  "was": "Elche CF"
+ },
+ "Moise Kean": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "since": "2026-09-01",
+  "was": "ACF Fiorentina"
+ },
+ "Loïs Openda": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "since": "2026-07-28",
+  "was": "Juventus FC"
+ },
+ "Arthur Theate": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "since": "2026-08-30",
+  "was": "Eintracht Frankfurt"
+ },
+ "Kristijan Jakic": {
+  "club": "PAOK FC",
+  "club_id": null,
+  "since": "2026-09-09",
+  "was": "FC Augsburg"
+ },
+ "Axel Disasi": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "since": "2026-08-01",
+  "was": "West Ham United"
+ },
+ "Lovro Majer": {
+  "club": "AEK Athens F.C.",
+  "club_id": null,
+  "since": "2026-07-29",
+  "was": "VfL Wolfsburg"
+ },
+ "Leon Bailey": {
+  "club": "Olympiacos F.C.",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Davide Frattesi": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "since": "2026-08-01",
+  "was": "Inter Milan"
+ },
+ "Sandro Tonali": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-07-01",
+  "was": "Newcastle United"
+ },
+ "Exequiel Palacios": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "since": "2026-08-01",
+  "was": "Bayer 04 Leverkusen"
+ },
+ "Robert Sánchez": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Yukinari Sugawara": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "since": "2026-09-01",
+  "was": "SV Werder Bremen"
+ },
+ "Keito Nakamura": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "since": "2026-09-02",
+  "was": "Stade Reims"
+ },
+ "Yves Bissouma": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Ezri Konsa": {
+  "club": "Arsenal FC",
+  "club_id": 11,
+  "since": "2026-08-01",
+  "was": "Aston Villa"
+ },
+ "Lutsharel Geertruida": {
+  "club": "PSV Eindhoven",
+  "club_id": null,
+  "since": "2026-08-21",
+  "was": "RB Leipzig"
+ },
+ "Quinten Timber": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "since": "2026-09-01",
+  "was": "Olympique Marseille"
+ },
+ "Nahuel Molina": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "since": "2026-08-01",
+  "was": "Atlético de Madrid"
+ },
+ "Zion Suzuki": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-08-01",
+  "was": "Parma Calcio 1913"
+ },
+ "Curtis Jones": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "since": "2026-08-01",
+  "was": "Liverpool FC"
+ },
+ "Maxence Lacroix": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-07-30",
+  "was": "Crystal Palace"
+ },
+ "Omar Marmoush": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-08-01",
+  "was": "Manchester City"
+ },
+ "David Affengruber": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "since": "2026-09-01",
+  "was": "Elche CF"
+ },
+ "Nick Woltemade": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-09-01",
+  "was": "Newcastle United"
+ },
+ "Patrizio Masini": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "since": "2026-08-10",
+  "was": "Genoa CFC"
+ },
+ "Tijjani Reijnders": {
+  "club": "Al Qadsiah FC",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Manchester City"
+ },
+ "Benoît Badiashile": {
+  "club": "SSC Napoli",
+  "club_id": 6195,
+  "since": "2026-08-01",
+  "was": "Chelsea FC"
+ },
+ "Nico González": {
+  "club": "Newcastle United",
+  "club_id": 762,
+  "since": "2026-08-26",
+  "was": "Manchester City"
+ },
+ "Yvan Neyou": {
+  "club": "Volos N.F.C.",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Getafe CF"
+ },
+ "Marcos Senesi": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-07-01",
+  "was": "AFC Bournemouth"
+ },
+ "Aaron Wan-Bissaka": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-08-21",
+  "was": "West Ham United"
+ },
+ "Ronald Araujo": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "since": "2026-08-01",
+  "was": "FC Barcelona"
+ },
+ "Djed Spence": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "since": "2026-08-15",
+  "was": "Tottenham Hotspur"
+ },
+ "Lilian Brassier": {
+  "club": "Eintracht Frankfurt",
+  "club_id": 24,
+  "since": "2026-08-01",
+  "was": "Stade Rennais FC"
+ },
+ "Randal Kolo Muani": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-07-29",
+  "was": "Tottenham Hotspur"
+ },
+ "Daniel Muñoz": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "since": "2026-10-03",
+  "was": "Crystal Palace"
+ },
+ "Karim Adeyemi": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "since": "2026-07-01",
+  "was": "Borussia Dortmund"
+ },
+ "David Carmo": {
+  "club": "Olympiacos F.C.",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Real Oviedo"
+ },
+ "Anthony Gordon": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "since": "2026-07-01",
+  "was": "Newcastle United"
+ },
+ "Morgan Rogers": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-07-21",
+  "was": "Aston Villa"
+ },
+ "Bruno Guimarães": {
+  "club": "Arsenal FC",
+  "club_id": 11,
+  "since": "2026-08-08",
+  "was": "Newcastle United"
+ },
+ "Horațiu Moldovan": {
+  "club": "Eyüpspor",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Real Oviedo"
+ },
+ "Kervin Arriaga": {
+  "club": "AEK Athens F.C.",
+  "club_id": null,
+  "since": "2026-08-17",
+  "was": "Levante UD"
+ },
+ "Mason Greenwood": {
+  "club": "Fenerbahçe Istanbul",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Olympique Marseille"
+ },
+ "Jonathan David": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "since": "2026-09-01",
+  "was": "Juventus FC"
+ },
+ "Mykhaylo Mudryk": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Terem Moffi": {
+  "club": "Hamburger SV",
+  "club_id": 41,
+  "since": "2026-08-01",
+  "was": "OGC Nice"
+ },
+ "Tanguy Nianzou": {
+  "club": "LOSC Lille",
+  "club_id": 1082,
+  "since": "2026-07-01",
+  "was": "Sevilla FC"
+ },
+ "Gonçalo Ramos": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "since": "2026-06-30",
+  "was": "Paris Saint-Germain"
+ },
+ "Santiago Gimenez": {
+  "club": "FC Porto",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "AC Milan"
+ },
+ "Kang-in Lee": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "since": "2026-07-01",
+  "was": "Paris Saint-Germain"
+ },
+ "Leo Román": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-07-03",
+  "was": "RCD Mallorca"
+ },
+ "Victor Kristiansen": {
+  "club": "Panathinaikos F.C.",
+  "club_id": null,
+  "since": "2026-07-13",
+  "was": "Leicester City"
+ },
+ "Harvey Elliott": {
+  "club": "Valencia CF",
+  "club_id": 1049,
+  "since": "2026-09-01",
+  "was": "Liverpool FC"
+ },
+ "Radu Drăgușin": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "since": "2026-07-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Răzvan Sava": {
+  "club": "CS Universitatea Craiova",
+  "club_id": null,
+  "since": "2026-06-01",
+  "was": "Udinese Calcio"
+ },
+ "Pape Matar Sarr": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-09-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Youssouf Fofana": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "since": "2026-09-01",
+  "was": "AC Milan"
+ },
+ "Fabio Miretti": {
+  "club": "Beşiktaş J.K.",
+  "club_id": null,
+  "since": "2026-08-28",
+  "was": "Juventus FC"
+ },
+ "Leonardo Balerdi": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "since": "2026-08-01",
+  "was": "Olympique Marseille"
+ },
+ "Thiago Almada": {
+  "club": "Club Atlético River Plate",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Atlético de Madrid"
+ },
+ "Marcus Pedersen": {
+  "club": "Olympiacos F.C.",
+  "club_id": null,
+  "since": "2026-08-29",
+  "was": "Torino FC"
+ },
+ "Azzedine Ounahi": {
+  "club": "Panathinaikos F.C.",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Girona FC"
+ },
+ "Beto": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "since": "2026-09-01",
+  "was": "Everton FC"
+ },
+ "Jean-Clair Todibo": {
+  "club": "RC Lens",
+  "club_id": 826,
+  "since": "2026-09-01",
+  "was": "West Ham United"
+ },
+ "Liam Delap": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "since": "2026-08-27",
+  "was": "Chelsea FC"
+ },
+ "Cenk Özkacar": {
+  "club": "Trabzonspor",
+  "club_id": null,
+  "since": "2026-07-18",
+  "was": "1.FC Köln"
+ },
+ "Matteo Ruggeri": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-08-01",
+  "was": "Atlético de Madrid"
+ },
+ "Mario Gila": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "since": "2026-07-01",
+  "was": "Società Sportiva Lazio S.p.A."
+ },
+ "Haissem Hassan": {
+  "club": "Celtic F.C.",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Real Oviedo"
+ },
+ "Mihai Popa": {
+  "club": "Motor Lublin",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Torino FC"
+ },
+ "Iliman Ndiaye": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "since": "2026-09-01",
+  "was": "Everton FC"
+ },
+ "Boulaye Dia": {
+  "club": "Stade Rennais FC",
+  "club_id": 273,
+  "since": "2026-09-01",
+  "was": "Società Sportiva Lazio S.p.A."
+ },
+ "Marc Casadó": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "since": "2026-09-01",
+  "was": "FC Barcelona"
+ },
+ "Enzo Fernández": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Samuel Mbangula": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "since": "2026-09-01",
+  "was": "SV Werder Bremen"
+ },
+ "Diego Moreira": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "since": "2026-08-01",
+  "was": "RC Strasbourg Alsace"
+ },
+ "Gabriel Martinelli": {
+  "club": "Al Hilal SFC",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Arsenal FC"
+ },
+ "Simon Adingra": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Sunderland AFC"
+ },
+ "Julio Enciso": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "since": "2026-08-01",
+  "was": "RC Strasbourg Alsace"
+ },
+ "Dário Essugo": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Mohamed-Ali Cho": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-08-01",
+  "was": "OGC Nice"
+ },
+ "Jonathan Rowe": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "since": "2026-09-01",
+  "was": "Olympique Marseille"
+ },
+ "Juanlu Sánchez": {
+  "club": "AFC Bournemouth",
+  "club_id": 989,
+  "since": "2026-08-01",
+  "was": "Sevilla FC"
+ },
+ "Tim Iroegbunam": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-09-01",
+  "was": "Everton FC"
+ },
+ "Bradley Barcola": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "since": "2026-08-01",
+  "was": "Paris Saint-Germain"
+ },
+ "Guéla Doué": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "since": "2026-09-01",
+  "was": "RC Strasbourg Alsace"
+ },
+ "Bryan Zaragoza": {
+  "club": "RCD Espanyol Barcelona",
+  "club_id": 714,
+  "since": "2026-08-01",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Brooke Norton-Cuffy": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-09-01",
+  "was": "Genoa CFC"
+ },
+ "Omari Hutchinson": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "since": "2026-08-01",
+  "was": "Nottingham Forest"
+ },
+ "Malick Fofana": {
+  "club": "Sunderland AFC",
+  "club_id": 289,
+  "since": "2026-09-01",
+  "was": "Olympique Lyon"
+ },
+ "Savinho": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-08-25",
+  "was": "Manchester City"
+ },
+ "Maghnes Akliouche": {
+  "club": "Paris Saint-Germain",
+  "club_id": 583,
+  "since": "2026-08-06",
+  "was": "AS Monaco"
+ },
+ "Caleb Wiley": {
+  "club": "Preston North End F.C.",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Chelsea FC"
+ },
+ "Mohamed Amoura": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "since": "2026-08-01",
+  "was": "VfL Wolfsburg"
+ },
+ "Tom Louchet": {
+  "club": "PAOK FC",
+  "club_id": null,
+  "since": "2026-08-03",
+  "was": "OGC Nice"
+ },
+ "Nicolas Jackson": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-08-28",
+  "was": "Bayern Munich"
+ },
+ "David Datro Fofana": {
+  "club": "Servette FC",
+  "club_id": null,
+  "since": "2026-08-31",
+  "was": "RC Strasbourg Alsace"
+ },
+ "El Chadaille Bitshiabu": {
+  "club": "Galatasaray S.K.",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "RB Leipzig"
+ },
+ "Conrad Harder": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "since": "2026-09-01",
+  "was": "RB Leipzig"
+ },
+ "Alejandro Garnacho": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-07-23",
+  "was": "Chelsea FC"
+ },
+ "Petar Ratkov": {
+  "club": "Levante UD",
+  "club_id": 3368,
+  "since": "2026-09-01",
+  "was": "Società Sportiva Lazio S.p.A."
+ },
+ "Alan Matturro": {
+  "club": "FC Shakhtar Donetsk",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Levante UD"
+ },
+ "Stefan Bajcetic": {
+  "club": "RC Celta Fortuna",
+  "club_id": null,
+  "since": "2026-08-31",
+  "was": "Liverpool FC"
+ },
+ "Mateus Fernandes": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "since": "2026-07-02",
+  "was": "West Ham United"
+ },
+ "Ethan Nwaneri": {
+  "club": "Borussia Dortmund",
+  "club_id": 16,
+  "since": "2026-09-01",
+  "was": "Olympique Marseille"
+ },
+ "Luka Vuskovic": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "since": "2026-07-01",
+  "was": "Tottenham Hotspur"
+ },
+ "Marco Palestra": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-07-01",
+  "was": "Cagliari Calcio"
+ },
+ "Alex Murphy": {
+  "club": "1. FC Kaiserslautern",
+  "club_id": null,
+  "since": "2026-08-11",
+  "was": "Newcastle United"
+ },
+ "Neil El Aynaoui": {
+  "club": "RB Leipzig",
+  "club_id": 23826,
+  "since": "2026-09-01",
+  "was": "Associazione Sportiva Roma"
+ },
+ "Mamadou Sarr": {
+  "club": "Real Sociedad",
+  "club_id": 681,
+  "since": "2026-08-28",
+  "was": "Chelsea FC"
+ },
+ "Jeff Ekhator": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "since": "2026-07-01",
+  "was": "Genoa CFC"
+ },
+ "Héctor Fort": {
+  "club": "Real Sociedad",
+  "club_id": 681,
+  "since": "2026-08-01",
+  "was": "Elche CF"
+ },
+ "Marc Guiu": {
+  "club": "RB Leipzig",
+  "club_id": 23826,
+  "since": "2026-09-01",
+  "was": "Chelsea FC"
+ },
+ "Jean-Mattéo Bahoya": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "since": "2026-09-01",
+  "was": "Eintracht Frankfurt"
+ },
+ "Álvaro Rodríguez": {
+  "club": "AFC Bournemouth",
+  "club_id": 989,
+  "since": "2026-07-14",
+  "was": "Elche CF"
+ },
+ "Chema Andrés": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "since": "2026-09-01",
+  "was": "VfB Stuttgart"
+ },
+ "Carlos Baleba": {
+  "club": "Manchester United",
+  "club_id": 985,
+  "since": "2026-08-01",
+  "was": "Brighton & Hove Albion"
+ },
+ "Aladji Bamba": {
+  "club": "Newcastle United",
+  "club_id": 762,
+  "since": "2026-07-01",
+  "was": "AS Monaco"
+ },
+ "Sidiki Chérif": {
+  "club": "Coventry City F.C.",
+  "club_id": null,
+  "since": "2026-08-19",
+  "was": "Angers SCO"
+ },
+ "Claudio Echeverri": {
+  "club": "S.L. Benfica",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Girona FC"
+ },
+ "Jérémy Jacquet": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "since": "2026-07-01",
+  "was": "Stade Rennais FC"
+ },
+ "Oso": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "since": "2026-08-01",
+  "was": "Sevilla FC"
+ },
+ "Nobel Mendy": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-08-12",
+  "was": "Rayo Vallecano"
+ },
+ "Ilyas Ansah": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "since": "2026-09-01",
+  "was": "1.FC Union Berlin"
+ },
+ "Renato Marin": {
+  "club": "C.D. Nacional",
+  "club_id": null,
+  "since": "2026-07-06",
+  "was": "Paris Saint-Germain"
+ },
+ "Franco Mastantuono": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "since": "2026-08-01",
+  "was": "Real Madrid"
+ },
+ "Honest Ahanor": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "since": "2026-09-01",
+  "was": "Atalanta BC"
+ },
+ "Karim Coulibaly": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "since": "2026-08-01",
+  "was": "SV Werder Bremen"
+ },
+ "Ayyoub Bouaddi": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "since": "2026-08-01",
+  "was": "LOSC Lille"
+ },
+ "El Hadji Malick Diouf": {
+  "club": "Brentford FC",
+  "club_id": 1148,
+  "since": "2026-08-01",
+  "was": "West Ham United"
+ },
+ "Yunus Konak": {
+  "club": "Lincoln City F.C.",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Brentford FC"
+ },
+ "Ibrahim Mbaye": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "since": "2026-09-01",
+  "was": "Paris Saint-Germain"
+ },
+ "Noham Kamara": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "since": "2026-07-01",
+  "was": "Paris Saint-Germain"
+ },
+ "Yan Diomande": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "since": "2026-08-06",
+  "was": "RB Leipzig"
+ },
+ "Georginio Wijnaldum": {
+  "club": "Al Ittihad FC",
+  "club_id": null,
+  "since": "2026-09-07",
+  "was": "Al-Ettifaq Football Club"
+ },
+ "Nico Gaitán": {
+  "club": "Club Atlético Aldosivi",
+  "club_id": null,
+  "since": "2026-07-27",
+  "was": "FC Paços de Ferreira"
+ },
+ "Douglas Costa": {
+  "club": "Al-Ittifaq F. C.",
+  "club_id": null,
+  "since": "2026-06-01",
+  "was": "Sydney FC"
+ },
+ "Philippe Coutinho": {
+  "club": "Santos F.C.",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Club de Regatas Vasco da Gama"
+ },
+ "James Rodríguez": {
+  "club": "Atlético Nacional",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Club León FC"
+ },
+ "Juan Cuadrado": {
+  "club": "Millonarios",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Pisa Sporting Club"
+ },
+ "Ander Herrera": {
+  "club": "Real Zaragoza",
+  "club_id": 142,
+  "since": "2026-07-01",
+  "was": "Club Atlético Boca Juniors"
+ },
+ "Lorenzo Insigne": {
+  "club": "UC Sampdoria",
+  "club_id": 1038,
+  "since": "2026-07-08",
+  "was": "SSC Napoli"
+ },
+ "Ryan Fraser": {
+  "club": "Macarthur FC",
+  "club_id": null,
+  "since": "2026-08-31",
+  "was": "Western Sydney Wanderers"
+ },
+ "João Mário": {
+  "club": "AEK Athens F.C.",
+  "club_id": null,
+  "since": "2026-09-02",
+  "was": "Athlitiki Enosi Konstantinoupoleos"
+ },
+ "Marcelo Brozović": {
+  "club": "Al Sadd Sports Club",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Al-Nassr Football Club"
+ },
+ "Kurt Zouma": {
+  "club": "Palm City FC",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "CFR Cluj"
+ },
+ "Riyad Mahrez": {
+  "club": "Al-Shamal Sports Club",
+  "club_id": null,
+  "since": "2026-10-14",
+  "was": "Al-Ahli Saudi Football Club"
+ },
+ "João Cancelo": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "since": "2026-08-20",
+  "was": "Al-Hilal Saudi Football Club"
+ },
+ "Fred": {
+  "club": "Clube Atlético Mineiro",
+  "club_id": null,
+  "since": "2026-08-14",
+  "was": "Fenerbahce"
+ },
+ "Nabil Fekir": {
+  "club": "Abha",
+  "club_id": null,
+  "since": "2026-08-05",
+  "was": "Real Betis Balompié"
+ },
+ "Stefano Sensi": {
+  "club": "PFC CSKA Sofia",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "AC Monza"
+ },
+ "Hakim Ziyech": {
+  "club": "Botafogo F.R.",
+  "club_id": null,
+  "since": "2026-09-01",
+  "was": "Galatasaray"
+ },
+ "Fabinho": {
+  "club": "Trabzonspor",
+  "club_id": null,
+  "since": "2026-08-24",
+  "was": "Al-Ittihad Football Club"
+ },
+ "Wout Weghorst": {
+  "club": "FC Twente",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Ajax Amsterdam"
+ },
+ "Otávio": {
+  "club": "Al-Rayyan",
+  "club_id": null,
+  "since": "2026-09-04",
+  "was": "Al-Qadsiah Saudi Football Club"
+ },
+ "Ángel Correa": {
+  "club": "Club Atlético River Plate",
+  "club_id": null,
+  "since": "2026-07-01",
+  "was": "Tigres UANL"
+ },
+ "Allan Saint-Maximin": {
+  "club": "Charlotte FC",
+  "club_id": null,
+  "since": "2026-07-13",
+  "was": "CF América"
+ },
+ "Sofyan Amrabat": {
+  "club": "AFC Ajax",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Fenerbahce"
+ },
+ "Franck Kessié": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "since": "2026-08-29",
+  "was": "Al-Ahli Saudi Football Club"
+ },
+ "Hirving Lozano": {
+  "club": "LA Galaxy",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "San Diego Football Club"
+ },
+ "Çağlar Söyüncü": {
+  "club": "Çorum FK",
+  "club_id": null,
+  "since": "2026-09-04",
+  "was": "Fenerbahce"
+ },
+ "Malcom": {
+  "club": "Al Jazira Club",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Al-Hilal Saudi Football Club"
+ },
+ "Takehiro Tomiyasu": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "since": "2026-08-01",
+  "was": "Ajax Amsterdam"
+ },
+ "Cengiz Ünder": {
+  "club": "Çorum FK",
+  "club_id": null,
+  "since": "2026-08-28",
+  "was": "Beşiktaş Jimnastik Kulübü"
+ },
+ "Ismaël Bennacer": {
+  "club": "Al-Gharafa SC",
+  "club_id": null,
+  "since": "2026-09-14",
+  "was": "GNK Dinamo Zagreb"
+ },
+ "Arthur Melo": {
+  "club": "Santos F.C.",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Grêmio Foot-Ball Porto Alegrense"
+ },
+ "Moussa Diaby": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "since": "2026-09-01",
+  "was": "Al-Ittihad Football Club"
+ },
+ "Joey Veerman": {
+  "club": "Borussia Dortmund",
+  "club_id": 16,
+  "since": "2026-08-18",
+  "was": "PSV Eindhoven"
+ },
+ "Pedro Gonçalves": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "since": "2026-09-01",
+  "was": "Sporting CP"
+ },
+ "Darwin Núñez": {
+  "club": "Al-Diriyah Club",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Al-Hilal Saudi Football Club"
+ },
+ "Enzo Millot": {
+  "club": "Al-Diriyah Club",
+  "club_id": null,
+  "since": "2026-08-01",
+  "was": "Al-Ahli Saudi Football Club"
+ },
+ "Jhon Durán": {
+  "club": "S.L. Benfica",
+  "club_id": null,
+  "since": "2026-07-20",
+  "was": "Fenerbahce"
+ },
+ "Mika Godts": {
+  "club": "Paris Saint-Germain",
+  "club_id": 583,
+  "since": "2026-08-15",
+  "was": "Ajax Amsterdam"
+ },
+ "Rodrigo Mora": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "since": "2026-08-01",
+  "was": "FC Porto"
+ },
+ "Ousmane Diomande": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "since": "2026-08-01",
+  "was": "Sporting CP"
+ },
+ "Geovany Quenda": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "since": "2026-07-01",
+  "was": "Sporting CP"
+ }
+}

@@ -1,5 +1,5 @@
 """
-Plain-language baselines for the tour and the About page, on the same 44,146 test matches as the model (2001-02 to 2025-26):
+Plain-language baselines for the tour and the About page, on the same 45,031 test matches as the model (2001-02 to 2025-26):
   random   picking Home, Draw or Away at random gets one in three right
   form     the 'fan's educated guess': back the team with the better points per game so far this season (before 5 games, a blend with last season's
            rate); the home team if they are level

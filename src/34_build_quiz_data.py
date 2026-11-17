@@ -165,14 +165,22 @@ def main():
                 q["tm"].append(st["id"])
     print("honours matched:", sum(1 for q in players if q["hn"]), "players; star list:", [x["n"] for x in stars][:12])
     ov = json.load(open("src/quiz_overrides.json", encoding="utf-8"))
+    try:                                                # moves found by src/45_fix_stale_transfers.py (Wikidata); hand-written overrides win
+        auto = json.load(open("02_processed_data/transfer_fixes.json", encoding="utf-8"))
+    except FileNotFoundError:
+        auto = {}
+    ov = {**auto, **ov}
     cl = pd.read_csv("01_data_market_value/clubs.csv").set_index("club_id")
     for q in players:
         o = ov.get(q["n"])
         if o:
-            q["club"] = cl.loc[o["club_id"], "name"]; q["comp"] = cl.loc[o["club_id"], "domestic_competition_id"] if cl.loc[o["club_id"], "domestic_competition_id"] in BIG else q["comp"]
+            if o.get("club_id") is not None:
+                q["club"] = cl.loc[o["club_id"], "name"]; q["comp"] = cl.loc[o["club_id"], "domestic_competition_id"] if cl.loc[o["club_id"], "domestic_competition_id"] in BIG else "OTH"
+            else:
+                q["club"] = o["club"]; q["comp"] = "OTH"
             if not q["hist"] or q["hist"][-1] != q["club"]:
                 q["hist"].append(q["club"])
-            print("override applied:", q["n"], "->", q["club"])
+    print("transfer fixes applied:", sum(1 for q in players if ov.get(q["n"])))
     players = [q for q in players if q["dob"] and q["pos"]]
     print(f"players: {len(players)} ({sum(q['active'] for q in players)} active); with a club history: {sum(1 for q in players if len(q['hist']) >= 2)}")
 
@@ -238,10 +246,15 @@ def main():
         q["cr"] = cr
     for q in players:                                   # manual corrections (src/quiz_overrides.json) also close the old stint and open the new one
         o = ov.get(q["n"])
-        if o and by_id.get(int(o["club_id"])) and not (q["cr"] and q["cr"][-1][0] == by_id[int(o["club_id"])]):
-            if q["cr"] and q["cr"][-1][2] == 0:
-                q["cr"][-1][2] = 2026
-            q["cr"].append([by_id[int(o["club_id"])], 2026, 0])
+        if not o:
+            continue
+        new = by_id.get(int(o["club_id"])) if o.get("club_id") is not None else None
+        if q["cr"] and q["cr"][-1][0] == new:
+            continue
+        if q["cr"] and q["cr"][-1][2] == 0:
+            q["cr"][-1][2] = 2026
+        if new:
+            q["cr"].append([new, 2026, 0])
     print("players with club stints:", sum(1 for q in players if q.get("cr")), "; stints:", sum(len(q["cr"]) for q in players))
     try:
         photos = json.load(open("02_processed_data/player_photos.json", encoding="utf-8"))

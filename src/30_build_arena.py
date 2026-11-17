@@ -154,7 +154,14 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
             mk = [r.mk_a, r.mk_d, r.mk_h] if not np.isnan(r.mk_a) else [r.p_a, r.p_d, r.p_h]
             exp, real = stat_lookup.get((lg, r.date, r.home, r.away), (None, None))
             ms.append([r.date, r.home, r.away, int(r.hg), int(r.ag), r.res, round(r.p_a, 3), round(r.p_d, 3), round(r.p_h, 3), round(r.lam_h, 2), round(r.lam_a, 2), *[round(float(v), 3) for v in mk], exp, real])
-        seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms}
+        rb, seen, last = [], set(), None                      # matchday groups: a new group starts after a 2-day gap or when a club would play twice
+        for i, mm in enumerate(ms):
+            dd = pd.Timestamp(mm[0])
+            if i and ((dd - last).days > 2 or mm[1] in seen or mm[2] in seen):
+                rb.append(i); seen = set()
+            seen.update((mm[1], mm[2])); last = dd
+        rb.append(len(ms))
+        seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms, "rb": rb}
     name, country, tag = META[lg]
     star = dict(zip(("name", "club", "role"), STARS[lg]))
     star["face"] = webp_uri(f"{LOGO_DIR}/players/{lg}.png", 300)

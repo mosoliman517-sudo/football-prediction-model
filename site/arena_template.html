@@ -1214,6 +1214,8 @@ async function shareDaily() {
 }
 
 /* ---------- Time machine ---------- */
+/* A matchday is a real group of fixtures: the builder splits each season wherever two days pass with no match or a club would play twice (season.rb holds the end index of each group). */
+function grpEnds(ms, sn) { if (sn && sn.rb && sn.rb.length) return sn.rb; const per = Math.max(1, Math.floor(new Set(ms.flatMap((m) => [m[1], m[2]])).size / 2)), e = []; for (let i = per; i <= ms.length; i += per) e.push(i); if (!e.length || e[e.length - 1] !== ms.length) e.push(ms.length); return e; }
 function roundsOf(ms) { const teams = new Set(ms.flatMap((m) => [m[1], m[2]])); return { per: Math.floor(teams.size / 2), teams }; }
 function tableAt(ms, n) {
   const T = {}; ms.forEach((m) => { T[m[1]] = T[m[1]] || { t: m[1], p: 0, pts: 0, gd: 0, gf: 0 }; T[m[2]] = T[m[2]] || { t: m[2], p: 0, pts: 0, gd: 0, gf: 0 }; });
@@ -1231,20 +1233,20 @@ function renderReplay() {
   paintReplay(true);
 }
 function paintReplay(first) {
-  const c = S.code, ms = lgOf(c).seasons[S.season].matches, { per } = roundsOf(ms), R = Math.ceil(ms.length / per), r = Math.max(0, Math.min(R, S.replay.round)); S.replay.round = r;
-  const n = Math.min(ms.length, r * per);
+  const c = S.code, sn = lgOf(c).seasons[S.season], ms = sn.matches, E = grpEnds(ms, sn), Es = new Set(E), R = E.length, r = Math.max(0, Math.min(R, S.replay.round)); S.replay.round = r;
+  const n = r === 0 ? 0 : E[r - 1], p0 = r > 1 ? E[r - 2] : 0;
   const sc = $("#rpScrub"); sc.max = R; sc.value = r; $("#rpLabel").textContent = r === 0 ? "Before matchday 1" : `Matchday ${r} / ${R}`;
   const f = DATA.profiles[S.style]; let right = 0; const pts = [];
-  ms.slice(0, n).forEach((m, i) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], pk = "ADH"[adj.indexOf(Math.max(...adj))]; if (pk === m[5]) right++; if ((i + 1) % per === 0 || i === n - 1) pts.push(right / (i + 1)); });
+  ms.slice(0, n).forEach((m, i) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], pk = "ADH"[adj.indexOf(Math.max(...adj))]; if (pk === m[5]) right++; if (Es.has(i + 1) || i === n - 1) pts.push(right / (i + 1)); });
   const W = 520, H = 190, L = 34, Rr = 508, T = 10, B = 160, y = (v) => B - ((Math.min(0.8, Math.max(0.2, v)) - 0.2) / 0.6) * (B - T), x = (k) => L + (R <= 1 ? 0 : (k / (R - 1)) * (Rr - L));
   const mk = ms.reduce((a, m) => a + (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5] ? 1 : 0), 0) / ms.length;
   let g = [0.3, 0.4, 0.5, 0.6, 0.7].map((v) => `<line x1="${L}" x2="${Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`).join("");
   g += `<line x1="${L}" x2="${Rr}" y1="${y(mk)}" y2="${y(mk)}" stroke="var(--accent2)" stroke-dasharray="5 5"/>`;
   if (pts.length) { const d = pts.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join(" "); g += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(pts.length - 1)}" cy="${y(pts[pts.length - 1])}" r="5" fill="var(--accent)"/><text x="${Math.min(x(pts.length - 1), Rr - 14)}" y="${y(pts[pts.length - 1]) - 10}" text-anchor="middle" style="fill:var(--accent);font-weight:700">${pct(pts[pts.length - 1])}</text>`; }
   $("#rpChart").innerHTML = `<div class="label" style="margin-bottom:6px">Model accuracy so far <span style="color:var(--accent2)">· dashed: bookmakers' season ${pct(mk)}</span></div><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative accuracy by matchday">${g}</svg>`;
-  const a0 = (r - 1) * per, rows = r === 0 ? [] : ms.slice(a0, Math.min(ms.length, r * per));
+  const rows = r === 0 ? [] : ms.slice(p0, n);
   $("#rpFeed").innerHTML = r === 0 ? `<p class="fine">Press play to start the season.</p>` : `<div class="label" style="margin:10px 0 2px">Matchday ${r}</div>` + rows.map((m) => { const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h], k = adj.indexOf(Math.max(...adj)), pk = "ADH"[k]; return `<div class="mrow"><span class="h">${esc(m[1])}${badge(m[1], "sm")}</span><b class="num">${m[3]}-${m[4]}</b><span>${badge(m[2], "sm")}${esc(m[2])}</span><span class="mark ${pk === m[5] ? "y" : "n"}" title="Model said ${OUTNAME[pk]}">${pk === m[5] ? "✓" : "✗"}</span></div>`; }).join("");
-  const tab = tableAt(ms, n), prev = tableAt(ms, Math.max(0, n - per)).map((q) => q.t), N = tab.length;
+  const tab = tableAt(ms, n), prev = tableAt(ms, p0).map((q) => q.t), N = tab.length;
   // The model's table: each match's win / draw / loss probabilities turned into expected points (3 x P(win) + P(draw)), summed over the matches played so far.
   const xp = {}; tab.forEach((q) => { xp[q.t] = { t: q.t, x: 0, pts: q.pts, p: q.p }; });
   for (let i = 0; i < n; i++) { const m = ms[i]; xp[m[1]].x += 3 * m[8] + m[7]; xp[m[2]].x += 3 * m[6] + m[7]; }
@@ -1258,7 +1260,7 @@ function paintReplay(first) {
 function stopReplay() { if (S.replay.timer) { clearInterval(S.replay.timer); S.replay.timer = null; } }
 function toggleReplay() {
   if (S.replay.timer) { stopReplay(); paintReplay(); return; }
-  const c = S.code, ms = lgOf(c).seasons[S.season].matches, { per } = roundsOf(ms), R = Math.ceil(ms.length / per);
+  const c = S.code, R = grpEnds(lgOf(c).seasons[S.season].matches, lgOf(c).seasons[S.season]).length;
   if (S.replay.round >= R) S.replay.round = 0;
   S.replay.timer = setInterval(() => { if (S.replay.round >= R) { stopReplay(); Snd.win(); paintReplay(); return; } S.replay.round++; Snd.tick(); paintReplay(); }, 1100);
   paintReplay();
@@ -1504,7 +1506,7 @@ function renderPlayRoom() {
 /* ---------- Matchday ---------- */
 function mdList(c) {
   const out = [];
-  lgs(c).forEach((lg) => poolSeasons(lg).forEach((sn) => { const ms = lgOf(lg).seasons[sn].matches, per = roundsOf(ms).per; for (let n = 1; n * per <= ms.length; n++) out.push({ c: lg, season: sn, n, per }); }));
+  lgs(c).forEach((lg) => poolSeasons(lg).forEach((sn) => { const se = lgOf(lg).seasons[sn], ms = se.matches, per = roundsOf(ms).per, E = grpEnds(ms, se); E.forEach((end, k) => { const a = k ? E[k - 1] : 0; if (end - a === per) out.push({ c: lg, season: sn, n: k + 1, per, a, b: end }); }); }));
   return out;
 }
 const mdKey = (c, sn, n) => `md_${c}_${sn}_${n}`;
@@ -1518,7 +1520,7 @@ function renderMatchday() {
       <p class="fine" style="margin-top:10px">${free.length} matchdays you haven't played, across ${c === "ALL" ? "all five leagues and 25 seasons" : poolSeasons(c).length + " seasons"}.</p></div>`;
     return;
   }
-  const { c: mc, season, n, per, picks, locked } = S.md, ms = lgOf(mc).seasons[season].matches.slice((n - 1) * per, n * per), done = store.items[mdKey(mc, season, n)];
+  const { c: mc, season, n, per, picks, locked } = S.md, ms = lgOf(mc).seasons[season].matches.slice(S.md.a, S.md.b), done = store.items[mdKey(mc, season, n)];
   const rows = ms.map((m, i) => {
     const call = modelCall(m), res = done ? done.res[i] : null;
     return `<div class="mdrow2" data-i="${i}"><div class="mteam h">${esc(m[1])}${badge(m[1], "sm")}</div>
@@ -1532,7 +1534,7 @@ function renderMatchday() {
 }
 const mdResult = (m, pick, call) => { const ok = pick === m[5], mok = call.pick === m[5]; return `<span class="num score">${m[3]}-${m[4]}</span><span class="mark ${ok ? "y" : "n"}" title="You">${ok ? "✓" : "✗"}</span><span class="mark ${mok ? "y" : "n"} dim" title="Model: ${OUTNAME[call.pick]}">${mok ? "✓" : "✗"}</span>`; };
 function lockMd() {
-  const { c, season, n, per, picks } = S.md, ms = lgOf(c).seasons[season].matches.slice((n - 1) * per, n * per);
+  const { c, season, n, per, picks } = S.md, ms = lgOf(c).seasons[season].matches.slice(S.md.a, S.md.b);
   S.md.locked = true; Snd.lock();
   document.querySelectorAll(".mp, #mdLock").forEach((b) => { b.disabled = true; });
   let you = 0, mod = 0, i = 0; const res = ms.map((m) => m[5]), mp = ms.map((m) => modelCall(m).pick);
@@ -2201,7 +2203,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-20", items: [["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-21", items: [["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -3070,7 +3072,7 @@ function renderAbout() {
     <p>The model forecasts Home, Draw or Away for a match using only what was known before kickoff: each team's recent results and goals, an Elo-style strength rating built from past results, rest days and table position. A random forest and a Poisson goal model are blended, and the blend is trained on all five leagues together.</p>
     <h3>How we test it honestly</h3><p>Season by season, the model is trained only on earlier seasons and then predicts the next one it has never seen. Across ${sm.n.toLocaleString()} matches it gets <b>${pct(sm.pooled_acc, 1)}</b> of results right; the bookmakers' closing odds get <b>${pct(sm.market_acc, 1)}</b>. For comparison, picking at random gets about a third right, and a fan who backs the team in better form this season gets <b>${BL().form}%</b>. The gap is information (lineups, injuries, news), not effort: many extra signals were tried and thrown out because they did not help in both of the test models.</p>
     <h3>Two playing styles</h3><p><b>Max Accuracy</b> simply picks the most likely result. <b>Balanced</b> also calls draws and away wins, so its picks are spread like real results, at the cost of some accuracy. In the games, switch between them where it says "Model plays".</p>
-    <h3>What the games do with it</h3><ul><li>The title race comes from 20,000 simulations of the rest of the season per league.</li><li>The Time machine puts the model's expected-points table beside the real one.</li><li>The ball-knowledge games use player and club facts from Transfermarkt, which stop at July 2026.</li></ul>
+    <h3>What the games do with it</h3><ul><li>The title race comes from 20,000 simulations of the rest of the season per league.</li><li>The Time machine puts the model's expected-points table beside the real one.</li><li>The ball-knowledge games use player and club facts from Transfermarkt, which stop at July 2026. Moves since then are checked against Wikidata and corrected.</li></ul>
     <h3>Credits</h3><ul><li>Results and bookmaker odds: football-data.co.uk. Expected goals (Premier League): Understat.</li><li>Players, transfers and market values: the Transfermarkt dataset on Kaggle (CC0).</li><li>Club badges, league logos and star cutouts: TheSportsDB and football-data.org. They belong to their owners and appear here only to identify clubs, leagues and players. Player portraits: for each player the newest available of the Premier League's official photo (current season, Premier League players), Transfermarkt's portrait and EA SPORTS FC's FC25 portrait, then Wikimedia Commons (each under its author's free licence) and TheSportsDB, loaded from those sites when shown and refreshed weekly. The photos belong to their owners and appear only to identify players. Players without any photo show their club badge.</li><li>Built by moisback22, a student project, in pair-programming sessions with Claude Code. Not affiliated with any league, club or player, and not betting advice.</li></ul>
     <p class="fine">Source code and the full project log: github.com/mosoliman517-sudo/football-prediction-model</p></div>`;
 }

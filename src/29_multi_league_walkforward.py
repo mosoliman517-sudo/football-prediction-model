@@ -13,7 +13,9 @@ for any league from results alone; the Premier League's richer inputs (xG, squad
 so this measures what extra leagues add on equal footing.
 Run from the project root:  python3 src/29_multi_league_walkforward.py
 """
+import csv
 import glob
+import re
 import json
 
 import numpy as np
@@ -32,18 +34,23 @@ LIVE = 2026                # 2026-27, still being played: predicted for the page
 
 
 def read(path):
-    for enc in ("utf-8-sig", "latin-1"):
-        try:
-            d = pd.read_csv(path, encoding=enc, on_bad_lines="skip")
+    for enc in ("utf-8-sig", "latin-1"):                  # some football-data files have rows with more fields than the header (extra odds columns on the end);
+        try:                                              # pandas' on_bad_lines="skip" threw those matches away (up to half a season), so read the rows by hand and keep the header's columns
+            with open(path, newline="", encoding=enc) as fh:
+                rows = [r for r in csv.reader(fh) if r]
             break
         except UnicodeDecodeError:
             continue
+    head = rows[0]
+    d = pd.DataFrame([(r + [""] * len(head))[:len(head)] for r in rows[1:]], columns=head).replace("", np.nan)
     d = d.dropna(subset=["HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR"])
     for c in COLS:
         if c not in d.columns:
             d[c] = np.nan
     d = d[COLS].copy()
     d["Date"] = pd.to_datetime(d["Date"], dayfirst=True, format="mixed")
+    code = re.search(r"_(\d{2})(\d{2})\.csv$", path)                    # the season is the one in the file name (0506 = 2005-06), not a guess from the date:
+    d["FileSeason"] = (2000 + int(code.group(1)) if int(code.group(1)) < 90 else 1900 + int(code.group(1))) if code else np.nan   # leagues that start in late July (or finish a season in August after a break) would otherwise be filed under the wrong year
     return d
 
 
@@ -55,7 +62,7 @@ def load():
         feat = core_features.build(d)
         d = pd.concat([d, feat], axis=1)
         d["League"] = lg
-        d["Season"] = np.where(d["Date"].dt.month >= 8, d["Date"].dt.year, d["Date"].dt.year - 1)
+        d["Season"] = d["FileSeason"].fillna(pd.Series(np.where(d["Date"].dt.month >= 8, d["Date"].dt.year, d["Date"].dt.year - 1), index=d.index)).astype(int)
         frames.append(d)
         print(f"  {LEAGUES[lg]:<15} {len(d):>5} matches, seasons {d['Season'].min()}-{d['Season'].max()}", flush=True)
     return pd.concat(frames, ignore_index=True)
@@ -94,7 +101,7 @@ def main():
     print("Loading and building features:")
     d = load()
     y = d["FTR"].map(CODE).to_numpy()
-    feats = [c for c in d.columns if c not in COLS and c not in ("League", "Season")]
+    feats = [c for c in d.columns if c not in COLS and c not in ("League", "Season", "FileSeason")]
     X = d[feats].copy()
     for lg in LEAGUES:
         X[f"lg_{lg}"] = (d["League"] == lg).astype(float)

@@ -130,6 +130,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **Beta tag.** The header now shows a "Beta v0.9.0" pill next to the site name (tapping it opens What's new). The site is still a beta; bump the number in the `vtag` button in `site/arena_template.html` when something notable ships.
 
+**Starting XI grew from 72 to 953 matches.** `src/49_build_xi.py` now covers every cup and European final (72), every Champions League quarter-final, semi-final and final leg plus Europa League semi-final legs (200 knockouts in all), every league meeting of 18 famous derbies (437: El Clásico, Madrid, Manchester, North London, London, Merseyside, North West, Der Klassiker, Revierderby, Milan, Derby d'Italia, Rome, Le Classique, Olympico, Seville, Basque, Tyne-Wear), and 244 league matches between two clubs that were both in the top three at the time. The start screen has a Match type switch (Surprise me, Finals, Champions League knockouts, Derbies, Big games) and the header names the match, date and score. Elite now means 2 minutes instead of 3, because Hard and Elite both already show positions only. **Gap, not hidden:** the lineup file starts in July 2013, so the 2012-13 final and every earlier final (Istanbul 2005, Barcelona 2011 and so on) are not in the game; there is no structured free source for them and I did not type any in by hand.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

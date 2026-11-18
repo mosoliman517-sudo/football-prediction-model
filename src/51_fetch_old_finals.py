@@ -1,5 +1,5 @@
 """
-Fetches the starting elevens of the European Cup / Champions League finals from 1956 to 2013 from Wikipedia (the lineup tables on each final's page, which cite
+Fetches the starting elevens of the European Cup / Champions League finals from 2000 to 2013 from Wikipedia (the lineup tables on each final's page, which cite
 UEFA's own match sheets; Wikipedia text is CC BY-SA), because the Transfermarkt lineup files only start in July 2013. Output: 02_processed_data/xi_old.json, same shape as
 xi.json (player id is null because these players are not matched to Transfermarkt).
 A final is kept ONLY if both teams parse to exactly eleven starters with positions we recognise; everything else is skipped and printed, never filled in by hand.
@@ -95,7 +95,7 @@ def parse_at(t, i):
 
 def main():
     out, skipped = [], []
-    for y in range(1956, 2014):
+    for y in range(2000, 2014):                          # the owner wants nothing older than 2000
         title = f"{y}_European_Cup_final" if y < 1993 else f"{y}_UEFA_Champions_League_final"
         t = wiki(title)
         r = parse(t) if t else None

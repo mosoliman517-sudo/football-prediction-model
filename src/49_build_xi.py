@@ -1,8 +1,8 @@
 """
 Builds the data for the "Starting XI" game: the starting eleven (name, position, shirt number, captain) of both teams in
   final       every Champions League, Europa League, FA Cup, Copa del Rey, DFB-Pokal and Coppa Italia final
-  knockout    every Champions League quarter-final, semi-final and final leg, and every Europa League semi-final leg
-  derby       every league meeting of famous derbies (El Clasico, Manchester derby, North London derby, Der Klassiker ...)
+  knockout    every Champions League semi-final and final leg, and quarter-final legs from the 2014-15 season on, and every Europa League semi-final leg
+  derby       every league meeting of the main derbies (El Clasico, Der Klassiker, Derby della Madonnina, Le Classique and, in the Premier League, the Manchester, North London and Merseyside derbies)
   big         every league match between two clubs that were both in the top 3 of the table at the time (not already a derby)
 from 2013-14 on, because the dataset's lineups start in July 2013 (2012-13 and older finals have no lineups, so they are not here).
 Only matches where both teams have a full eleven on record are kept. Output 02_processed_data/xi.json.
@@ -15,14 +15,10 @@ import pandas as pd
 D = "01_data_market_value/"
 CUPS = {"CL": "Champions League", "EL": "Europa League", "FAC": "FA Cup", "CDR": "Copa del Rey", "DFB": "DFB-Pokal", "CIT": "Coppa Italia"}
 LEAGUE = {"GB1": "Premier League", "L1": "Bundesliga", "ES1": "La Liga", "IT1": "Serie A", "FR1": "Ligue 1"}
-DERBIES = [  # (name, club A, club B) by Transfermarkt club names
-    ("El Clásico", "Real Madrid", "FC Barcelona"), ("Madrid derby", "Real Madrid", "Atlético de Madrid"), ("Manchester derby", "Manchester United", "Manchester City"),
-    ("North London derby", "Arsenal FC", "Tottenham Hotspur"), ("Merseyside derby", "Liverpool FC", "Everton FC"), ("North West derby", "Manchester United", "Liverpool FC"),
-    ("London derby", "Chelsea FC", "Arsenal FC"), ("London derby", "Chelsea FC", "Tottenham Hotspur"), ("Der Klassiker", "Bayern Munich", "Borussia Dortmund"),
-    ("Revierderby", "Borussia Dortmund", "FC Schalke 04"), ("Derby della Madonnina", "Inter Milan", "AC Milan"), ("Derby d'Italia", "Inter Milan", "Juventus FC"),
-    ("Derby della Capitale", "Associazione Sportiva Roma", "Società Sportiva Lazio S.p.A."), ("Le Classique", "Paris Saint-Germain", "Olympique Marseille"),
-    ("Olympico", "Olympique Lyon", "Olympique Marseille"), ("Seville derby", "Sevilla FC", "Real Betis Balompié"), ("Basque derby", "Athletic Bilbao", "Real Sociedad"),
-    ("Tyne-Wear derby", "Newcastle United", "Sunderland AFC"),
+DERBIES = [  # (name, club A, club B) by Transfermarkt club names: the owner's choice, one per league and three for the Premier League
+    ("El Clásico", "Real Madrid", "FC Barcelona"), ("Der Klassiker", "Bayern Munich", "Borussia Dortmund"), ("Derby della Madonnina", "Inter Milan", "AC Milan"),
+    ("Le Classique", "Paris Saint-Germain", "Olympique Marseille"), ("Manchester derby", "Manchester United", "Manchester City"),
+    ("North London derby", "Arsenal FC", "Tottenham Hotspur"), ("Merseyside derby", "Liverpool FC", "Everton FC"),
 ]
 
 
@@ -41,7 +37,7 @@ def main():
     rnd = g["round"].astype(str)
     for r in g[g["competition_id"].isin(CUPS) & (rnd.str.lower() == "final")].itertuples():
         pick[r.game_id] = ("final", f"{CUPS[r.competition_id]} final")
-    for r in g[(g["competition_id"] == "CL") & rnd.str.contains(r"Quarter|Semi", case=False)].itertuples():
+    for r in g[(g["competition_id"] == "CL") & ((rnd.str.contains("Semi", case=False)) | (rnd.str.contains("Quarter", case=False) & (g["season"] >= 2014)))].itertuples():
         pick.setdefault(r.game_id, ("knockout", f"Champions League {str(r.round).replace('1st leg', '').replace('2nd leg', '').replace('1st Leg', '').replace('2nd Leg', '').strip().lower()}, {'1st' if '1st' in str(r.round).lower() else '2nd' if '2nd' in str(r.round).lower() else 'one'} leg".replace(", one leg", "")))
     for r in g[(g["competition_id"] == "EL") & rnd.str.contains("Semi", case=False)].itertuples():
         pick.setdefault(r.game_id, ("knockout", f"Europa League semi-final, {'1st' if '1st' in str(r.round).lower() else '2nd' if '2nd' in str(r.round).lower() else 'one'} leg".replace(", one leg", "")))

@@ -1,4 +1,6 @@
 """
+Builds the data for the "Starting XI" game (selection rule: src/big_matches.py; the Wikipedia finals 2000-2013 come from src/51)
+Old description follows.
 Builds the data for the "Starting XI" game: the starting eleven (name, position, shirt number, captain) of both teams in
   final       every Champions League, Europa League, FA Cup, Copa del Rey, DFB-Pokal and Coppa Italia final
   knockout    every Champions League semi-final and final leg, and quarter-final legs from the 2014-15 season on, and every Europa League semi-final leg
@@ -9,6 +11,7 @@ Only matches where both teams have a full eleven on record are kept. Output 02_p
 Needs 01_data_market_value/new/game_lineups.csv (see the README). Run from the project root:  python3 src/49_build_xi.py
 """
 import json
+import sys
 
 import pandas as pd
 
@@ -23,6 +26,7 @@ DERBIES = [  # (name, club A, club B) by Transfermarkt club names: the owner's c
 
 
 def main():
+    sys.path.insert(0, "src")
     g = pd.read_csv(D + "games.csv")
     g = g[g["season"] >= 2013].copy()
     clubs = pd.read_csv(D + "clubs.csv")
@@ -33,24 +37,12 @@ def main():
     full = sizes[sizes == 11].reset_index()["game_id"].value_counts()
     ok = set(full[full == 2].index)
 
-    pick = {}   # game_id -> (kind, title)
-    rnd = g["round"].astype(str)
-    for r in g[g["competition_id"].isin(CUPS) & (rnd.str.lower() == "final")].itertuples():
-        pick[r.game_id] = ("final", f"{CUPS[r.competition_id]} final")
-    for r in g[(g["competition_id"] == "CL") & ((rnd.str.contains("Semi", case=False)) | (rnd.str.contains("Quarter", case=False) & (g["season"] >= 2014)))].itertuples():
-        pick.setdefault(r.game_id, ("knockout", f"Champions League {str(r.round).replace('1st leg', '').replace('2nd leg', '').replace('1st Leg', '').replace('2nd Leg', '').strip().lower()}, {'1st' if '1st' in str(r.round).lower() else '2nd' if '2nd' in str(r.round).lower() else 'one'} leg".replace(", one leg", "")))
-    for r in g[(g["competition_id"] == "EL") & rnd.str.contains("Semi", case=False)].itertuples():
-        pick.setdefault(r.game_id, ("knockout", f"Europa League semi-final, {'1st' if '1st' in str(r.round).lower() else '2nd' if '2nd' in str(r.round).lower() else 'one'} leg".replace(", one leg", "")))
-    lg = g[g["competition_id"].isin(LEAGUE)]
-    for name, a, b in DERBIES:
-        if a not in cid or b not in cid:
-            print("  derby club not found:", a, b)
-            continue
-        m = lg[((lg["home_club_id"] == cid[a]) & (lg["away_club_id"] == cid[b])) | ((lg["home_club_id"] == cid[b]) & (lg["away_club_id"] == cid[a]))]
-        for r in m.itertuples():
-            pick.setdefault(r.game_id, ("derby", name))
-    for r in lg[(lg["home_club_position"] <= 3) & (lg["away_club_position"] <= 3)].itertuples():
-        pick.setdefault(r.game_id, ("big", f"Top-three clash, {LEAGUE[r.competition_id]}"))
+    from big_matches import selection
+    pick, _ = selection(pd.read_csv(D + "games.csv"), 2013)
+    rnd0 = pd.read_csv(D + "games.csv").set_index("game_id")["round"].astype(str)
+    for gid, (kind, title) in list(pick.items()):               # add the leg to semi-finals and quarter-finals
+        if kind == "knockout":
+            r_ = rnd0.get(gid, "").lower(); pick[gid] = (kind, title + (", 1st leg" if "1st" in r_ else ", 2nd leg" if "2nd" in r_ else ""))
 
     out = []
     gi = g.set_index("game_id")

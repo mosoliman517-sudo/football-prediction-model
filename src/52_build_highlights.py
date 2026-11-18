@@ -1,5 +1,5 @@
 """
-Builds the data for the "Iconic matches" game: for famous matches, the real goals (minute, scorer, assister, penalty or not) and red cards, from the Transfermarkt dataset's match events
+Builds the data for the "Who did it" game (formerly Iconic matches; selection rule in src/big_matches.py): for famous matches, the real goals (minute, scorer, assister, penalty or not) and red cards, from the Transfermarkt dataset's match events
 (01_data_market_value/new/game_events.csv; see the README for where it comes from), into 02_processed_data/highlights.json.
 Matches: every match in xi.json (finals, Champions League and Europa League semi-finals and later quarter-finals, the main derbies, top-three clashes), plus Champions League and Europa League
 quarter-finals, semi-finals and finals from 2010-11 on, cup finals from 2010-11 on, and World Cup and European Championship semi-finals and finals.
@@ -7,6 +7,7 @@ Minutes are the dataset's whole minutes (a goal in added time is 90+3 on TV but 
 flagged in the source, so a match whose goal list does not match its score is skipped rather than patched. Run from the project root:  python3 src/52_build_highlights.py
 """
 import json
+import sys
 
 import pandas as pd
 
@@ -18,19 +19,13 @@ COMP = {"CL": "Champions League", "EL": "Europa League", "FAC": "FA Cup", "CDR":
 def main():
     g = pd.read_csv(D + "games.csv")
     pl = pd.read_csv(D + "players.csv", usecols=["player_id", "name"]).set_index("player_id")["name"].to_dict()
-    xi = json.load(open("02_processed_data/xi.json", encoding="utf-8"))
-    key = {(r.date, r.home_club_name, r.away_club_name): r.game_id for r in g.itertuples()}
+    sys.path.insert(0, "src")
+    from big_matches import selection
     chosen = {}
-    for m in xi:
-        gid = key.get((m["date"], m["teams"][0]["club"], m["teams"][1]["club"]))
-        if gid:
-            chosen[gid] = m["t"]
+    sel, _ = selection(g, 2010)
+    for gid, (kind, title) in sel.items():
+        chosen[gid] = title
     rnd = g["round"].astype(str)
-    late = g[g["season"] >= 2010]
-    for r in late[late["competition_id"].isin(["CL", "EL"]) & rnd.loc[late.index].str.contains("Quarter|Semi|Final", case=False) & ~rnd.loc[late.index].str.contains("Group|Qualif", case=False)].itertuples():
-        chosen.setdefault(r.game_id, f"{COMP[r.competition_id]} {str(r.round).replace('1st leg', '').replace('2nd leg', '').replace('1st Leg', '').replace('2nd Leg', '').strip().lower().replace('quarter-finals', 'quarter-final').replace('semi-finals', 'semi-final')}")
-    for r in late[late["competition_id"].isin(["FAC", "CDR", "DFB", "CIT"]) & (rnd.loc[late.index].str.lower() == "final")].itertuples():
-        chosen.setdefault(r.game_id, f"{COMP[r.competition_id]} final")
     nat = g[g["competition_id"].isin(["EURO", "FIWC"]) & rnd.str.contains(r"^(?:Final|Semi)", case=False)]
     for r in nat.itertuples():
         chosen.setdefault(r.game_id, f"{'World Cup' if r.competition_id == 'FIWC' else 'European Championship'} {'final' if str(r.round).lower() == 'final' else 'semi-final'} {r.date[:4]}")
@@ -58,7 +53,7 @@ def main():
             side = "h" if x.club_id == r.home_club_id else "a"
             if x.type == "Goals":
                 d = str(x.description or "")
-                evs.append({"m": int(x.minute), "k": "goal", "s": side, "p": nm, "a": pl.get(int(x.player_assist_id)) if pd.notna(x.player_assist_id) else None, "pen": "Penalty" in d, "how": "header" if "Header" in d else "free kick" if "free kick" in d.lower() else "left foot" if "Left-footed" in d else "right foot" if "Right-footed" in d else None})
+                evs.append({"m": int(x.minute), "k": "goal", "s": side, "p": nm, "a": (pl.get(int(x.player_assist_id)) if pd.notna(x.player_assist_id) and "Penalty" not in d else None), "pen": "Penalty" in d, "how": "header" if "Header" in d else "free kick" if "free kick" in d.lower() else "left foot" if "Left-footed" in d else "right foot" if "Right-footed" in d else None})
             else:
                 d = str(x.description or "")
                 if d.startswith("Red") or d.startswith("Second yellow"):

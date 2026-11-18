@@ -69,7 +69,7 @@ def main():
             if not nm:
                 gl = None
                 break
-            gl.append([int(x.minute), 0 if x.club_id == r.home_club_id else 1, nm, pl.get(int(x.player_assist_id)) if pd.notna(x.player_assist_id) else None, 1 if "Penalty" in str(x.description) else 0])
+            gl.append([int(x.minute), 0 if x.club_id == r.home_club_id else 1, nm, (pl.get(int(x.player_assist_id)) if pd.notna(x.player_assist_id) and "Penalty" not in str(x.description) else None), 1 if "Penalty" in str(x.description) else 0])
         if gl is not None and gl:
             out.append([lg, r.date, h, a, gl])
     json.dump(out, open("02_processed_data/real_goals.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))

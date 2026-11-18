@@ -23,7 +23,7 @@ jobs:
           B=https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data
           mkdir -p 01_data_market_value/new
           for f in clubs games players transfers; do curl -sf -o $f.csv.gz $B/$f.csv.gz && gunzip -f $f.csv.gz && mv $f.csv 01_data_market_value/$f.csv; done
-          for f in appearances game_lineups; do curl -sf -o $f.csv.gz $B/$f.csv.gz && gunzip -f $f.csv.gz && mv $f.csv 01_data_market_value/new/$f.csv; done
+          for f in appearances game_lineups game_events; do curl -sf -o $f.csv.gz $B/$f.csv.gz && gunzip -f $f.csv.gz && mv $f.csv 01_data_market_value/new/$f.csv; done
       - name: Rebuild the facts
         run: |
           python3 src/34_build_quiz_data.py
@@ -34,9 +34,10 @@ jobs:
           python3 src/46_audit_quiz_data.py
           python3 src/49_build_xi.py
           python3 src/50_build_bracket.py
+          python3 src/52_build_highlights.py
       - name: Commit the JSON results if they changed
         run: |
           git config user.name "ballknowledge bot"
           git config user.email "bot@users.noreply.github.com"
-          git add 02_processed_data/quiz_data.json 02_processed_data/match_facts.json 02_processed_data/transfer_fixes.json 02_processed_data/xi.json 02_processed_data/bracket.json
+          git add 02_processed_data/quiz_data.json 02_processed_data/match_facts.json 02_processed_data/transfer_fixes.json 02_processed_data/xi.json 02_processed_data/bracket.json 02_processed_data/highlights.json
           git diff --cached --quiet || (git commit -m "Weekly player facts refresh" && git push)

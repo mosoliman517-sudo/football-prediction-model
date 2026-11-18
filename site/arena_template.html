@@ -689,6 +689,10 @@ body[data-net="host"] .buzzers .buzz.p2, body[data-net="guest"] .buzzers .buzz.p
 .rmrow { display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 14px; background: var(--surface2); } .rmst { display: inline-block; padding: 2px 9px; border-radius: 99px; font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--line); color: var(--muted); } .rmst.done { color: #4ade80; border-color: #4ade80; } .rmst.next { color: var(--accent); border-color: var(--accent); }
 .idearow { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 14px; background: var(--surface2); } .vote { display: grid; place-items: center; padding: 6px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; } .vote b { font-size: 18px; } .vote small { color: var(--muted); font-size: 10px; } .vote.on { border-color: var(--accent); color: var(--accent); }
 #doors { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.icscore { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; margin: 8px 0 12px; } .icscore .num { font: 800 32px var(--display); } .icscore b:first-child { text-align: right; } .icscore b:last-child { text-align: left; }
+.iclist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; } .icrow { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface2); border: 1px solid transparent; font-size: 14px; } .icrow.cur { border-color: var(--accent); } .icrow .num { color: var(--muted); font-weight: 700; }
+.redcard { display: inline-block; width: 10px; height: 14px; border-radius: 2px; background: #e5334b; vertical-align: -2px; }
+.lgstreak { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; } .lgstreak .fire { color: #ff8a3d; } .lgstreak b { font-size: 14px; }
 </style>
 
 <!--sprite--><svg width='0' height='0' style='position:absolute' aria-hidden='true' focusable='false'><defs><symbol id='i-trophy' viewBox='0 0 24 24'><path d='M8 4h8v5a4 4 0 0 1-8 0V4z M8 6H5v1a3 3 0 0 0 3 3 M16 6h3v1a3 3 0 0 1-3 3 M12 13v4 M8.5 20h7 M10 17h4'/></symbol><symbol id='i-album' viewBox='0 0 24 24'><path d='M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z M5 17a3 3 0 0 1 3-3h11'/></symbol><symbol id='i-hourglass' viewBox='0 0 24 24'><path d='M6 3h12 M6 21h12 M7 3c0 5 5 6 5 9s-5 4-5 9 M17 3c0 5-5 6-5 9s5 4 5 9'/></symbol><symbol id='i-flame' viewBox='0 0 24 24'><path d='M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4 0 2 1 3 2 3 0-3-1-5 1-9z'/></symbol><symbol id='i-chart' viewBox='0 0 24 24'><path d='M5 20v-6 M12 20V6 M19 20v-10 M3 20h18'/></symbol><symbol id='i-bulb' viewBox='0 0 24 24'><path d='M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z'/></symbol><symbol id='i-star' viewBox='0 0 24 24'><path d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/></symbol><symbol id='i-games' viewBox='0 0 24 24'><path d='M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5 2l-1-1H9l-1 1a3 3 0 0 1-5-2v-1a4 4 0 0 1 4-4z M8 11v3 M6.5 12.5h3 M16 12h.01 M18 13.5h.01'/></symbol><symbol id='i-flag' viewBox='0 0 24 24'><path d='M5 21V4 M5 4h12l-2 4 2 4H5'/></symbol><symbol id='i-live' viewBox='0 0 24 24'><path d='M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M7.5 7.5a6 6 0 0 0 0 9 M16.5 7.5a6 6 0 0 1 0 9 M4.5 4.5a10 10 0 0 0 0 15 M19.5 4.5a10 10 0 0 1 0 15'/></symbol><symbol id='i-crown' viewBox='0 0 24 24'><path d='M3 8l4 4 5-7 5 7 4-4-2 11H5z'/></symbol><symbol id='i-chip' viewBox='0 0 24 24'><path d='M7 7h10v10H7z M10 3v4 M14 3v4 M10 17v4 M14 17v4 M3 10h4 M3 14h4 M17 10h4 M17 14h4'/></symbol><symbol id='i-brain' viewBox='0 0 24 24'><path d='M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3 M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3 M12 4v16'/></symbol><symbol id='i-ball' viewBox='0 0 24 24'><path d='M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0 M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4z M12 3v5 M15.5 10.5L20 9 M14.2 14.5L17 18 M9.8 14.5L7 18 M8.5 10.5L4 9'/></symbol><symbol id='i-gloves' viewBox='0 0 24 24'><path d='M7 21v-8l-2-3a1.5 1.5 0 0 1 2.5-1.5L9 10V5a1.5 1.5 0 0 1 3 0v4 M12 9V4a1.5 1.5 0 0 1 3 0v5 M15 9V6a1.5 1.5 0 0 1 3 0v8c0 4-2 7-6 7H7'/></symbol><symbol id='i-handshake' viewBox='0 0 24 24'><path d='M3 12l4-4 4 2 3-2 4 3 3-1 M3 12l5 5 2-1 M8 17l2 2 M12 15l2 3 M21 12l-6 6-2-1'/></symbol><symbol id='i-medal' viewBox='0 0 24 24'><path d='M8 3h8l-2 6h-4z M12 9a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/></symbol><symbol id='i-search' viewBox='0 0 24 24'><path d='M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-4-4'/></symbol><symbol id='i-gem' viewBox='0 0 24 24'><path d='M6 4h12l4 5-10 12L2 9z M2 9h20 M9 4l-2 5 5 12 5-12-2-5'/></symbol><symbol id='i-seat' viewBox='0 0 24 24'><path d='M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5 M5 11h14v4H5z M7 15v5 M17 15v5'/></symbol><symbol id='i-stadium' viewBox='0 0 24 24'><path d='M3 14c0-3 4-5 9-5s9 2 9 5-4 5-9 5-9-2-9-5z M3 14v-3 M21 14v-3 M8 9.5V6 M16 9.5V6'/></symbol><symbol id='i-calendar' viewBox='0 0 24 24'><path d='M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4'/></symbol><symbol id='i-users' viewBox='0 0 24 24'><path d='M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M3 20c0-3 3-5 6-5s6 2 6 5 M17 11a2.5 2.5 0 1 0 0-5 M18 15c2 0 4 1.5 4 4'/></symbol><symbol id='i-fore' viewBox='0 0 24 24'><path d='M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M8 9c1-1.5 2.5-2 4-2 M7 20h10'/></symbol><symbol id='i-user' viewBox='0 0 24 24'><path d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 4-6 8-6s8 2 8 6'/></symbol><symbol id='i-palette' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 0 0 3-3c0-6-4-11-8-11z M8 10h.01 M12 7h.01 M16 10h.01'/></symbol><symbol id='i-compass' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M15 9l-2 6-4 .5 2-6z'/></symbol><symbol id='i-dice' viewBox='0 0 24 24'><path d='M5 5h14v14H5z M9 9h.01 M15 9h.01 M12 12h.01 M9 15h.01 M15 15h.01'/></symbol><symbol id='i-net' viewBox='0 0 24 24'><path d='M3 18V7h18v11 M3 7l3 11 M21 7l-3 11 M9 7v11 M15 7v11'/></symbol><symbol id='i-target' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 12h.01'/></symbol><symbol id='i-bolt' viewBox='0 0 24 24'><path d='M13 2L4 14h7l-1 8 9-12h-7z'/></symbol><symbol id='i-moon' viewBox='0 0 24 24'><path d='M20 14a8 8 0 1 1-10-10 6 6 0 0 0 10 10z'/></symbol><symbol id='i-sun' viewBox='0 0 24 24'><path d='M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5'/></symbol><symbol id='i-monitor' viewBox='0 0 24 24'><path d='M3 5h18v11H3z M8 20h8 M12 16v4'/></symbol><symbol id='i-trend' viewBox='0 0 24 24'><path d='M3 17l6-6 4 4 8-8 M15 7h6v6'/></symbol><symbol id='i-check' viewBox='0 0 24 24'><path d='M5 12l4 4 10-10'/></symbol><symbol id='i-cross' viewBox='0 0 24 24'><path d='M6 6l12 12 M18 6L6 18'/></symbol><symbol id='i-minus' viewBox='0 0 24 24'><path d='M6 12h12'/></symbol><symbol id='i-swords' viewBox='0 0 24 24'><path d='M4 4l10 10 M20 4L10 14 M4 20l4-4 M20 20l-4-4 M3 4h4v4 M21 4h-4v4'/></symbol><symbol id='i-timer' viewBox='0 0 24 24'><path d='M12 8v5l3 2 M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M10 2h4'/></symbol><symbol id='i-shield' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z'/></symbol><symbol id='i-gear' viewBox='0 0 24 24'><path d='M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1'/></symbol><symbol id='i-coach' viewBox='0 0 24 24'><path d='M4 5h16v10H4z M9 20l3-5 3 5 M8 9h8'/></symbol><symbol id='i-suitcase' viewBox='0 0 24 24'><path d='M4 8h16v12H4z M9 8V5h6v3'/></symbol><symbol id='i-globe' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18'/></symbol><symbol id='i-sprout' viewBox='0 0 24 24'><path d='M12 20v-8 M12 12c0-4-3-6-7-6 0 4 3 6 7 6z M12 14c0-3 2-5 6-5 0 3-2 5-6 5z'/></symbol><symbol id='i-ruler' viewBox='0 0 24 24'><path d='M3 16L16 3l5 5L8 21z M8 10l2 2 M11 7l2 2 M5 13l2 2'/></symbol><symbol id='i-boot' viewBox='0 0 24 24'><path d='M6 3h5v8l6 2c2 .7 3 2 3 4v2H5z M8 17h2 M12 17h2'/></symbol><symbol id='i-euro' viewBox='0 0 24 24'><path d='M16 7a6 6 0 1 0 0 10 M5 10h8 M5 14h8'/></symbol><symbol id='i-coin' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7v10 M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4'/></symbol><symbol id='i-cap' viewBox='0 0 24 24'><path d='M3 15c0-5 4-8 9-8 3 0 6 1 8 4v2H3z M3 15h18 M12 7c1.5 0 2-2 4-2'/></symbol><symbol id='i-rank' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M12 8l1.6 3.2 3.4.5-2.5 2.4.6 3.4L12 15.8 8.9 17.5l.6-3.4L7 11.7l3.4-.5z'/></symbol></defs></svg>
@@ -697,20 +701,8 @@ body[data-net="host"] .buzzers .buzz.p2, body[data-net="guest"] .buzzers .buzz.p
 /* loading screens: a star-player poster (common), a legend poster (uncommon), or a short animated recreation of a famous goal (rare, legendary).
    The page records which you have seen; the art itself is drawn by paintSplashArt() once the data is parsed. */
 const SPLASH_TIPS = ["Buzz early in a quiz: points fall from 1,000 toward 100 as the clues arrive.", "Hard counts 1.4x and Elite ball knowledge counts 2x on your solo scores.", "In two-player mode, player 1 buzzes with A and player 2 with L.", "Public Ranked lobbies change your Elo; private code rooms never do.", "Press Enter to submit: near matches and typos are accepted.", "Elite asks only about the obscure players and the smaller clubs.", "Club roulette: a wrong name, a repeat or a timeout loses the round.", "Tic-tac-toe has categories for managers, league titles and cup winners.", "Every badge in Badge blur is checked by eye. Names are not hidden, so look at the shapes.", "Your progress saves to your account automatically after every round.", "There are four loading screens you will not see every time. Collect them all.", "The model has never seen the matches you predict. Can you beat it?", "Where did they finish? gets harder fast on Elite: you get one place of margin.", "Invite a friend with a link: create a room and copy it.", "Friends see your Elo and your favourite player and team.", "Come back every day: streaks fill the calendar on your profile.", "Easy only asks about superstars and the biggest clubs.", "Market value: write your number and the closest guess wins the round.", "Spot the upset: the model's least likely result is hiding in five real matches.", "Daily 5 is the same for everyone today. Compare with a friend.", "A wrong buzz costs 150 points, so be sure.", "Unlock achievements for the odd things: night owl, hat-trick, speed demon.", "You can change your profile picture to any star player or club badge.", "Data about players stops in July 2026, so some recent transfers are missing."];
-const SPLASH_MOMENTS = [
-  { id: "aguero", rar: "Rare", name: "Agüero, 93:20", who: "Sergio Aguero", big: "93:20", sub: "13 May 2012 · Manchester City 3–2 QPR", line: "A last-gasp goal wins City the Premier League.", ball: "M120 150 L250 130 L320 142 L398 150", run: "M200 180 Q280 150 330 138", defs: [[300, 110], [330, 172]], keeper: [392, 148] },
-  { id: "roberto", rar: "Rare", name: "Sergi Roberto, 90+5", who: "Sergi Roberto", big: "90+5'", sub: "8 March 2017 · Barcelona 6–1 PSG", line: "The comeback is completed in stoppage time.", ball: "M340 30 Q372 90 338 142 L398 138", run: "M240 190 Q300 170 336 144", defs: [[300, 130], [325, 176]], keeper: [392, 140] },
-  { id: "iniesta", rar: "Rare", name: "Iniesta at Stamford Bridge", who: "Andres Iniesta", big: "90+3'", sub: "6 May 2009 · Chelsea 1–1 Barcelona", line: "A late strike sends Barcelona to the final.", ball: "M300 200 Q350 130 398 120", run: "M250 215 L298 202", defs: [[340, 150], [320, 186]], keeper: [392, 128] },
-  { id: "messi", rar: "Legendary", name: "Messi v Boateng", who: "Lionel Messi", big: "80'", sub: "6 May 2015 · Barcelona 3–0 Bayern Munich", line: "Boateng goes down, and Messi chips Neuer.", ball: "M160 150 L260 135 L318 145 Q356 92 398 138", run: "M130 160 L250 128 L318 142", defs: [[300, 140]], fall: 0, keeper: [390, 142] },
-  { id: "maradona", rar: "Legendary", name: "Maradona, 1986", who: "Diego Maradona", big: "55'", sub: "22 June 1986 · Argentina 2–1 England", line: "The Goal of the Century: a run from his own half.", ball: "M40 150 L110 128 L175 165 L240 130 L300 158 L398 142", run: "M40 150 L110 128 L175 165 L240 130 L300 158 L350 142", defs: [[100, 150], [165, 140], [235, 150], [290, 135], [330, 162]], keeper: [392, 142] },
-  { id: "solskjaer", rar: "Rare", name: "Solskjaer at Camp Nou", who: "Ole Gunnar Solskjaer", big: "90+3'", sub: "26 May 1999 · Manchester United 2–1 Bayern Munich", line: "Two goals in stoppage time win the Champions League.", ball: "M392 22 Q352 70 332 112 L342 126 L398 138", run: "M290 160 Q320 140 340 126", defs: [[310, 128], [350, 150]], keeper: [392, 140] },
-  { id: "rooney", rar: "Rare", name: "Rooney's bicycle kick", who: "Wayne Rooney", big: "78'", sub: "12 February 2011 · Manchester United 2–1 Manchester City", line: "An overhead kick wins the Manchester derby.", ball: "M330 28 Q356 78 340 110 L398 146", run: "M285 165 Q325 150 340 112", defs: [[318, 135], [352, 152]], keeper: [392, 146] },
-  { id: "bergkamp", rar: "Rare", name: "Bergkamp's turn", who: "Dennis Bergkamp", big: "90'", sub: "4 July 1998 · Netherlands 2–1 Argentina", line: "One touch to control, one turn, and a place in the semi-final.", ball: "M110 80 Q240 50 332 112 L346 130 L398 142", run: "M270 175 L332 116 L348 132", defs: [[320, 140], [345, 112]], keeper: [392, 142] },
-  { id: "zidane", rar: "Legendary", name: "Zidane's volley", who: "Zinedine Zidane", big: "45'", sub: "15 May 2002 · Real Madrid 2–1 Bayer Leverkusen", line: "A left-foot volley in the Champions League final.", ball: "M60 60 Q210 8 318 90 L398 128", run: "M270 150 Q305 125 318 92", defs: [[300, 112], [330, 150]], keeper: [392, 130] },
-  { id: "vanbasten", rar: "Legendary", name: "Van Basten at Euro 88", who: "Marco van Basten", big: "54'", sub: "25 June 1988 · Netherlands 2–0 Soviet Union", line: "A volley from a tight angle in the final.", ball: "M200 205 Q330 90 372 112 L398 128", run: "M320 190 Q360 150 372 114", defs: [[352, 140]], keeper: [388, 128] },
-  { id: "mbappe", rar: "Legendary", name: "Mbappé's hat-trick", who: "Kylian Mbappe", big: "80' 81' 118'", sub: "18 December 2022 · Argentina 3–3 France (Argentina won 4–2 on penalties)", line: "Three goals in a World Cup final.", ball: "M150 150 L260 138 L330 130 L398 140", run: "M120 165 L250 140 L330 132", defs: [[290, 150], [322, 118]], keeper: [392, 140] },
-  { id: "cr7", rar: "Legendary", name: "Ronaldo's bicycle kick", who: "Cristiano Ronaldo", big: "64'", sub: "3 April 2018 · Juventus 0–3 Real Madrid", line: "An overhead kick that stunned Turin.", ball: "M335 25 Q350 75 342 105 L398 150", run: "M290 160 Q330 150 342 108", defs: [[320, 130], [355, 150]], keeper: [392, 148] },
-];
+/* The twelve drawn goal recreations were removed on the owner's report that they did not match the real goals: the ball paths were illustrations, not tracking data. */
+const SPLASH_MOMENTS = [];
 const SPLASH_LEGENDS = ["Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Andres Iniesta", "Sergio Aguero", "Sergi Roberto", "Zinedine Zidane", "Marco van Basten", "Dennis Bergkamp", "Ole Gunnar Solskjaer", "Wayne Rooney"];
 const splashNorm = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]/g, "");
 function splashCatalog() { const hero = (DATA.hero || []).filter((x) => x.img); return [...hero.filter((h) => !SPLASH_LEGENDS.includes(h.n)).map((h) => ({ id: "p:" + splashNorm(h.n), name: h.n, rar: "Common" })), ...hero.filter((h) => SPLASH_LEGENDS.includes(h.n)).map((h) => ({ id: "l:" + splashNorm(h.n), name: h.n, rar: "Uncommon" })), ...SPLASH_MOMENTS.map((m) => ({ id: "m:" + m.id, name: m.name, rar: m.rar }))]; }
@@ -726,7 +718,8 @@ function momentSVG(m) {
 function paintSplashArt() {
   const sp = document.getElementById("splash"); if (!sp || !window.__sp) return; const s = window.__sp, hero = (DATA.hero || []).filter((x) => x.img), cat = splashCatalog();
   const stars = hero.filter((h) => !SPLASH_LEGENDS.includes(h.n)), legs = hero.filter((h) => SPLASH_LEGENDS.includes(h.n)); let kind = s.kind;
-  if (kind === "star" && !stars.length) kind = "legend"; if (kind === "legend" && !legs.length) kind = "rare";
+  if (!SPLASH_MOMENTS.length && (kind === "rare" || kind === "legendary")) kind = legs.length ? "legend" : "star";
+  if (kind === "star" && !stars.length) kind = "legend"; if (kind === "legend" && !legs.length && SPLASH_MOMENTS.length) kind = "rare";
   const art = sp.querySelector(".sp-art"); let cur;
   if (kind === "star" || kind === "legend") {
     const list = kind === "star" ? stars : legs, h = list[Math.floor(s.r2 * list.length)] || hero[0], pal = (h.n.length * 7 + h.n.charCodeAt(0)) % 6;
@@ -752,15 +745,15 @@ function paintSplashArt() {
 <div class="wrap">
   <div class="bar">
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
-    <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.2 beta, see what is new"><b>Beta</b> v0.9.2</button>
+    <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.3 beta, see what is new"><b>Beta</b> v0.9.3</button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
     <button class="pill" id="adminBtn" type="button" hidden title="Admin dashboard"><svg class=ic><use href=#i-shield></use></svg> Admin</button>
     <button class="pill" id="searchBtn" type="button" title="Search (press /)" aria-label="Search"><svg class=ic><use href=#i-search></use></svg></button>
-    <button class="pill" id="musBtn" type="button" title="Background music on or off" aria-label="Music">Music: on</button>
-    <button class="pill" id="sndBtn" type="button" title="Sound: off, soft or full" aria-label="Sound">Sound: soft</button>
+    <button class="pill" id="settingsBtn" type="button" title="Settings: sound, music, language" aria-label="Settings"><svg class=ic><use href=#i-gear></use></svg></button>
     <button class="pill" id="acctBtn" type="button">Sign in</button>
+    <span class="pill lgstreak" id="loginStreak" hidden title="Days in a row you have opened ballknowledge"></span>
     <button class="pill profilebtn" id="profileBtn" type="button" title="Your profile, rank and achievements" aria-label="Open your profile"></button>
   </div>
 
@@ -790,6 +783,7 @@ function paintSplashArt() {
   <section id="adminPage" hidden></section>
   <section id="albumPage" hidden></section>
   <section id="aboutPage" hidden></section>
+  <section id="setPage" hidden></section>
   <section id="league" hidden>
     <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
     <div class="lhead">
@@ -925,6 +919,8 @@ const Snd = (() => {
     cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
     unlock() { if (level) { init(); mStart(); } },
     get music() { return mus; }, mode(m) { mSet(m); },
+    setLevel(n) { level = n; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return level; },
+    setMusic(on) { mus = on ? 1 : 0; try { localStorage.setItem("arena-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
     toggleMusic() { mus = mus ? 0 : 1; try { localStorage.setItem("arena-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
     count(n) { run((t) => { if (n === 0) { [72, 76, 79, 84].forEach((x, i) => note(x, t + i * 0.025, 0.7, "triangle", 0.06)); noise(t, 0.35, 800, 5000, 0.03, 0.8); } else note(n === 1 ? 69 : 67, t, 0.22, "sine", 0.08); }); },
     tick() { run((t) => noise(t, 0.035, 2600, 1800, 0.035, 2)); },
@@ -942,7 +938,7 @@ const Snd = (() => {
     flip() { run((t) => noise(t, 0.2, 800, 2400, 0.05, 1.5)); },
   };
 })();
-function paintSound() { $("#sndBtn").textContent = "Sound: " + ["off", "soft", "full"][Snd.level]; const m = $("#musBtn"); if (m) m.textContent = "Music: " + (Snd.music && Snd.level ? "on" : "off"); }
+function paintSound() { if ($("#setPage") && !$("#setPage").hidden) renderSettings(); }
 setInterval(() => Snd.mode(inMatch() || (Q.s && Q.s.phase === "run") ? "game" : "lobby"), 1500);
 
 /* ---------- ambient particles ---------- */
@@ -1051,10 +1047,10 @@ function inMatch() { return !!((Net.role && Net.started) || (Q.s && Q.s.mode ===
 function leaveModal(cb) { window.__leaveCb = cb; modal(`<h2 style="font-size:24px">Leave this match?</h2><p class="fine">${Net.role && Net.ranked ? "Leaving a ranked match ends it, and your opponent may be awarded the win." : "Your match will end."}</p><div class="row" style="margin-top:14px"><button class="btn" id="lvStay" type="button">Stay</button><button class="btn ghost" id="lvLeave" type="button">Leave</button></div>`); }
 function go(slug) { if (inMatch() && location.hash.replace("#", "") !== slug) { leaveModal(() => { Q.s = null; S.ttt = S.rou = S.fin = S.num = null; Net.close(); go0(slug); }); return; } go0(slug); }
 function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
-const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette", "xi", "rapid", "bracket", "scramble"];
+const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette", "xi", "rapid", "bracket", "scramble", "iconic"];
 function route(ev) {
   const h = location.hash.slice(1);
-  stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; const ad = $("#adminPage"); if (ad) ad.hidden = true; const ab = $("#aboutPage"); if (ab) ab.hidden = true; }
+  stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; const ad = $("#adminPage"); if (ad) ad.hidden = true; const ab = $("#aboutPage"); if (ab) ab.hidden = true; const sp_ = $("#setPage"); if (sp_) sp_.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
   const jm = /^join-([A-Za-z]{4})-([a-z]+)$/.exec(h);
@@ -1064,6 +1060,7 @@ function route(ev) {
   if (h === "profile") return showProfile(ev);
   if (h === "admin") return showAdmin(ev);
   if (h === "about") return showAbout(ev);
+  if (h === "settings") return showSettings(ev);
   if (h === "album") return showAlbum(ev);
   let mode = null, rest = h;
   if (h === "games") { mode = "games"; rest = "all-leagues"; } else if (h.startsWith("games-")) { mode = "games"; rest = h.slice(6); } else if (h.startsWith("lab-")) { mode = "lab"; rest = h.slice(4); }
@@ -1506,6 +1503,7 @@ const QUIZ_GAMES = [
   { id: "value", name: "Market value", modes: "Solo higher or lower · 2 players", tag: "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.", faces: () => heroFaces(2) },
   { id: "roulette", name: "Club roulette", modes: "2 players · one device or two", tag: "A club appears. Take turns naming players who played for it. First to blank loses.", faces: () => heroFaces(2) },
   { id: "xi", name: "Starting XI", modes: "Solo · 2 to 3 minutes", tag: "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.", faces: () => heroFaces(3) },
+  { id: "iconic", name: "Iconic matches", modes: "Solo", tag: "A famous match and its highlights by minute. Name the scorers, assisters, penalty takers and red cards.", faces: () => heroFaces(3) },
   { id: "scramble", name: "Scramble", modes: "Solo streak · 2 players", tag: "A club, player or manager with the letters shuffled. Unscramble it before your rival does." },
   { id: "ttt", name: "Football tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
 ];
@@ -1573,7 +1571,7 @@ function renderPlayRoom() {
   if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
   ({ call: renderCall, daily: renderDaily, matchday: renderMatchday, upset: renderUpset, table: renderTableGame, hol: renderHol, challenge: renderChallenge,
      finish: renderFinish,
-     value: renderValue, ttt: renderTTT, roulette: renderRoulette, xi: renderXI, rapid: renderRapid, bracket: renderBracket })[S.game]();
+     value: renderValue, ttt: renderTTT, roulette: renderRoulette, xi: renderXI, iconic: renderIconic, rapid: renderRapid, bracket: renderBracket })[S.game]();
 }
 
 /* ---------- Matchday ---------- */
@@ -1746,8 +1744,6 @@ const ACH = [
   ["tttwin", "Three in a row", "Beat the computer at football tic-tac-toe"],
   ["splash_all", "Loading screen collector", "See every loading screen"],
   ["splash_10", "Channel hopper", "See ten different loading screens"],
-  ["splash_rare", "Lucky load", "See a rare or legendary loading screen"],
-  ["splash_leg", "Glitch in the matrix", "See the legendary loading screen"],
   ["first_buzz", "First buzz", "Get your first quiz answer right"],
   ["speed", "Speed demon", "Answer a quiz in the first few seconds (950 points or more)"],
   ["elite_win", "Elite mind", "Get a quiz answer right on Elite ball knowledge"],
@@ -1764,7 +1760,7 @@ const ACH = [
   ["elo1200", "Rising", "Reach 1200 Elo"],
   ["alldiff", "Every level", "Play a ballknowledge game on all four difficulty levels"],
   ["rounds100", "Century", "Play 100 games"],
-  ["squad", "The whole squad", "Play all ten ballknowledge originals"],
+  ["squad", "The whole squad", "Play all eleven ballknowledge originals"],
   ["curious", "Know thyself", "Open your profile"],
   ["pred1", "On the record", "Lock your first live prediction"],
   ["pred10", "Pundit", "Lock 10 live predictions"],
@@ -1774,15 +1770,23 @@ const ACH = [
   ["stick50", "Swapper", "Collect 50 different stickers"],
   ["stick150", "Panini pro", "Collect 150 different stickers"],
   ["wk_play", "Weekly regular", "Finish a weekly tournament"],
+  ["ic_perfect", "Highlight reel", "Name every highlight of an iconic match"],
+  ["xi_perfect", "Full eleven", "Name a complete Starting XI"],
+  ["rapid_win", "Quicker than the model", "Beat the model in Rapid fire"],
+  ["rapid_20", "Twenty in a minute", "Get 20 results right in one Rapid fire"],
+  ["bracket_win", "Bracket buster", "Beat the Elo model on a Champions League bracket"],
+  ["scramble10", "Word wizard", "Solve 10 Scramble rounds"],
+  ["login7", "Regular visitor", "Open ballknowledge seven days in a row"],
+  ["login30", "Part of the furniture", "Open ballknowledge thirty days in a row"],
   ["wk_win", "Weekly champion", "Finish first in a weekly tournament"],
 ];
 /* Badge difficulty: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary. Every unlocked achievement can be equipped as a badge. */
 const TIERS = [["Common", "#9aa3b2"], ["Uncommon", "#4ade80"], ["Rare", "#38bdf8"], ["Epic", "#c084fc"], ["Legendary", "#fbbf24"]];
 const ACH_TIER = { curious: 0, avatar: 0, fav: 0, social: 0, first_call: 0, first_buzz: 0, sticker1: 0, pred1: 0, ranked_first: 0, early: 0, night: 0, flame3: 0,
-  draw: 1, sharp: 1, upset: 1, streak5: 1, hat3: 1, dailybeat: 1, splash_10: 1, splash_rare: 1, pred10: 1, tttwin: 1, friend: 1, table: 1, hol5: 1, decade: 1, alldiff: 1,
+  draw: 1, sharp: 1, upset: 1, streak5: 1, hat3: 1, dailybeat: 1, splash_10: 1, pred10: 1, tttwin: 1, friend: 1, table: 1, hol5: 1, decade: 1, alldiff: 1,
   speed: 2, md9: 2, daily5: 2, flame7: 2, globe: 2, ranked_win: 2, elo1200: 2, ranked5: 2, rounds100: 2, stick50: 2, page: 2, squad: 2, giant: 2,
-  elite_win: 3, streak10: 3, streak10q: 3, beatmodel: 3, quizmaster: 3, captain: 3, splash_leg: 3, stick150: 4, splash_all: 4, wk_play: 1, wk_win: 4 };
-const ACH_ICON = { first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", wk_play: "calendar", wk_win: "trophy", owner: "crown", admin: "shield" };
+  elite_win: 3, streak10: 3, streak10q: 3, beatmodel: 3, quizmaster: 3, captain: 3, stick150: 4, splash_all: 4, wk_play: 1, wk_win: 4, ic_perfect: 3, login7: 2, login30: 4, xi_perfect: 3, rapid_win: 2, rapid_20: 3, bracket_win: 3, scramble10: 2 };
+const ACH_ICON = { first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", wk_play: "calendar", wk_win: "trophy", ic_perfect: "live", login7: "flame", login30: "flame", xi_perfect: "users", rapid_win: "bolt", rapid_20: "timer", bracket_win: "trophy", scramble10: "brain", owner: "crown", admin: "shield" };
 const ROLE_BADGES = { owner: ["Owner", "Owns ballknowledge. Only the owner can wear this."], admin: ["Admin", "Looks after ballknowledge. Only admins can wear this."] };
 const badgeName = (id) => ROLE_BADGES[id] ? ROLE_BADGES[id][0] : ((ACH.find((a) => a[0] === id) || [])[1] || "");
 const badgeTier = (id) => ROLE_BADGES[id] ? 5 : ACH_TIER[id] != null ? ACH_TIER[id] : 0;
@@ -1809,7 +1813,7 @@ function toast(html, kind = "") {
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
 const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join("");
 const emptyState = (icon, title, text) => `<div class="fxempty"><span>${icon}</span><b>${title}</b><div class="fine">${text}</div></div>`;
-const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette", "Starting XI", "Scramble"];
+const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette", "Starting XI", "Scramble", "Iconic matches"];
 function award(id) { const p = prof(); if (p.ach[id]) return; unlock(p, id); saveProf(p); }
 function trackPlay(label) {
   const p = prof(); label = label === "Write your number" ? "Market value" : label; p.rounds = (p.rounds || 0) + 1; p.played = { ...(p.played || {}) }; p.diffs = { ...(p.diffs || {}) };
@@ -1855,6 +1859,9 @@ function afterUpset(ok, prob, streak, lg) { reward(10 + (ok ? 15 + 5 * Math.min(
 function afterTable(d) { const beat = d.youErr < d.modErr; reward(60 + (beat ? 40 : 0) + (d.youErr < d.lastErr ? 20 : 0), "Guess the table", (p) => { mark(p, d.lg, d.season); if (beat) unlock(p, "table"); }); Board.submit({ game: "table", league: d.lg, score: beat ? 1 : 0 }); }
 function afterHol(ok, streak, lg) { reward(5 + (ok ? 5 + 2 * Math.min(streak, 10) : 0), "Higher or lower", (p) => { mark(p, lg, null); if (streak >= 5) unlock(p, "hol5"); }); if (ok) Board.submit({ game: "hol", league: S.code, score: streak }); }
 
+function loginStreak(p) { let s = 0; const now = Date.now(), L = p.logins || {}; for (let k = 0; k < 400; k++) { const key = new Date(now - k * 864e5).toISOString().slice(0, 10); if (L[key]) s++; else if (k > 0) break; else continue; } return s; }
+function recordLogin() { const p = prof(), k = todayKey(); p.logins = { ...(p.logins || {}) }; if (!p.logins[k]) { p.logins[k] = 1; const ks = Object.keys(p.logins).sort(); while (ks.length > 120) delete p.logins[ks.shift()]; const s = loginStreak(p); if (s >= 7) unlock(p, "login7"); if (s >= 30) unlock(p, "login30"); saveProf(p); } paintLoginStreak(); }
+function paintLoginStreak() { const el = $("#loginStreak"); if (!el) return; const s = loginStreak(prof()); el.hidden = s < 1; el.innerHTML = `<svg class="ic fire"><use href="#i-flame"></use></svg><b class="num">${s}</b>`; el.title = `${s} day${s === 1 ? "" : "s"} in a row opening ballknowledge`; }
 function paintProfileBtn() {
   const b = $("#profileBtn"); if (!b) return; const p = prof(), lv = levelOf(p.xp), st = dayStreak(p), signed = Account.signedIn || Account.claude, pct = lv.to ? Math.min(100, Math.round(((p.xp - lv.from) / (lv.to - lv.from)) * 100)) : 100;
   b.title = signed ? `Your profile. ${lv.to ? lv.to - p.xp + " XP to " + lv.next : "Top rank"}` : "Sign in or create an account";
@@ -1888,6 +1895,7 @@ const HOWTO = {
   "g:roulette": ["Club roulette", ["What you do", "A club appears. Two players take turns naming someone who has played for it."], ["You lose a round if", "you name someone who never played there, repeat a name, or run out of time."], ["Winning", "The first to win two rounds takes the match."]],
   "g:rapid": ["Rapid fire", ["What you do", "A real match appears. Tap Home win, Draw or Away win as fast as you can for 60 seconds."], ["The model", "It calls the same matches. Whoever gets more right wins."], ["Tip", "You can use the keys H, D and A."]],
   "g:bracket": ["Bracket buster", ["What you do", "A real Champions League knockout. In every round pick who goes through in each tie, then lock the round in."], ["The model", "A plain Elo rating, computed from every match before the tie, picks the higher-rated club."], ["Scoring", "A round of 16 tie is worth 1 point, a quarter-final 2, a semi-final 3 and the final 4."]],
+  "g:iconic": ["Iconic matches", ["What you do", "A famous match appears with its score and its highlights by minute. For each goal and red card you name the player: the scorer, the penalty taker, the player who set it up, or who was sent off."], ["Hints and scoring", "100 per right answer, minus 15 per wrong guess and 30 per hint. Skip if you are stuck; the answer is shown at the end."], ["Good to know", "Minutes are whole minutes, so added-time goals show as 91, 93 and so on. Matches with own goals or shoot-outs are left out because the source does not mark them."]],
   "g:scramble": ["Scramble", ["What you do", "A club, a footballer or a manager appears with the letters of every word shuffled. Buzz in when you know it and type the real name."], ["Clues", "Every few seconds a new hint arrives: what kind of name it is, its shape, the first letters and one extra fact. Points fall as hints appear."], ["Two players", "Take the same round on two devices or one. A wrong answer costs 150 points and locks you out of that round."]],
   "g:xi": ["Starting XI", ["What you do", "A real match (a final, a Champions League knockout, a derby or a big game) and one of its teams appear on a pitch. Type the surnames of the eleven players who started."], ["Clues", "Easy shows first letters and shirt numbers, Medium shirt numbers, Hard and Elite only the positions (Elite also has 2 minutes instead of 3). Hint reveals more letters for 30 points."], ["Scoring", "100 per player, a bonus for the time left on a perfect XI, minus 20 per wrong guess."]],
   "g:ttt": ["Football tic-tac-toe", ["What you do", "Claim a square by naming a player who fits both its row and its column, for example 'played for Arsenal' and 'Spanish'."], ["Rules", "Nobody can be used twice, and a wrong answer loses your turn. Three in a row wins."]],
@@ -2098,7 +2106,34 @@ const Ranked = {
     setTimeout(async () => { const now = await this.refresh(); if (now !== before || res === "draw") { toast(`Rating ${now} (${now >= before ? "+" : ""}${now - before})`); award("ranked_first"); if (res === "win") award("ranked_win"); if (this.games >= 5) award("ranked5"); if (now >= 1200) award("elo1200"); } else toast("Waiting for your opponent to confirm the result"); }, 2500);
   },
 };
+/* ================= Two accounts on one device (experiment) =================
+   Player 2 signs in with email and password; the password goes straight to the database's sign-in and nothing about player 2 is stored on the device. At the end of a same-device
+   two-player game each account reports the result with its own sign-in, so both ratings move exactly like an online match. */
+const Dual = {
+  p2: null, game: null,
+  async rpc2(fn, args) { try { const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: Board.cfg.key, Authorization: `Bearer ${this.p2.token}`, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) }); const x = await r.text(); return r.ok ? (x ? JSON.parse(x) : true) : null; } catch (e) { return null; } },
+  async signIn(email, pw) {
+    try { const r = await fetch(`${Board.cfg.url}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: Board.cfg.key, "Content-Type": "application/json" }, body: JSON.stringify({ email, password: pw }) }); const j = await r.json(); if (!r.ok || !j.access_token) return { error: j.error_description || j.msg || "Could not sign in." };
+      if (Account.session && j.user && j.user.id === Account.session.user.id) return { error: "That is the account you are already using. Sign in with a different one." };
+      this.p2 = { uid: j.user.id, token: j.access_token, nick: "Player 2", elo: 1000 };
+      const pr = await fetch(`${Board.cfg.url}/rest/v1/profiles?select=nick`, { headers: { apikey: Board.cfg.key, Authorization: `Bearer ${j.access_token}` } }); const pj = await pr.json(); if (pj && pj[0]) this.p2.nick = pj[0].nick; else { this.p2 = null; return { error: "That account has no display name yet. Sign in to it once on its own and pick a name." }; }
+      const rt = await this.rpc2("my_rating"); if (rt && rt[0]) this.p2.elo = rt[0].elo; return { ok: true }; } catch (e) { return { error: "Could not reach the server." }; }
+  },
+  out() { this.p2 = null; this.game = null; S.dual = false; },
+  async finish(sc) {
+    const p1 = Account.session.user.id, p2 = this.p2.uid, mid = `dual-${Date.now().toString(36)}-${p1.slice(0, 4)}${p2.slice(0, 4)}`, r1 = sc[0] > sc[1] ? "win" : sc[0] < sc[1] ? "loss" : "draw", r2 = r1 === "win" ? "loss" : r1 === "loss" ? "win" : "draw", b1 = Ranked.elo, b2 = this.p2.elo;
+    const a = await Ranked.rpcx("report_match", { p_match: mid, p_opp: p2, p_result: r1, p_game: this.game }); const b = await this.rpc2("report_match", { p_match: mid, p_opp: p1, p_result: r2, p_game: this.game });
+    await Ranked.refresh(); const rt = await this.rpc2("my_rating"); if (rt && rt[0]) this.p2.elo = rt[0].elo;
+    if (a.ok && b === "applied") { toast(`Rated: ${prof().nick || "Player 1"} ${Ranked.elo} (${Ranked.elo - b1 >= 0 ? "+" : ""}${Ranked.elo - b1}) · ${this.p2.nick} ${this.p2.elo} (${this.p2.elo - b2 >= 0 ? "+" : ""}${this.p2.elo - b2})`); if (r1 === "win") award("ranked_win"); award("ranked_first"); } else toast(`The rating did not move (${a.ok ? String(b) : a.why}). Both accounts must be signed in and rated games need schema_v2 or newer.`);
+  },
+};
+function dualCard() {
+  const d = Dual.p2;
+  if (!d) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Two accounts, one device <span class="chip2">experiment</span></h3></div><p class="fine">Hand the device to a friend: they sign in with their own account, you play a two-player game here, and both ratings move as in an online match. Their password is only sent to the sign-in and is not kept.</p><div class="row" style="margin-top:8px"><input id="d2Mail" type="email" autocomplete="off" placeholder="Player 2 email" aria-label="Player 2 email"><input id="d2Pw" type="password" autocomplete="off" placeholder="Player 2 password" aria-label="Player 2 password"><button class="btn" id="d2In" type="button">Sign in player 2</button></div><div class="fine" id="d2Msg"></div></div>`;
+  return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Two accounts, one device <span class="chip2">experiment</span></h3><button class="btn ghost" id="d2Out" type="button">Sign player 2 out</button></div><p class="fine">Player 1 is <b>${esc(prof().nick || "you")}</b> (Elo ${Ranked.elo}), player 2 is <b>${esc(d.nick)}</b> (Elo ${d.elo}). Player 1 is X and goes first.</p><div class="row" style="margin-top:8px"><select id="d2Game" aria-label="Game">${[["ttt", "Football tic-tac-toe"], ["who", "Who am I?"], ["career", "Career path"], ["club", "Name that club"], ["blur", "Badge blur"], ["scramble", "Scramble"]].map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><button class="btn" id="d2Go" type="button">Start rated game</button></div></div>`;
+}
 function rankedEnd(ref, sc) {
+  if (S.dual && Dual.p2) { if (Net.lastRef === ref) return; Net.lastRef = ref; Dual.finish(sc); return; }
   if (Net.role !== "host" || !Net.ranked || !Net.guest || !Net.guest.uid || Net.lastRef === ref || !Account.signedIn) return; Net.lastRef = ref;
   const mid = `${Net.code}-${Date.now().toString(36)}`, hostRes = sc[0] > sc[1] ? "win" : sc[0] < sc[1] ? "loss" : "draw";
   Net.send({ k: "result", mid, game: Net.game, hostUid: Account.session.user.id, guestRes: hostRes === "win" ? "loss" : hostRes === "loss" ? "win" : "draw" });
@@ -2119,6 +2154,7 @@ function renderRanked() {
     <div class="rkform"><label>Game<select id="rkGame">${RK_GAMES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label><label>Difficulty<select id="rkDiff">${DIFFS.map(([v, n]) => `<option value="${v}" ${v === S.diff ? "selected" : ""}>${n}</option>`).join("")}</select></label>
     <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn" id="rkCreate" type="button">Create lobby</button></div>
     <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
+    ${dualCard()}
     <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx">${skelRows(3)}</div></div>`;
   paintLobbies(); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); }, 4000);
   Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>${rankOf(Ranked.elo).icon} ${rankOf(Ranked.elo).name} · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
@@ -2289,7 +2325,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-28", items: [["Scramble", "A new ballknowledge original: a club, player or manager with the letters shuffled. Buzz in when you know it."], ["About page", "Our story, how the model works with two tools to play with, honest limits and sources, and a roadmap where you can suggest ideas and badges and vote."], ["Wrong kits hidden", "If a player's photo was taken before his latest transfer, the club badge shows instead of the old shirt."], ["Fixes and polish", "A quick three-beat reveal after each call, a smaller and faster match simulation, labelled model bars, a mobile title that fits, one Buzz button online, consistent player photo framing, and no more invented scorers in old matches."], ["Older Champions League finals", "Starting XI now has the Champions League finals from 2000 to 2013, with lineups from Wikipedia, and keeps only the main derbies: one per league and three in the Premier League."], ["Starting XI: 953 matches", "Cup and Champions League finals, quarter-finals and semi-finals, 18 famous derbies like El Clásico and the Manchester derby, and top-three clashes. Pick the match type before you start."], ["Nine and nine", "New: Starting XI, Rapid fire and Bracket buster. Tic-tac-toe has Best of 3, wrong answers can be reported, and there is a Weekly tournament with a Weekly champion badge."], ["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-29", items: [["Iconic matches", "A new original: a famous match and its highlights by minute. Name the scorers, assisters, penalty takers and red cards."], ["Settings and languages", "A settings page for sound and music, plus German, French and Arabic (a first draft: menus and games, not every sentence yet)."], ["Login streak", "A fire counter next to your profile for days in a row."], ["Two accounts, one device", "An experiment on the Ranked page: a friend signs in on your device and a rated game moves both ratings."], ["Scramble", "A new ballknowledge original: a club, player or manager with the letters shuffled. Buzz in when you know it."], ["About page", "Our story, how the model works with two tools to play with, honest limits and sources, and a roadmap where you can suggest ideas and badges and vote."], ["Wrong kits hidden", "If a player's photo was taken before his latest transfer, the club badge shows instead of the old shirt."], ["Fixes and polish", "A quick three-beat reveal after each call, a smaller and faster match simulation, labelled model bars, a mobile title that fits, one Buzz button online, consistent player photo framing, and no more invented scorers in old matches."], ["Older Champions League finals", "Starting XI now has the Champions League finals from 2000 to 2013, with lineups from Wikipedia, and keeps only the main derbies: one per league and three in the Premier League."], ["Starting XI: 953 matches", "Cup and Champions League finals, quarter-finals and semi-finals, 18 famous derbies like El Clásico and the Manchester derby, and top-three clashes. Pick the match type before you start."], ["Nine and nine", "New: Starting XI, Rapid fire and Bracket buster. Tic-tac-toe has Best of 3, wrong answers can be reported, and there is a Weekly tournament with a Weekly champion badge."], ["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and legend cards to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -2300,6 +2336,170 @@ function playerCard(p) {
 }
 addEventListener("keydown", (e) => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || "") && !e.metaKey && !e.ctrlKey) { e.preventDefault(); openSearch(); } });
 
+
+/* ================= Settings ================= */
+const LANGS = [["en", "English", "ltr"], ["de", "Deutsch", "ltr"], ["fr", "Français", "ltr"], ["ar", "العربية", "rtl"]];
+function showSettings(ev) {
+  S.code = null; S.mode = null; S.cur = null; setTheme("HOME", ev); ["#home", "#lobby", "#league", "#profilePage", "#albumPage", "#adminPage", "#aboutPage"].forEach((s) => { $(s).hidden = true; }); $("#setPage").hidden = false; window.scrollTo(0, 0); renderSettings();
+}
+function renderSettings() {
+  const el = $("#setPage"); if (!el) return; const lv = Snd.level, mu = Snd.music && lv > 0 ? 1 : 0, lang = curLang();
+  const seg = (attr, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-${attr}="${v}" aria-pressed="${String(cur) === String(v)}">${n}</button>`).join("")}</div>`;
+  el.innerHTML = `<div class="row" style="margin-bottom:8px"><button class="btn ghost" id="aboutBack" type="button">← Menu</button><h1 style="font-size:28px">Settings</h1></div>
+    <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, goals and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
+    <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during matches. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
+    <div class="card"><h3>Language</h3><p class="fine">${lang === "en" ? "More of the site is translated over time; anything not translated yet stays in English." : "Teile der Seite sind noch Englisch."}</p>${seg("lang", LANGS.map(([c, n]) => [c, n]), lang)}</div>
+    <div class="card"><h3>Appearance</h3><p class="fine">Theme, text size, contrast and reduced motion are in your profile.</p><button class="btn ghost" data-go="profile" type="button">Open profile</button></div>`;
+}
+/* ================= Languages: German, French, Arabic =================
+   Text is matched against the exact English wording and replaced; anything not in the lists below stays English. These are written to read like football talk in each language, not
+   word for word, but they have not been checked by native speakers yet and cover the menus, games and main pages, not every sentence. */
+const I18N = {
+  de: {
+    "Football, predicted and played": "Fußball, getippt und gespielt", "Games": "Spiele", "Play": "Spielen", "Our model": "Unser Modell", "Explore": "Entdecken", "About": "Über uns", "Read": "Lesen",
+    "matches tested": "Spiele getestet", "model": "Modell", "bookmakers": "Wettanbieter", "leagues": "Ligen", "seasons": "Saisons", "Sign in": "Anmelden", "Built by moisback22": "Gebaut von moisback22",
+    "← Menu": "← Menü", "← Back": "← Zurück", "Menu": "Menü", "Back": "Zurück", "Got it": "Verstanden", "Beta": "Beta",
+    "Pick a game, or switch leagues above.": "Such dir ein Spiel aus oder wechsle oben die Liga.", "All leagues": "Alle Ligen", "All five leagues": "Alle fünf Ligen", "Leaderboard": "Bestenliste",
+    "Random matches from every league on one big pitch.": "Zufällige Spiele aus allen Ligen auf einem großen Platz.", "Mix it up": "Alles gemischt", "Any league, any season": "Jede Liga, jede Saison",
+    "Premier League": "Premier League", "Bundesliga": "Bundesliga", "La Liga": "La Liga", "Serie A": "Serie A", "Ligue 1": "Ligue 1", "Star to watch": "Spieler im Fokus",
+    "What do you want to play?": "Worauf hast du Lust?", "ballknowledge originals": "ballknowledge-Originale", "Beat the Model": "Schlag das Modell", "Ranked": "Rangliste", "Play online": "Online spielen",
+    "Live predictions": "Live-Tipps", "Live": "Live", "Weekly tournament": "Wochenturnier", "Five matches, the same for everyone this week": "Fünf Spiele, diese Woche für alle gleich",
+    "Call it": "Tipp abgeben", "Solo, against the model": "Allein gegen das Modell", "not played yet": "noch nicht gespielt", "Daily 5": "Die Tages-5", "not played today": "heute noch nicht gespielt",
+    "The same five matches for everyone today. Beat the model and share your result.": "Heute für alle dieselben fünf Spiele. Schlag das Modell und teile dein Ergebnis.",
+    "Matchday": "Spieltag", "Call a whole round at once and watch the results land one by one.": "Tippe einen ganzen Spieltag auf einmal und sieh zu, wie die Ergebnisse eintrudeln.",
+    "Rapid fire": "Blitzrunde", "60 seconds. Call as many real matches as you can and beat the model on the same ones.": "60 Sekunden. Tippe so viele echte Spiele wie möglich und schlag das Modell bei denselben.",
+    "Bracket buster": "Turnierbaum-Tipp", "A real Champions League knockout. Pick every tie, round by round, against an Elo model.": "Eine echte Champions-League-K.-o.-Runde. Tippe jedes Duell, Runde für Runde, gegen ein Elo-Modell.",
+    "Spot the upset": "Finde die Überraschung", "Five real results. Which one did the model think was least likely?": "Fünf echte Ergebnisse. Welches hielt das Modell für am unwahrscheinlichsten?",
+    "Guess the table": "Tabelle tippen", "Rebuild a final table from last season's, then see you against the model.": "Bau eine Abschlusstabelle nach und miss dich dann mit dem Modell.",
+    "Higher or lower": "Höher oder tiefer", "Two clubs, one number. Keep the streak alive.": "Zwei Vereine, eine Zahl. Halte die Serie am Leben.", "Challenge a friend": "Freund herausfordern",
+    "Five matches, one link. Send it and see who does better.": "Fünf Spiele, ein Link. Schick ihn los und schau, wer besser tippt.",
+    "Who am I?": "Wer bin ich?", "Solo streak · 2 players": "Solo-Serie · 2 Spieler", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "Ein Mysterium im Trikot. Die Hinweise werden immer deutlicher. Wer früher drückt, bekommt mehr Punkte.",
+    "Career path": "Karriereweg", "Every club he played for, in order. Name the player.": "Alle Stationen in der richtigen Reihenfolge. Wer ist es?",
+    "Name that club": "Welcher Verein?", "Goals, wins and a stadium size. Which club is it?": "Tore, Siege und eine Stadiongröße. Welcher Verein steckt dahinter?",
+    "Badge blur": "Wappen-Rätsel", "A blurry badge that sharpens by the second.": "Ein verschwommenes Wappen, das mit jeder Sekunde schärfer wird.",
+    "Where did they finish?": "Wo landen sie?", "A club, a season, a slider. How close can you get?": "Ein Verein, eine Saison, ein Regler. Wie nah kommst du ran?",
+    "Market value": "Marktwert", "Solo higher or lower · 2 players": "Solo höher oder tiefer · 2 Spieler", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "Wer ist mehr wert, ein Spieler oder ein Kader? Oder ihr schätzt beide einen Wert, und wer näher dran ist, gewinnt.",
+    "Club roulette": "Vereins-Roulette", "2 players · one device or two": "2 Spieler · ein Gerät oder zwei", "A club appears. Take turns naming players who played for it. First to blank loses.": "Ein Verein erscheint. Nennt abwechselnd Spieler, die dort gespielt haben. Wer zuerst nichts mehr weiß, verliert.",
+    "Starting XI": "Startelf", "Solo · 2 to 3 minutes": "Solo · 2 bis 3 Minuten", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "Finals, Champions-League-K.-o.-Spiele, Derbys und Topspiele. Nenne die elf, die angefangen haben.",
+    "Iconic matches": "Legendäre Spiele", "Solo": "Solo", "A famous match and its highlights by minute. Name the scorers, assisters, penalty takers and red cards.": "Ein berühmtes Spiel und seine Höhepunkte Minute für Minute. Nenne Torschützen, Vorlagengeber, Elfmeterschützen und Platzverweise.",
+    "Scramble": "Buchstabensalat", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "Ein Verein, Spieler oder Trainer mit durcheinandergewürfelten Buchstaben. Entwirr ihn vor deinem Gegner.",
+    "Football tic-tac-toe": "Fußball-Tic-Tac-Toe", "2 players": "2 Spieler", "Name a player who fits the row and the column. Three in a row wins.": "Nenne einen Spieler, der zu Zeile und Spalte passt. Drei in einer Reihe gewinnen.",
+    "How Ranked works": "So funktioniert die Rangliste", "Play real people online. Create a lobby and others can join from the list.": "Spiel online gegen echte Leute. Erstell eine Lobby, andere steigen aus der Liste ein.",
+    "Create an account or sign in": "Konto erstellen oder anmelden", "Your rating.": "Deine Wertung.", "This week": "Diese Woche", "30 days": "30 Tage", "This season": "Diese Saison",
+    "Settings": "Einstellungen", "Sound": "Ton", "Effects for taps, goals and results.": "Effekte für Klicks, Tore und Ergebnisse.", "Off": "Aus", "Soft": "Leise", "Full": "Voll", "Music": "Musik",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Ein ruhiger Loop in den Menüs und ein lebhafterer im Spiel. Der Ton muss an sein.", "On": "An", "Language": "Sprache",
+    "Appearance": "Darstellung", "Theme, text size, contrast and reduced motion are in your profile.": "Design, Textgröße, Kontrast und weniger Animationen findest du in deinem Profil.", "Open profile": "Profil öffnen",
+    "About ballknowledge": "Über ballknowledge", "Our story": "Unsere Geschichte", "How the model works": "So funktioniert das Modell", "Honest limits and sources": "Ehrliche Grenzen und Quellen", "Roadmap and votes": "Fahrplan und Abstimmung",
+    "How it grew": "So ist es gewachsen", "Who builds it": "Wer dahintersteckt", "Roadmap": "Fahrplan", "Shipped": "Fertig", "Next": "Als Nächstes", "Later": "Später", "Your ideas": "Deine Ideen",
+    "Suggest a feature, a game or a badge. Vote for the ones you like.": "Schlag ein Feature, ein Spiel oder ein Abzeichen vor. Stimm für die, die dir gefallen.", "Feature": "Feature", "Badge": "Abzeichen", "Game": "Spiel", "Other": "Sonstiges", "Suggest": "Vorschlagen",
+    "What we do not have": "Was uns fehlt", "Sources": "Quellen", "Profile": "Profil", "Guest": "Gast", "Elo": "Elo", "day streak": "Tage in Folge", "achievements": "Erfolge", "Edit profile": "Profil bearbeiten",
+    "Profile picture": "Profilbild", "Favourite player": "Lieblingsspieler", "Favourite team": "Lieblingsverein", "None": "Keiner", "Elo history": "Elo-Verlauf", "Friends": "Freunde", "Style": "Stil", "Minimal": "Schlicht", "Classic": "Klassisch",
+    "Theme": "Design", "Dark": "Dunkel", "Light": "Hell", "Auto": "Automatisch", "Text size": "Textgröße", "Small": "Klein", "Normal": "Normal", "Large": "Groß", "Extra large": "Sehr groß", "Sunday League": "Sonntagsliga", "Pub Team": "Kneipenteam", "Academy": "Nachwuchs", "Reserves": "Reserve", "First Team": "Profis", "Captain": "Kapitän", "Club Legend": "Vereinslegende", "World Class": "Weltklasse",
+    "Coming later": "Kommt später", "Champions League": "Champions League", "Report a problem": "Problem melden", "Report a wrong answer": "Falsche Antwort melden", "Weekly regular": "Stammgast der Woche", "Weekly champion": "Wochenmeister"
+  },
+  fr: {
+    "Football, predicted and played": "Le foot, pronostiqué et joué", "Games": "Jeux", "Play": "Jouer", "Our model": "Notre modèle", "Explore": "Explorer", "About": "À propos", "Read": "Lire",
+    "matches tested": "matchs testés", "model": "modèle", "bookmakers": "bookmakers", "leagues": "championnats", "seasons": "saisons", "Sign in": "Se connecter", "Built by moisback22": "Créé par moisback22",
+    "← Menu": "← Menu", "← Back": "← Retour", "Menu": "Menu", "Back": "Retour", "Got it": "Compris", "Beta": "Bêta",
+    "Pick a game, or switch leagues above.": "Choisis un jeu, ou change de championnat en haut.", "All leagues": "Tous les championnats", "All five leagues": "Les cinq grands championnats",
+    "Random matches from every league on one big pitch.": "Des matchs au hasard de tous les championnats, sur une seule grande pelouse.", "Mix it up": "Un peu de tout", "Any league, any season": "N'importe quel championnat, n'importe quelle saison",
+    "Premier League": "Premier League", "Bundesliga": "Bundesliga", "La Liga": "Liga", "Serie A": "Serie A", "Ligue 1": "Ligue 1", "Star to watch": "Le joueur à suivre",
+    "What do you want to play?": "À quoi on joue ?", "ballknowledge originals": "Les originaux ballknowledge", "Beat the Model": "Bats le modèle", "Ranked": "Classé", "Play online": "Jouer en ligne",
+    "Live predictions": "Pronos en direct", "Live": "Direct", "Weekly tournament": "Tournoi de la semaine", "Five matches, the same for everyone this week": "Cinq matchs, les mêmes pour tout le monde cette semaine",
+    "Call it": "Fais ton pronostic", "Solo, against the model": "En solo, contre le modèle", "not played yet": "pas encore joué", "Daily 5": "Les 5 du jour", "not played today": "pas joué aujourd'hui",
+    "The same five matches for everyone today. Beat the model and share your result.": "Les mêmes cinq matchs pour tout le monde aujourd'hui. Bats le modèle et partage ton score.",
+    "Matchday": "Journée", "Call a whole round at once and watch the results land one by one.": "Pronostique toute une journée d'un coup et regarde les scores tomber un par un.",
+    "Rapid fire": "Tir rapide", "60 seconds. Call as many real matches as you can and beat the model on the same ones.": "60 secondes. Pronostique un max de vrais matchs et bats le modèle sur les mêmes.",
+    "Bracket buster": "Prédis le tableau", "A real Champions League knockout. Pick every tie, round by round, against an Elo model.": "Une vraie phase à élimination directe de Ligue des champions. Choisis chaque qualifié, tour après tour, face à un modèle Elo.",
+    "Spot the upset": "Repère la surprise", "Five real results. Which one did the model think was least likely?": "Cinq vrais résultats. Lequel le modèle jugeait-il le moins probable ?",
+    "Guess the table": "Devine le classement", "Rebuild a final table from last season's, then see you against the model.": "Reconstitue un classement final à partir de celui de la saison passée, puis mesure-toi au modèle.",
+    "Higher or lower": "Plus ou moins", "Two clubs, one number. Keep the streak alive.": "Deux clubs, un chiffre. Garde ta série en vie.", "Challenge a friend": "Défie un ami",
+    "Five matches, one link. Send it and see who does better.": "Cinq matchs, un lien. Envoie-le et vois qui pronostique le mieux.",
+    "Who am I?": "Qui suis-je ?", "Solo streak · 2 players": "Série en solo · 2 joueurs", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "Un joueur mystère. Les indices passent de flous à évidents. Buzze tôt pour plus de points.",
+    "Career path": "Parcours", "Every club he played for, in order. Name the player.": "Tous ses clubs, dans l'ordre. Qui est-ce ?",
+    "Name that club": "Quel club ?", "Goals, wins and a stadium size. Which club is it?": "Des buts, des victoires et la taille d'un stade. De quel club s'agit-il ?",
+    "Badge blur": "Écusson flou", "A blurry badge that sharpens by the second.": "Un écusson flou qui devient net seconde après seconde.",
+    "Where did they finish?": "Où ont-ils fini ?", "A club, a season, a slider. How close can you get?": "Un club, une saison, un curseur. Jusqu'où peux-tu t'approcher ?",
+    "Market value": "Valeur marchande", "Solo higher or lower · 2 players": "Plus ou moins en solo · 2 joueurs", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "Qui vaut le plus, un joueur ou un effectif ? Ou vous estimez tous les deux une valeur et le plus proche gagne.",
+    "Club roulette": "Roulette des clubs", "2 players · one device or two": "2 joueurs · un ou deux appareils", "A club appears. Take turns naming players who played for it. First to blank loses.": "Un club apparaît. À tour de rôle, citez des joueurs qui y ont joué. Le premier qui sèche a perdu.",
+    "Starting XI": "Le onze de départ", "Solo · 2 to 3 minutes": "Solo · 2 à 3 minutes", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "Finales, éliminatoires de Ligue des champions, derbys et grosses affiches. Cite les onze titulaires.",
+    "Iconic matches": "Matchs de légende", "Solo": "Solo", "A famous match and its highlights by minute. Name the scorers, assisters, penalty takers and red cards.": "Un match mythique et ses temps forts minute par minute. Retrouve les buteurs, les passeurs, les tireurs de penalty et les cartons rouges.",
+    "Scramble": "Mots mélangés", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "Un club, un joueur ou un entraîneur aux lettres mélangées. Remets-les en ordre avant ton adversaire.",
+    "Football tic-tac-toe": "Morpion du foot", "2 players": "2 joueurs", "Name a player who fits the row and the column. Three in a row wins.": "Cite un joueur qui correspond à la ligne et à la colonne. Trois alignés et c'est gagné.",
+    "How Ranked works": "Comment marche le mode Classé", "Play real people online. Create a lobby and others can join from the list.": "Joue en ligne contre de vraies personnes. Crée un salon, les autres te rejoignent depuis la liste.",
+    "Create an account or sign in": "Crée un compte ou connecte-toi", "Your rating.": "Ton classement.", "This week": "Cette semaine", "30 days": "30 jours", "This season": "Cette saison",
+    "Settings": "Réglages", "Sound": "Son", "Effects for taps, goals and results.": "Effets pour les clics, les buts et les résultats.", "Off": "Coupé", "Soft": "Doux", "Full": "Fort", "Music": "Musique",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Une boucle calme dans les menus et une plus rythmée pendant les matchs. Le son doit être activé.", "On": "Activée", "Language": "Langue",
+    "Appearance": "Apparence", "Theme, text size, contrast and reduced motion are in your profile.": "Thème, taille du texte, contraste et animations réduites sont dans ton profil.", "Open profile": "Ouvrir le profil",
+    "About ballknowledge": "À propos de ballknowledge", "Our story": "Notre histoire", "How the model works": "Comment marche le modèle", "Honest limits and sources": "Limites assumées et sources", "Roadmap and votes": "Feuille de route et votes",
+    "How it grew": "Comment ça a grandi", "Who builds it": "Qui le construit", "Roadmap": "Feuille de route", "Shipped": "Livré", "Next": "Prochainement", "Later": "Plus tard", "Your ideas": "Tes idées",
+    "Suggest a feature, a game or a badge. Vote for the ones you like.": "Propose une fonction, un jeu ou un badge. Vote pour ceux qui te plaisent.", "Feature": "Fonction", "Badge": "Badge", "Game": "Jeu", "Other": "Autre", "Suggest": "Proposer",
+    "What we do not have": "Ce qu'on n'a pas", "Sources": "Sources", "Profile": "Profil", "Guest": "Invité", "Elo": "Elo", "day streak": "jours d'affilée", "achievements": "succès", "Edit profile": "Modifier le profil",
+    "Profile picture": "Photo de profil", "Favourite player": "Joueur préféré", "Favourite team": "Équipe préférée", "None": "Aucune", "Elo history": "Historique Elo", "Friends": "Amis", "Style": "Style", "Minimal": "Épuré", "Classic": "Classique",
+    "Theme": "Thème", "Dark": "Sombre", "Light": "Clair", "Auto": "Auto", "Text size": "Taille du texte", "Small": "Petite", "Normal": "Normale", "Large": "Grande", "Extra large": "Très grande", "Sunday League": "Foot du dimanche", "Pub Team": "Équipe du bar", "Academy": "Centre de formation", "Reserves": "Réserve", "First Team": "Équipe première", "Captain": "Capitaine", "Club Legend": "Légende du club", "World Class": "Classe mondiale",
+    "Coming later": "Bientôt", "Champions League": "Ligue des champions", "Report a problem": "Signaler un problème", "Report a wrong answer": "Signaler une mauvaise réponse", "Weekly regular": "Habitué de la semaine", "Weekly champion": "Champion de la semaine"
+  },
+  ar: {
+    "Football, predicted and played": "كرة القدم: توقّع وتحدَّ", "Games": "الألعاب", "Play": "العب", "Our model": "نموذجنا", "Explore": "استكشف", "About": "عن الموقع", "Read": "اقرأ",
+    "matches tested": "مباراة مُختبَرة", "model": "النموذج", "bookmakers": "شركات الرهان", "leagues": "دوريات", "seasons": "مواسم", "Sign in": "تسجيل الدخول", "Built by moisback22": "من تطوير moisback22",
+    "← Menu": "القائمة ←", "← Back": "رجوع ←", "Menu": "القائمة", "Back": "رجوع", "Got it": "فهمت", "Beta": "تجريبي",
+    "Pick a game, or switch leagues above.": "اختر لعبة، أو بدّل الدوري من الأعلى.", "All leagues": "كل الدوريات", "All five leagues": "الدوريات الخمسة الكبرى",
+    "Random matches from every league on one big pitch.": "مباريات عشوائية من كل الدوريات على ملعب واحد كبير.", "Mix it up": "خليط من كل شيء", "Any league, any season": "أي دوري، أي موسم",
+    "Premier League": "الدوري الإنجليزي الممتاز", "Bundesliga": "الدوري الألماني", "La Liga": "الدوري الإسباني", "Serie A": "الدوري الإيطالي", "Ligue 1": "الدوري الفرنسي", "Star to watch": "نجم يستحق المتابعة",
+    "What do you want to play?": "ماذا تريد أن تلعب؟", "ballknowledge originals": "ألعاب ballknowledge الأصلية", "Beat the Model": "تغلّب على النموذج", "Ranked": "التصنيف", "Play online": "العب أونلاين",
+    "Live predictions": "توقعات مباشرة", "Live": "مباشر", "Weekly tournament": "بطولة الأسبوع", "Five matches, the same for everyone this week": "خمس مباريات، نفسها للجميع هذا الأسبوع",
+    "Call it": "توقّع النتيجة", "Solo, against the model": "فردي، ضد النموذج", "not played yet": "لم تُلعب بعد", "Daily 5": "خمس مباريات اليوم", "not played today": "لم تُلعب اليوم",
+    "The same five matches for everyone today. Beat the model and share your result.": "اليوم خمس مباريات نفسها للجميع. تغلّب على النموذج وشارك نتيجتك.",
+    "Matchday": "الجولة", "Call a whole round at once and watch the results land one by one.": "توقّع جولة كاملة دفعة واحدة وشاهد النتائج تظهر واحدة تلو الأخرى.",
+    "Rapid fire": "الجولة السريعة", "60 seconds. Call as many real matches as you can and beat the model on the same ones.": "60 ثانية. توقّع أكبر عدد من المباريات الحقيقية وتغلّب على النموذج في المباريات نفسها.",
+    "Bracket buster": "توقّع الأدوار الإقصائية", "A real Champions League knockout. Pick every tie, round by round, against an Elo model.": "دور إقصائي حقيقي من دوري أبطال أوروبا. اختر المتأهل في كل مواجهة، دورًا بعد دور، ضد نموذج إيلو.",
+    "Spot the upset": "اكتشف المفاجأة", "Five real results. Which one did the model think was least likely?": "خمس نتائج حقيقية. أيّها رآها النموذج الأقل احتمالًا؟",
+    "Guess the table": "خمّن الترتيب", "Rebuild a final table from last season's, then see you against the model.": "أعد بناء جدول الترتيب النهائي انطلاقًا من الموسم الماضي، ثم قارن نفسك بالنموذج.",
+    "Higher or lower": "أعلى أم أقل", "Two clubs, one number. Keep the streak alive.": "ناديان ورقم واحد. حافظ على سلسلتك.", "Challenge a friend": "تحدَّ صديقًا",
+    "Five matches, one link. Send it and see who does better.": "خمس مباريات ورابط واحد. أرسله وشاهد من يتوقع أفضل.",
+    "Who am I?": "من أنا؟", "Solo streak · 2 players": "سلسلة فردية · لاعبان", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "لاعب غامض. تتدرج التلميحات من الغامض إلى الواضح. اضغط الجرس مبكرًا لتحصل على نقاط أكثر.",
+    "Career path": "مسيرة اللاعب", "Every club he played for, in order. Name the player.": "كل الأندية التي لعب لها بالترتيب. من هو اللاعب؟",
+    "Name that club": "أي نادٍ هذا؟", "Goals, wins and a stadium size. Which club is it?": "أهداف وانتصارات وسعة ملعب. فما هو النادي؟",
+    "Badge blur": "شعار ضبابي", "A blurry badge that sharpens by the second.": "شعار ضبابي يزداد وضوحًا مع كل ثانية.",
+    "Where did they finish?": "أين أنهوا الموسم؟", "A club, a season, a slider. How close can you get?": "نادٍ وموسم ومنزلق. إلى أي حد تقترب من الصواب؟",
+    "Market value": "القيمة السوقية", "Solo higher or lower · 2 players": "أعلى أم أقل فرديًا · لاعبان", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "من يساوي أكثر، لاعب أم فريق؟ أو يخمّن كل منكما قيمة ويفوز الأقرب.",
+    "Club roulette": "روليت الأندية", "2 players · one device or two": "لاعبان · جهاز واحد أو جهازان", "A club appears. Take turns naming players who played for it. First to blank loses.": "يظهر نادٍ. تناوبا على ذكر لاعبين لعبوا فيه. من يتعثر أولًا يخسر.",
+    "Starting XI": "التشكيلة الأساسية", "Solo · 2 to 3 minutes": "فردي · من دقيقتين إلى ثلاث", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "نهائيات وأدوار إقصائية في دوري الأبطال وديربيات ومباريات كبرى. اذكر اللاعبين الأحد عشر الذين بدؤوا المباراة.",
+    "Iconic matches": "مباريات خالدة", "Solo": "فردي", "A famous match and its highlights by minute. Name the scorers, assisters, penalty takers and red cards.": "مباراة شهيرة ولقطاتها دقيقة بدقيقة. اذكر المسجّلين وصنّاع الأهداف ومنفّذي ركلات الجزاء والبطاقات الحمراء.",
+    "Scramble": "حروف مبعثرة", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "اسم نادٍ أو لاعب أو مدرب بحروف مبعثرة. رتّبه قبل خصمك.",
+    "Football tic-tac-toe": "إكس أو كرة القدم", "2 players": "لاعبان", "Name a player who fits the row and the column. Three in a row wins.": "اذكر لاعبًا يناسب الصف والعمود. ثلاثة في خط واحد تفوز.",
+    "How Ranked works": "كيف يعمل التصنيف", "Play real people online. Create a lobby and others can join from the list.": "العب أونلاين ضد أشخاص حقيقيين. أنشئ غرفة ويمكن للآخرين الانضمام من القائمة.",
+    "Create an account or sign in": "أنشئ حسابًا أو سجّل الدخول", "Your rating.": "تصنيفك.", "This week": "هذا الأسبوع", "30 days": "30 يومًا", "This season": "هذا الموسم",
+    "Settings": "الإعدادات", "Sound": "الصوت", "Effects for taps, goals and results.": "مؤثرات للنقرات والأهداف والنتائج.", "Off": "إيقاف", "Soft": "هادئ", "Full": "كامل", "Music": "الموسيقى",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "لحن هادئ في القوائم وآخر أكثر حيوية أثناء المباريات. يلزم تشغيل الصوت.", "On": "تشغيل", "Language": "اللغة",
+    "Appearance": "المظهر", "Theme, text size, contrast and reduced motion are in your profile.": "المظهر وحجم الخط والتباين وتقليل الحركة في ملفك الشخصي.", "Open profile": "افتح الملف الشخصي",
+    "About ballknowledge": "عن ballknowledge", "Our story": "قصتنا", "How the model works": "كيف يعمل النموذج", "Honest limits and sources": "حدود صريحة ومصادر", "Roadmap and votes": "خارطة الطريق والتصويت",
+    "How it grew": "كيف كبر المشروع", "Who builds it": "من يبنيه", "Roadmap": "خارطة الطريق", "Shipped": "تم", "Next": "التالي", "Later": "لاحقًا", "Your ideas": "أفكارك",
+    "Suggest a feature, a game or a badge. Vote for the ones you like.": "اقترح ميزة أو لعبة أو شارة، وصوّت لما يعجبك.", "Feature": "ميزة", "Badge": "شارة", "Game": "لعبة", "Other": "أخرى", "Suggest": "اقترح",
+    "What we do not have": "ما لا نملكه", "Sources": "المصادر", "Profile": "الملف الشخصي", "Guest": "ضيف", "Elo": "إيلو", "day streak": "أيام متتالية", "achievements": "إنجازات", "Edit profile": "تعديل الملف",
+    "Profile picture": "صورة الملف", "Favourite player": "اللاعب المفضل", "Favourite team": "الفريق المفضل", "None": "لا شيء", "Elo history": "سجل إيلو", "Friends": "الأصدقاء", "Style": "النمط", "Minimal": "بسيط", "Classic": "كلاسيكي",
+    "Theme": "المظهر", "Dark": "داكن", "Light": "فاتح", "Auto": "تلقائي", "Text size": "حجم الخط", "Small": "صغير", "Normal": "عادي", "Large": "كبير", "Extra large": "كبير جدًا", "Sunday League": "دوري الأحد", "Pub Team": "فريق الحي", "Academy": "الأكاديمية", "Reserves": "الاحتياط", "First Team": "الفريق الأول", "Captain": "القائد", "Club Legend": "أسطورة النادي", "World Class": "مستوى عالمي",
+    "Coming later": "قريبًا", "Champions League": "دوري أبطال أوروبا", "Report a problem": "أبلغ عن مشكلة", "Report a wrong answer": "أبلغ عن إجابة خاطئة", "Weekly regular": "منتظم الأسبوع", "Weekly champion": "بطل الأسبوع"
+  },
+};
+const I18N_EN = (() => { const m = {}; Object.values(I18N).forEach((d) => Object.entries(d).forEach(([en, tr]) => { m[tr] = en; })); return m; })();
+let LANGC = "en";
+function i18nOne(s, lang) { const k = s.trim(); if (!k) return s; const en = I18N_EN[k] || k, t = lang === "en" ? en : (I18N[lang] || {})[en]; return t && t !== k ? s.replace(k, t) : (lang === "en" && en !== k ? s.replace(k, en) : s); }
+function i18nWalk(root) {
+  if (!root) return; const lang = LANGC;
+  if (root.nodeType === 3) { const v = i18nOne(root.nodeValue, lang); if (v !== root.nodeValue) root.nodeValue = v; return; }
+  if (root.nodeType !== 1 || ["SCRIPT", "STYLE", "TEXTAREA", "INPUT"].includes(root.tagName) && !root.placeholder) { if (root.nodeType === 1 && root.placeholder) { const v = i18nOne(root.placeholder, lang); if (v !== root.placeholder) root.placeholder = v; } return; }
+  ["title", "aria-label", "placeholder"].forEach((a) => { const o = root.getAttribute && root.getAttribute(a); if (o) { const v = i18nOne(o, lang); if (v !== o) root.setAttribute(a, v); } });
+  for (let c = root.firstChild; c; c = c.nextSibling) i18nWalk(c);
+}
+let i18nBusy = false;
+const i18nObs = new MutationObserver((ms) => { if (LANGC === "en" && !document.documentElement.dataset.i18nDirty) return; if (i18nBusy) return; i18nBusy = true; requestAnimationFrame(() => { ms.forEach((m) => { if (m.type === "characterData") i18nWalk(m.target); else m.addedNodes.forEach((n) => i18nWalk(n)); }); i18nBusy = false; }); });
+function applyLang(code) {
+  LANGC = (LANGS.find((l) => l[0] === code) || LANGS[0])[0]; const dir = (LANGS.find((l) => l[0] === LANGC) || LANGS[0])[2];
+  const d = document.documentElement; d.setAttribute("lang", LANGC); d.setAttribute("dir", dir); if (LANGC !== "en") d.dataset.i18nDirty = "1";
+  i18nWalk(document.body);
+}
+i18nObs.observe(document.body, { childList: true, subtree: true, characterData: true });
 
 /* ================= About: story, how it works, honest limits, roadmap with votes ================= */
 const ABOUT_TABS = [["story", "Our story"], ["how", "How the model works"], ["limits", "Honest limits and sources"], ["road", "Roadmap and votes"]];
@@ -2390,6 +2590,7 @@ async function loadIdeas() {
   box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow idearow"><button type="button" class="vote ${r.mine ? "on" : ""}" data-vote="${r.id}" aria-pressed="${!!r.mine}" title="Vote"><b>${r.votes}</b><small>${r.mine ? "voted" : "vote"}</small></button><span><b>${esc(r.title)}</b> <span class="chip2">${esc((IDEA_KINDS.find((k) => k[0] === r.kind) || [, r.kind])[1])}</span>${r.status !== "open" ? ` <span class="rmst ${r.status === "done" ? "done" : "next"}">${esc(r.status)}</span>` : ""}${r.body ? `<div class="fine">${esc(r.body)}</div>` : ""}<div class="fine">${r.nick ? "by " + esc(r.nick) : ""}</div>${Admin.is ? `<div class="row" style="gap:6px;margin-top:4px">${["planned", "done", "declined", "open"].map((s) => `<button type="button" class="chip" data-ideast="${r.id}|${s}" style="padding:2px 8px;font-size:11px">${s}</button>`).join("")}</div>` : ""}</span></div>`).join("") : '<div class="fine">No ideas yet. Be the first.</div>';
 }
 function updateAboutOnInput(t) { if (["abRA", "abRB", "abPH", "abPA"].includes(t.id)) updateAboutTools(); }
+function curLang() { try { return localStorage.getItem("bk_lang") || "en"; } catch (e) { return "en"; } }
 
 /* ================= Admin (only accounts listed in the admins table) ================= */
 const Admin = { is: false, role: null, users: [], q: "" };
@@ -2815,7 +3016,7 @@ function wrongGuess(timedOut) {
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
   if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
-  if (S_.mode === "solo") { if (winner != null) saveResume(S_.game, S_.scope, S_.scores[0], S_.streak, S_.round); else clearResume(); } S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
+  if (S_.mode === "solo") { if (winner != null) saveResume(S_.game, S_.scope, S_.scores[0], S_.streak, S_.round); else clearResume(); } S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner === 0 && S_.game === "scramble" && S_.mode === "solo") { const p0 = prof(); p0.scrSolved = (p0.scrSolved || 0) + 1; if (p0.scrSolved >= 10) unlock(p0, "scramble10"); saveProf(p0); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 const RESUME_KEY = "bk_resume";
 const getResume = (game, scope) => { try { const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null"); return r && r.game === game && r.scope === scope && r.diff === S.diff && Date.now() - r.at < 3 * 864e5 ? r : null; } catch (e) { return null; } };
@@ -3041,7 +3242,7 @@ function rapidPick(k) {
   r.n++; if (ok) { r.you++; r.streak++; r.best = Math.max(r.best, r.streak); Snd.tick(); } else { r.streak = 0; Snd.wrong(); } if (mo) r.mod++;
   r.last = { ok, t: `${m[1]} ${m[3]}–${m[4]} ${m[2]}` }; nextRapid(); renderRapid();
 }
-function endRapid() { const r = S.rp; if (!r || r.phase === "done") return; r.phase = "done"; clearInterval(r.timer); if (r.you > r.mod) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + r.you * 2 + (r.you > r.mod ? 20 : 0), "Rapid fire", () => {}); renderRapid(); }
+function endRapid() { const r = S.rp; if (!r || r.phase === "done") return; r.phase = "done"; clearInterval(r.timer); if (r.you > r.mod) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + r.you * 2 + (r.you > r.mod ? 20 : 0), "Rapid fire", (p) => { if (r.you > r.mod) unlock(p, "rapid_win"); if (r.you >= 20) unlock(p, "rapid_20"); }); renderRapid(); }
 
 /* ================= Bracket buster: call every Champions League knockout tie, round by round ================= */
 const BB = DATA.bracket || [], BBPTS = [1, 2, 3, 4];
@@ -3068,9 +3269,47 @@ function bbLock() {
   b.you += y; b.mod += m; b.ptsYou += y * pt; b.ptsMod += m * pt; b.locked = true; y >= m ? Snd.right() : Snd.wrong(); renderBracket();
 }
 function bbNext() {
-  const b = S.bb; if (!b || !b.locked) return; if (b.r >= b.s.rounds.length - 1) { b.phase = "done"; if (b.ptsYou > b.ptsMod) { Snd.win(); confetti(); } reward(5 + b.you * 3 + (b.ptsYou > b.ptsMod ? 20 : 0), "Bracket buster", () => {}); renderBracket(); return; }
+  const b = S.bb; if (!b || !b.locked) return; if (b.r >= b.s.rounds.length - 1) { b.phase = "done"; if (b.ptsYou > b.ptsMod) { Snd.win(); confetti(); } reward(5 + b.you * 3 + (b.ptsYou > b.ptsMod ? 20 : 0), "Bracket buster", (p) => { if (b.ptsYou > b.ptsMod) unlock(p, "bracket_win"); }); renderBracket(); return; }
   b.r++; b.picks = {}; b.locked = false; Snd.tick(); renderBracket();
 }
+
+/* ================= Iconic matches: guess the highlights (scorers, assisters, penalty takers, red cards) ================= */
+const HL = DATA.highlights || [];
+const ICKINDS = [["any", "Surprise me", () => true], ["ucl", "Champions League", (m) => m.comp === "Champions League"], ["intl", "World Cups and Euros", (m) => /World Cup|European Championship/.test(m.comp)], ["cup", "Cup finals and Europa League", (m) => /Europa|FA Cup|Copa|DFB|Coppa/.test(m.comp)], ["league", "League classics", (m) => /Premier|Bundesliga|La Liga|Serie A|Ligue 1/.test(m.comp)]];
+function newIconic() {
+  trackPlay("Iconic matches"); const f = (ICKINDS.find((k) => k[0] === (S.icKind || "any")) || ICKINDS[0])[2], pool = HL.filter(f); if (!pool.length) { toast("No matches of that kind in this build."); return; }
+  const m = rnd(pool), qs = [];
+  m.ev.forEach((e, i) => { if (e.k === "goal") { qs.push({ i, q: e.pen ? "Who converted the penalty?" : "Who scored?", ans: e.p }); if (e.a) qs.push({ i, q: "Who set it up?", ans: e.a, assist: true }); } else qs.push({ i, q: e.why === "second yellow" ? "Who was sent off for a second yellow?" : "Who was sent off?", ans: e.p }); });
+  const cap = qs.filter((q) => !q.assist).length > 10 ? qs.filter((q) => !q.assist).slice(0, 10) : qs.slice(0, 12);
+  S.ic = { m, qs: cap, k: 0, got: {}, wrong: 0, hints: 0, hint: 0, skipped: 0, phase: "play", msg: "" }; renderIconic();
+}
+function icHint(s, level) { const t = s.split(" "), sur = t[t.length - 1]; return level === 1 ? `${t.length > 1 ? t[0][0] + ". " : ""}${sur.length} letters in the surname` : `Surname starts with “${sur.slice(0, 3)}”`; }
+function renderIconic() {
+  const x = S.ic;
+  if (!x) { $("#room").innerHTML = `<div class="card">${gamesBar("Iconic matches")}<h2 style="margin-top:6px">Iconic matches</h2><p class="sub">A famous match appears with its result and the highlights: the minute of every goal and red card, who it was for, and how. You name the scorer, the player who set it up, the penalty taker and who was sent off.</p><p class="fine">${HL.length} matches from Champions League and Europa League nights, finals, derbies and big league games, World Cups and Euros. Goals, minutes and cards come from match records (minutes are whole minutes, so a goal in added time shows as, say, 93'). A match is skipped if its goals do not add up to its score; own goals are not marked in the source, so those matches are left out.</p><div class="scope" style="padding:2px 0;margin-top:8px">${ICKINDS.map(([k, n, f]) => `<button type="button" class="chip" data-ick="${k}" aria-pressed="${(S.icKind || "any") === k}">${n} (${HL.filter(f).length})</button>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="icStart" type="button">Start</button></div></div>`; return; }
+  const m = x.m, done = x.phase === "done", cur = x.qs[x.k], sn = m.season >= 1990 && !/World Cup|European/.test(m.comp) ? `${m.season}-${String(m.season + 1).slice(2)}` : String(m.season);
+  const asked = new Set(x.qs.map((q) => q.i)), rows = m.ev.map((e, i) => {
+    const mine = x.qs.filter((q) => q.i === i), isCur = !done && cur && cur.i === i, side = e.s === "h" ? m.h : m.a;
+    const ok = (q) => x.got[x.qs.indexOf(q)];
+    const scorer = mine.find((q) => !q.assist), assist = mine.find((q) => q.assist);
+    const name = (q, real) => (done || x.got[x.qs.indexOf(q)] ? esc(real) : isCur && cur === q ? "<b>?</b>" : "…");
+    const txt = e.k === "goal" ? `${e.pen ? "Penalty" : "Goal"}${e.how && !e.pen ? ` (${e.how})` : ""} for ${esc(side)}: ${scorer ? name(scorer, e.p) : esc(e.p)}${e.a ? ` · assist ${assist ? name(assist, e.a) : esc(e.a)}` : " · no assist recorded"}` : `${e.why === "second yellow" ? "Second yellow, red card" : "Red card"} for ${esc(side)}: ${scorer ? name(scorer, e.p) : name(mine[0], e.p)}`;
+    return `<li class="icrow ${isCur ? "cur" : ""} ${e.k}"><span class="num">${e.m}'</span><span>${e.k === "goal" ? "<svg class=ic><use href=#i-ball></use></svg>" : "<i class=\"redcard\"></i>"} ${txt}</span></li>`;
+  }).join("");
+  const correct = Object.keys(x.got).length, score = Math.max(0, correct * 100 - x.wrong * 15 - x.hints * 30);
+  $("#room").innerHTML = `<div class="card">${gamesBar("Iconic matches")}<div class="qhud"><span class="label">${esc(m.t)} · ${esc(sn)} · ${esc(fmtDate(m.date))}</span><b class="num">${correct}/${x.qs.length}</b></div>
+    <div class="icscore"><b>${esc(m.h)}</b><span class="num">${m.hg} – ${m.ag}</span><b>${esc(m.a)}</b></div>
+    <ol class="iclist">${rows}</ol>
+    ${done ? `<div class="rcard on" style="margin-top:12px"><b style="font-size:20px">${correct === x.qs.length ? "Perfect highlights" : `${correct} of ${x.qs.length}`}</b><div class="fine">Score ${score}. ${x.wrong} wrong guess${x.wrong === 1 ? "" : "es"}, ${x.hints} hint${x.hints === 1 ? "" : "s"}, ${x.skipped} skipped.</div></div><div class="row" style="margin-top:12px"><button class="btn" id="icStart" type="button">Another match</button></div>`
+    : `<div class="answerbox"><div class="row"><b>${esc(cur.q)}</b><span class="fine">minute ${m.ev[cur.i].m}</span></div><div class="row"><input id="icIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a surname" aria-label="Player"><button class="btn" id="icGuess" type="button">Guess</button><button class="btn ghost" id="icHint" type="button">Hint (-30)</button><button class="btn ghost" id="icSkip" type="button">Skip</button></div>${x.hint ? `<div class="fine">Hint: ${esc(icHint(cur.ans, x.hint))}</div>` : ""}${x.msg ? `<div class="fine">${esc(x.msg)}</div>` : ""}</div>`}</div>`;
+  const i = $("#icIn"); if (i) i.focus();
+}
+function icMatch(typed, ans) {
+  const g = xiTok(typed), t = xiTok(ans); if (!g.length) return false; const same = (a, b) => a === b || (a.length >= 5 && Math.abs(a.length - b.length) <= 1 && editOne(a, b));
+  return g.join(" ") === t.join(" ") || (g.every((w) => w.length >= 3 && t.some((v) => same(w, v))));
+}
+function icAdvance() { const x = S.ic; x.k++; x.hint = 0; x.msg = ""; if (x.k >= x.qs.length) { x.phase = "done"; const c = Object.keys(x.got).length; if (c === x.qs.length) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + c * 3 + (c === x.qs.length ? 15 : 0), "Iconic matches", (p) => { p.icPlays = (p.icPlays || 0) + 1; if (c === x.qs.length && x.qs.length >= 4) unlock(p, "ic_perfect"); }); } renderIconic(); }
+function icGuess() { const x = S.ic; if (!x || x.phase !== "play") return; const cur = x.qs[x.k], v = ($("#icIn") || {}).value || ""; if (!v.trim()) return; if (icMatch(v, cur.ans)) { x.got[x.k] = true; x.msg = ""; Snd.right(); icAdvance(); } else { x.wrong++; x.msg = `"${v.trim()}" is not it.`; Snd.wrong(); renderIconic(); } }
 
 /* ================= Starting XI ================= */
 const XI = DATA.xi || [];
@@ -3121,7 +3360,7 @@ function xiGuess() {
   renderXI();
 }
 function editOne(a, b) { if (a === b) return true; let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1); if (a.length + 1 === b.length) return a.slice(i) === b.slice(i + 1); if (b.length + 1 === a.length) return a.slice(i + 1) === b.slice(i); return false; }
-function endXI() { const x = S.xi; if (!x || x.phase === "done") return; x.phase = "done"; clearInterval(x.timer); const n = x.found.size; if (n === 11) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + n * 3 + (n === 11 ? 20 : 0), "Starting XI", () => {}); renderXI(); }
+function endXI() { const x = S.xi; if (!x || x.phase === "done") return; x.phase = "done"; clearInterval(x.timer); const n = x.found.size; if (n === 11) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + n * 3 + (n === 11 ? 20 : 0), "Starting XI", (p) => { if (n === 11) unlock(p, "xi_perfect"); }); renderXI(); }
 
 /* ================= Football tic-tac-toe ================= */
 const POSNAME = { Goalkeeper: "Goalkeepers", Defender: "Defenders", Midfield: "Midfielders", Attack: "Attackers" };
@@ -3542,8 +3781,13 @@ document.addEventListener("click", (e) => {
   if (b.dataset.scope) { Snd.tick(); go(b.dataset.scope); route(e); return; }
   if (b.dataset.lg) { Snd.tick(); go("lab-" + SLUG[b.dataset.lg]); route(e); return; }
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
-  if (b.id === "musBtn") { Snd.toggleMusic(); paintSound(); Snd.tick(); return; }
-  if (b.id === "sndBtn") { Snd.cycle(); paintSound(); Snd.right(); return; }
+  if (b.id === "settingsBtn") { go("settings"); return; }
+  if (b.id === "d2In") { const m = ($("#d2Mail").value || "").trim(), pw = $("#d2Pw").value || ""; if (!m || !pw) { $("#d2Msg").textContent = "Enter the email and password."; return; } $("#d2Msg").textContent = "Signing in…"; Dual.signIn(m, pw).then((r) => { if (r.ok) { $("#d2Pw") && ($("#d2Pw").value = ""); renderRanked(); } else $("#d2Msg") && ($("#d2Msg").textContent = r.error); }); return; }
+  if (b.id === "d2Out") { Dual.out(); renderRanked(); return; }
+  if (b.id === "d2Go") { const g = $("#d2Game").value; resetGames(); S.dual = true; Dual.game = g; S.hubGroup = "ranked"; S.rk = true; S.game = g === "who" || g === "career" || g === "club" || g === "blur" || g === "scramble" || g === "ttt" ? g : "ttt"; Net.lastRef = null; if (g === "ttt") { renderRoom(); newTTT("duo"); } else { S.game = g; renderRoom(); newQuiz(g, "duo", S.code || "ALL"); nextRound(); } return; }
+  if (b.dataset.lang) { try { localStorage.setItem("bk_lang", b.dataset.lang); } catch (e) { /* blocked */ } applyLang(b.dataset.lang); renderSettings(); applyLang(b.dataset.lang); Snd.tick(); return; }
+  if (b.dataset.snd != null) { Snd.setLevel(+b.dataset.snd); renderSettings(); Snd.right(); return; }
+  if (b.dataset.mus != null) { Snd.setMusic(+b.dataset.mus); renderSettings(); Snd.tick(); return; }
   if (b.id === "profileBtn" && !(Account.signedIn || Account.claude) && Account.available) { Snd.tick(); authForm("in"); return; }
   if (b.id === "profileBtn" || b.id === "openProfileJoin") { openProfile(); return; }
   if (b.id === "modalClose") { closeModal(); return; }
@@ -3630,6 +3874,11 @@ document.addEventListener("click", (e) => {
   if (b.id === "bbLock") { bbLock(); return; }
   if (b.id === "bbNext") { bbNext(); return; }
   if (b.dataset.xik) { S.xiKind = b.dataset.xik; Snd.tick(); renderXI(); return; }
+  if (b.dataset.ick) { S.icKind = b.dataset.ick; Snd.tick(); renderIconic(); return; }
+  if (b.id === "icStart") { newIconic(); Snd.tick(); return; }
+  if (b.id === "icGuess") { icGuess(); return; }
+  if (b.id === "icHint") { const x = S.ic; if (x && x.phase === "play" && x.hint < 2) { x.hint++; x.hints++; renderIconic(); } return; }
+  if (b.id === "icSkip") { const x = S.ic; if (x && x.phase === "play") { x.skipped++; x.msg = ""; icAdvance(); } return; }
   if (b.id === "xiStart" || b.id === "xiAgain") { newXI(); Snd.tick(); return; }
   if (b.id === "xiGuess") { xiGuess(); return; }
   if (b.id === "xiHint") { const x = S.xi; if (x && x.phase === "play") { const i = x.team.xi.findIndex((p, k) => !x.found.has(k) && !(x.hintOf[k] >= 2)); if (i >= 0) { x.hintOf[i] = (x.hintOf[i] || 0) + 1; x.hints++; renderXI(); } } return; }
@@ -3668,14 +3917,14 @@ document.addEventListener("click", (e) => {
   if (b.id === "rpPlay") { toggleReplay(); return; }
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
-function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; S.rou = null; if (S.xi) clearInterval(S.xi.timer); S.xi = null; if (S.rp) clearInterval(S.rp.timer); S.rp = null; S.bb = null; }
+function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; S.rou = null; if (S.xi) clearInterval(S.xi.timer); S.xi = null; S.ic = null; S.dual = false; if (S.rp) clearInterval(S.rp.timer); S.rp = null; S.bb = null; }
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-diff]"); if (!b) return; S.diff = b.dataset.diff; try { localStorage.setItem("bk_diff", S.diff); } catch (err) { /* storage blocked */ } document.querySelectorAll("[data-diff]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.diff === S.diff)); const n = $("#diffNote"); if (n) n.textContent = DIFFNOTE[S.diff]; Snd.tick(); });
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
 document.addEventListener("input", (e) => { if (e.target.id === "admQ") { clearTimeout(window.__admT); window.__admT = setTimeout(() => { Admin.q = e.target.value; loadAdminUsers(); }, 300); } });
 document.addEventListener("input", (e) => { if (e.target.id === "pfPlayer") { const box = $("#pfPSug"), list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-favp="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")}</small></button>`).join(""); } });
 document.addEventListener("input", (e) => { if (e.target.id === "rIn") { const box = $("#rSug"); if (!box) return; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
 document.addEventListener("input", (e) => { if (e.target.id === "tIn") { const box = $("#tSug"); if (!box) return; const g = S.ttt.grid, r = g.rows[Math.floor(S.ttt.sel / 3)], c = g.cols[S.ttt.sel % 3]; const list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-sug="${x.id}"><span>${esc(x.n)}</span>${list.filter((y) => y.n === x.n).length > 1 ? `<small>born ${esc(x.dob.slice(0, 4))}</small>` : ""}</button>`).join(""); } });
-document.addEventListener("keydown", (e) => { if (S.rp && S.rp.phase === "play" && !/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || "")) && /^[hdaHDA]$/.test(e.key)) { rapidPick(e.key.toUpperCase()); return; } if (e.key !== "Enter") return; if (e.target.id === "xiIn") { e.preventDefault(); xiGuess(); return; } if (e.target.id === "rIn") { e.preventDefault(); if (Net.role === "host" && S.rou.turn === 1) return; rouSubmit(null); } else if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
+document.addEventListener("keydown", (e) => { if (S.rp && S.rp.phase === "play" && !/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || "")) && /^[hdaHDA]$/.test(e.key)) { rapidPick(e.key.toUpperCase()); return; } if (e.key !== "Enter") return; if (e.target.id === "xiIn") { e.preventDefault(); xiGuess(); return; } if (e.target.id === "icIn") { e.preventDefault(); icGuess(); return; } if (e.target.id === "rIn") { e.preventDefault(); if (Net.role === "host" && S.rou.turn === 1) return; rouSubmit(null); } else if (e.target.id === "tIn") { e.preventDefault(); tttSubmit(null); } else if (e.target.id === "nmIn") { e.preventDefault(); lockNumber(); } });
 document.addEventListener("change", (e) => {
   const t = e.target;
   if (t.id === "pfNick") { const b = $("#pfNickSave"); if (b && t.value.trim() && t.value.trim() !== (prof().nick || "")) b.click(); return; }
@@ -3701,6 +3950,6 @@ document.addEventListener("mouseout", (e) => { if (!e.relatedTarget || !lastHov 
 addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e.returnValue = ""; } });
 addEventListener("hashchange", () => route());
 
-renderLobby(); paintSound(); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
+renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
 try { fetch("data/photos.json").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.p) { QZ.players.forEach((p) => { const x = j.p[p.id]; if (x) { p.ph = x[0]; p.pq = x[1]; p.pd = x[2]; } }); window.__photosV = j.v; } }).catch(() => {}); } catch (e) { /* offline or blocked */ } route(); setTimeout(finishSplash, 300);
 </script>

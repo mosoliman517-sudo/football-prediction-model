@@ -104,6 +104,9 @@ def main():
             st.append((rows[i - 1]["d"] if i else pd.Timestamp("1900-01-01"), rw["d"], rows[i - 1]["to_club_id"] if i else rw["from_club_id"]))
         st.append((rows[-1]["d"], pd.Timestamp("2100-01-01"), rows[-1]["to_club_id"]))
         stints[pid] = st
+    for q in players:                                   # month of the player's latest club change: a photo older than that shows his previous club's shirt
+        stt = stints.get(q["id"])
+        q["mv"] = stt[-1][0].strftime("%Y-%m") if stt and stt[-1][0].year >= 1995 else ""
     def club_on(pid, day):
         for a, b, cid in stints.get(pid, []):
             if a <= day < b:
@@ -181,6 +184,8 @@ def main():
                 q["club"] = o["club"]; q["comp"] = "OTH"
             if not q["hist"] or q["hist"][-1] != q["club"]:
                 q["hist"].append(q["club"])
+            if o.get("since"):
+                q["mv"] = o["since"][:7]
     print("transfer fixes applied:", sum(1 for q in players if ov.get(q["n"])))
     try:                                                # facts rebuilt from real matches (src/47_build_match_facts.py) replace the guesses made from squads and transfer dates above
         mf = json.load(open("02_processed_data/match_facts.json", encoding="utf-8"))

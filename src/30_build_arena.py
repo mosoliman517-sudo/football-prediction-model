@@ -171,6 +171,15 @@ def final_tables(lg):
     return out
 leagues = {}
 colours = {}
+REAL = {}
+GN, GNI = [], {}
+def gname(n):
+    if n not in GNI:
+        GNI[n] = len(GN); GN.append(n)
+    return GNI[n]
+if os.path.exists("02_processed_data/real_goals.json"):
+    for lg_, dt_, h_, a_, gl_ in json.load(open("02_processed_data/real_goals.json", encoding="utf-8")):
+        REAL[(lg_, dt_, h_, a_)] = gl_
 for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     seasons = {}
     for lab, s in g.groupby("season_lab"):
@@ -180,6 +189,9 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
             mk = [r.mk_a, r.mk_d, r.mk_h] if not np.isnan(r.mk_a) else [r.p_a, r.p_d, r.p_h]
             exp, real = stat_lookup.get((lg, r.date, r.home, r.away), (None, None))
             ms.append([r.date, r.home, r.away, int(r.hg), int(r.ag), r.res, round(r.p_a, 3), round(r.p_d, 3), round(r.p_h, 3), round(r.lam_h, 2), round(r.lam_a, 2), *[round(float(v), 3) for v in mk], exp, real])
+            rg = REAL.get((lg, r.date, r.home, r.away))
+            if rg:                                          # real goals (src/53): [minute, side, scorer, assister or -1, penalty], names in a shared table
+                ms[-1].append([[g_[0], g_[1], gname(g_[2]), gname(g_[3]) if g_[3] else -1, g_[4]] for g_ in rg])
         rb, seen, last = [], set(), None                      # matchday groups: a new group starts after a 2-day gap or when a club would play twice
         for i, mm in enumerate(ms):
             dd = pd.Timestamp(mm[0])
@@ -226,7 +238,7 @@ for nm in _h.NAMES:
         hero.append({"n": nm, "img": uri, "photo": photo, "card": _cards.get(_h.norm(nm))})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
 print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
-data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
+data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "gn": GN, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])

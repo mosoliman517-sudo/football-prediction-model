@@ -35,9 +35,10 @@ jobs:
           python3 src/49_build_xi.py
           python3 src/50_build_bracket.py
           python3 src/52_build_highlights.py
+          python3 src/53_build_real_goals.py
       - name: Commit the JSON results if they changed
         run: |
           git config user.name "ballknowledge bot"
           git config user.email "bot@users.noreply.github.com"
-          git add 02_processed_data/quiz_data.json 02_processed_data/match_facts.json 02_processed_data/transfer_fixes.json 02_processed_data/xi.json 02_processed_data/bracket.json 02_processed_data/highlights.json
+          git add 02_processed_data/quiz_data.json 02_processed_data/match_facts.json 02_processed_data/transfer_fixes.json 02_processed_data/xi.json 02_processed_data/bracket.json 02_processed_data/highlights.json 02_processed_data/real_goals.json
           git diff --cached --quiet || (git commit -m "Weekly player facts refresh" && git push)

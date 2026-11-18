@@ -270,8 +270,8 @@ table.race td, table.race th { padding: 6px 7px; }
 .mt-poss i { display: block; transition: width .25s linear; }
 .mt-stats { display: grid; grid-template-columns: 1fr auto 1fr; gap: 4px 12px; align-items: center; }
 .mt-stats > .num:nth-child(3n+1) { text-align: left; } .mt-stats > .num:nth-child(3n) { text-align: right; } .mt-stats .label { text-align: center; }
-.mt-pitch { width: 100%; height: auto; border-radius: 12px; background: #1F6B40; }
-.mt-feed { list-style: none; margin: 0; padding: 0; max-height: 250px; overflow: auto; display: flex; flex-direction: column; }
+.mt-pitch { width: 100%; max-width: 380px; max-height: 30vh; display: block; margin: 0 auto; height: auto; border-radius: 12px; background: #1F6B40; }
+.mt-feed { list-style: none; margin: 0; padding: 0; max-height: 150px; overflow: auto; display: flex; flex-direction: column; }
 .mt-feed li { display: grid; grid-template-columns: 54px 1fr; gap: 8px; padding: 6px 4px; border-top: 1px solid var(--line); font-size: 13px; animation: rise .35s ease both; }
 .mt-feed li.goal { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .mt-feed li.ht, .mt-feed li.ft { color: var(--muted); font-weight: 600; }
@@ -674,6 +674,15 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 .bbgrid { display: grid; gap: 10px; margin-top: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } .bbtie { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface2); } .bbinfo { grid-column: 1 / -1; text-align: center; }
 .bbt { padding: 10px 6px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; } .bbt:hover:not(:disabled) { border-color: var(--accent); } .bbt.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; } .bbt.won { border-color: #4ade80; box-shadow: 0 0 0 1px #4ade80 inset; } .bbt.lost { border-color: #ff7a8a; opacity: .75; }
 .bbc { display: grid; justify-items: center; gap: 4px; text-align: center; } .bbc b { font-size: 12px; line-height: 1.2; }
+.bro { position: fixed; inset: 0; z-index: 9400; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg) 88%, #000); backdrop-filter: blur(8px); animation: broIn .25s ease both; } @keyframes broIn { from { opacity: 0; } }
+.bro-in { width: min(440px, 100%); display: grid; gap: 10px; text-align: center; } .bro-m { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.bro-b { padding: 16px 12px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface2); opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .35s ease, transform .35s cubic-bezier(.2, 1.3, .4, 1); } .bro-b.on { opacity: 1; transform: none; }
+.bro-b b { display: block; font: 800 clamp(22px, 6vw, 30px) var(--display); margin-top: 4px; } .bro-f { border-color: var(--accent); } .bro-f b { font-size: clamp(44px, 13vw, 68px); letter-spacing: -.02em; }
+.bro-v { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; opacity: 0; transition: opacity .3s; } .bro-v.on { opacity: 1; } .bro-v .vd { padding: 6px 12px; border-radius: 99px; font-weight: 700; font-size: 13px; border: 1px solid var(--line); } .bro-v .vd.ok { color: #4ade80; border-color: #4ade80; } .bro-v .vd.no { color: #ff7a8a; border-color: #ff7a8a; }
+.bars .tr i { display: flex; align-items: center; overflow: hidden; } .bars .tr i em { font: 700 10px var(--mono); font-style: normal; padding-left: 7px; white-space: nowrap; color: var(--bg); letter-spacing: .02em; }
+body[data-net="host"] .buzzers .buzz.p2, body[data-net="guest"] .buzzers .buzz.p1 { display: none; } body[data-net="host"] .buzzers, body[data-net="guest"] .buzzers { grid-template-columns: 1fr; }
+.homeinner { min-width: 0; max-width: 100%; } .homeinner > * { max-width: 100%; }
+@media (max-width: 640px) { .homehero { padding: 22px 12px; } .homeinner { padding: 10px; } .homeinner h1 { font-size: min(10.4vw, 54px); letter-spacing: -.03em; white-space: nowrap; } }
 </style>
 
 <!--sprite--><svg width='0' height='0' style='position:absolute' aria-hidden='true' focusable='false'><defs><symbol id='i-trophy' viewBox='0 0 24 24'><path d='M8 4h8v5a4 4 0 0 1-8 0V4z M8 6H5v1a3 3 0 0 0 3 3 M16 6h3v1a3 3 0 0 1-3 3 M12 13v4 M8.5 20h7 M10 17h4'/></symbol><symbol id='i-album' viewBox='0 0 24 24'><path d='M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z M5 17a3 3 0 0 1 3-3h11'/></symbol><symbol id='i-hourglass' viewBox='0 0 24 24'><path d='M6 3h12 M6 21h12 M7 3c0 5 5 6 5 9s-5 4-5 9 M17 3c0 5-5 6-5 9s5 4 5 9'/></symbol><symbol id='i-flame' viewBox='0 0 24 24'><path d='M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4 0 2 1 3 2 3 0-3-1-5 1-9z'/></symbol><symbol id='i-chart' viewBox='0 0 24 24'><path d='M5 20v-6 M12 20V6 M19 20v-10 M3 20h18'/></symbol><symbol id='i-bulb' viewBox='0 0 24 24'><path d='M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z'/></symbol><symbol id='i-star' viewBox='0 0 24 24'><path d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/></symbol><symbol id='i-games' viewBox='0 0 24 24'><path d='M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5 2l-1-1H9l-1 1a3 3 0 0 1-5-2v-1a4 4 0 0 1 4-4z M8 11v3 M6.5 12.5h3 M16 12h.01 M18 13.5h.01'/></symbol><symbol id='i-flag' viewBox='0 0 24 24'><path d='M5 21V4 M5 4h12l-2 4 2 4H5'/></symbol><symbol id='i-live' viewBox='0 0 24 24'><path d='M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M7.5 7.5a6 6 0 0 0 0 9 M16.5 7.5a6 6 0 0 1 0 9 M4.5 4.5a10 10 0 0 0 0 15 M19.5 4.5a10 10 0 0 1 0 15'/></symbol><symbol id='i-crown' viewBox='0 0 24 24'><path d='M3 8l4 4 5-7 5 7 4-4-2 11H5z'/></symbol><symbol id='i-chip' viewBox='0 0 24 24'><path d='M7 7h10v10H7z M10 3v4 M14 3v4 M10 17v4 M14 17v4 M3 10h4 M3 14h4 M17 10h4 M17 14h4'/></symbol><symbol id='i-brain' viewBox='0 0 24 24'><path d='M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3 M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3 M12 4v16'/></symbol><symbol id='i-ball' viewBox='0 0 24 24'><path d='M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0 M12 8l3.5 2.5-1.3 4h-4.4l-1.3-4z M12 3v5 M15.5 10.5L20 9 M14.2 14.5L17 18 M9.8 14.5L7 18 M8.5 10.5L4 9'/></symbol><symbol id='i-gloves' viewBox='0 0 24 24'><path d='M7 21v-8l-2-3a1.5 1.5 0 0 1 2.5-1.5L9 10V5a1.5 1.5 0 0 1 3 0v4 M12 9V4a1.5 1.5 0 0 1 3 0v5 M15 9V6a1.5 1.5 0 0 1 3 0v8c0 4-2 7-6 7H7'/></symbol><symbol id='i-handshake' viewBox='0 0 24 24'><path d='M3 12l4-4 4 2 3-2 4 3 3-1 M3 12l5 5 2-1 M8 17l2 2 M12 15l2 3 M21 12l-6 6-2-1'/></symbol><symbol id='i-medal' viewBox='0 0 24 24'><path d='M8 3h8l-2 6h-4z M12 9a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/></symbol><symbol id='i-search' viewBox='0 0 24 24'><path d='M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-4-4'/></symbol><symbol id='i-gem' viewBox='0 0 24 24'><path d='M6 4h12l4 5-10 12L2 9z M2 9h20 M9 4l-2 5 5 12 5-12-2-5'/></symbol><symbol id='i-seat' viewBox='0 0 24 24'><path d='M6 11V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5 M5 11h14v4H5z M7 15v5 M17 15v5'/></symbol><symbol id='i-stadium' viewBox='0 0 24 24'><path d='M3 14c0-3 4-5 9-5s9 2 9 5-4 5-9 5-9-2-9-5z M3 14v-3 M21 14v-3 M8 9.5V6 M16 9.5V6'/></symbol><symbol id='i-calendar' viewBox='0 0 24 24'><path d='M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4'/></symbol><symbol id='i-users' viewBox='0 0 24 24'><path d='M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M3 20c0-3 3-5 6-5s6 2 6 5 M17 11a2.5 2.5 0 1 0 0-5 M18 15c2 0 4 1.5 4 4'/></symbol><symbol id='i-fore' viewBox='0 0 24 24'><path d='M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M8 9c1-1.5 2.5-2 4-2 M7 20h10'/></symbol><symbol id='i-user' viewBox='0 0 24 24'><path d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 4-6 8-6s8 2 8 6'/></symbol><symbol id='i-palette' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 0 0 3-3c0-6-4-11-8-11z M8 10h.01 M12 7h.01 M16 10h.01'/></symbol><symbol id='i-compass' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M15 9l-2 6-4 .5 2-6z'/></symbol><symbol id='i-dice' viewBox='0 0 24 24'><path d='M5 5h14v14H5z M9 9h.01 M15 9h.01 M12 12h.01 M9 15h.01 M15 15h.01'/></symbol><symbol id='i-net' viewBox='0 0 24 24'><path d='M3 18V7h18v11 M3 7l3 11 M21 7l-3 11 M9 7v11 M15 7v11'/></symbol><symbol id='i-target' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 12h.01'/></symbol><symbol id='i-bolt' viewBox='0 0 24 24'><path d='M13 2L4 14h7l-1 8 9-12h-7z'/></symbol><symbol id='i-moon' viewBox='0 0 24 24'><path d='M20 14a8 8 0 1 1-10-10 6 6 0 0 0 10 10z'/></symbol><symbol id='i-sun' viewBox='0 0 24 24'><path d='M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5'/></symbol><symbol id='i-monitor' viewBox='0 0 24 24'><path d='M3 5h18v11H3z M8 20h8 M12 16v4'/></symbol><symbol id='i-trend' viewBox='0 0 24 24'><path d='M3 17l6-6 4 4 8-8 M15 7h6v6'/></symbol><symbol id='i-check' viewBox='0 0 24 24'><path d='M5 12l4 4 10-10'/></symbol><symbol id='i-cross' viewBox='0 0 24 24'><path d='M6 6l12 12 M18 6L6 18'/></symbol><symbol id='i-minus' viewBox='0 0 24 24'><path d='M6 12h12'/></symbol><symbol id='i-swords' viewBox='0 0 24 24'><path d='M4 4l10 10 M20 4L10 14 M4 20l4-4 M20 20l-4-4 M3 4h4v4 M21 4h-4v4'/></symbol><symbol id='i-timer' viewBox='0 0 24 24'><path d='M12 8v5l3 2 M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M10 2h4'/></symbol><symbol id='i-shield' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z'/></symbol><symbol id='i-gear' viewBox='0 0 24 24'><path d='M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1'/></symbol><symbol id='i-coach' viewBox='0 0 24 24'><path d='M4 5h16v10H4z M9 20l3-5 3 5 M8 9h8'/></symbol><symbol id='i-suitcase' viewBox='0 0 24 24'><path d='M4 8h16v12H4z M9 8V5h6v3'/></symbol><symbol id='i-globe' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18'/></symbol><symbol id='i-sprout' viewBox='0 0 24 24'><path d='M12 20v-8 M12 12c0-4-3-6-7-6 0 4 3 6 7 6z M12 14c0-3 2-5 6-5 0 3-2 5-6 5z'/></symbol><symbol id='i-ruler' viewBox='0 0 24 24'><path d='M3 16L16 3l5 5L8 21z M8 10l2 2 M11 7l2 2 M5 13l2 2'/></symbol><symbol id='i-boot' viewBox='0 0 24 24'><path d='M6 3h5v8l6 2c2 .7 3 2 3 4v2H5z M8 17h2 M12 17h2'/></symbol><symbol id='i-euro' viewBox='0 0 24 24'><path d='M16 7a6 6 0 1 0 0 10 M5 10h8 M5 14h8'/></symbol><symbol id='i-coin' viewBox='0 0 24 24'><path d='M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7v10 M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4'/></symbol><symbol id='i-cap' viewBox='0 0 24 24'><path d='M3 15c0-5 4-8 9-8 3 0 6 1 8 4v2H3z M3 15h18 M12 7c1.5 0 2-2 4-2'/></symbol><symbol id='i-rank' viewBox='0 0 24 24'><path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M12 8l1.6 3.2 3.4.5-2.5 2.4.6 3.4L12 15.8 8.9 17.5l.6-3.4L7 11.7l3.4-.5z'/></symbol></defs></svg>
@@ -737,7 +746,7 @@ function paintSplashArt() {
 <div class="wrap">
   <div class="bar">
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
-    <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.0 beta, see what is new"><b>Beta</b> v0.9.0</button>
+    <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.1 beta, see what is new"><b>Beta</b> v0.9.1</button>
     <span class="byline">Built by moisback22</span>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
@@ -1052,8 +1061,9 @@ function route(ev) {
   if (h === "games") { mode = "games"; rest = "all-leagues"; } else if (h.startsWith("games-")) { mode = "games"; rest = h.slice(6); } else if (h.startsWith("lab-")) { mode = "lab"; rest = h.slice(4); }
   const slug = Object.keys(BYSLUG).find((x) => rest === x || rest.startsWith(x + "-"));
   if (!slug) return showHome(ev);
-  const lg = BYSLUG[slug], tail = rest.slice(slug.length + 1);
+  let lg = BYSLUG[slug]; const tail = rest.slice(slug.length + 1);
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
+  if (mode === "lab" && lg === "ALL") lg = ORDER[0];          // the model section has no all-leagues view
   S.mode = mode;
   if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" ? tail : null; S.rk = tail === "ranked"; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
@@ -1064,7 +1074,7 @@ function showHome(ev) {
   $("#home").hidden = false; $("#lobby").hidden = true; $("#league").hidden = true; renderHome(); window.scrollTo(0, 0);
 }
 function showLab(ev) {
-  S.code = null; S.mode = "lab-pick"; S.cur = null; setTheme("ALL", ev);
+  S.code = null; S.mode = "lab-pick"; S.cur = null; setTheme("ALL", ev); renderLobby();
   $("#home").hidden = true; $("#lobby").hidden = false; $("#league").hidden = true; window.scrollTo(0, 0);
 }
 function openLeague(code, ev) {
@@ -1078,7 +1088,7 @@ function openLeague(code, ev) {
 }
 function renderScope() {
   const prefix = S.mode === "games" ? "games-" : "lab-";
-  $("#scope").innerHTML = ["ALL", ...ORDER].map((c) => `<button type="button" class="chip" data-scope="${prefix}${SLUG[c]}" aria-pressed="${S.code === c}">${c === "ALL" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("");
+  $("#scope").innerHTML = (S.mode === "lab" ? ORDER : ["ALL", ...ORDER]).map((c) => `<button type="button" class="chip" data-scope="${prefix}${SLUG[c]}" aria-pressed="${S.code === c}">${c === "ALL" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("");
 }
 /* ---------- front page ---------- */
 function renderHome() {
@@ -1095,7 +1105,7 @@ function renderHome() {
 
 /* ---------- lobby ---------- */
 function renderLobby() {
-  $("#worlds").innerHTML = ["ALL", ...ORDER].map((c) => {
+  $("#worlds").innerHTML = (S.mode === "lab-pick" ? ORDER : ["ALL", ...ORDER]).map((c) => {
     const L = lgOf(c), p = PAL[c], sm = DATA.summary[c], st = L.star;
     return `<button type="button" class="world" data-lg="${c}" style="--c-bg:${p.bg};--c-surface:${p.surface};--c-ink:${p.ink};--c-muted:${p.muted};--c-accent:${p.accent};--c-glow:${p.glow};--c-display:${p.display}">
       <span class="flag" style="background:${FLAG[c]}" aria-hidden="true"></span>${emblem(c)}
@@ -1187,7 +1197,7 @@ function showReveal(it, instant) {
   if (S.cur && S.cur.m) box.insertAdjacentHTML("beforeend", statsCard(S.cur.c, S.cur.m) + '<div class="row" style="margin-top:6px"><button class="btn ghost" id="watchBtn" type="button">Watch the model\'s match</button></div>');
   const cards = box.querySelectorAll(".rcard");
   if (instant) { cards.forEach((c) => c.classList.add("on")); box.querySelectorAll(".fill").forEach((f) => { f.style.transition = "none"; f.style.width = f.dataset.w + "%"; }); return; }
-  Snd.whoosh();
+  Snd.whoosh(); bigReveal(it, ok, mok, yp, mpts);
   step(cards[0], 120, () => requestAnimationFrame(() => box.querySelectorAll(".fill").forEach((f) => { f.style.width = f.dataset.w + "%"; })));
   if (cards[2]) step(cards[2], 2200);
   step(cards[1], 1300, () => {
@@ -1195,6 +1205,24 @@ function showReveal(it, instant) {
     setTimeout(() => { if (yp > mpts) { Snd.win(); confetti(); } else if (ok) Snd.right(); else Snd.wrong(); S.busy = false; lbPublish(); afterPlayHook(it); }, 700);
   });
 }
+/* A quick full-screen reveal in three beats: what you called, what the model called, the real score. */
+function bigReveal(it, ok, mok, yp, mpts) {
+  const old = $("#bro"); if (old) old.remove();
+  const call = (r, s) => `${OUTNAME[r]}${r === "D" ? "" : " win"}${s ? ` · ${s[0]}-${s[1]}` : ""}`;
+  const o = document.createElement("div"); o.id = "bro"; o.className = "bro"; o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Result reveal");
+  o.innerHTML = `<div class="bro-in"><div class="bro-m">${esc(it.home)} v ${esc(it.away)}</div>
+    <div class="bro-b" id="broY"><span class="label">You called</span><b>${esc(call(it.pick, it.score))}</b></div>
+    <div class="bro-b" id="broM"><span class="label">The model called</span><b>${esc(call(it.mpick, it.mscore))}</b></div>
+    <div class="bro-b bro-f" id="broF"><span class="label">Full time</span><b class="num" id="broS">0-0</b></div>
+    <div class="bro-v" id="broV"><span class="vd ${ok ? "ok" : "no"}">You: ${ok ? "right" : "wrong"} · ${yp} pt${yp === 1 ? "" : "s"}</span><span class="vd ${mok ? "ok" : "no"}">Model: ${mok ? "right" : "wrong"} · ${mpts} pt${mpts === 1 ? "" : "s"}</span></div>
+    <div class="row" style="justify-content:center;margin-top:14px"><button class="btn ghost" id="broMore" type="button">Details</button><button class="btn" id="broNext" type="button">${S.cur && S.cur.onDone ? "Back to the Daily 5" : "Next match"}</button></div></div>`;
+  document.body.appendChild(o);
+  const at = (id, ms) => setTimeout(() => { const e = $("#" + id); if (e) e.classList.add("on"); }, REDUCED ? 0 : ms);
+  at("broY", 100); at("broM", 900); at("broF", 1700);
+  setTimeout(() => { const e = $("#broS"); if (!e) return; if (REDUCED) e.textContent = `${it.real[0]}-${it.real[1]}`; else countUp(e, it.real); }, REDUCED ? 0 : 1800);
+  at("broV", 2700);
+}
+function closeBro() { const o = $("#bro"); if (o) o.remove(); }
 function countUp(el, real) {
   if (!el) return;
   const end = real, t0 = performance.now(); const tot = Math.max(end[0], end[1]);
@@ -1326,7 +1354,7 @@ function pickBy(r, list, wi, skip) {
 }
 function squadOf(c, season, club) {
   const L = lgOf(c); let sq = (L.scorers && L.scorers[season] && L.scorers[season][club]) || [];
-  if (L.star.club === club) sq = [[L.star.name, "MID", 7, 7], ...sq];        // the league's star always has a chance of being involved
+  if (sq.length && L.star && L.star.club === club) sq = [[L.star.name, "MID", 7, 7], ...sq];   // today's star is added only for seasons whose squads we really have; before, he might not even have been born (a 2004 match named Lamine Yamal)
   return sq;
 }
 // With no stored statistics forecast the league average is scaled by each side's expected goals, so stats still follow the goal forecast.
@@ -1345,7 +1373,7 @@ function genMatch(c, season, home, away, score, seed, exp) {
   const spot = (sd, goal) => { const d = goal ? 5 + 11 * Math.pow(r(), 1.5) : 7 + 24 * Math.pow(r(), 1.2), spread = Math.min(26, 6 + d * 0.5); return [sd === "H" ? 105 - d : d, 34 + (r() * 2 - 1) * spread * (goal ? 0.7 : 1)]; };
   const ev = [];
   [["H", home, score[0], 0], ["A", away, score[1], 1]].forEach(([sd, club, g, k]) => {
-    const squad = squadOf(c, season, club), anon = () => `${club} ${r() < 0.55 ? "striker" : r() < 0.7 ? "midfielder" : "defender"}`;
+    const squad = squadOf(c, season, club), anon = () => "A player";
     const xSh = exp[k], xSot = exp[2 + k], xCor = exp[4 + k], xFoul = exp[6 + k], xYel = exp[8 + k];
     for (let i = 0; i < g; i++) { const sc = pickBy(r, squad, 2), as = r() < 0.72 && sc ? pickBy(r, squad, 3, sc[0]) : null, [x, y] = spot(sd, true); ev.push({ t: minute(FH), sd, type: "goal", x, y, who: sc ? sc[0] : anon(), assist: as ? as[0] : null }); }
     const nSot = Math.max(g, Math.round(xSot)), nShots = Math.max(nSot, Math.round(xSh)), saves = nSot - g, others = nShots - nSot;
@@ -1370,7 +1398,7 @@ function theatreHTML(m) {
     <div class="mt-poss" aria-hidden="true"><i id="thPH" style="background:var(--home)"></i><i id="thPA" style="background:var(--away)"></i></div>
     <div class="mt-stats" id="thStats"></div>${pitch}
     <div class="fine">${esc(m.home)} attacks to the right, ${esc(m.away)} to the left. Filled dot: goal. Ring: saved. Cross: wide. Grey: blocked. Positions are illustrative; the final score and every statistic come from the model's forecast.</div>
-    <div class="row mt-ctrl" style="margin-top:10px"><button class="btn ghost" id="thPause" type="button">Pause</button><button class="btn ghost" id="thSpeed" type="button">Speed 1x</button><button class="btn ghost" id="thSkip" type="button">Skip to full time</button></div>
+    <div class="row mt-ctrl" style="margin-top:10px"><button class="btn ghost" id="thPause" type="button">Pause</button><button class="btn ghost" id="thSpeed" type="button">Speed 3x</button><button class="btn ghost" id="thSkip" type="button">Skip to full time</button></div>
     <ol class="mt-feed" id="thFeed"></ol>`;
 }
 function paintTheatre() {
@@ -1420,7 +1448,7 @@ function finishTheatre() {
 function startTheatre(c, season, m, score, onDone) {
   stopTheatre();
   const seed = hash(`${m[1]}|${m[2]}|${m[0]}|${score.join("-")}`);
-  theatre.m = genMatch(c, season, m[1], m[2], score, seed, expFor(m)); theatre.t = 0; theatre.speed = 1; theatre.paused = false; theatre.done = onDone; theatre.last = 0;
+  theatre.m = genMatch(c, season, m[1], m[2], score, seed, expFor(m)); theatre.t = 0; theatre.speed = 3; theatre.paused = false; theatre.done = onDone; theatre.last = 0;
   const box = $("#theatre"); box.innerHTML = theatreHTML(theatre.m); box.hidden = false; paintTheatre(); Snd.whistle();
   box.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "nearest" });
   if (REDUCED) { finishTheatre(); return; }
@@ -2044,6 +2072,13 @@ const Ranked = {
     if (Board.mode !== "rest") return null;
     try { const t = await Account.token(); const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: t ? Account.hdr(t) : Board.headers(), body: JSON.stringify(args || {}) }); if (!r.ok) return null; const txt = await r.text(); return txt ? JSON.parse(txt) : true; } catch (e) { return null; }
   },
+  /* like rpc, but says what went wrong instead of returning null: { ok, data, why } */
+  async rpcx(fn, args) {
+    if (Board.mode !== "rest") return { ok: false, why: "This build has no database connection." };
+    try { const t = await Account.token(); if (!t) return { ok: false, why: "Please sign in first." }; const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: Account.hdr(t), body: JSON.stringify(args || {}) }); const txt = await r.text(); let j = null; try { j = txt ? JSON.parse(txt) : true; } catch (e) { j = txt; }
+      if (!r.ok) return { ok: false, why: r.status === 404 || (j && j.code === "PGRST202") ? `The database function ${fn} is missing. Run its schema file in Supabase.` : `The database refused it (${r.status}${j && j.message ? ": " + j.message : ""}).` };
+      return { ok: true, data: j }; } catch (e) { return { ok: false, why: "Could not reach the server." }; }
+  },
   async refresh() { const r = await this.rpc("my_rating"); if (r && r[0]) { this.elo = r[0].elo; this.games = r[0].games; this.wins = r[0].wins; } return this.elo; },
   startLobby(code, game, diff) { this.stopLobby(true); const go = () => this.rpc("lobby_ping", { p_code: code, p_game: game, p_diff: diff }); go(); this.lt = setInterval(go, 15000); },
   stopLobby(quiet) { if (this.lt) { clearInterval(this.lt); this.lt = null; if (!quiet) this.rpc("lobby_close"); } },
@@ -2243,7 +2278,7 @@ function reportDialog(kind, ref, label) {
   if (!Account.signedIn || Board.mode !== "rest") { toast("Sign in to send a report"); Account.available ? authForm("in") : openProfile(); return; }
   modal(`<h2 style="font-size:24px">Report a problem</h2><p class="fine">${esc(label)}. What is wrong? (a wrong photo, club, fact or answer)</p><textarea id="rpNote" maxlength="500" rows="4" placeholder="For example: this player now plays for another club" aria-label="What is wrong" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--sans, system-ui)"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="rpSend" data-kind="${esc(kind)}" data-ref="${esc(ref)}" type="button">Send report</button><button class="btn ghost" id="modalClose" type="button">Cancel</button></div>`);
 }
-const CHANGELOG = { v: "2026-11-26", items: [["Older Champions League finals", "Starting XI now has the Champions League finals from 2000 to 2013, with lineups from Wikipedia, and keeps only the main derbies: one per league and three in the Premier League."], ["Starting XI: 953 matches", "Cup and Champions League finals, quarter-finals and semi-finals, 18 famous derbies like El Clásico and the Manchester derby, and top-three clashes. Pick the match type before you start."], ["Nine and nine", "New: Starting XI, Rapid fire and Bracket buster. Tic-tac-toe has Best of 3, wrong answers can be reported, and there is a Weekly tournament with a Weekly champion badge."], ["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
+const CHANGELOG = { v: "2026-11-27", items: [["Fixes and polish", "A quick three-beat reveal after each call, a smaller and faster match simulation, labelled model bars, a mobile title that fits, one Buzz button online, consistent player photo framing, and no more invented scorers in old matches."], ["Older Champions League finals", "Starting XI now has the Champions League finals from 2000 to 2013, with lineups from Wikipedia, and keeps only the main derbies: one per league and three in the Premier League."], ["Starting XI: 953 matches", "Cup and Champions League finals, quarter-finals and semi-finals, 18 famous derbies like El Clásico and the Manchester derby, and top-three clashes. Pick the match type before you start."], ["Nine and nine", "New: Starting XI, Rapid fire and Bracket buster. Tic-tac-toe has Best of 3, wrong answers can be reported, and there is a Weekly tournament with a Weekly champion badge."], ["Real match facts", "Managers, league titles, cup wins and teammates now come from who actually played in each match since 2012-13, not from guesses. Played-under is back as a category."], ["Tic-tac-toe draft", "Twelve categories, one from each family, and players take turns picking three each: X picks the rows, O the columns. Every pair is checked so no category sits inside another."], ["Data fixes", "Players who moved this summer now show their new club in tic-tac-toe and the quizzes. Matchdays are real rounds with no club twice, and older seasons are complete again."], ["Music", "A calm lobby loop and a slightly more driven in-game loop, played live with no downloads. Music has its own button next to Sound."], ["Badges", "Wear up to three of your achievements next to your picture. Every achievement now has a difficulty from Common to Legendary."], ["Epic ranked rooms", "Waiting, joining and a versus screen with a countdown when your opponent arrives."], ["Moving loading screens", "Animated player cards and twelve goal recreations to collect."], ["Fresher player photos", "Premier League players now use the official current-season photo; everyone else gets the newest available one."], ["Every game explains itself", "A short how-it-works panel appears the first time you open a game. Press the ? button to see it again."], ["A gentler tour", "New visitors choose what they want to do and get a short, personal walkthrough."], ["Report a problem", "Spot a wrong photo, club or fact? Report it from any player card."]] };
 function showWhatsNew() {
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${CHANGELOG.items.map(([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
   try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
@@ -2281,8 +2316,9 @@ async function renderAdmin() {
   loadAdminUsers(); loadAdminReports();
 }
 async function loadAdminReports() {
-  const rows = await Ranked.rpc("admin_reports", { p_status: "open" }), box = $("#admReports"); if (!box) return;
-  if (!rows) { box.innerHTML = '<div class="fine">Reports need schema_v7.sql.</div>'; return; }
+  const res = await Ranked.rpcx("admin_reports", { p_status: "open" }), box = $("#admReports"); if (!box) return;
+  if (!res.ok) { box.innerHTML = `<div class="fine">Could not load reports. ${esc(res.why)}</div>`; return; }
+  const rows = Array.isArray(res.data) ? res.data : [];
   $("#admRepN").textContent = rows.length + " open";
   box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow rrow"><div><b>${esc(r.ref || r.kind)}</b><div class="fine">${esc(r.note || "")}</div><div class="fine">${esc(r.email || "")} · ${esc((r.created || "").slice(0, 16).replace("T", " "))}</div></div><button class="btn ghost" data-resolve="${r.id}" type="button">Resolve</button></div>`).join("") : '<div class="fine">No open reports.</div>';
 }
@@ -2336,7 +2372,7 @@ async function renderProfilePage() {
     ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
     <label class="pfl">Profile picture</label><div class="avgrid">${avs}</div>
     <label class="pfl">Favourite player</label><div class="row"><input id="pfPlayer" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${favP ? esc(favP.n) : "Search a player"}" aria-label="Favourite player">${favP ? '<button class="btn ghost" id="pfPlayerClear" type="button">Clear</button>' : ""}</div><div id="pfPSug" class="sugs"></div>
-    <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : ""}</div>
+    <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : p.favT ? `<div class="fine" style="margin-top:6px">We do not have theme colours for ${esc(p.favT)} yet, so the site keeps its normal colours.</div>` : ""}</div>
   <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
   <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx">${skelRows(2)}</div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
   <div class="card"><h3>Appearance</h3>${appearanceHTML()}</div>
@@ -2445,7 +2481,11 @@ const Account = {
   async afterSignIn() { await this.pull(); await this.push(); paintProfileBtn(); paintScore(); ensureNick(); Ranked.refresh(); checkAdmin(); },
   async pull() {
     const t = await this.token(); if (!t) return;
-    try { const r = await fetch(`${Board.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); if (rows[0] && rows[0].data) mergeProgress(rows[0].data); this.status = "Progress synced."; } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
+    try { const r = await fetch(`${Board.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); if (rows[0] && rows[0].data) mergeProgress(rows[0].data); this.status = "Progress synced."; await this.syncNick(t); } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
+  },
+  /* the display name lives in the database (unique, checked there); the copy in saved progress can be older, so after every sync the database name wins */
+  async syncNick(t) {
+    try { const r = await fetch(`${Board.cfg.url}/rest/v1/profiles?select=nick`, { headers: this.hdr(t) }); if (!r.ok) return; const j = await r.json(); const n = j && j[0] && j[0].nick; if (!n) return; const p = prof(); if (p.nick !== n) { p.nick = n; p.board = true; store.items.profile = p; saveLocal(); paintProfileBtn(); if ($("#profilePage") && !$("#profilePage").hidden) renderProfilePage(); } } catch (e) { /* offline: keep the local name */ }
   },
   async push() {
     const t = await this.token(); if (!t) return;
@@ -2701,7 +2741,7 @@ function renderQuiz() {
     $("#room").innerHTML = `<div class="card">${head}${hud}<div class="rcard on" style="margin-bottom:10px"><b style="font-size:20px">${name}${r.winner != null ? `: +${r.pts}` : ""}</b></div>${answerCard(S_)}<div class="row" style="margin-top:14px"><button class="btn" id="${last ? "qFinish" : "qNext"}" type="button">${last ? "See the final score" : "Next round"}</button></div></div>`; return;
   }
   const buzzed = S_.paused;
-  const buzzers = duo ? `<div class="buzzers"><button class="buzz p1" id="qB0" type="button" ${S_.locked[0] || buzzed ? "disabled" : ""}>Player 1<small>key A</small></button><button class="buzz p2" id="qB1" type="button" ${S_.locked[1] || buzzed ? "disabled" : ""}>Player 2<small>key L</small></button></div>` : `<div class="buzzers"><button class="buzz p1 wide" id="qB0" type="button" ${buzzed ? "disabled" : ""}>BUZZ<small>space bar</small></button></div>`;
+  const buzzers = duo ? `<div class="buzzers"><button class="buzz p1" id="qB0" type="button" ${S_.locked[0] || buzzed ? "disabled" : ""}>${Net.role ? "Buzz" : "Player 1"}<small>${Net.role ? "you are Player 1" : "key A"}</small></button><button class="buzz p2" id="qB1" type="button" ${S_.locked[1] || buzzed ? "disabled" : ""}>${Net.role ? "Buzz" : "Player 2"}<small>${Net.role ? "you are Player 2" : "key L"}</small></button></div>` : `<div class="buzzers"><button class="buzz p1 wide" id="qB0" type="button" ${buzzed ? "disabled" : ""}>BUZZ<small>space bar</small></button></div>`;
   const answer = buzzed ? `<div class="answerbox"><div class="row"><b>${duo ? who[S_.buzzed] : "Your answer"}</b><span class="num fine" id="qClock">${Math.ceil(S_.answerLeft)}s</span></div><div class="row"><input id="qIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="${QDEF[S_.game].unit === "club" ? "Type the club" : "Type the player"}" aria-label="Your answer"><button class="btn" id="qGuess" type="button">Guess</button></div><div id="qSug" class="sugs"></div></div>` : "";
   $("#room").innerHTML = `<div class="card">${head}${hud}<div class="meter"><i id="qMeter" style="width:${(100 * (1 - S_.elapsed / S_.total)).toFixed(1)}%"></i></div><div class="row" style="justify-content:space-between"><span class="fine">Worth <b class="num" id="qWorth">${worth()}</b> points now</span></div><div id="qClues" class="clues">${cluesHTML()}</div>${answer}${buzzers}</div>`;
 }
@@ -2713,8 +2753,9 @@ function paintSuggestions() {
 document.addEventListener("input", (e) => { if (e.target.id === "qIn") paintSuggestions(); });
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT") { if (e.key === "Enter" && e.target.id === "qIn") { e.preventDefault(); submitAnswer(null); } return; }
+  if (Net.role === "guest" && e.code === "Space") { const gb = $("#qB1"); if (gb && !gb.disabled) { e.preventDefault(); gb.click(); } return; }
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || !S_.game) return;
-  if (S_.mode === "solo" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (S_.mode === "duo") { const k = e.key.toLowerCase(); if (k === "a") { e.preventDefault(); buzz(0); } else if (k === "l" && !Net.role) { e.preventDefault(); buzz(1); } }
+  if (S_.mode === "solo" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (S_.mode === "duo") { const k = e.key.toLowerCase(); if (Net.role === "host" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (k === "a") { e.preventDefault(); buzz(0); } else if (k === "l" && !Net.role) { e.preventDefault(); buzz(1); } }
 });
 
 /* ---------- Where did they finish? ---------- */
@@ -3157,6 +3198,7 @@ const Net = {
   onLink(up) { this.paintStatus(); if (up && this.role === "guest" && this.welcomed) { this.send({ k: "hello", uid: Account.signedIn ? Account.session.user.id : null, nick: prof().nick || "", card: Vs.me() }); toast("Reconnected"); } else if (!up && this.role && (this.started || this.welcomed) && !this.linked()) toast("Connection lost. Reconnecting…"); },
   linked() { return (this.mq || []).filter((q) => q.open).length; },
   paintStatus() {
+    document.body.dataset.net = this.role || "";
     const rb = $("#reactBar"); if (rb) rb.hidden = !(this.role && (this.started || this.welcomed));
     const el = $("#roomStatus"); if (!el || !this.role) return;
     if (this.role === "host") { if (this.started) { el.textContent = "Player 2 is in. Good luck!"; return; } const link = inviteLink(this.code, this.game); el.innerHTML = `Room <b class="num" style="font-size:22px">${this.code}</b> ${this.linked() ? "is open" : "is connecting…"}. Send the code, or this link, to your friend:<div class="row" style="margin-top:6px"><input id="inviteBox" readonly value="${esc(link)}" style="flex:1;min-width:0;font:600 13px var(--mono);padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn" id="roomCopy" type="button">Copy link</button></div>`; return; }
@@ -3164,7 +3206,7 @@ const Net = {
     const secs = Math.round((Date.now() - this.since) / 1000);
     el.textContent = !this.linked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${this.code}. Check the code, and that your friend has created the room and is still on that screen.` : `Looking for room ${this.code}…`;
   },
-  close() { if (Vs.on) Vs.close(); const rb = $("#reactBar"); if (rb) rb.hidden = true; if (this.role === "host" && Ranked.lt) Ranked.stopLobby(); this.ranked = false; this.guest = null; this.lastRef = null; if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
+  close() { document.body.dataset.net = ""; if (Vs.on) Vs.close(); const rb = $("#reactBar"); if (rb) rb.hidden = true; if (this.role === "host" && Ranked.lt) Ranked.stopLobby(); this.ranked = false; this.guest = null; this.lastRef = null; if (this.bc) { try { this.bc.close(); } catch (e) { /* ignore */ } } (this.mq || []).forEach((q) => q.close()); clearInterval(this.sti); clearInterval(this.hi); if (this.obs) this.obs.disconnect(); this.bc = this.mq = this.obs = null; this.role = null; this.started = false; this.guestOn = false; },
   recv(m) {
     if (!m || m.from === this.role) return; if (m.i) { if (this.seen && this.seen.has(m.i)) return; if (this.seen) { this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); } }
     if (this.role === "host") {
@@ -3296,8 +3338,8 @@ function renderReview() {
   lgs(c).forEach((lg) => Object.entries(lgOf(lg).seasons).forEach(([sn, S_]) => { const a = agg[sn] || (agg[sn] = { s: sn, live: S_.live, n: 0, mo: 0, mk: 0, hm: 0 }); S_.matches.forEach((m) => { a.n++; const adj = [m[6] * f.a, m[7] * f.d, m[8] * f.h]; if ("ADH"[adj.indexOf(Math.max(...adj))] === m[5]) a.mo++; if (["A", "D", "H"][[m[11], m[12], m[13]].indexOf(Math.max(m[11], m[12], m[13]))] === m[5]) a.mk++; if (m[5] === "H") a.hm++; }); }));
   const rows = Object.values(agg).sort((x, y) => (x.s < y.s ? -1 : 1)).map((a) => ({ s: a.s, live: a.live, n: a.n, mo: a.mo / a.n, mk: a.mk / a.n, hm: a.hm / a.n }));
   $("#room").innerHTML = `<div class="card"><h2>How good is the model?</h2><p class="sub">Across ${sm.n.toLocaleString()} ${esc(L.name)} matches since 2001-02, each predicted only from earlier seasons: the model gets <b>${pct(sm.pooled_acc, 1)}</b> of results right, the bookmakers <b>${pct(sm.market_acc, 1)}</b>, and always picking the home team <b>${pct(sm.home_acc, 1)}</b>. Football is noisy, so around half is a good score and a point or two is a real gap.</p>
-    <div class="bars">${rows.map((r) => `<div class="brow"><span class="num">${r.s}${r.live ? " live" : ""}</span><div class="tracks"><div class="t"><div class="tr"><i style="width:${r.mo * 100}%;background:var(--accent)"></i></div><span class="num">${pct(r.mo)}</span></div><div class="t"><div class="tr"><i style="width:${r.mk * 100}%;background:var(--accent2)"></i></div><span class="num">${pct(r.mk)}</span></div><div class="t"><div class="tr"><i style="width:${r.hm * 100}%;background:var(--muted)"></i></div><span class="num">${pct(r.hm)}</span></div></div></div>`).join("")}</div>
-    <div class="row fine" style="margin-top:10px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent)"></i> model (Max Accuracy)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent2)"></i> bookmakers</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></i> always Home</span></div>
+    <div class="row fine" style="margin:10px 0 6px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent)"></i> model (Max Accuracy)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent2)"></i> bookmakers</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted)"></i> always Home</span></div>
+    <div class="bars">${rows.map((r) => `<div class="brow"><span class="num">${r.s}${r.live ? " live" : ""}</span><div class="tracks"><div class="t"><div class="tr"><i style="width:${r.mo * 100}%;background:var(--accent)"><em>Model</em></i></div><span class="num">${pct(r.mo)}</span></div><div class="t"><div class="tr"><i style="width:${r.mk * 100}%;background:var(--accent2)"><em>Bookmakers</em></i></div><span class="num">${pct(r.mk)}</span></div><div class="t"><div class="tr"><i style="width:${r.hm * 100}%;background:var(--muted)"><em>Always Home</em></i></div><span class="num">${pct(r.hm)}</span></div></div></div>`).join("")}</div>
     <div class="tiles"><div class="tile"><b class="num">${t.n ? `${t.you} v ${t.mod}` : "–"}</b><small>your points v the model, ${esc(L.name)}</small></div><div class="tile"><b class="num">${t.n ? `${t.yr} v ${t.mr}` : "–"}</b><small>results right, of ${t.n}</small></div><div class="tile"><b class="num">${pct(DATA.profiles.balanced.bench.D)}</b><small>draws found by the Balanced style (Max Accuracy: ${pct(DATA.profiles.accuracy.bench.D)})</small></div></div>
     <div id="board"></div></div>`;
   renderBoard();
@@ -3362,7 +3404,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "adminBtn") { Snd.tick(); go("admin"); return; }
   if (b.id === "admCsv") { const head = "nick,email,joined,last_seen,elo,games,wins"; const csv = [head, ...Admin.users.map((r) => [r.nick, r.email, (r.created || "").slice(0, 10), (r.last_seen || "").slice(0, 10), r.elo, r.games, r.wins].map((v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`).join(","))].join("\n"); const blob = new Blob([csv], { type: "text/csv" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ballknowledge-accounts.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); return; }
   if (b.dataset.report) { const [k, ref, lab] = b.dataset.report.split("|"); reportDialog(k, k + ":" + ref, lab); return; }
-  if (b.id === "rpSend") { const note = ($("#rpNote").value || "").trim(); if (note.length < 3) { toast("Please describe the problem"); return; } Ranked.rpc("submit_report", { p_kind: b.dataset.kind, p_ref: b.dataset.ref, p_note: note }).then((r) => { closeModal(); toast(r === "ok" ? "Thanks, report sent" : r === "limit" ? "Too many reports today" : "Could not send the report"); }); return; }
+  if (b.id === "rpSend") { const note = ($("#rpNote").value || "").trim(); if (note.length < 3) { toast("Please describe the problem"); return; } Ranked.rpcx("submit_report", { p_kind: b.dataset.kind, p_ref: b.dataset.ref, p_note: note }).then((r) => { closeModal(); toast(r.ok ? (r.data === "ok" ? "Thanks, report sent" : r.data === "limit" ? "Too many reports today" : r.data === "auth" ? "Sign in to send a report" : "The report was not saved: " + r.data) : "Report NOT sent. " + r.why); }); return; }
   if (b.id === "newBtn") { showWhatsNew(); return; }
   if (b.id === "admResolve" || b.dataset.resolve) { Ranked.rpc("admin_resolve_report", { p_id: +b.dataset.resolve }).then(() => loadAdminReports()); return; }
   if (b.id === "searchBtn") { openSearch(); return; }
@@ -3397,6 +3439,8 @@ document.addEventListener("click", (e) => {
   if (b.id === "dailyCard") { dailyCard(); return; }
   if (b.id === "mdCard") { const it = store.items[mdKey(S.md.c, S.md.season, S.md.n)]; if (it) mdCardNow(it); return; }
   if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
+  if (b.id === "broMore") { closeBro(); const r = $("#reveal"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  if (b.id === "broNext") { closeBro(); const n = $("#nextBtn") || $("#dailyNext"); if (n) n.click(); return; }
   if (b.id === "vtag") { showWhatsNew(); return; }
   if (b.id === "wkPlay") { Snd.tick(); resetGames(); S.game = "challenge"; S.hubGroup = "model"; S.cur = null; S.chal = { code: "wk" + weekId(), c: "ALL", weekly: true }; renderRoom(); return; }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
@@ -3409,7 +3453,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
   if (b.id === "gamesBack") { Snd.back(); resetGames(); S.game = null; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
-  if (b.id === "thSpeed") { theatre.speed = theatre.speed === 1 ? 3 : theatre.speed === 3 ? 8 : 1; b.textContent = `Speed ${theatre.speed}x`; return; }
+  if (b.id === "thSpeed") { theatre.speed = theatre.speed === 3 ? 8 : theatre.speed === 8 ? 1 : 3; b.textContent = `Speed ${theatre.speed}x`; return; }
   if (b.id === "thSkip") { finishTheatre(); return; }
   if (b.id === "watchBtn") { const { c, season, i, m } = S.cur, it = store.items[`p_${c}_${season}_${i}`], box = $("#theatre"); if (box) { box.hidden = false; startTheatre(c, season, m, it ? it.mscore : modelCall(m).score, null); } return; }
   if (b.id === "mdRandom") { const free = mdList(S.code).filter((x) => !store.items[mdKey(x.c, x.season, x.n)]); if (free.length) { const x = free[Math.floor(Math.random() * free.length)]; S.md = { ...x, picks: Array(x.per).fill(null), locked: false }; Snd.tick(); renderMatchday(); } return; }

@@ -104,11 +104,37 @@ def crest_colours(path):
     return ["#%02x%02x%02x" % c for c in top] if top else None
 
 
-def webp_uri(path, max_px):
+HEAD_CROPPED = []
+
+
+def head_crop(im, name=""):
+    """Cut-outs come from different sources: some are tight face crops (Doue, Barcola), others show the head and a lot of torso (Foden, Haaland). Where the silhouette widens a lot below the head
+    (a torso is there), crop to the head and a little neck and shoulder: a box 1.35 times the head's width and about as tall as wide, centred on the head, so heads fill a similar share of the frame and almost none of the shirt (which may be an old kit) shows.
+    Images that are already tight faces are left alone."""
+    import numpy as np
+    a = np.array(im.getchannel("A")) > 24
+    ys = np.where(a.any(axis=1))[0]
+    if not len(ys):
+        return im
+    y0, y1 = int(ys[0]), int(ys[-1]); h = y1 - y0 + 1
+    rows = a.sum(axis=1)[y0:y1 + 1]
+    head_w = int(rows[: max(2, int(0.3 * h))].max())
+    if rows[int(0.6 * h):].max() < 1.5 * head_w:
+        return im
+    top = a[y0: y0 + max(2, int(0.3 * h))]
+    cx = int(np.where(top.any(axis=0))[0].mean())
+    cw = int(head_w * 1.35); ch = int(cw * 1.05)
+    HEAD_CROPPED.append(name)
+    return im.crop((max(0, cx - cw // 2), max(0, y0 - 3), min(im.width, cx + cw // 2), min(im.height, y0 + ch)))
+
+
+def webp_uri(path, max_px, head=False):
     """Official artwork (git-ignored, from src/31_fetch_assets.py) as a small WebP data URI; None if the file is absent."""
     if not ARTWORK or not os.path.exists(path):
         return None
     im = Image.open(path).convert("RGBA")
+    if head:
+        im = head_crop(im, os.path.basename(path))
     im.thumbnail((max_px, max_px), Image.LANCZOS)
     buf = io.BytesIO()
     im.save(buf, "WEBP", quality=88, method=6)
@@ -192,14 +218,14 @@ _spec = importlib.util.spec_from_file_location("hero35", "src/35_fetch_hero_phot
 _cards = json.load(open("02_processed_data/hero_cards.json", encoding="utf-8")) if os.path.exists("02_processed_data/hero_cards.json") else {}
 hero = []
 for nm in _h.NAMES:
-    uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.png", 520)
+    uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.png", 520, head=True)
     photo = False
     if uri is None:                                     # retired legends that EA does not list use a Wikimedia Commons photo (a rectangle, not a cut-out)
         uri = webp_uri(f"{LOGO_DIR}/players/hero/{_h.norm(nm)}.jpg", 700); photo = bool(uri)
     if uri:
         hero.append({"n": nm, "img": uri, "photo": photo, "card": _cards.get(_h.norm(nm))})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
-print(f"front page photos: {len(hero)}; quiz players: {len(quiz['players']) if quiz else 0}")
+print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
 data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
 html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."

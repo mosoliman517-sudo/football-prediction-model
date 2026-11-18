@@ -94,6 +94,8 @@ for name, kind, val, want in FACTS:
     if bool(got) != bool(want):
         bad.append((name, kind, val, "should be " + ("true" if want else "false")))
 print(f"{len(FACTS)} facts, {len(missing)} players not in the data ({', '.join(sorted(missing))})")
+import datetime
+json.dump({"facts": len(FACTS) - len(missing), "wrong": len(bad), "ran": datetime.date.today().isoformat()}, open("02_processed_data/audit.json", "w"))
 for b in bad:
     print("  WRONG:", *b)
 print("all good" if not bad else f"{len(bad)} wrong")

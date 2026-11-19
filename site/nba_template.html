@@ -696,7 +696,7 @@ body[data-net="host"] .buzzers .buzz.p2, body[data-net="guest"] .buzzers .buzz.p
 .lgstreak { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; } .lgstreak .fire { color: #ff8a3d; } .lgstreak b { font-size: 14px; }
 .dfopts { display: flex; gap: 8px; flex-wrap: wrap; } .dfopts .btn { min-width: 120px; }
 .scr { display: grid; gap: 18px; justify-items: center; padding: 20px 6px 10px; } .scw { display: flex; gap: clamp(6px, 1.6vw, 12px); justify-content: center; flex-wrap: wrap; }
-.sct { width: clamp(38px, 11.5vw, 72px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 16px; background: linear-gradient(160deg, var(--surface2), var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); font: 800 clamp(22px, 7.2vw, 42px) var(--display); font-style: normal; color: var(--ink); box-shadow: 0 10px 24px -12px #000, inset 0 1px 0 #ffffff14; animation: sctIn .55s cubic-bezier(.2, 1.4, .4, 1) both, sctBob 4.2s ease-in-out infinite; animation-delay: calc(var(--i) * 55ms), calc(var(--i) * 140ms); } .sct.hot { color: var(--on-accent, #111); background: var(--accent); border-color: transparent; }
+.sct { width: clamp(38px, 11.5vw, 72px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 16px; background: linear-gradient(160deg, var(--surface2), var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); font: 800 clamp(22px, 7.2vw, 42px) var(--display); font-style: normal; color: var(--ink); box-shadow: 0 10px 24px -12px #000, inset 0 1px 0 #ffffff14; animation: sctIn .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: calc(var(--i) * 55ms); } .scr.seen .sct { animation: none; } .sct.hot { color: var(--on-accent, #111); background: var(--accent); border-color: transparent; }
 .sct:nth-child(odd) { transform: rotate(-2deg); } .sct:nth-child(even) { transform: rotate(2deg); } @keyframes sctIn { from { opacity: 0; transform: translateY(22px) scale(.6) rotate(-14deg); } } @keyframes sctBob { 50% { translate: 0 -4px; } }
 :root[data-motion="reduced"] .sct { animation: none; } @media (prefers-reduced-motion: reduce) { .sct { animation: none; } }
 .schints { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; } .schint { padding: 8px 14px; border-radius: 14px; border: 1px dashed var(--line); background: var(--surface2); text-align: center; animation: sctIn .45s cubic-bezier(.2, 1.4, .4, 1) both; } .schint b { display: block; font-size: 16px; letter-spacing: .08em; } .schintbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; margin: 10px 0 4px; } .schb.on { border-color: var(--accent); color: var(--accent); }
@@ -3071,7 +3071,7 @@ function nextRound() {
   const S_ = Q.s, d = QDEF[S_.game];
   if (S_.round === 0) { S_.streak = 0; S_.over = false; clearResume(); }
   S_.round++; const uk = S_.game + S.diff + S_.scope; S.seenQ = S.seenQ || {}; if (!S.seenQ[uk] || S.seenQ[uk].size > 150) S.seenQ[uk] = new Set(); S_.used = S.seenQ[uk]; S_.r = (() => { let r; for (let k = 0; k < 40; k++) { r = d.mk(S_.scope); const key = r.p ? r.p.id : r.e.n; if (!S_.used.has(key)) { S_.used.add(key); break; } } return r; })(); S_.clues = d.clues(S_.r); S_.elapsed = 0; S_.paused = false; S_.buzzed = null; S_.locked = [false, false]; S_.phase = "run"; S_.sug = []; S_.points = 0; S_.result = null;
-  S_.hv = [false, false]; S_.hn = 0; S_.cs = d.clueS * clueSpeed(); S_.total = S_.clues.length * S_.cs + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
+  S_.hv = [false, false]; S_.hn = 0; S_.scDone = false; S_.cs = d.clueS * clueSpeed(); S_.total = S_.clues.length * S_.cs + 6; renderQuiz(); stopQuiz(); Q.timer = setInterval(tickQuiz, 250);
 }
 const worth = () => { const S_ = Q.s, base = Math.round(1000 * (1 - S_.elapsed / S_.total)); return Math.max(100, S_.game === "scramble" ? Math.round(base * Math.max(0.4, 1 - 0.15 * (S_.hn || 0))) : base); };
 function shownCount() { const S_ = Q.s, d = QDEF[S_.game]; return Math.min(S_.clues.length, 1 + Math.floor(S_.elapsed / S_.cs)); }
@@ -3079,7 +3079,7 @@ function tickQuiz() {
   const S_ = Q.s; if (!S_ || S_.phase !== "run") return;
   if (!document.getElementById("qMeter")) { stopQuiz(); return; }
   if (S_.paused) { S_.answerLeft -= 0.25; if (S_.answerLeft <= 0) wrongGuess(true); else paintAnswerClock(); return; }
-  const before = shownCount(); S_.elapsed += 0.25; if (shownCount() > before) { Snd.tick(); paintClues(); }
+  const before = shownCount(); S_.elapsed += 0.25; if (shownCount() > before) { Snd.tick(); if (S_.game !== "scramble") paintClues(); }
   if (S_.elapsed >= S_.total) endRound(null); else paintMeter();
 }
 function buzz(who) {
@@ -3123,13 +3123,13 @@ function paintMeter() { const m = $("#qMeter"), w = $("#qWorth"); if (m) m.style
 function paintAnswerClock() { const el = $("#qClock"); if (el) el.textContent = Math.max(0, Math.ceil(Q.s.answerLeft)) + "s"; }
 function paintClues() { const box = $("#qClues"); if (box) box.innerHTML = cluesHTML(); }
 function scrambleHTML(S_) {
-  let k = 0; const words = S_.r.scr.split(/\s{2,}/).map((w) => `<div class="scw">${[...w].map((c) => `<i class="sct ${(k++ % 5) === 3 ? "hot" : ""}" style="--i:${k}">${esc(c)}</i>`).join("")}</div>`).join("");
+  let k = 0; const words = S_.r.scr.split(/\s{2,}/).map((w) => `<div class="scw">${[...w].map((c) => `<i class="sct" style="--i:${++k}">${esc(c)}</i>`).join("")}</div>`).join("");
   const hs = scrambleClues(S_.r), order = [1, 3, 2, 4], shown = order.slice(0, S_.hn || 0).map((i) => `<div class="schint"><span class="label">${esc(hs[i][0])}</span><b>${esc(hs[i][1])}</b></div>`).join("");
-  return `<div class="scr">${words}</div>${shown ? `<div class="schints">${shown}</div>` : ""}`;
+  const seen = S_.scDone ? " seen" : ""; S_.scDone = true; return `<div class="scr${seen}">${words}</div>${shown ? `<div class="schints">${shown}</div>` : ""}`;
 }
 function scHintBar(S_) {
   if (S_.game !== "scramble") return ""; const duo = S_.mode === "duo", left = (S_.hn || 0) >= 4, v = S_.hv || [false, false], who = ["Player 1", "Player 2"];
-  const btn = (i) => `<button type="button" class="btn ghost schb ${v[i] ? "on" : ""}" id="scH${i}" data-p="${i + 1}" ${left || S_.paused ? "disabled" : ""}>${duo ? (Net.role ? "Ask for a hint" : who[i] + ": hint") : "Hint"}${v[i] ? " ✓" : ""}</button>`;
+  const btn = (i) => `<button type="button" class="btn ghost schb ${v[i] ? "on" : ""}" id="scH${i}" data-p="${i + 1}" ${left || S_.paused ? "disabled" : ""}>${duo ? (Net.role ? "Ask for a hint (H)" : who[i] + ": hint (" + (i ? "K" : "S") + ")") : "Hint (H)"}${v[i] ? " ✓" : ""}</button>`;
   const status = left ? "All hints shown." : !duo ? "A hint lowers this round's points a little." : v[0] || v[1] ? `${v[0] ? who[0] : who[1]} wants a hint. It arrives when ${v[0] ? who[1] : who[0]} agrees.` : "A hint arrives only when both players ask for one.";
   return `<div class="schintbar">${btn(0)}${duo ? btn(1) : ""}<span class="fine">${status}</span></div>`;
 }
@@ -3175,6 +3175,7 @@ document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT") { if (e.key === "Enter" && e.target.id === "qIn") { e.preventDefault(); submitAnswer(null); } return; }
   if (Net.role === "guest" && e.code === "Space") { const gb = $("#qB1"); if (gb && !gb.disabled) { e.preventDefault(); gb.click(); } return; }
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || !S_.game) return;
+  if (S_.game === "scramble" && S_.phase === "run" && !S_.paused) { const k0 = e.key.toLowerCase(), id = S_.mode === "solo" ? (k0 === "h" ? 0 : -1) : Net.role === "host" ? (k0 === "h" ? 0 : -1) : Net.role === "guest" ? (k0 === "h" ? 1 : -1) : (k0 === "s" ? 0 : k0 === "k" ? 1 : -1); if (id >= 0) { e.preventDefault(); const hb = document.getElementById("scH" + id); if (hb && !hb.disabled) hb.click(); return; } }
   if (S_.mode === "solo" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (S_.mode === "duo") { const k = e.key.toLowerCase(); if (Net.role === "host" && e.code === "Space") { e.preventDefault(); buzz(0); } else if (k === "a") { e.preventDefault(); buzz(0); } else if (k === "l" && !Net.role) { e.preventDefault(); buzz(1); } }
 });
 
@@ -4060,6 +4061,7 @@ addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e
 addEventListener("hashchange", () => route());
 
 /*__NBA_OVERLAY__*/
+/*__SHARED__*/
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
  route(); setTimeout(finishSplash, 300);
 </script>

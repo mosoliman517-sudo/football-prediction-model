@@ -10,10 +10,18 @@ for r in csv.DictReader(open("01_data_chess/openings.tsv", encoding="utf-8"), de
     if n >= 400 and 2 <= plies <= 8: openings.append({"eco": r["eco"], "name": r["name"], "pgn": r["pgn"], "n": n})
 print("openings in the quiz:", len(openings))
 model = json.load(open("02_processed_data/chess_model.json")); players = json.load(open("02_processed_data/chess_players.json"))
-import random
+import random, collections as _c
+def _key(n): return " ".join(sorted(re.sub(r"[^a-z ]", " ", re.sub(r"\(.*?\)", "", (n or "")).lower().replace(",", " ")).split()))
+_allraw = json.load(open("02_processed_data/chess_elite.json")); _cnt = _c.Counter(); [_cnt.update([g["white"], g["black"]]) for g in _allraw]
+_pref = {}
+for n_, c_ in _cnt.most_common():
+    k_ = _key(n_)
+    if k_ not in _pref or ("(" in _pref[k_] and "(" not in n_): _pref[k_] = n_
+fixn = lambda n: _pref.get(_key(n), n)                         # one spelling per player: "Carlsen, Magnus" and "Carlsen Magnus (NOR)" are the same person
 em = json.load(open("02_processed_data/chess_elite_model.json"))
-for g in em["games"]: g["plies"] = len(g["moves"]); g.pop("moves", None)       # the prediction game needs only how long the game was
+for g in em["games"]: g["white"] = fixn(g["white"]); g["black"] = fixn(g["black"]); g["plies"] = len(g["moves"]); g.pop("moves", None)       # the prediction game needs only how long the game was
 allg = json.load(open("02_processed_data/chess_elite.json")); random.seed(4)
+for g in allg: g["white"] = fixn(g["white"]); g["black"] = fixn(g["black"])
 big = [g for g in allg if g["kind"] in ("World Championship", "Candidates", "Norway Chess", "Tata Steel")]
 rest = random.sample([g for g in allg if g["kind"] not in ("World Championship", "Candidates", "Norway Chess", "Tata Steel") and min(g["we"], g["be"]) >= 2550], 350)
 elite_moves = [{"kind": g["kind"], "event": g["event"], "date": g["date"], "white": g["white"], "black": g["black"], "result": g["result"], "moves": g["moves"][:90]} for g in big + rest]
@@ -21,7 +29,17 @@ evals = json.load(open("02_processed_data/chess_evals.json"))
 for e in evals: e["moves"] = [re.sub(r"[?!]+", "", m) for m in e["moves"]]; e["san"] = re.sub(r"[?!]+", "", e["san"])      # Lichess marks bad moves with ? in the text, which would give the answer away
 puzzles = json.load(open("02_processed_data/chess_puzzles.json"))
 print("elite games for the model:", len(em["games"]), "| with moves:", len(elite_moves), "| graded moves:", len(evals), "| puzzles:", len(puzzles))
-data = {"model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
-html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
+# lookup tables: every elite game in a compact form, so the page can build any player's or tournament's history
+evs = sorted({g["event"] for g in allg}); evi = {e: i for i, e in enumerate(evs)}
+names = sorted({g["white"] for g in allg} | {g["black"] for g in allg}); ni = {n: i for i, n in enumerate(names)}
+kinds = {g["event"]: g["kind"] for g in allg}
+lookup = {"events": [{"n": e, "kind": kinds[e]} for e in evs], "players": names,
+          "games": [[evi[g["event"]], g["date"] if re.match(r"\d{4}-\d\d-\d\d", g["date"]) else "", ni[g["white"]], ni[g["black"]], {"1-0": 1, "0-1": 0, "1/2-1/2": 2}[g["result"]], g["we"], g["be"], str(g["round"]).split(".")[0], len(g["moves"]) // 2] for g in allg]}
+print("lookup:", len(evs), "events,", len(names), "players,", len(lookup["games"]), "games")
+data = {"lookup": lookup, "model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
+import base64, glob
+pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(data:image/svg+xml;base64,{base64.b64encode(open(f,'rb').read()).decode()})}}" for f in sorted(glob.glob("01_data_chess/pieces/*.svg")))
+html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss)
+html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC: html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + html + "</html>"
 os.makedirs(os.path.dirname(OUT), exist_ok=True); open(OUT, "w", encoding="utf-8").write(html); print("wrote", OUT, f"{len(html)/1e6:.2f} MB")

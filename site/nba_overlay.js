@@ -63,6 +63,7 @@ QDEF.scramble.mk = (scope) => {
   const names = clubList(scope).filter((c) => clubOK(c.n)), c = rnd(names.length ? names : clubList(scope)); return { kind, e: { n: c.n, lg: c.lg }, scr: scrambleName(c.n) };
 };
 QDEF.career.mk = (scope) => ({ p: rnd(playerPool(scope, (p) => !p.partial && p.cr.length >= 3 && playerOK(p))) });
+QDEF.who.mk = (scope) => ({ p: rnd(playerPool(scope, (p) => p.hist.length >= 2 && playerOK(p))) });   // legends count too, otherwise Easy had only 30 players
 QDEF.club.name = "Name that team"; QDEF.blur.name = "Logo blur";
 
 /* ---------- tic-tac-toe categories: only facts the data really holds ---------- */
@@ -518,7 +519,7 @@ function droppedClues(r) {
   cl.push(["Name", `${p.n.split(" ").length} words, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
   return cl;
 }
-QDEF.dropped = { name: "Who dropped it?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => { const pool = NBPERF.filter((g) => PBYID[g.pid] && playerOK(PBYID[g.pid])); const g = rnd(pool.length ? pool : NBPERF.filter((x) => PBYID[x.pid])); return { p: PBYID[g.pid], g }; }, clues: (r) => droppedClues(r), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) };
+QDEF.dropped = { name: "Who dropped it?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => { const pool = NBPERF.filter((g) => PBYID[g.pid] && playerOK(PBYID[g.pid])); const g = rnd(pool.length >= 150 ? pool : NBPERF.filter((x) => PBYID[x.pid] && poolOK(PBYID[x.pid]))); /* Elite alone has few big games, so it also draws from the wider pool */ return { p: PBYID[g.pid], g }; }, clues: (r) => droppedClues(r), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) };
 /* ---- Starting five ---- */
 function nbxStart() {
   const row = rnd(NBX), t = rnd(row.teams), o = row.teams.find((x) => x !== t);
@@ -706,3 +707,39 @@ setTimeout(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches ||
 { const css = document.createElement("style"); css.textContent = `.lhead .flag,#lFlag{display:none!important}.bar a.pill{color:var(--muted);text-decoration:none;white-space:nowrap}.bar a.pill:hover{color:var(--ink)}`; document.head.appendChild(css); }
 
 const _icss = document.createElement("style"); _icss.textContent = `h2 svg.ic,h3 svg.ic,.sec svg.ic{color:var(--accent);width:1.1em;height:1.1em;vertical-align:-.15em}`; document.head.appendChild(_icss);
+
+/* =====================================================================================================================
+   Our model > Look up: a player's season-by-season history, or a team's seasons and how each ended.
+   ===================================================================================================================== */
+ABOUT_TABS.unshift(["look", "Look up a player or team"]);
+const nbSeasonsLeft = (cr, s) => { const hit = (cr || []).find(([, a, b]) => a <= s && s <= b); return hit ? hit[0] : ""; };
+function nbLkSearch(q) { const n = qnorm(q); if (n.length < 2) return []; const out = [];
+  Object.keys(QZ.clubs).forEach((t) => { const f = QZ.clubs[t]; if (qnorm(t + " " + (f.full || "") + " " + (f.loc || "")).includes(n)) out.push({ k: "t|" + t, label: f.full || t, sub: "team", s: 0 }); });
+  QZ.players.forEach((p) => { const nm = qnorm(p.n); if (nm.includes(n)) out.push({ k: "p|" + p.id, label: p.n, sub: `${p.club || ""} · ${p.first.slice(0, 4)}-${p.last.slice(0, 4)}`, s: nm.startsWith(n) || qnorm(p.n.split(" ").slice(-1)[0]).startsWith(n) ? 0 : 1, f: p.rk }); });
+  return out.sort((a, b) => a.s - b.s || (a.f || 0) - (b.f || 0)).slice(0, 8); }
+function nbLkPlayer(id) {
+  const p = PBYID[id]; if (!p) return ""; const seasons = Object.keys(p.ss || {}).sort(), row = (s) => { const v = p.ss[s]; return `<tr><td>${s}</td><td>${esc(nbSeasonsLeft(p.cr, s))}</td><td>${v[0]}</td><td><b>${v[1]}</b></td><td>${v[2]}</td><td>${v[3]}</td><td>${v[4]}</td><td>${v[5]}</td></tr>`; };
+  const aw = (p.aw || []).reduce((m, [k, s]) => { (m[k] = m[k] || []).push(s); return m; }, {}), best = seasons.slice().sort((a, b) => p.ss[b][1] - p.ss[a][1])[0];
+  return `<div class="card abx" style="margin-top:12px"><div class="row" style="gap:14px">${playerPic(p, "xl")}<div><h3 style="font-size:28px;margin:0">${esc(p.n)}</h3><div class="fine">${[p.sub || p.pos, p.nat, p.h ? ftIn(p.h) : "", "born " + p.dob.slice(0, 4), p.active ? "plays for the " + p.club : "last team: " + p.club].filter(Boolean).join(" · ")}</div></div></div>
+  <div class="tiles"><div class="tile"><b class="num">${p.gp.toLocaleString("en-US")}</b><small>games since ${COVER}</small></div><div class="tile"><b class="num">${p.pts.toLocaleString("en-US")}</b><small>points</small></div><div class="tile"><b class="num">${p.reb.toLocaleString("en-US")}</b><small>rebounds</small></div><div class="tile"><b class="num">${p.ast.toLocaleString("en-US")}</b><small>assists</small></div>${(p.ti || []).length ? `<div class="tile"><b class="num">${p.ti.length}</b><small>titles</small></div>` : ""}${best ? `<div class="tile"><b class="num">${p.ss[best][1]}</b><small>best scoring season (${best})</small></div>` : ""}</div>
+  ${(p.ti || []).length ? `<p><b>Champion:</b> ${p.ti.map((t) => `${esc(t.team)} ${t.season}`).join(", ")}</p>` : ""}${Object.keys(aw).length ? `<p><b>Awards:</b> ${Object.entries(aw).map(([k, v]) => `${AWN[k]} (${v.join(", ")})`).join("; ")}</p>` : ""}
+  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Team</th><th>GP</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th></tr>${seasons.map(row).join("")}</table></div>
+  <p class="fine" style="margin-top:8px">Per-game averages for seasons with 20+ games, ${COVER} on. Anything before ${COVER} is not in the data${p.partial ? ", so this career is only partly shown" : ""}.</p></div>`;
+}
+function nbLkTeam(t) {
+  const f = QZ.clubs[t]; if (!f) return ""; const rows = Object.entries(LG.NBA.tables).map(([s, tb]) => { const i = tb.findIndex((r) => r[0] === t); return i < 0 ? null : { s, r: tb[i], pos: i + 1 }; }).filter(Boolean);
+  const champs = rows.filter((x) => (x.r[7] | 0) === 5).map((x) => x.s), best = rows.slice().sort((a, b) => b.r[4] - a.r[4])[0];
+  return `<div class="card abx" style="margin-top:12px"><div class="row" style="gap:14px">${badge(t, "xl")}<div><h3 style="font-size:28px;margin:0">${esc(f.full || t)}</h3><div class="fine">${esc(f.loc || "")} · ${rows.length} seasons in the data</div></div></div>
+  <div class="tiles"><div class="tile"><b class="num">${champs.length}</b><small>titles since ${COVER}</small></div>${best ? `<div class="tile"><b class="num">${best.r[4]}-${best.r[6]}</b><small>best record (${best.s})</small></div>` : ""}<div class="tile"><b class="num">${rows.filter((x) => (x.r[7] | 0) > 0).length}</b><small>playoff seasons</small></div></div>${champs.length ? `<p><b>Champions:</b> ${champs.join(", ")}</p>` : ""}
+  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Record</th><th>Rank</th><th>PPG</th><th>Opp PPG</th><th>How it ended</th></tr>${rows.map((x) => `<tr><td>${x.s}</td><td><b>${x.r[4]}-${x.r[6]}</b></td><td>${ordn(x.pos)}</td><td>${x.r[2].toFixed(1)}</td><td>${x.r[3].toFixed(1)}</td><td>${PLAYOFF_ROUND[x.r[7] | 0]}</td></tr>`).join("")}</table></div>
+  <p class="fine" style="margin-top:8px">Rank is by wins among the 30 teams. Seasons with fewer than 60 games in the data are left out. ${f.old && f.old.length ? "Earlier names: " + esc(f.old.join(", ")) + "." : ""}</p></div>`;
+}
+{ const css = document.createElement("style"); css.textContent = `.nbtb{width:100%;border-collapse:collapse;font-size:14px}.nbtb th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px}.nbtb td{padding:6px;border-top:1px solid var(--line);white-space:nowrap}`; document.head.appendChild(css); }
+{ const old = renderAboutPage; renderAboutPage = function () {
+    if (S.abTab !== "look") return old();
+    const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${S.abTab === k}">${n}</button>`).join("")}</div>`;
+    $("#aboutPage").innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}<div class="card abx"><h2><svg class=ic><use href=#i-search></use></svg> Look up a player or team</h2><p class="sub">Type a name. You get a player's season-by-season numbers, titles and awards, or a team's seasons and how each one ended.</p><input class="t" id="nbLk" placeholder="e.g. LeBron, Curry, Celtics, Spurs" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"><div class="hub" id="nbLkSug" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px"></div></div><div id="nbLkRes"></div>`;
+  }; }
+S.abTab = "look";
+document.addEventListener("input", (e) => { if (e.target.id !== "nbLk") return; $("#nbLkSug").innerHTML = nbLkSearch(e.target.value).map((x) => `<button type="button" class="chip" data-nbl="${esc(x.k)}">${esc(x.label)} <span class="fine">${esc(x.sub)}</span></button>`).join(""); });
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbl]"); if (!b) return; const [k, v] = b.dataset.nbl.split("|"); $("#nbLkRes").innerHTML = k === "p" ? nbLkPlayer(+v) : nbLkTeam(v); $("#nbLkRes").scrollIntoView({ behavior: "smooth", block: "nearest" }); });

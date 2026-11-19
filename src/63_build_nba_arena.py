@@ -73,7 +73,8 @@ cfg = "site/board_config.json"
 if os.path.exists(cfg): data["board"] = json.load(open(cfg))
 if os.environ.get("BOARD_URL") and os.environ.get("BOARD_KEY"): data["board"] = {"url": os.environ["BOARD_URL"].rstrip("/"), "key": os.environ["BOARD_KEY"]}
 overlay = open("site/nba_overlay.js", encoding="utf-8").read() if os.path.exists("site/nba_overlay.js") else ""
-html = open("site/nba_template.html", encoding="utf-8").read().replace("/*__NBA_OVERLAY__*/", overlay).replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
+shared = open("site/shared_names.js", encoding="utf-8").read()
+html = open("site/nba_template.html", encoding="utf-8").read().replace("/*__NBA_OVERLAY__*/", overlay).replace("/*__SHARED__*/", shared).replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 STAMP = f'Build {datetime.datetime.now(datetime.timezone.utc):%d %b %Y %H:%M} UTC · {"public" if PUBLIC else "private"} · box scores through {max(p["last"] for p in nd["players"])}'
 html = html.replace('<div class="foot">', f'<div class="foot"><span class="num" id="buildStamp">{STAMP}</span>', 1)
 if PUBLIC:

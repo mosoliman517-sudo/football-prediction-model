@@ -1,4 +1,4 @@
 {
- "why": "",
+ "why": "I moved from Germany to Saudi Arabia when I was thirteen, and for a long time football was the one thing that made sense. Not the game itself: the numbers behind it. I kept a notebook of power rankings built from nothing but watching and counting.\n\nLater I was told that the thing I actually cared about, data and programming, did not count as real, so I built it myself instead. ballknowledge is the same idea: a place where the numbers get to count. It started as one question, can a model beat \"always pick the home team\", and it grew into quizzes, a model you can try to out-call, and now basketball.\n\nEverything here is meant to be honest. If the data is missing, I say so instead of guessing.",
  "note": "Write the owner's own words about why ballknowledge exists in 'why'. It is shown on the About page under Our story when it is not empty. Plain text; blank line = new paragraph."
 }

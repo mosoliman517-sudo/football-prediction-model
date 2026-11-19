@@ -465,7 +465,7 @@ ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and
     const el = $("#aboutPage"), tab = S.abTab, per = NM.summary.perSeason || {}, o = NBO;
     const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${tab === k}">${n}</button>`).join("")}</div>`;
     let body = "";
-    if (tab === "how") body = `<div class="card abx"><h2>How the model works</h2>
+    if (tab === "how") body = `${String((DATA.about || {}).why || "").trim() ? `<div class="card abx"><h2>Why this exists</h2><div class="abwhy">${esc(String(DATA.about.why).trim()).split(/\n\s*\n/).map((p) => `<p>${p}</p>`).join("")}<div class="fine">In the owner's words.</div></div></div>` : ""}<div class="card abx"><h2>How the model works</h2>
       <p>Every team has a <b>rating</b>, a single number that says how good it is. Everyone starts at 1,500. After each game the winner's rating goes up and the loser's goes down. Beat a strong team, or win by a lot, and it moves more. This is called an <b>Elo rating</b>.</p>
       <h3>What it adds</h3><ul><li><b>Home court.</b> The home team gets a boost worth about 70 rating points.</li><li><b>Tired legs.</b> A team playing the second night of a back-to-back gets a small penalty.</li><li><b>New seasons.</b> Ratings slide a quarter of the way back toward average each summer, because rosters change.</li></ul>
       <h3>From a rating to a score</h3><p>The rating gap gives a predicted <b>margin</b>. Each team's recent scoring and defence give a predicted <b>total</b>. Together they make a predicted score for both teams. To call a <b>quarter</b>, the model picks the team it expects to lead: a quarter is about a quarter of the game, so it mostly follows the favourite.</p>
@@ -613,3 +613,33 @@ function renderHOL2() {
     ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${s.streak}</b><button class="btn" id="nbhNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
 }
 HOWTO["g:nbhol"] = ["Higher or lower", ["What you do", "Two players or two teams and one question. It changes every round: more or fewer points in a season, career totals, titles, height, age, or a team's wins. Read the question, it can ask for the lower one."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Career numbers count games since ${COVER} only, for both players.`]];
+
+/* =====================================================================================================================
+   Discover (basketball): one fun fact, one spotlight player and one question a day, the same for everyone. All computed from the data.
+   ===================================================================================================================== */
+function nbFacts() {
+  const P = QZ.players, top = (f, n = 1) => P.slice().sort((a, b) => f(b) - f(a)).slice(0, n), rows = [];
+  Object.entries(LG.NBA.tables).forEach(([s, t]) => t.forEach((r) => rows.push({ s, r })));
+  const f = [], c = top((p) => p.pts)[0], r = top((p) => p.reb)[0], a = top((p) => p.ast)[0], m = top((p) => new Set(p.hist).size)[0], w = rows.slice().sort((x, y) => y.r[4] - x.r[4])[0], hs = rows.slice().sort((x, y) => y.r[2] - x.r[2])[0], ds = rows.slice().sort((x, y) => x.r[3] - y.r[3])[0];
+  f.push(`${c.n} has scored the most points since ${COVER}: ${c.pts.toLocaleString("en-US")}.`, `${r.n} leads the rebounding since ${COVER} with ${r.reb.toLocaleString("en-US")}.`, `${a.n} has the most assists since ${COVER}: ${a.ast.toLocaleString("en-US")}.`, `${m.n} has played for ${new Set(m.hist).size} different teams since ${COVER}, more than anyone else in the data.`,
+    `The best regular season since ${COVER} by wins: the ${w.r[0]} in ${w.s} with ${w.r[4]}.`, `The highest-scoring team season since ${COVER}: the ${hs.r[0]} in ${hs.s}, ${hs.r[2].toFixed(1)} points a game.`, `The stingiest defence since ${COVER}: the ${ds.r[0]} in ${ds.s}, allowing ${ds.r[3].toFixed(1)} points a game.`);
+  const tall = top((p) => p.h || 0)[0]; f.push(`${tall.n} is the tallest player in the data at ${ftIn(tall.h)}.`);
+  const ti = top((p) => (p.ti || []).length)[0]; if (ti && (ti.ti || []).length) f.push(`${ti.n} has won the most titles since ${COVER}: ${ti.ti.length}.`);
+  return f;
+}
+function renderDiscover() {
+  const day = todayKey(), rng = mulberry(hash("nbdisc" + day)), el = $("#discPage"), facts = nbFacts(), fact = facts[Math.floor(rng() * facts.length)];
+  const spot = QZ.players.filter((p) => playerOK({ ...p }) || true).filter((p) => FAME.get(p.id) < 400)[Math.floor(rng() * 400)] || QZ.players[0];
+  const seasons = Object.keys(NM.series || {}).filter((y) => +y >= 2003).sort(), y = seasons[Math.floor(rng() * seasons.length)], champ = ((NM.series[y] || []).slice(-1)[0] || {}).win, champName = champ ? teamById(champ) : null;
+  const opts = champName ? shuffle([champName, ...shuffle(Object.keys(QZ.clubs).filter((n) => n !== champName)).slice(0, 3)]) : [], saved = store.items["dq_" + day];
+  const sline = [spot.sub || spot.pos, spot.nat ? "from " + spot.nat : "", spot.active ? `plays for the ${spot.club}` : `last played for the ${spot.club}`, spot.bp ? `best scoring season: ${spot.bp.avg} points a game (${spot.bp.season})` : ""].filter(Boolean).join(" · ");
+  el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Discover</span></div></nav>
+    <div class="card abx"><div class="label">Today</div><h2>Fun fact</h2><p style="font-size:18px">${esc(fact)}</p></div>
+    <div class="card abx"><div class="label">Spotlight</div><div class="row" style="gap:14px">${playerPic(spot, "xl")}<div><h3 style="font-size:28px">${esc(spot.n)}</h3><div class="fine">${esc(sline)}</div></div></div></div>
+    ${champName ? `<div class="card abx"><div class="label">Question of the day</div><h3>Who won the NBA title in ${seasonLab(+y)}?</h3><div class="holpair" style="flex-wrap:wrap">${opts.map((n) => `<button type="button" class="holc ${saved ? (n === champName ? "ans" : saved.pick === n ? "wrong" : "") : ""}" data-nbdq="${esc(n)}" ${saved ? "disabled" : ""}>${badge(n, "md")}<b>${esc(n)}</b></button>`).join("")}</div>${saved ? `<p class="fine" style="margin-top:8px">${saved.pick === champName ? "Right!" : "Not quite."} It was the ${esc(champName)}. Come back tomorrow.</p>` : ""}</div>` : ""}`;
+  el._champ = champName;
+}
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbdq]"); if (!b) return; const day = todayKey(), el = $("#discPage"); if (store.items["dq_" + day]) return; const pick = b.dataset.nbdq, ok = pick === el._champ; lockIn("dq_" + day, { pick }); reward(ok ? 15 : 5, "Daily question", null); ok ? (Snd.win(), confetti()) : Snd.wrong(); renderDiscover(); });
+{ const homeOld2 = renderHome; renderHome = function () { homeOld2(); const d = $("#doors"); if (d && !d.querySelector('[data-door="discover"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">A fun fact, a spotlight player and a question, new every day.</div><span class="dgo">Open</span></button>`); }; }
+/* basketball text is English only for now, so the football-only language picker is hidden */
+{ const css = document.createElement("style"); css.textContent = `[data-lang],#langRow{display:none!important}`; document.head.appendChild(css); }

@@ -56,7 +56,7 @@ def alive(u):
     except Exception: return False
 before = len(hero); hero = [h for h in hero if alive(h["img"])]; print("hero photos reachable:", len(hero), "of", before)
 data = {"sport": "nba", "leagues": {"NBA": league}, "profiles": {}, "summary": {"ALL": {"n": 0, "pooled_acc": 0, "market_acc": 0}}, "statsval": {}, "board": None, "hero": hero, "colors": {},
-        "baselines": {}, "quiz": {"players": P, "clubs": clubs, "alias": alias, "asOf": nd["asOf"]}, "xi": [], "bracket": [], "highlights": [], "about": {}, "audit": None, "gn": []}
+        "baselines": {}, "quiz": {"players": P, "clubs": clubs, "alias": alias, "asOf": nd["asOf"]}, "xi": [], "bracket": [], "highlights": [], "about": (json.load(open("site/about.json")) if os.path.exists("site/about.json") else {}), "audit": None, "gn": []}
 nm = json.load(open("02_processed_data/nba_model.json"))
 data["nbaModel"] = {"games": nm["games"], "summary": nm["summary"], "quarters": nm["quarters"], "elo": nm["elo_final"], "po_elo": nm["po_elo"], "series": nd["series"]}
 ids = {p["id"] for p in P}

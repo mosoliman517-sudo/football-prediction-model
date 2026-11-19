@@ -39,3 +39,4 @@ site/logos/
 # Per-match files from the Transfermarkt dataset (hundreds of MB); src/47 reads them and writes the small match_facts.json
 01_data_market_value/new/
 01_data_nba/
+01_data_chess/

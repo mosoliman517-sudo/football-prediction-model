@@ -11,12 +11,11 @@
 body{min-height:100vh;min-height:100dvh;background:radial-gradient(1200px 600px at 50% -10%,#16212c 0,var(--bg) 60%);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:max(28px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
 h1{font:800 clamp(40px,9vw,72px)/1 "Bricolage Grotesque","DM Sans",system-ui,sans-serif;letter-spacing:-.03em;margin:0;text-align:center}h1 b{color:var(--fb)}
 .sub{color:var(--muted);text-align:center;margin:10px 0 0;font-size:17px}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:min(860px,100%)}
-@media(max-width:640px){.cards{grid-template-columns:1fr}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;width:min(1020px,100%)}
 a.card{position:relative;display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:24px;background:var(--card);border:1px solid var(--line);color:inherit;text-decoration:none;overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
 a.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 220px at 80% 0,var(--c),transparent 70%);opacity:.18;transition:opacity .25s}
 a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--c);box-shadow:0 18px 50px -20px var(--c);outline:none}a.card:hover::before{opacity:.32}
-.fb{--c:var(--fb)}.bb{--c:var(--bb)}
+.fb{--c:var(--fb)}.bb{--c:var(--bb)}.ch{--c:#e8c35a}
 .ico{width:76px;height:76px;color:var(--c)}
 .name{font:800 32px/1.1 "Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.02em;margin:0;position:relative}
 .tag{color:var(--muted);margin:0;position:relative;font-size:15px}
@@ -40,12 +39,18 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
   <p class="tag">The NBA: players, teams and careers from 25 seasons of real box scores.</p>
   <div class="go">Play basketball <span aria-hidden="true">→</span></div>
  </a>
+ <a class="card ch" id="ch" href="chess/">
+  <svg class="ico" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M30 66h20M32 66l2-12h12l2 12M34 54c-6-4-8-12-4-18 1-2 2-4 1-6l-3-3 5-1 1-4 5 3 5-3 1 4 5 1-3 3c-1 2 0 4 1 6 4 6 2 14-4 18"/><path d="M38 24l-3-5M46 24l3-5"/></svg>
+  <h2 class="name">Chess<span class="beta">Beta</span></h2>
+  <p class="tag">A rating-based model to beat, name the opening, and guess the grandmaster.</p>
+  <div class="go">Play chess <span aria-hidden="true">→</span></div>
+ </a>
 </main>
-<p class="note">One login for both. Each sport has its own profile, rating, badges, friends and leaderboards.</p>
+<p class="note">Football and basketball share one login, with a separate profile, rating, badges, friends and leaderboards for each. Chess saves progress in your browser for now.</p>
 <script>
 (function () {
   var h = location.hash; if (/^#(join|challenge)-/.test(h)) { location.replace("football/" + h); return; }   // links shared before basketball existed
-  try { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } catch (e) {}
-  ["fb", "bb"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
+  try { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } catch (e) {}
+  ["fb", "bb", "ch"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
 })();
 </script></body></html>

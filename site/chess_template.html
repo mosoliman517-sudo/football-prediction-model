@@ -1,0 +1,141 @@
+<title>ballknowledge chess</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+:root{--bg:#0e1411;--panel:#16201b;--panel2:#1d2a23;--ink:#f3eddc;--muted:#a9b5ab;--gold:#e8c35a;--light:#ead9b0;--dark:#6f8f6a;--ok:#5ee6a8;--bad:#ff6b7f;--line:#2c3d33;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:repeating-conic-gradient(rgba(255,255,255,.025) 0 25%,transparent 0 50%) 0 0/72px 72px,radial-gradient(900px 480px at 50% -10%,rgba(232,195,90,.12),transparent 70%),var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;min-height:100vh;padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.wrap{max-width:860px;margin:0 auto}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.brand{font:800 22px Fraunces,serif;letter-spacing:-.01em;background:none;border:0;color:var(--ink);cursor:pointer;padding:0}.brand b{color:var(--gold)}
+.pill{border:1px solid var(--line);color:var(--muted);text-decoration:none;font-size:13px;padding:5px 11px;border-radius:99px;background:var(--panel)}.pill:hover{border-color:var(--gold);color:var(--ink)}
+.tag{font:700 11px Inter;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);padding:3px 8px;border-radius:99px}
+h1{font:800 clamp(44px,9vw,84px)/.95 Fraunces,serif;letter-spacing:-.03em;margin:8px 0 10px}h1 em{color:var(--gold);font-style:normal}
+h2{font:800 28px Fraunces,serif;margin:0 0 6px}h3{font:700 18px Fraunces,serif;margin:14px 0 6px}
+p{margin:0 0 10px}.sub{color:var(--muted)}.fine{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:20px}
+.door,.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:20px}
+.door{cursor:pointer;text-align:left;color:inherit;font:inherit;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;position:relative;overflow:hidden}
+.door:hover{transform:translateY(-5px);border-color:var(--gold)}.door:active{transform:scale(.98)}
+.door .pc{font-size:44px;line-height:1;display:block;margin-bottom:8px;animation:bob 3.2s ease-in-out infinite}.door:nth-child(2) .pc{animation-delay:.4s}.door:nth-child(3) .pc{animation-delay:.8s}.door:nth-child(4) .pc{animation-delay:1.2s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px) rotate(-3deg)}}
+.dname{font:800 24px Fraunces,serif}.dtag{color:var(--muted);font-size:14px;margin-top:4px}
+.btn{background:var(--gold);color:#241c00;border:0;border-radius:12px;padding:10px 18px;font:700 15px Inter;cursor:pointer;transition:transform .15s}.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.97)}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.btn[disabled]{opacity:.4;cursor:default;transform:none}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.opt{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:14px;font:600 15px Inter;cursor:pointer;text-align:center}.opt:hover{border-color:var(--gold)}.opt.sel{outline:3px solid var(--gold)}.opt.ok{background:rgba(94,230,168,.18);border-color:var(--ok)}.opt.no{background:rgba(255,107,127,.18);border-color:var(--bad)}.opt[disabled]{cursor:default}
+.players{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center;margin:10px 0}
+.side{background:var(--panel2);border-radius:14px;padding:14px;border:1px solid var(--line)}.side .sq{width:26px;height:26px;border-radius:6px;display:inline-block;vertical-align:middle;margin-right:6px;border:2px solid #000}.w .sq{background:#f5f5f5}.b .sq{background:#1a1a1a;border-color:#555}
+.big{font:800 40px Fraunces,serif;color:var(--gold);line-height:1}
+.vs{color:var(--muted);font:700 14px Inter}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}.tile{background:var(--panel2);border-radius:14px;padding:14px;border:1px solid var(--line)}.tile b{display:block;font:800 30px Fraunces,serif;color:var(--gold)}
+.board{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,340px);aspect-ratio:1;border:3px solid #000;border-radius:6px;overflow:hidden;margin:10px auto}
+.board i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:clamp(22px,6.6vw,34px);line-height:1}.board .l{background:var(--light)}.board .d{background:var(--dark)}.board .pw{color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 0 3px #000}.board .pb{color:#111}
+.bar2{height:12px;border-radius:6px;background:var(--line);overflow:hidden;display:flex}.bar2 b{display:block;height:100%}.bar2 .w{background:#f1f1f1}.bar2 .dr{background:#8a8f8c}.bar2 .b{background:#2a2a2a}
+.clues{display:grid;gap:8px;margin:10px 0}.clue{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:12px;align-items:baseline;animation:pop .35s cubic-bezier(.3,1.6,.5,1)}.clue .label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:88px}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:11px 14px;font:inherit}
+.photo{width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:top;border:3px solid var(--gold);background:var(--panel2)}
+.tb{width:100%;border-collapse:collapse;font-size:14px}.tb td,.tb th{padding:6px 8px;border-top:1px solid var(--line);text-align:left}.tb th{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.foot{margin-top:30px;color:var(--muted);font-size:12px;max-width:640px}
+@media(prefers-reduced-motion:reduce){.door .pc{animation:none}}
+</style>
+<div class="wrap">
+ <div class="bar"><button class="brand" id="home" type="button">ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../">Pick your sport</a></div>
+ <main id="app"></main>
+ <div class="foot">Games come from the Lichess open database (CC0), January 2024, standard rated games. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser only.</div>
+</div>
+<script>
+const DATA = /*__DATA__*/null;
+const $ = (s, r = document) => r.querySelector(s), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const rnd = (a) => a[Math.floor(Math.random() * a.length)], shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const store = { get(k, d) { try { const v = localStorage.getItem("bkc_" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem("bkc_" + k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } } };
+const M = DATA.model, S = M.summary, GAMES = M.games, OPEN = DATA.openings, PLAYERS = DATA.players;
+const PIECE = { wk: "♔", wq: "♕", wr: "♖", wb: "♗", wn: "♘", wp: "♙", bk: "♚", bq: "♛", br: "♜", bb: "♝", bn: "♞", bp: "♟" };
+const pct = (v, d = 1) => (Math.round(v * 10 ** (d + 2)) / 10 ** d).toFixed(d) + "%";
+const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+let st = {};
+/* ---------- home ---------- */
+function home() {
+  st = {}; $("#app").innerHTML = `<h1>Chess, <em>predicted</em> and played</h1><p class="sub" style="font-size:18px;max-width:600px">Out-call a model on real games between real players, name the opening from the moves, and guess the grandmaster. Everything comes from real data; nothing is made up.</p>
+  <div class="grid"><button class="door" data-go="call"><span class="pc">♞</span><div class="dname">Call it</div><div class="dtag">Two ratings, a time control. Who wins, and how long does it last? Beat the model.</div></button>
+  <button class="door" data-go="open"><span class="pc">♝</span><div class="dname">Name the opening</div><div class="dtag">A position on the board. Is it the Sicilian, the Ruy Lopez, the King's Indian?</div></button>
+  <button class="door" data-go="who"><span class="pc">♚</span><div class="dname">Who is this player?</div><div class="dtag">Clues about a top player, from hard to easy. Fewer clues, more points.</div></button>
+  <button class="door" data-go="model"><span class="pc">♛</span><div class="dname">Our model</div><div class="dtag">How the prediction works, how good it really is, and what the data does not cover.</div></button></div>`;
+}
+/* ---------- Call it ---------- */
+const LEN = ["Short (under 30 moves)", "Medium (30 to 50)", "Long (over 50 moves)"], lenOf = (p) => (p < 60 ? 0 : p < 100 ? 1 : 2), RES = ["Black wins", "Draw", "White wins"];
+function callStart() { const g = shuffle(GAMES.filter((x) => Math.abs(x[0] - x[1]) <= 400)).slice(0, 5); st = { game: "call", items: g, i: 0, you: 0, mod: 0, pick: null, len: null, phase: "ask", log: [] }; callRender(); }
+function callRender() {
+  const s = st, g = s.items[s.i], [we, be, res, base, inc, speed, plies, eco, opening, pw, pd, pb, pl, term] = g;
+  const hud = `<div class="row" style="justify-content:space-between"><b>Game ${s.i + 1} of 5</b><span class="fine">You ${s.you} · Model ${s.mod}</span></div>`;
+  const head = `<div class="players"><div class="side w"><span class="sq"></span><b>White</b><div class="big">${we}</div></div><div class="vs">${speed}<br>${base / 60 >= 1 ? base / 60 + " min" : base + " s"}${inc ? " + " + inc + " s" : ""}</div><div class="side b"><span class="sq"></span><b>Black</b><div class="big">${be}</div></div></div>`;
+  if (s.phase === "ask") {
+    $("#app").innerHTML = `<div class="card">${hud}<h2>Call it</h2><p class="sub">A real rated game from Lichess you have not seen. Who wins, and how long does it last?</p>${head}
+      <h3>Result</h3><div class="opts">${RES.map((r, k) => `<button class="opt ${s.pick === k ? "sel" : ""}" data-r="${k}">${r}</button>`).join("")}</div><h3>Length</h3><div class="opts">${LEN.map((r, k) => `<button class="opt ${s.len === k ? "sel" : ""}" data-l="${k}">${r}</button>`).join("")}</div>
+      <div class="row"><button class="btn" id="lock" ${s.pick != null && s.len != null ? "" : "disabled"}>Lock it in</button></div></div>`; return;
+  }
+  const realR = res === 1 ? 2 : res === 0 ? 0 : 1, realL = lenOf(plies), mR = [pb, pd, pw].indexOf(Math.max(pb, pd, pw)), mL = pl.indexOf(Math.max(...pl)), y = (s.pick === realR ? 2 : 0) + (s.len === realL ? 1 : 0), m = (mR === realR ? 2 : 0) + (mL === realL ? 1 : 0);
+  $("#app").innerHTML = `<div class="card">${hud}${head}<div class="card" style="background:var(--panel)"><div class="label fine">Real result</div><h3 style="margin-top:2px">${RES[realR]}, ${Math.round(plies / 2)} moves${term === "Time forfeit" ? " (on time)" : ""}</h3><p class="fine">${esc(opening || eco)}</p>
+    <div class="bar2" title="model: black / draw / white"><b class="b" style="width:${pb * 100}%"></b><b class="dr" style="width:${pd * 100}%"></b><b class="w" style="width:${pw * 100}%"></b></div><p class="fine" style="margin-top:6px">Model: White ${Math.round(pw * 100)}% · Draw ${Math.round(pd * 100)}% · Black ${Math.round(pb * 100)}%</p>
+    <div class="tiles"><div class="tile"><small>You</small><b>+${y}</b><span class="fine">${RES[s.pick]}, ${LEN[s.len].split(" ")[0].toLowerCase()}</span></div><div class="tile"><small>Model</small><b>+${m}</b><span class="fine">${RES[mR]}, ${LEN[mL].split(" ")[0].toLowerCase()}</span></div></div></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="next">${s.i >= 4 ? "See the final score" : "Next game"}</button></div></div>`;
+  s.last = { y, m };
+}
+function callLock() { const s = st, r = (() => { const g = s.items[s.i], res = g[2], realR = res === 1 ? 2 : res === 0 ? 0 : 1, [pw, pd, pb] = [g[9], g[10], g[11]]; return { y: (s.pick === realR ? 2 : 0) + (s.len === lenOf(g[6]) ? 1 : 0), m: ([pb, pd, pw].indexOf(Math.max(pb, pd, pw)) === realR ? 2 : 0) + (g[12].indexOf(Math.max(...g[12])) === lenOf(g[6]) ? 1 : 0) }; })(); s.you += r.y; s.mod += r.m; s.phase = "reveal"; callRender(); }
+function callNext() { const s = st; if (s.i >= 4) { const best = store.get("best_call", 0); if (s.you > best) store.set("best_call", s.you); $("#app").innerHTML = `<div class="card"><h2>${s.you > s.mod ? "You beat the model" : s.you === s.mod ? "A tie with the model" : "The model won"}</h2><div class="tiles"><div class="tile"><small>You, of 15</small><b>${s.you}</b></div><div class="tile"><small>Model</small><b>${s.mod}</b></div><div class="tile"><small>Your best</small><b>${Math.max(best, s.you)}</b></div></div><div class="row"><button class="btn" data-go="call">Play again</button><button class="btn ghost" data-go="home">Menu</button></div></div>`; return; } s.i++; s.pick = null; s.len = null; s.phase = "ask"; callRender(); }
+/* ---------- Name the opening ---------- */
+function openStart() { st = { game: "open", streak: 0, q: null }; openNext(); }
+function openNext() {
+  const o = rnd(OPEN), fam = (n) => n.split(":")[0], same = OPEN.filter((x) => x.name !== o.name && x.eco[0] === o.eco[0]), others = shuffle([...same.filter((x) => fam(x.name) !== fam(o.name))]).slice(0, 2).concat(shuffle(same.filter((x) => fam(x.name) === fam(o.name))).slice(0, 1));
+  while (others.length < 3) others.push(rnd(OPEN.filter((x) => x.name !== o.name && !others.includes(x))));
+  st.q = { o, opts: shuffle([o, ...others.slice(0, 3)]), chosen: null }; openRender();
+}
+function boardHTML(pgn) { const c = new Chess(); c.load_pgn(pgn); const b = c.board(); let h = ""; for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) { const p = b[r][f]; h += `<i class="${(r + f) % 2 ? "d" : "l"} ${p ? (p.color === "w" ? "pw" : "pb") : ""}">${p ? PIECE[p.color + p.type] : ""}</i>`; } return `<div class="board">${h}</div>`; }
+function openRender() {
+  const q = st.q, o = q.o, rev = q.chosen != null, best = store.get("best_open", 0);
+  $("#app").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Name the opening</h2><span class="fine">Streak ${st.streak} · best ${best}</span></div>${boardHTML(o.pgn)}<p class="fine" style="text-align:center">${esc(o.pgn)}</p>
+    <div class="opts">${q.opts.map((x, k) => `<button class="opt ${rev ? (x === o ? "ok" : x === q.chosen ? "no" : "") : ""}" data-o="${k}" ${rev ? "disabled" : ""}>${esc(x.name)}</button>`).join("")}</div>
+    ${rev ? `<div class="row"><b>${q.chosen === o ? "Right!" : "It was " + esc(o.name) + "."}</b> <span class="fine">ECO ${esc(o.eco)}${o.n ? ` · played in ${o.n.toLocaleString()} of the sample's games` : ""}</span><button class="btn" id="onext">${q.chosen === o ? "Next" : "Try again"}</button></div>` : ""}</div>`;
+}
+/* ---------- Who is this player? ---------- */
+function whoMatch(t, full) { const a = norm(t), b = norm(full); if (!a) return false; if (a === b) return true; const parts = b.split(" "), last = parts[parts.length - 1]; if (a === last && last.length >= 4) return true; if (parts.length > 1 && a === parts[0] + " " + last) return true; const lev = (x, y) => { const d = Array.from({ length: x.length + 1 }, (_, i) => [i]); for (let j = 1; j <= y.length; j++) d[0][j] = j; for (let i = 1; i <= x.length; i++) for (let j = 1; j <= y.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (x[i - 1] === y[j - 1] ? 0 : 1)); return d[x.length][y.length]; }; return (a.length >= 5 && lev(a, last) <= 1) || (a.length >= 8 && lev(a, b) <= 2); }
+function whoStart() { st = { game: "who", streak: 0 }; whoNext(); }
+function whoNext() {
+  const p = rnd(PLAYERS.slice(0, 120)), age = new Date().getFullYear() - p.born, cl = [];
+  cl.push(["Born", `In ${p.born}${p.birth ? ", " + p.birth : ""}`]); if (p.country) cl.push(["Country", p.country]); cl.push(["Peak rating", `${p.peak} (the very best are above 2800)`]);
+  cl.push(["Status", p.died ? `Died in ${p.died}, aged ${p.died - p.born}` : `Still alive, ${age} years old`]); if (p.champ) cl.push(["Title", "A former World Chess Champion"]);
+  cl.push(["Name", `${p.n.split(" ").length} words, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]); if (p.img) cl.push(["Photo", "IMG"]);
+  st.q = { p, cl, shown: 1, done: false, msg: "" }; whoRender();
+}
+function whoRender() {
+  const q = st.q, p = q.p, pts = Math.max(100, 1000 - 150 * (q.shown - 1)), best = store.get("best_who", 0);
+  const clueHTML = q.cl.slice(0, q.done ? q.cl.length : q.shown).map(([l, t]) => `<div class="clue"><span class="label">${l}</span>${t === "IMG" ? `<img class="photo" src="${esc(p.img.replace("http://", "https://"))}?width=300" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span>${esc(t)}</span>`}</div>`).join("");
+  $("#app").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Who is this player?</h2><span class="fine">Streak ${st.streak} · best ${best}</span></div><p class="sub">Worth <b>${q.done ? 0 : pts}</b> points now. Each new clue costs 150.</p><div class="clues">${clueHTML}</div>
+    ${q.done ? `<div class="row"><b>${esc(q.msg)}</b><button class="btn" id="wnext">${q.won ? "Next" : "Try again"}</button></div>` : `<div class="row"><input class="t" id="win" placeholder="Type a name, a surname is fine" autocomplete="off"><button class="btn" id="wgo">Guess</button><button class="btn ghost" id="wclue" ${q.shown >= q.cl.length ? "disabled" : ""}>Next clue</button><button class="btn ghost" id="wgive">Give up</button></div><p class="fine">${esc(q.msg)}</p>`}</div>`;
+  const i = $("#win"); if (i) i.focus();
+}
+function whoGuess() { const q = st.q, v = $("#win").value; if (!v.trim()) return; if (whoMatch(v, q.p.n)) { const pts = Math.max(100, 1000 - 150 * (q.shown - 1)); q.done = true; q.won = true; q.msg = `Yes, ${q.p.n}! +${pts}`; st.streak++; const b = store.get("best_who", 0); if (st.streak > b) store.set("best_who", st.streak); } else { q.msg = "Not him. Try again or take another clue."; if (q.shown < q.cl.length) q.shown++; } whoRender(); }
+/* ---------- Our model ---------- */
+function modelPage() {
+  const by = S.bySpeed;
+  $("#app").innerHTML = `<div class="card"><h2>Our model</h2><h3>What it does</h3><p>Given the two players' ratings and the time control, it estimates the chance of a White win, a draw and a Black win, and how long the game will last. It is a logistic regression, which is a simple way of turning the rating gap into probabilities. It learned from 80% of the games and is scored only on the other 20%, games it never saw.</p>
+  <div class="tiles"><div class="tile"><small>Result right</small><b>${pct(S.acc)}</b></div><div class="tile"><small>Always pick White</small><b>${pct(S.white)}</b></div><div class="tile"><small>Always pick the higher rating</small><b>${pct(S.higher)}</b></div><div class="tile"><small>Length bucket right</small><b>${pct(S.len_acc)}</b><span class="fine">guessing the commonest: ${pct(S.len_base)}</span></div></div>
+  <p class="fine">Tested on ${S.n.toLocaleString()} unseen games. The edge is small on purpose of nature: most opponents are within 100 rating points, so results are close to coin flips, and a draw is almost never the most likely result.</p>
+  <h3>By speed</h3><table class="tb"><tr><th>Speed</th><th>Games</th><th>Model</th><th>Higher rating</th></tr>${Object.entries(by).map(([k, v]) => `<tr><td>${k}</td><td>${v.n.toLocaleString()}</td><td>${pct(v.acc)}</td><td>${pct(v.higher)}</td></tr>`).join("")}</table>
+  <h3>Honest limits</h3><ul><li>Only one month of games (January 2024), a 250 MB slice of the standard rated games. It is Lichess players, not tournament chess.</li><li>The games you call are from the held-out 20%, in the order they happened to land. No engine analysis is used.</li><li>The Call it game skips bullet games and rating gaps over 400, so every game has something to think about.</li><li>Player facts (country, birth, peak rating, world champion) come from Wikidata and only cover players with a FIDE id and a peak rating of 2600 or more.</li></ul></div>`;
+}
+/* ---------- events ---------- */
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.id === "home") return home();
+  if (t.dataset.go) { const g = t.dataset.go; return g === "home" ? home() : g === "call" ? callStart() : g === "open" ? openStart() : g === "who" ? whoStart() : modelPage(); }
+  if (st.game === "call") { if (t.dataset.r != null) { st.pick = +t.dataset.r; return callRender(); } if (t.dataset.l != null) { st.len = +t.dataset.l; return callRender(); } if (t.id === "lock") return callLock(); if (t.id === "next") return callNext(); }
+  if (st.game === "open") { if (t.dataset.o != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.o]; st.streak = st.q.chosen === st.q.o ? st.streak + 1 : 0; if (st.streak > store.get("best_open", 0)) store.set("best_open", st.streak); return openRender(); } if (t.id === "onext") { if (st.q.chosen !== st.q.o) st.streak = 0; return openNext(); } }
+  if (st.game === "who") { if (t.id === "wgo") return whoGuess(); if (t.id === "wclue") { st.q.shown++; return whoRender(); } if (t.id === "wgive") { st.q.done = true; st.q.won = false; st.q.msg = `It was ${st.q.p.n}.`; st.streak = 0; return whoRender(); } if (t.id === "wnext") return whoNext(); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "win") { e.preventDefault(); whoGuess(); } });
+home();
+</script>

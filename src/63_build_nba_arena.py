@@ -9,12 +9,15 @@ lab = lambda y: f"{y-1}-{str(y)[2:]}"
 short = {t["id"]: t["short"] for t in teams.values()}
 
 # ---- players: keep real careers only (a birth date for age clues, and enough games to be a fair question) ----
+AWD = json.load(open("02_processed_data/nba_awards.json")); AW = {}      # src/67: complete winner lists from Wikipedia, 2001-02 on
+for k_, d_ in AWD.items():
+    for s_, n_ in d_.items(): AW.setdefault(n_, []).append([k_, s_])
 P = []
 for p in nd["players"]:
     if not p["dob"] or p["gp"] < 100: continue
     q = dict(p)
     q.update({"comp": "NBA", "nat": p["bc"] or p["nat"] or "", "bc": p["bc"], "city": (p["bpl"] or ""), "sub": p["posn"], "val": p["pts"], "peak": p["pts"]})
-    q["end"] = None; q["aw"] = None   # Wikidata awards are incomplete (e.g. no Embiid MVP), so none are used until a complete list is sourced
+    q["end"] = None; q["aw"] = AW.get(p["n"]) or None
     q["ph"] = p["photo"] or f"https://a.espncdn.com/i/headshots/nba/players/full/{p['id']}.png"
     P.append(q)
 print("quiz players", len(P), "active", sum(p["active"] for p in P), "career-path eligible", sum(1 for p in P if not p["partial"] and len(p["hist"]) >= 3))

@@ -8,6 +8,7 @@ const COVER = "2001-02";                                   // the box scores sta
 const ftIn = (cm) => { const i = Math.round(cm / 2.54); return `${Math.floor(i / 12)} ft ${i % 12} in`; };
 Object.assign(POSICON, { Guard: "<svg class=ic><use href=#i-gear></use></svg>", Forward: "<svg class=ic><use href=#i-shield></use></svg>", Center: "<svg class=ic><use href=#i-ball></use></svg>" });
 Object.assign(POSNAME, { Guard: "Guards", Forward: "Forwards", Center: "Centers" });
+const AWN = { MVP: "NBA MVP", FMVP: "Finals MVP", DPOY: "Defensive Player of the Year", ROY: "Rookie of the Year", "6MOY": "Sixth Man of the Year", MIP: "Most Improved Player" };
 const ordSeason = (s) => s;                                  // "2011-12" is already how fans write a season
 const POSLONG = (p) => (p.sub || p.pos || "player").toLowerCase();
 const natOf = (p) => p.nat || "";
@@ -24,6 +25,7 @@ function playerClues(p) {
   if (p.br && p.br.avg >= 6) cl.push(["Rebounding", `Best rebounding season since ${COVER}: ${bestLine(p.br, "rebounds")}`]);
   if (p.ba && p.ba.avg >= 4.5) cl.push(["Passing", `Best passing season since ${COVER}: ${bestLine(p.ba, "assists")}`]);
   if (p.pts >= 5000) cl.push(["Career", `${p.pts.toLocaleString("en-US")} points, ${p.reb.toLocaleString("en-US")} rebounds and ${p.ast.toLocaleString("en-US")} assists since ${COVER}`]);
+  if ((p.aw || []).length) cl.push(["Awards", `Won ${Object.entries(p.aw.reduce((m, [k, s]) => { (m[k] = m[k] || []).push(s); return m; }, {})).map(([k, v]) => `${AWN[k]} (${v.join(", ")})`).join("; ")}`, "<svg class=ic><use href=#i-medal></use></svg>"]);
   if ((p.ti || []).length) cl.push(["Titles", `NBA champion ${p.ti.length > 1 ? p.ti.length + " times" : "once"}: ${p.ti.map((t) => `${t.team} ${t.season}`).join(", ")}`, "<svg class=ic><use href=#i-trophy></use></svg>"]);
   cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
   cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
@@ -95,6 +97,8 @@ function tttCategories(pool, scope) {
   Object.entries(ln).filter(([L, n]) => /[a-z]/.test(L) && n >= 45).forEach(([L]) => add({ id: "L:" + L, fam: "letter", label: `Name starts with ${L.toUpperCase()}`, icon: `<span class="cflag"><b>${L.toUpperCase()}</b></span>`, test: (p) => qnorm(p.n)[0] === L }));
   ["Guard", "Forward", "Center"].forEach((k) => add({ id: "pos:" + k, fam: "pos", label: POSNAME[k], icon: `<span class="cflag">${POSICON[k]}</span>`, test: (p) => p.pos === k }));
   ["Point Guard", "Shooting Guard", "Small Forward", "Power Forward"].forEach((s) => { if (count((p) => p.sub === s) >= 40) add({ id: "sub:" + s, fam: "pos", label: s + "s", icon: ico(/Guard/.test(s) ? "gear" : "shield"), test: (p) => p.sub === s }); });
+  Object.keys(AWN).forEach((k) => { const f = (p) => (p.aw || []).some((x) => x[0] === k); if (count(f) >= 5) add({ id: "aw:" + k, fam: "award", label: `Won ${AWN[k]} (${COVER} on)`, icon: ico("medal"), test: f }); });
+  const anyA = (p) => (p.aw || []).length > 0; if (count(anyA) >= 10) add({ id: "aw:any", fam: "award", label: `Won a major award (${COVER} on)`, icon: ico("medal"), test: anyA });
   return F;
 }
 function factsOf(p) { return [p.nat, p.sub || p.pos, p.club ? (p.active ? "now with the " : "last with the ") + p.club : "", `${new Set(p.hist).size} team${new Set(p.hist).size === 1 ? "" : "s"} since ${COVER}`].filter(Boolean).join(" · "); }
@@ -158,7 +162,7 @@ RK_GAMES.length = 0; RK_GAMES.push(["who", "Who am I?"], ["career", "Career path
 BK_LABELS.length = 0; BK_LABELS.push("Who am I?", "Career path", "Name that team", "Logo blur", "Where did they finish?", "Basketball tic-tac-toe", "Team roulette", "Scramble");
 { const keep = new Set(["flame3", "flame7", "captain", "quizmaster", "tttwin", "splash_all", "splash_10", "splash_rare", "splash_leg", "first_buzz", "speed", "elite_win", "hat3", "streak10q", "night", "early", "social", "avatar", "fav", "ranked_first", "ranked_win", "ranked5", "elo1200", "alldiff", "rounds100", "squad", "curious", "scramble10", "login7", "login30"]);
   const rest = ACH.filter((a) => keep.has(a[0])); ACH.length = 0; ACH.push(...rest);
-  ACH.forEach((a) => { if (a[0] === "tttwin") a[2] = "Beat the computer at basketball tic-tac-toe"; if (a[0] === "squad") a[2] = `Play all ${QUIZ_GAMES.length} ballknowledge originals`; if (a[0] === "captain") a[2] = "Reach the Captain rank"; }); }
+  ACH.forEach((a) => { if (a[0] === "squad") a[1] = "Full roster"; if (a[0] === "tttwin") a[2] = "Beat the computer at basketball tic-tac-toe"; if (a[0] === "squad") a[2] = `Play all ${QUIZ_GAMES.length} ballknowledge originals`; if (a[0] === "captain") a[2] = "Reach the Captain rank"; }); }
 CHANGELOG.v = "2026-12-03"; CHANGELOG.items.length = 0;
 CHANGELOG.items.push(["Basketball", "ballknowledge now has an NBA side: players, teams and careers from 25 seasons of real box scores. Your football and basketball profiles, ratings and leaderboards are completely separate."], ["Honest limits", `Stats, titles and teammates only count from ${COVER} on. Careers that began earlier are left out of Career path.`]);
 
@@ -483,7 +487,7 @@ ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and
       <li><b>Bios.</b> Birth dates, heights, birthplaces and nationalities come from Wikidata. If a player has none, he is left out of games that need them.</li>
       <li><b>Quarters.</b> Real quarter scores exist from about ${seasonLab(NBQ.from || 2020)} on, so score and quarter games use those seasons only.</li>
       <li><b>Titles.</b> A player counts as a champion if he played in the playoffs for the title team.</li>
-      <li><b>Awards.</b> MVPs and other awards are not used yet: the free source I found was incomplete, and a wrong answer is worse than none.</li>
+      <li><b>Awards.</b> MVP, Finals MVP, Defensive Player, Rookie, Sixth Man and Most Improved winners for 2001-02 on come from Wikipedia's winner lists and are matched to players by name; any it could not match are left out, never guessed.</li>
       <li><b>Names.</b> Teams appear under today's names, so the Sonics show as the Thunder.</li>
       <li><b>Not affiliated.</b> Team logos and player photos belong to their owners. This is an independent student project, not endorsed by the NBA, any team or any player.</li></ul>
       <p class="fine">Built by moisback22. The model is simple on purpose: it can be explained in a minute, and its accuracy is shown above, not hidden.</p></div>`;

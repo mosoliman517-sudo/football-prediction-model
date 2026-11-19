@@ -1015,7 +1015,7 @@ const formHTML = (f) => `<span class="form">${f.map((x) => `<i class="${x}">${x}
 
 /* ---------- theme + routing ---------- */
 
-/* ---------- team colours and stadium backdrop ---------- */
+/* ---------- team colours and arena backdrop ---------- */
 /* Seven clubs have only black-and-white badge files, so their colours cannot be read from the badge. Kit colours, as the owner suggested, checked against recent kit-release reports:
    Juventus black and white stripes; Swansea white; Freiburg white and red; Nottingham Forest red; Gladbach white with green. Amiens and Spezia: no reliable kit source found, so they use their
    black-and-white badge colours. White on a dark theme reads as a light accent. */
@@ -2238,7 +2238,7 @@ function renderAlbum() {
   const top = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><button type="button" class="crumb" data-alb="home|0">Sticker album</button>${a.club ? `<i>›</i><span class="crumb cur">${esc(a.club)}</span>` : ""}</div></nav>`;
   if (!a.club) {
     const clubs = albumClubs(a.lg);
-    el.innerHTML = `${top}<div class="card"><div class="row" style="justify-content:space-between"><h2><svg class=ic><use href=#i-album></use></svg> Sticker album</h2><span class="rkbadge"><b class="num">${have}</b><small>stickers collected</small></span></div><p class="sub">Every club has a page: its badge, then every player who played there, with his years. Get a player right and he fills a slot at each club he played for.</p>
+    el.innerHTML = `${top}<div class="card"><div class="row" style="justify-content:space-between"><h2><svg class=ic><use href=#i-album></use></svg> Sticker album</h2><span class="rkbadge"><b class="num">${have}</b><small>stickers collected</small></span></div><p class="sub">Every team has a page: its logo, then every player who played there, with his years. Get a player right and he fills a slot at each team he played for.</p>
     <div class="scope">${ORDER.map((c) => `<button type="button" class="chip" data-alb="lg|${c}" aria-pressed="${a.lg === c}">${esc(lgOf(c).name)}</button>`).join("")}</div>
     <div class="clubgrid">${clubs.map((n) => { const g = clubProgress(n, pr); return `<button type="button" class="clubcard ${g.have === g.total ? "done" : ""}" data-alb="club|${esc(n)}">${badge(n, "md")}<b>${esc(n)}</b><small class="num">${g.have}/${g.total}</small><i style="--w:${Math.round((g.have / g.total) * 100)}%"></i></button>`; }).join("")}</div></div>`; return;
   }
@@ -2352,8 +2352,8 @@ function renderSettings() {
   const el = $("#setPage"); if (!el) return; const lv = Snd.level, mu = Snd.music && lv > 0 ? 1 : 0, lang = curLang();
   const seg = (attr, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-${attr}="${v}" aria-pressed="${String(cur) === String(v)}">${n}</button>`).join("")}</div>`;
   el.innerHTML = `<div class="row" style="margin-bottom:8px"><button class="btn ghost" id="aboutBack" type="button">← Menu</button><h1 style="font-size:28px">Settings</h1></div>
-    <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, goals and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
-    <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during matches. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
+    <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, buzzers and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
+    <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during games. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
     <div class="card"><h3>Language</h3><p class="fine">${lang === "en" ? "More of the site is translated over time; anything not translated yet stays in English." : "Teile der Seite sind noch Englisch."}</p>${seg("lang", LANGS.map(([c, n]) => [c, n]), lang)}</div>
     <div class="card"><h3>Appearance</h3><p class="fine">Theme, text size, contrast and reduced motion are in your profile.</p><button class="btn ghost" data-go="profile" type="button">Open profile</button></div>`;
 }
@@ -2392,8 +2392,8 @@ const I18N = {
     "Basketball tic-tac-toe": "Fußball-Tic-Tac-Toe", "2 players": "2 Spieler", "Name a player who fits the row and the column. Three in a row wins.": "Nenne einen Spieler, der zu Zeile und Spalte passt. Drei in einer Reihe gewinnen.",
     "How Ranked works": "So funktioniert die Rangliste", "Play real people online. Create a lobby and others can join from the list.": "Spiel online gegen echte Leute. Erstell eine Lobby, andere steigen aus der Liste ein.",
     "Create an account or sign in": "Konto erstellen oder anmelden", "Your rating.": "Deine Wertung.", "This week": "Diese Woche", "30 days": "30 Tage", "This season": "Diese Saison",
-    "Settings": "Einstellungen", "Sound": "Ton", "Effects for taps, goals and results.": "Effekte für Klicks, Tore und Ergebnisse.", "Off": "Aus", "Soft": "Leise", "Full": "Voll", "Music": "Musik",
-    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Ein ruhiger Loop in den Menüs und ein lebhafterer im Spiel. Der Ton muss an sein.", "On": "An", "Language": "Sprache",
+    "Settings": "Einstellungen", "Sound": "Ton", "Effects for taps, buzzers and results.": "Effekte für Klicks, Tore und Ergebnisse.", "Off": "Aus", "Soft": "Leise", "Full": "Voll", "Music": "Musik",
+    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "Ein ruhiger Loop in den Menüs und ein lebhafterer im Spiel. Der Ton muss an sein.", "On": "An", "Language": "Sprache",
     "Appearance": "Darstellung", "Theme, text size, contrast and reduced motion are in your profile.": "Design, Textgröße, Kontrast und weniger Animationen findest du in deinem Profil.", "Open profile": "Profil öffnen",
     "About ballknowledge": "Über ballknowledge", "Our story": "Unsere Geschichte", "How the model works": "So funktioniert das Modell", "Honest limits and sources": "Ehrliche Grenzen und Quellen", "Roadmap and votes": "Fahrplan und Abstimmung",
     "How it grew": "So ist es gewachsen", "Who builds it": "Wer dahintersteckt", "Roadmap": "Fahrplan", "Shipped": "Fertig", "Next": "Als Nächstes", "Later": "Später", "Your ideas": "Deine Ideen",
@@ -2434,8 +2434,8 @@ const I18N = {
     "Basketball tic-tac-toe": "Morpion du foot", "2 players": "2 joueurs", "Name a player who fits the row and the column. Three in a row wins.": "Cite un joueur qui correspond à la ligne et à la colonne. Trois alignés et c'est gagné.",
     "How Ranked works": "Comment marche le mode Classé", "Play real people online. Create a lobby and others can join from the list.": "Joue en ligne contre de vraies personnes. Crée un salon, les autres te rejoignent depuis la liste.",
     "Create an account or sign in": "Crée un compte ou connecte-toi", "Your rating.": "Ton classement.", "This week": "Cette semaine", "30 days": "30 jours", "This season": "Cette saison",
-    "Settings": "Réglages", "Sound": "Son", "Effects for taps, goals and results.": "Effets pour les clics, les buts et les résultats.", "Off": "Coupé", "Soft": "Doux", "Full": "Fort", "Music": "Musique",
-    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Une boucle calme dans les menus et une plus rythmée pendant les matchs. Le son doit être activé.", "On": "Activée", "Language": "Langue",
+    "Settings": "Réglages", "Sound": "Son", "Effects for taps, buzzers and results.": "Effets pour les clics, les buts et les résultats.", "Off": "Coupé", "Soft": "Doux", "Full": "Fort", "Music": "Musique",
+    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "Une boucle calme dans les menus et une plus rythmée pendant les matchs. Le son doit être activé.", "On": "Activée", "Language": "Langue",
     "Appearance": "Apparence", "Theme, text size, contrast and reduced motion are in your profile.": "Thème, taille du texte, contraste et animations réduites sont dans ton profil.", "Open profile": "Ouvrir le profil",
     "About ballknowledge": "À propos de ballknowledge", "Our story": "Notre histoire", "How the model works": "Comment marche le modèle", "Honest limits and sources": "Limites assumées et sources", "Roadmap and votes": "Feuille de route et votes",
     "How it grew": "Comment ça a grandi", "Who builds it": "Qui le construit", "Roadmap": "Feuille de route", "Shipped": "Livré", "Next": "Prochainement", "Later": "Plus tard", "Your ideas": "Tes idées",
@@ -2476,8 +2476,8 @@ const I18N = {
     "Basketball tic-tac-toe": "إكس أو كرة القدم", "2 players": "لاعبان", "Name a player who fits the row and the column. Three in a row wins.": "اذكر لاعبًا يناسب الصف والعمود. ثلاثة في خط واحد تفوز.",
     "How Ranked works": "كيف يعمل التصنيف", "Play real people online. Create a lobby and others can join from the list.": "العب أونلاين ضد أشخاص حقيقيين. أنشئ غرفة ويمكن للآخرين الانضمام من القائمة.",
     "Create an account or sign in": "أنشئ حسابًا أو سجّل الدخول", "Your rating.": "تصنيفك.", "This week": "هذا الأسبوع", "30 days": "30 يومًا", "This season": "هذا الموسم",
-    "Settings": "الإعدادات", "Sound": "الصوت", "Effects for taps, goals and results.": "مؤثرات للنقرات والأهداف والنتائج.", "Off": "إيقاف", "Soft": "هادئ", "Full": "كامل", "Music": "الموسيقى",
-    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "لحن هادئ في القوائم وآخر أكثر حيوية أثناء المباريات. يلزم تشغيل الصوت.", "On": "تشغيل", "Language": "اللغة",
+    "Settings": "الإعدادات", "Sound": "الصوت", "Effects for taps, buzzers and results.": "مؤثرات للنقرات والأهداف والنتائج.", "Off": "إيقاف", "Soft": "هادئ", "Full": "كامل", "Music": "الموسيقى",
+    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "لحن هادئ في القوائم وآخر أكثر حيوية أثناء المباريات. يلزم تشغيل الصوت.", "On": "تشغيل", "Language": "اللغة",
     "Appearance": "المظهر", "Theme, text size, contrast and reduced motion are in your profile.": "المظهر وحجم الخط والتباين وتقليل الحركة في ملفك الشخصي.", "Open profile": "افتح الملف الشخصي",
     "About ballknowledge": "عن ballknowledge", "Our story": "قصتنا", "How the model works": "كيف يعمل النموذج", "Honest limits and sources": "حدود صريحة ومصادر", "Roadmap and votes": "خارطة الطريق والتصويت",
     "How it grew": "كيف كبر المشروع", "Who builds it": "من يبنيه", "Roadmap": "خارطة الطريق", "Shipped": "تم", "Next": "التالي", "Later": "لاحقًا", "Your ideas": "أفكارك",
@@ -2710,7 +2710,7 @@ function avatarHTML(av, size = "md", nick = "") {
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); syncBadges(); }
 function appearanceHTML() {
   const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bkn_theme", "dark"), tx = g("bkn_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
-  return `<label class="pfl">Style</label>${seg("style", [["minimal", "Minimal"], ["classic", "Classic"]], g("bkn_style", "minimal") === "classic" ? "classic" : "minimal")}<div class="fine" style="margin:4px 0 0">Minimal is calm and quiet. Classic brings back the glow, effects and stadium backdrop.</div><label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
+  return `<label class="pfl">Style</label>${seg("style", [["minimal", "Minimal"], ["classic", "Classic"]], g("bkn_style", "minimal") === "classic" ? "classic" : "minimal")}<div class="fine" style="margin:4px 0 0">Minimal is calm and quiet. Classic brings back the glow, effects and arena backdrop.</div><label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
   <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bkn_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bkn_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bkn_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bkn_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
 }
 const signedIn0 = () => !!(Account.signedIn || Account.claude);

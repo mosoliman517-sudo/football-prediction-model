@@ -809,7 +809,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 19 Nov 2026 12:28 UTC · private · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 19 Nov 2026 12:29 UTC · private · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -4708,6 +4708,33 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
 { const homeOld2 = renderHome; renderHome = function () { homeOld2(); const d = $("#doors"); if (d && !d.querySelector('[data-door="discover"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">A fun fact, a spotlight player and a question, new every day.</div><span class="dgo">Open</span></button>`); }; }
 /* basketball text is English only for now, so the football-only language picker is hidden */
 { const css = document.createElement("style"); css.textContent = `[data-lang],#langRow{display:none!important}`; document.head.appendChild(css); }
+
+/* ---------- Odd one out: three of these four fit, one does not ---------- */
+function nboNew() {
+  const kinds = [
+    () => { const teams = Object.keys(QZ.clubs).filter((t) => clubOK(t)), t = rnd(teams), pool = playerPool("ALL", (p) => playerOK(p)), yes = shuffle(pool.filter((p) => p.hist.includes(t))).slice(0, 3), no = rnd(pool.filter((p) => !p.hist.includes(t) && !p.partial)); return yes.length === 3 && no && { text: `Which of these players never played for the ${t} (since ${COVER})?`, yes, no, why: `${no.n} never played for the ${t}.` }; },
+    () => { const pool = playerPool("ALL", (p) => playerOK(p)), yes = shuffle(pool.filter((p) => (p.ti || []).length)).slice(0, 3), no = rnd(pool.filter((p) => !(p.ti || []).length && p.gp > 700)); return yes.length === 3 && no && { text: `Which of these players has never won an NBA title (since ${COVER})?`, yes, no, why: `${no.n} has no title since ${COVER}.` }; },
+    () => { const pool = playerPool("ALL", (p) => playerOK(p) && p.bp), yes = shuffle(pool.filter((p) => p.bp.avg >= 22)).slice(0, 3), no = rnd(pool.filter((p) => p.bp.avg < 14)); return yes.length === 3 && no && { text: `Which of these players never averaged 22+ points in a season (since ${COVER})?`, yes, no, why: `${no.n}'s best was ${no.bp.avg}.` }; },
+  ];
+  for (let t = 0; t < 40; t++) { const q = rnd(kinds)(); if (q) { q.opts = shuffle([...q.yes, q.no]); q.chosen = null; return q; } }
+  return null;
+}
+function renderODD() {
+  const s = S.nbo = S.nbo || { streak: 0, q: null }; if (!s.q) s.q = nboNew(); const q = s.q, best = (store.items["nbbest_nbodd"] || { best: 0 }).best;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Odd one out")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  $("#room").innerHTML = `<div class="card">${gamesBar("Odd one out")}<p class="sub" style="font-size:18px"><b>${esc(q.text)}</b></p><div class="holpair" style="flex-wrap:wrap">${q.opts.map((p) => { const rev = q.chosen != null, cls = rev ? (p === q.no ? "ans" : p === q.chosen ? "wrong" : "") : ""; return `<button type="button" class="holc ${cls}" data-nbo="${p.id}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)}</span></button>`; }).join("")}</div>
+    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.no ? "up" : "down"}">${q.chosen === q.no ? "Right!" : "Wrong."} ${esc(q.why)} Streak ${s.streak}</b><button class="btn" id="nboNext" type="button">${q.chosen === q.no ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
+}
+document.addEventListener("click", (e) => { if (S.game !== "nbodd") return; const t = e.target.closest && e.target.closest("[data-nbo],#nboNext"); if (!t) return; const s = S.nbo;
+  if (t.id === "nboNext") { s.q = null; return renderODD(); }
+  const q = s.q; if (q.chosen != null) return; q.chosen = q.opts.find((p) => String(p.id) === t.dataset.nbo); const ok = q.chosen === q.no; s.streak = ok ? s.streak + 1 : 0;
+  const cur = store.items["nbbest_nbodd"] || { best: 0 }; if (s.streak > cur.best) lockIn("nbbest_nbodd", { best: s.streak }); reward(5 + (ok ? 5 + 2 * Math.min(s.streak, 10) : 0), "Odd one out", null); if (ok) Board.submit({ game: "nbodd", league: "all", score: s.streak });
+  Snd.flip(); renderODD(); setTimeout(() => { ok ? Snd.right() : Snd.wrong(); if (ok && s.streak % 5 === 0) confetti(); }, 400); });
+{ const old2 = renderNB; renderNB = function () { if (S.game === "nbodd") return renderODD(); old2(); }; }
+NB_TITLE.nbodd = "Odd one out"; GAME_IDS.push("nbodd");
+QUIZ_GAMES.push({ id: "nbodd", name: "Odd one out", modes: "Solo streak", tag: "Four players, one does not belong. Who never played for the team, never won a title, never scored 22 a night?", faces: () => heroFaces(3) });
+HOWTO["g:nbodd"] = ["Odd one out", ["What you do", "Three of the four players fit the question and one does not. Tap the odd one out."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Everything counts from ${COVER} on only, and the question says so.`]];
+BOARD_GAMES.push(["nbodd", "Odd one out", "best streak"]); BK_LABELS.push("Odd one out");
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
  route(); setTimeout(finishSplash, 300);

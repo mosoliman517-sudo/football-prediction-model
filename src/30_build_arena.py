@@ -28,7 +28,7 @@ SRC = "02_processed_data/multi_league_matches.csv"
 TEMPLATE = "site/arena_template.html"
 PUBLIC = "--public" in sys.argv         # public build: a standalone page in docs/ for GitHub Pages
 ARTWORK = "--no-artwork" not in sys.argv   # the official badges, logos and photos from site/logos/ are included unless --no-artwork is given
-OUT = os.environ.get("ARENA_OUT", "docs/index.html" if PUBLIC else "site/arena.html")
+OUT = os.environ.get("ARENA_OUT", "docs/football/index.html" if PUBLIC else "site/arena.html")   # docs/index.html is the sport picker (src/64_build_picker.py)
 KEEP_FROM = 2001          # seasons shown in the arena (2001-02 on; the model needs one season of history first)
 META = {
     "E0": ("Premier League", "England", "Twenty clubs, the loudest league on earth."),
@@ -239,7 +239,7 @@ for nm in _h.NAMES:
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
 print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
 data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "gn": GN, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
-html = open(TEMPLATE).read().replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
+html = open(TEMPLATE).read().replace('const ASSET_BASE = "";', 'const ASSET_BASE = "../";' if PUBLIC else 'const ASSET_BASE = "";').replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])
 STAMP = f'Build {datetime.now(timezone.utc):%d %b %Y %H:%M} UTC · {"public" if PUBLIC else "private"} · results through {latest}'
@@ -256,10 +256,10 @@ if PUBLIC:
         foot = ("<span>Club and league names belong to their owners. The coloured discs and emblems are original drawings, not official crests or logos, and no third-party artwork or photographs are used. "
                 "This is an independent student project, not affiliated with any league, club or player." + CREDIT + "</span>")
     html = html.replace(old_foot, foot)
-    pwa = ('<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="apple-touch-icon.png">' if PUBLIC else "")
+    pwa = ('<link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="../apple-touch-icon.png">' if PUBLIC else "")
     html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + pwa + html + "</html>"
     if PUBLIC:
-        html = html.replace("</html>", '<script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></html>')
+        html = html.replace("</html>", '<script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("../sw.js").catch(() => {}));</script></html>')
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
 open(OUT, "w").write(html)
 print(f"Wrote {OUT} ({len(html) / 1e6:.2f} MB)")

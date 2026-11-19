@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ballknowledge</title>
+<meta name="description" content="Test your ball knowledge. Football and basketball quizzes, and a model to beat.">
+<meta name="theme-color" content="#0b0f14"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#0b0f14;--ink:#f4f1ea;--muted:#9aa4b2;--card:#121a22;--line:#223040;--fb:#3ddc84;--bb:#ff8a3d;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{min-height:100vh;min-height:100dvh;background:radial-gradient(1200px 600px at 50% -10%,#16212c 0,var(--bg) 60%);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:max(28px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+h1{font:800 clamp(40px,9vw,72px)/1 "Bricolage Grotesque","DM Sans",system-ui,sans-serif;letter-spacing:-.03em;margin:0;text-align:center}h1 b{color:var(--fb)}
+.sub{color:var(--muted);text-align:center;margin:10px 0 0;font-size:17px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:min(860px,100%)}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+a.card{position:relative;display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:24px;background:var(--card);border:1px solid var(--line);color:inherit;text-decoration:none;overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
+a.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 220px at 80% 0,var(--c),transparent 70%);opacity:.18;transition:opacity .25s}
+a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--c);box-shadow:0 18px 50px -20px var(--c);outline:none}a.card:hover::before{opacity:.32}
+.fb{--c:var(--fb)}.bb{--c:var(--bb)}
+.ico{width:76px;height:76px;color:var(--c)}
+.name{font:800 32px/1.1 "Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.02em;margin:0;position:relative}
+.tag{color:var(--muted);margin:0;position:relative;font-size:15px}
+.go{position:relative;margin-top:auto;display:flex;align-items:center;gap:10px;font-weight:700;color:var(--c)}
+.beta{font:700 11px/1 "DM Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--c);color:var(--c);padding:3px 7px;border-radius:99px;margin-left:8px;vertical-align:middle}
+.last{position:absolute;top:18px;right:18px;font-size:12px;color:var(--muted);border:1px solid var(--line);padding:3px 9px;border-radius:99px;background:#0b0f1488}
+.note{color:var(--muted);font-size:13px;text-align:center;max-width:560px;margin:0}
+@media(prefers-reduced-motion:reduce){a.card{transition:none}}
+</style></head><body>
+<header><h1>ball<b>knowledge</b></h1><p class="sub">Pick your game.</p></header>
+<main class="cards">
+ <a class="card fb" id="fb" href="arena.html">
+  <svg class="ico" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><circle cx="40" cy="40" r="32"/><path d="M40 24l12 9-4.6 14H32.6L28 33z"/><path d="M40 24V9M52 33l15-5M47.4 47l9 13M32.6 47l-9 13M28 33l-15-5"/></svg>
+  <h2 class="name">Football</h2>
+  <p class="tag">Five leagues, a prediction model to beat, and quizzes on players, clubs and careers.</p>
+  <div class="go">Play football <span aria-hidden="true">→</span></div>
+ </a>
+ <a class="card bb" id="bb" href="nba.html">
+  <svg class="ico" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="40" cy="40" r="32"/><path d="M40 8v64M8 40h64"/><path d="M16.5 17.5C28 27 28 53 16.5 62.5M63.5 17.5C52 27 52 53 63.5 62.5"/></svg>
+  <h2 class="name">Basketball<span class="beta">Beta</span></h2>
+  <p class="tag">The NBA: players, teams and careers from 25 seasons of real box scores.</p>
+  <div class="go">Play basketball <span aria-hidden="true">→</span></div>
+ </a>
+</main>
+<p class="note">One login for both. Each sport has its own profile, rating, badges, friends and leaderboards.</p>
+<script>
+(function () {
+  var h = location.hash; if (/^#(join|challenge)-/.test(h)) { location.replace("football/" + h); return; }   // links shared before basketball existed
+  try { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } catch (e) {}
+  ["fb", "bb"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
+})();
+</script></body></html>

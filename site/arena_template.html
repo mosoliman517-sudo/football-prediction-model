@@ -768,6 +768,7 @@ function paintSplashArt() {
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.9.6 beta, see what is new"><b>Beta</b> v0.9.6</button>
     <span class="byline">Built by moisback22</span>
+    <a class="pill" href="../" title="Switch between football and basketball" aria-label="Switch sport"><b>Football</b> / Basketball</a>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
     <button class="pill" id="adminBtn" type="button" hidden title="Admin dashboard"><svg class=ic><use href=#i-shield></use></svg> Admin</button>
@@ -826,6 +827,7 @@ function paintSplashArt() {
 </div>
 
 <script>
+const ASSET_BASE = "";   // the public build serves this page from /football/, so shared files live one level up
 const DATA = /*__DATA__*/null;
 paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
@@ -4092,5 +4094,5 @@ addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e
 addEventListener("hashchange", () => route());
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
-try { fetch("data/photos.json").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.p) { QZ.players.forEach((p) => { const x = j.p[p.id]; if (x) { p.ph = x[0]; p.pq = x[1]; p.pd = x[2]; } }); window.__photosV = j.v; } }).catch(() => {}); } catch (e) { /* offline or blocked */ } route(); setTimeout(finishSplash, 300);
+try { fetch(ASSET_BASE + "data/photos.json").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.p) { QZ.players.forEach((p) => { const x = j.p[p.id]; if (x) { p.ph = x[0]; p.pq = x[1]; p.pd = x[2]; } }); window.__photosV = j.v; } }).catch(() => {}); } catch (e) { /* offline or blocked */ } route(); setTimeout(finishSplash, 300);
 </script>

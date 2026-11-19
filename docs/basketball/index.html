@@ -757,7 +757,7 @@ function paintSplashArt() {
     <button class="brand" id="brand" type="button" title="Back to the menu" aria-label="Back to the front page"><i></i><span>ball<b>knowledge</b></span></button>
     <button class="vtag" id="vtag" type="button" title="This site is still in beta. Tap to see what is new." aria-label="Version 0.1 beta, see what is new"><b>Beta</b> v0.1</button>
     <span class="byline">Built by moisback22</span>
-    <a class="pill" href="../" title="Back to the sport picker" aria-label="Switch sport">Pick your sport</a>
+    <a class="pill" style="display:inline-flex;gap:6px;align-items:center" href="../" title="Back to the sport picker" aria-label="Switch sport"><svg class=ic><use href=#i-compass></use></svg>Pick your sport</a>
     <span class="spacer"></span>
     <button class="pill" data-go="album" type="button" title="Your sticker album"><svg class=ic><use href=#i-album></use></svg></button>
     <button class="pill" id="adminBtn" type="button" hidden title="Admin dashboard"><svg class=ic><use href=#i-shield></use></svg> Admin</button>
@@ -809,7 +809,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 19 Nov 2026 12:53 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 19 Nov 2026 13:08 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -4180,8 +4180,8 @@ function renderHub() {
   const g = S.hubGroup, clubs = Object.keys(CREST), pick = (k) => [0, 1, 2].map((j) => clubs[hash(`nba-${k}-${j}`) % clubs.length]);
   const card = (x, k) => `<button type="button" class="gcard" data-game="${x.id}" style="--d:${k * 60}ms"><div class="gfaces">${x.faces ? x.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes || "Solo"}</div><div class="gtag">${x.tag}</div><div class="grec">${recordLine(S.code, x.id)}</div></button>`;
   if (g === "ranked") { renderRanked(); return; }
-  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, teams and careers from 25 seasons of NBA box scores. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
-  $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Pick a place to play.</p><div class="groups">
+  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-ball></use></svg> ballknowledge originals</h2><p class="secsub">Players, teams and careers from 25 seasons of NBA box scores. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
+  $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-compass></use></svg> What do you want to play?</h2><p class="secsub">Pick a place to play.</p><div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, team roulette, tic-tac-toe and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">Play</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real NBA games against a prediction model that never saw them: winners and margins, a daily five, rapid fire and a playoff bracket.</div><span class="dgo">Play</span></button>
     <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Play online</div><div class="gtag">Ranked matches against real people, a public lobby and a leaderboard.</div><span class="dgo">Play</span></button></div>`;
@@ -4377,7 +4377,7 @@ function recordLine(c, id) {
 { const hubOld = renderHub;
   renderHub = function () {
     if (S.hubGroup === "model") { const clubs = Object.keys(CREST), pick = (k) => [0, 1, 2].map((j) => clubs[hash(`nbm-${k}-${j}`) % clubs.length]);
-      $("#room").innerHTML = `<h2 class="sec">Beat the Model</h2><p class="secsub">Real NBA games and a model that never saw them. Over ${(NBO.n || 0).toLocaleString()} games it picked ${Math.round((NBO.acc || 0) * 1000) / 10}% of winners right (always picking the home team: ${Math.round((NBO.home || 0) * 1000) / 10}%).</p><div class="hub">${GAMES.map((x, k) => `<button type="button" class="gcard" data-game="${x.id}" style="--d:${k * 60}ms"><div class="gfaces">${pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recordLine(S.code, x.id)}</div></button>`).join("")}</div>`; return; }
+      $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-trophy></use></svg> Beat the Model</h2><p class="secsub">Real NBA games and a model that never saw them. Over ${(NBO.n || 0).toLocaleString()} games it picked ${Math.round((NBO.acc || 0) * 1000) / 10}% of winners right (always picking the home team: ${Math.round((NBO.home || 0) * 1000) / 10}%).</p><div class="hub">${GAMES.map((x, k) => `<button type="button" class="gcard" data-game="${x.id}" style="--d:${k * 60}ms"><div class="gfaces">${pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recordLine(S.code, x.id)}</div></button>`).join("")}</div>`; return; }
     hubOld();
   };
 }
@@ -4529,20 +4529,20 @@ ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and
     const el = $("#aboutPage"), tab = S.abTab, per = NM.summary.perSeason || {}, o = NBO;
     const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${tab === k}">${n}</button>`).join("")}</div>`;
     let body = "";
-    if (tab === "how") body = `${String((DATA.about || {}).why || "").trim() ? `<div class="card abx"><h2>Why this exists</h2><div class="abwhy">${esc(String(DATA.about.why).trim()).split(/\n\s*\n/).map((p) => `<p>${p}</p>`).join("")}<div class="fine">In the owner's words.</div></div></div>` : ""}<div class="card abx"><h2>How the model works</h2>
+    if (tab === "how") body = `${String((DATA.about || {}).why || "").trim() ? `<div class="card abx"><h2><svg class=ic><use href=#i-ball></use></svg> Why this exists</h2><div class="abwhy">${esc(String(DATA.about.why).trim()).split(/\n\s*\n/).map((p) => `<p>${p}</p>`).join("")}<div class="fine">In the owner's words.</div></div></div>` : ""}<div class="card abx"><h2><svg class=ic><use href=#i-gear></use></svg> How the model works</h2>
       <p>Every team has a <b>rating</b>, a single number that says how good it is. Everyone starts at 1,500. After each game the winner's rating goes up and the loser's goes down. Beat a strong team, or win by a lot, and it moves more. This is called an <b>Elo rating</b>.</p>
       <h3>What it adds</h3><ul><li><b>Home court.</b> The home team gets a boost worth about 70 rating points.</li><li><b>Tired legs.</b> A team playing the second night of a back-to-back gets a small penalty.</li><li><b>New seasons.</b> Ratings slide a quarter of the way back toward average each summer, because rosters change.</li></ul>
       <h3>From a rating to a score</h3><p>The rating gap gives a predicted <b>margin</b>. Each team's recent scoring and defence give a predicted <b>total</b>. Together they make a predicted score for both teams. To call a <b>quarter</b>, the model picks the team it expects to lead: a quarter is about a quarter of the game, so it mostly follows the favourite.</p>
       <h3>The rule that keeps it honest</h3><p>When the model predicts a game it only uses games played <b>before</b> it. It never sees the result, so beating it means something.</p></div>`;
     else if (tab === "acc") {
       const seasons = Object.keys(per).filter((y) => +y >= 2003 && +y <= 2026).sort(), pct = (v) => Math.round(v * 1000) / 10;
-      body = `<div class="card abx"><h2>How good is it?</h2><div class="tiles"><div class="tile"><b class="num">${pct(o.acc || 0)}%</b><small>winners right, ${(o.n || 0).toLocaleString()} games</small></div><div class="tile"><b class="num">${pct(o.home || 0)}%</b><small>always pick the home team</small></div><div class="tile"><b class="num">${NBQ.score_err || "?"}</b><small>points off, both teams added up</small></div><div class="tile"><b class="num">${pct(NBQ.q_acc || 0)}%</b><small>quarter winners right</small></div></div>
+      body = `<div class="card abx"><h2><svg class=ic><use href=#i-trophy></use></svg> How good is it?</h2><div class="tiles"><div class="tile"><b class="num">${pct(o.acc || 0)}%</b><small>winners right, ${(o.n || 0).toLocaleString()} games</small></div><div class="tile"><b class="num">${pct(o.home || 0)}%</b><small>always pick the home team</small></div><div class="tile"><b class="num">${NBQ.score_err || "?"}</b><small>points off, both teams added up</small></div><div class="tile"><b class="num">${pct(NBQ.q_acc || 0)}%</b><small>quarter winners right</small></div></div>
       <p class="fine" style="margin-top:10px">Every number is from games the model had never seen. Basketball has a lot of luck in it, so even good models are wrong about one winner in three. A season here is named by the year it ends, and the model uses earlier seasons only.</p>
       <h3>Winners right, by season</h3><div class="nbbars">${seasons.map((y) => `<div class="nbbar"><span class="fine">${seasonLab(+y)}</span><i><b style="--w:${pct(per[y].acc) * 1.3}%"></b></i><em class="num">${pct(per[y].acc)}%</em></div>`).join("")}</div></div>`;
     } else if (tab === "rate") {
       const list = Object.entries(NM.elo || {}).sort((a, b) => b[1] - a[1]), top = list[0] ? list[0][1] : 1700, lo = list.length ? list[list.length - 1][1] : 1300;
-      body = `<div class="card abx"><h2>Team ratings</h2><p class="fine">The model's rating for every team after the latest game in the data. Higher means stronger.</p>${list.map(([t, v], i) => `<div class="nbrate"><span class="num">${i + 1}</span>${badge(t, "sm")}<span>${esc(t)}</span><b class="num">${v}</b></div>`).join("")}</div>`;
-    } else body = `<div class="card abx"><h2>Honest limits and sources</h2><ul>
+      body = `<div class="card abx"><h2><svg class=ic><use href=#i-rank></use></svg> Team ratings</h2><p class="fine">The model's rating for every team after the latest game in the data. Higher means stronger.</p>${list.map(([t, v], i) => `<div class="nbrate"><span class="num">${i + 1}</span>${badge(t, "sm")}<span>${esc(t)}</span><b class="num">${v}</b></div>`).join("")}</div>`;
+    } else body = `<div class="card abx"><h2><svg class=ic><use href=#i-shield></use></svg> Honest limits and sources</h2><ul>
       <li><b>Box scores.</b> Players, teams, scores and titles come from ESPN box scores (via the sportsdataverse project), from the 2001-02 season on. Nothing earlier is used, so career totals say "since 2001-02", and careers that began earlier are left out of Career path.</li>
       <li><b>Bios.</b> Birth dates, heights, birthplaces and nationalities come from Wikidata. If a player has none, he is left out of games that need them.</li>
       <li><b>Quarters.</b> Real quarter scores exist from about ${seasonLab(NBQ.from || 2020)} on, so score and quarter games use those seasons only.</li>
@@ -4698,7 +4698,7 @@ function renderDiscover() {
   const opts = champName ? shuffle([champName, ...shuffle(Object.keys(QZ.clubs).filter((n) => n !== champName)).slice(0, 3)]) : [], saved = store.items["dq_" + day];
   const sline = [spot.sub || spot.pos, spot.nat ? "from " + spot.nat : "", spot.active ? `plays for the ${spot.club}` : `last played for the ${spot.club}`, spot.bp ? `best scoring season: ${spot.bp.avg} points a game (${spot.bp.season})` : ""].filter(Boolean).join(" · ");
   el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Discover</span></div></nav>
-    <div class="card abx"><div class="label">Today</div><h2>Fun fact</h2><p style="font-size:18px">${esc(fact)}</p></div>
+    <div class="card abx"><div class="label">Today</div><h2><svg class=ic><use href=#i-bulb></use></svg> Fun fact</h2><p style="font-size:18px">${esc(fact)}</p></div>
     <div class="card abx"><div class="label">Spotlight</div><div class="row" style="gap:14px">${playerPic(spot, "xl")}<div><h3 style="font-size:28px">${esc(spot.n)}</h3><div class="fine">${esc(sline)}</div></div></div></div>
     ${champName ? `<div class="card abx"><div class="label">Question of the day</div><h3>Who won the NBA title in ${seasonLab(+y)}?</h3><div class="holpair" style="flex-wrap:wrap">${opts.map((n) => `<button type="button" class="holc ${saved ? (n === champName ? "ans" : saved.pick === n ? "wrong" : "") : ""}" data-nbdq="${esc(n)}" ${saved ? "disabled" : ""}>${badge(n, "md")}<b>${esc(n)}</b></button>`).join("")}</div>${saved ? `<p class="fine" style="margin-top:8px">${saved.pick === champName ? "Right!" : "Not quite."} It was the ${esc(champName)}. Come back tomorrow.</p>` : ""}</div>` : ""}`;
   el._champ = champName;
@@ -4765,6 +4765,8 @@ const nbBoard = (away, home) => `background:linear-gradient(90deg,color-mix(in s
 setTimeout(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) return; let n = 0, t0 = performance.now(), aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis);
   const f = (t) => { n++; if (aborted) return; if (t - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); const fps = n * 1000 / (t - t0); if (fps < 30 && !document.documentElement.dataset.perf) { document.documentElement.dataset.perf = "low"; try { toast("Switched to lighter visuals to keep things smooth"); } catch (e) { /* ok */ } } } }; requestAnimationFrame(f); }, 3500);
 { const css = document.createElement("style"); css.textContent = `.lhead .flag,#lFlag{display:none!important}.bar a.pill{color:var(--muted);text-decoration:none;white-space:nowrap}.bar a.pill:hover{color:var(--ink)}`; document.head.appendChild(css); }
+
+const _icss = document.createElement("style"); _icss.textContent = `h2 svg.ic,h3 svg.ic,.sec svg.ic{color:var(--accent);width:1.1em;height:1.1em;vertical-align:-.15em}`; document.head.appendChild(_icss);
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
  route(); setTimeout(finishSplash, 300);

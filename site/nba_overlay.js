@@ -404,10 +404,9 @@ document.addEventListener("change", (e) => { const m = /^nbS([ha])$/.exec(e.targ
 { const css = document.createElement("style"); css.textContent = `
 :root{--display:"Anton","Barlow Condensed",Impact,sans-serif}
 :root[data-league]{--display:"Anton","Barlow Condensed",Impact,sans-serif}
-body{background:
-  repeating-linear-gradient(90deg,rgba(255,170,90,.035) 0 2px,transparent 2px 64px),
-  repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 7px),
-  radial-gradient(1100px 520px at 50% -8%,rgba(255,138,61,.16),transparent 70%),var(--bg)}
+body{background:var(--bg)}
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,170,90,.035) 0 2px,transparent 2px 64px),radial-gradient(1100px 520px at 50% -8%,rgba(255,138,61,.16),transparent 70%);transform:translateZ(0)}
+.stadium{contain:strict;will-change:transform}
 h1,h2,h3,.dname,.gname,.name,.big,.big2,.bigpos{font-family:var(--display);letter-spacing:.015em;text-transform:uppercase;font-weight:400}
 h1{font-size:clamp(54px,11vw,110px);line-height:.95}
 h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
@@ -426,7 +425,7 @@ h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
 #scorebox{display:none}
 .homehero h1{animation:nbdrop .9s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes nbdrop{0%{transform:translateY(-60px) scaleY(1.15);opacity:0}55%{transform:translateY(0) scaleY(.9)}75%{transform:translateY(-12px) scaleY(1.04)}100%{transform:none;opacity:1}}
-.gfaces .badge{animation:nbhop 2.8s ease-in-out infinite}.gfaces .badge:nth-child(2){animation-delay:.25s}.gfaces .badge:nth-child(3){animation-delay:.5s}
+.gcard:hover .gfaces .badge,.door:hover .gfaces .badge,.gpick:hover .gfaces .badge{animation:nbhop 1.1s ease-in-out infinite}.gcard:hover .gfaces .badge:nth-child(2){animation-delay:.12s}.gcard:hover .gfaces .badge:nth-child(3){animation-delay:.24s}
 @keyframes nbhop{0%,100%{transform:translateY(0)}12%{transform:translateY(-8px)}24%{transform:translateY(0) scale(1.04,.94)}30%{transform:none}}
 .nbscore{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:#0a0603;border:2px solid color-mix(in srgb,var(--accent) 50%,#000);border-radius:12px;padding:12px}
 .nbtm{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.nbtm b{font-family:var(--display);text-transform:uppercase;font-weight:400;letter-spacing:.03em;font-size:20px}
@@ -448,7 +447,7 @@ h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
 `; document.head.appendChild(css); }
 function paintStadium(code) {
   const el = $("#stadium"); if (!el) return; const r = mulberry(hash("court" + code)), W = 1200, H = 360;
-  let crowd = ""; for (let k = 0; k < 150; k++) { const x = r() * W, y = 150 + r() * 70, col = r() < 0.3 ? "var(--accent)" : r() < 0.5 ? "var(--accent2)" : "#fff"; crowd += `<circle class="fan" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.6 + r() * 2).toFixed(1)}" fill="${col}" style="animation-delay:${(r() * 3).toFixed(2)}s;animation-duration:${(1.4 + r() * 2).toFixed(2)}s"/>`; }
+  let crowd = ""; for (let k = 0; k < 56; k++) { const x = r() * W, y = 150 + r() * 70, col = r() < 0.3 ? "var(--accent)" : r() < 0.5 ? "var(--accent2)" : "#fff"; crowd += `<circle class="fan" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.6 + r() * 2).toFixed(1)}" fill="${col}" style="animation-delay:${(r() * 3).toFixed(2)}s;animation-duration:${(1.4 + r() * 2).toFixed(2)}s"/>`; }
   const net = [0, 1, 2, 3, 4].map((i) => `<path d="M${960 + i * 20} 156 L${970 + i * 15} 205" stroke="#fff" stroke-opacity=".8" stroke-width="2" fill="none"/>`).join("") + `<path d="M964 172h72M968 188h64" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none"/>`;
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="floor" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8a5a2b"/><stop offset="1" stop-color="#4a2c12"/></linearGradient></defs>
     ${crowd}
@@ -503,7 +502,7 @@ ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and
    ===================================================================================================================== */
 const NBX = DATA.nbaXI || [], NBPERF = DATA.nbaPerf || [];
 const PBYID = Object.fromEntries(QZ.players.map((p) => [p.id, p]));
-const espnFace = (id) => `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png`;
+const espnFace = (id) => `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${id}.png&w=112&h=82`;
 /* ---- Who dropped it? (runs on the shared quiz engine: solo, two players, online) ---- */
 function droppedClues(r) {
   const g = r.g, p = r.p, cl = [];
@@ -674,3 +673,34 @@ NB_TITLE.nbodd = "Odd one out"; GAME_IDS.push("nbodd");
 QUIZ_GAMES.push({ id: "nbodd", name: "Odd one out", modes: "Solo streak", tag: "Four players, one does not belong. Who never played for the team, never won a title, never scored 22 a night?", faces: () => heroFaces(3) });
 HOWTO["g:nbodd"] = ["Odd one out", ["What you do", "Three of the four players fit the question and one does not. Tap the odd one out."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Everything counts from ${COVER} on only, and the question says so.`]];
 BOARD_GAMES.push(["nbodd", "Odd one out", "best streak"]); BK_LABELS.push("Odd one out");
+
+/* =====================================================================================================================
+   Speed: lighter visuals on slow devices, scoreboard look, team colours, more motion.
+   ===================================================================================================================== */
+{ const css = document.createElement("style"); css.textContent = `
+:root[data-perf=low] .stadium,:root[data-perf=low] #fx,:root[data-perf=low] .photowall,:root[data-perf=low] body::before{display:none!important}
+:root[data-perf=low] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;backdrop-filter:none!important}
+.nbstep input,.nbvs,.qhud .qscore b,#nbRpTime,.nbtable td.num,.nbscore .nbpts{font-family:"Orbitron","Barlow Condensed",monospace;font-weight:900;letter-spacing:.04em}
+.nbstep input{color:#ffb21f;text-shadow:0 0 10px rgba(255,150,20,.7)}
+.nbscore{box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 10px 30px -14px #000}
+.nbpts{font-size:34px;color:#ffb21f;text-shadow:0 0 12px rgba(255,150,20,.65);line-height:1}
+#nbRpTime{display:inline-block;min-width:64px;text-align:center;font-size:34px;color:#ff5a2a;background:#0a0603;border:2px solid #3a1d0e;border-radius:10px;padding:2px 10px;text-shadow:0 0 12px rgba(255,90,40,.8)}
+.nbq.sel{box-shadow:0 0 0 3px var(--accent),0 0 22px -4px var(--accent)}
+#room>.card,#room .gcard{animation:nbin .45s cubic-bezier(.2,.9,.3,1) both}
+@keyframes nbin{from{opacity:0;transform:translateY(14px) scale(.985)}}
+.holc.ans{animation:nbwin .6s cubic-bezier(.3,1.6,.5,1)}.holc.wrong{animation:nbshake .4s}
+@keyframes nbwin{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}@keyframes nbshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+`; document.head.appendChild(css); }
+/* team colours: the matchup scoreboard glows in both teams' colours, and favourite-team themes use real team colours */
+const nbLum = (h) => { const n = parseInt(String(h).replace("#", ""), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); };
+const nbCol = (team) => { const c = (DATA.colors || {})[team]; if (!c) return "#ff8a3d"; return nbLum(c[0]) < 70 && c[1] ? c[1] : c[0]; };
+const nbBoard = (away, home) => `background:linear-gradient(90deg,color-mix(in srgb,${nbCol(away)} 38%,#0a0603),#0a0603 38%,#0a0603 62%,color-mix(in srgb,${nbCol(home)} 38%,#0a0603));border-color:color-mix(in srgb,${nbCol(home)} 60%,#000)`;
+{ const old = renderNB; renderNB = function () { old(); const s = S.nb; if (!s || !s.items) { if (S.game === "nbxi" && S.nbx) tint(S.nbx.t.team, S.nbx.o.team); return; } const it = s.items[s.round - 1]; if (it && S.game !== "nbrapid") tint(it[2], it[1]); else if (it && S.game === "nbrapid") tint(it[2], it[1]); };
+  function tint(a, h) { const el = document.querySelector("#room .nbscore"); if (el) el.setAttribute("style", nbBoard(a, h)); const r = document.documentElement; r.style.setProperty("--accent", nbCol(h)); }
+}
+/* count-up on the revealed final score */
+{ const old2 = renderNB; renderNB = function () { old2(); document.querySelectorAll("#room .rcard .label").forEach((l) => { if (!/^Final:/.test(l.textContent)) return; }); const t = $("#nbRpTime"); if (t) t.classList.add("nbclock"); }; }
+/* slow device? measure the frame rate for two seconds while the page is in view, and only switch to lighter visuals if it is clearly low (under 30 fps). A hidden tab is never measured, because browsers slow those down on purpose. */
+setTimeout(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) return; let n = 0, t0 = performance.now(), aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis);
+  const f = (t) => { n++; if (aborted) return; if (t - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); const fps = n * 1000 / (t - t0); if (fps < 30 && !document.documentElement.dataset.perf) { document.documentElement.dataset.perf = "low"; try { toast("Switched to lighter visuals to keep things smooth"); } catch (e) { /* ok */ } } } }; requestAnimationFrame(f); }, 3500);
+{ const css = document.createElement("style"); css.textContent = `.lhead .flag,#lFlag{display:none!important}.bar a.pill{color:var(--muted);text-decoration:none;white-space:nowrap}.bar a.pill:hover{color:var(--ink)}`; document.head.appendChild(css); }

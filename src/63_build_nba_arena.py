@@ -12,13 +12,17 @@ short = {t["id"]: t["short"] for t in teams.values()}
 AWD = json.load(open("02_processed_data/nba_awards.json")); AW = {}      # src/67: complete winner lists from Wikipedia, 2001-02 on
 for k_, d_ in AWD.items():
     for s_, n_ in d_.items(): AW.setdefault(n_, []).append([k_, s_])
+def small(u, w=160, h=116):
+    """ESPN serves resized copies (about 20 KB instead of 200 KB): far less to download and decode, which matters most on phones."""
+    m = re.search(r"https?://a\.espncdn\.com(/i/[^?]+)", u or "")
+    return f"https://a.espncdn.com/combiner/i?img={m.group(1)}&w={w}&h={h}" if m else u
 P = []
 for p in nd["players"]:
     if not p["dob"] or p["gp"] < 100: continue
     q = dict(p)
     q.update({"comp": "NBA", "nat": p["bc"] or p["nat"] or "", "bc": p["bc"], "city": (p["bpl"] or ""), "sub": p["posn"], "val": p["pts"], "peak": p["pts"]})
     q["end"] = None; q["aw"] = AW.get(p["n"]) or None
-    q["ph"] = p["photo"] or f"https://a.espncdn.com/i/headshots/nba/players/full/{p['id']}.png"
+    q["ph"] = small(p["photo"] or f"https://a.espncdn.com/i/headshots/nba/players/full/{p['id']}.png")
     P.append(q)
 print("quiz players", len(P), "active", sum(p["active"] for p in P), "career-path eligible", sum(1 for p in P if not p["partial"] and len(p["hist"]) >= 3))
 
@@ -44,8 +48,8 @@ for s, d in sorted(nd["seasons"].items()):
     if len(rows) >= 28:
         rows.sort(key=lambda x: (-x[1], -(x[2] - x[3])))
         tables[lab(int(s))] = rows
-crests = {t["short"]: t["logo"] for t in teams.values()}
-colours = {t["short"]: {"a": t["col"], "b": t["col2"]} if False else None for t in teams.values()}
+crests = {t["short"]: small(t["logo"], 128, 128) for t in teams.values()}
+colours = {t["short"]: [t["col"], t["col2"]] for t in teams.values()}
 league = {"name": "NBA", "country": "United States", "tag": "Thirty franchises, 25 seasons of box scores.", "star": None, "logo": None, "crests": crests, "race": None, "tables": tables, "scorers": None,
           "seasons": {k: {"live": False, "matches": [], "rb": [0]} for k in tables}}
 LEG = ["Kobe Bryant", "Dirk Nowitzki", "Tim Duncan", "Kevin Garnett", "Dwyane Wade", "Vince Carter", "Paul Pierce", "Ray Allen", "Jason Kidd", "Steve Nash", "Manu Ginobili", "Tony Parker", "Carmelo Anthony", "Pau Gasol", "Allen Iverson", "Shaquille O'Neal", "Chris Bosh", "Dwight Howard"]
@@ -58,7 +62,7 @@ def alive(u):
     try: return requests.head(u, timeout=8, allow_redirects=True).status_code == 200
     except Exception: return False
 before = len(hero); hero = [h for h in hero if alive(h["img"])]; print("hero photos reachable:", len(hero), "of", before)
-data = {"sport": "nba", "leagues": {"NBA": league}, "profiles": {}, "summary": {"ALL": {"n": 0, "pooled_acc": 0, "market_acc": 0}}, "statsval": {}, "board": None, "hero": hero, "colors": {},
+data = {"sport": "nba", "leagues": {"NBA": league}, "profiles": {}, "summary": {"ALL": {"n": 0, "pooled_acc": 0, "market_acc": 0}}, "statsval": {}, "board": None, "hero": hero, "colors": colours,
         "baselines": {}, "quiz": {"players": P, "clubs": clubs, "alias": alias, "asOf": nd["asOf"]}, "xi": [], "bracket": [], "highlights": [], "about": (json.load(open("site/about.json")) if os.path.exists("site/about.json") else {}), "audit": None, "gn": []}
 nm = json.load(open("02_processed_data/nba_model.json"))
 data["nbaModel"] = {"games": nm["games"], "summary": nm["summary"], "quarters": nm["quarters"], "elo": nm["elo_final"], "po_elo": nm["po_elo"], "series": nd["series"]}

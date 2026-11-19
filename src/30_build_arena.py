@@ -216,7 +216,14 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
         if cc:
             colours[c] = cc
     print(f"   logo {'yes' if logo else 'no'}, face {'yes' if star['face'] else 'no'}, crests {len(crests)}/{len(clubs)}" + (f"  missing: {[c for c in clubs if c not in crests]}" if len(crests) < len(clubs) else ""))
-    leagues[lg] = {"name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "tables": final_tables(lg), "scorers": ({sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in scorers_all.items()} if lg == "E0" else None), "seasons": seasons}
+    # real season totals per team from the match stats (src/33): yellow cards, fouls, corners, shots, shots on target. They have little to do with how good a team is, which makes better Higher-or-lower questions.
+    tstats = {}
+    st_lg = stats[(stats["League"] == lg) & (stats["Season"] >= 2017)]
+    for (sn_, team_), x in pd.concat([st_lg.assign(T=st_lg["HomeTeam"], Y=st_lg["r_HY"], F=st_lg["r_HF"], C=st_lg["r_HC"], S=st_lg["r_HS"], O=st_lg["r_HST"]),
+                                      st_lg.assign(T=st_lg["AwayTeam"], Y=st_lg["r_AY"], F=st_lg["r_AF"], C=st_lg["r_AC"], S=st_lg["r_AS"], O=st_lg["r_AST"])]).groupby(["Season", "T"]):
+        if x[["Y", "F", "C", "S", "O"]].notna().all(axis=1).sum() < 30: continue
+        tstats.setdefault(f"{int(sn_)}-{str(int(sn_) + 1)[2:]}", {})[team_] = [int(x["Y"].sum()), int(x["F"].sum()), int(x["C"].sum()), int(x["S"].sum()), int(x["O"].sum())]
+    leagues[lg] = {"tstats": tstats, "name": name, "country": country, "tag": tag, "star": star, "logo": logo, "crests": crests, "race": race.get(lg), "tables": final_tables(lg), "scorers": ({sn: {c: sorted(pl, key=lambda q: -q[2])[:8] for c, pl in cl.items()} for sn, cl in scorers_all.items()} if lg == "E0" else None), "seasons": seasons}
     print(f"{name:<15} " + ", ".join(f"{k}:{len(v['matches'])}" for k, v in seasons.items()))
 
 sm = {k: {kk: round(vv, 4) if isinstance(vv, float) else vv for kk, vv in v.items()} for k, v in summary.items()}

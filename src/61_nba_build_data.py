@@ -87,6 +87,7 @@ for pid, g in pb.sort_values(["game_date", "game_id"]).groupby("athlete_id"):
     def top(k):
         if not best: return None
         s = max(best, key=lambda z: best[z][k]); return {"season": lab(s), "avg": round(float(best[s][k]), 1), "team": teams[int(reg[reg.season == s].team_id.iloc[-1])]["short"]}
+    ssn = {lab(k): [v["gp"], round(float(v["pts"]), 1), round(float(v["reb"]), 1), round(float(v["ast"]), 1), round(float(v["stl"]), 1), round(float(v["blk"]), 1)] for k, v in best.items()}   # every season with 20+ games: gp, pts, reb, ast, stl, blk a game
     titles = []
     for s, x in po.groupby("season"):
         if champs.get(int(s)) and champs[int(s)] in set(x.team_id.astype(int)):
@@ -101,7 +102,7 @@ for pid, g in pb.sort_values(["game_date", "game_id"]).groupby("athlete_id"):
            "club": teams[int(last.team_id)]["short"], "tid": int(last.team_id), "active": bool(LATEST in set(g.season) and int(last.season) == LATEST),
            "hist": hist, "cr": [[teams[t]["short"], lab(a), lab(b)] for t, a, b in sp], "first": lab(first_season), "last": lab(int(last.season)),
            "partial": first_season == 2002, "gp": int(len(reg)), "min": int(g.minutes.sum()), "pts": int(g.points.sum()), "reb": int(g.rebounds.sum()), "ast": int(g.assists.sum()),
-           "bp": top("pts"), "br": top("reb"), "ba": top("ast"), "bs": top("stl"), "bb": top("blk"), "ti": titles, "photo": ph[0][0] if ph else None,
+           "ss": ssn, "bp": top("pts"), "br": top("reb"), "ba": top("ast"), "bs": top("stl"), "bb": top("blk"), "ti": titles, "photo": ph[0][0] if ph else None,
            "dob": w.get("dob"), "h": w.get("h"), "bpl": w.get("bp"), "bc": w.get("bc"), "nat": w.get("nat"), "aw": sorted(set(w.get("awards", []))) or None, "wd": w.get("wd")}
     players.append(rec)
 players.sort(key=lambda p: -p["min"])

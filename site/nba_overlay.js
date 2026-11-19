@@ -579,3 +579,37 @@ Object.assign(HOWTO, {
 BOARD_GAMES.push(["dropped", "Who dropped it?", "points"], ["nbxi", "Starting five", "best score"], ["nbhol", "Higher or lower", "best streak"]);
 RK_GAMES.push(["dropped", "Who dropped it?"]);
 BK_LABELS.push("Who dropped it?", "Starting five", "Higher or lower");
+
+/* =====================================================================================================================
+   Higher or lower, version 2: many kinds of question, and "fewer" as often as "more", so the famous or the better team
+   is not always the answer. Players, seasons, titles, height, age and whole teams.
+   ===================================================================================================================== */
+const NBH_DIFF = (a, b, c, d) => ({ easy: a, medium: b, hard: c, elite: d })[S.diff] || b;
+const nbhSeasons = () => Object.keys(LG.NBA.tables).filter((s) => s >= "2003-04");
+function nbhFind(pool, val, minRatio, minAbs, tries = 500) {
+  const seen = (S.nbhSeen = S.nbhSeen || []);
+  for (let t = 0; t < tries; t++) { const a = rnd(pool), b = rnd(pool); if (a === b) continue; const va = val(a), vb = val(b), hi = Math.max(va, vb), lo = Math.min(va, vb); if (va === vb) continue; if (lo > 0 && hi / lo < minRatio) continue; if (hi - lo < minAbs) continue; const ka = a.id || a[0], kb = b.id || b[0]; if (t < 300 && (seen.includes(ka + "|" + kb) || seen.includes(kb + "|" + ka))) continue; seen.push(ka + "|" + kb); S.nbhSeen = seen.slice(-80); return { a, b, va, vb }; }
+  return null;
+}
+const NBH_KINDS = [
+  () => { const m = rnd([["pts", "career points", (p) => p.pts], ["reb", "career rebounds", (p) => p.reb], ["ast", "career assists", (p) => p.ast], ["gp", "regular-season games played", (p) => p.gp]]), more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && m[2](p) > 0), r = nbhFind(pool, m[2], NBH_DIFF(1.7, 1.35, 1.15, 1.05), 0); return r && { ...r, text: `Who has ${more ? "more" : "fewer"} ${m[1]} since ${COVER}?`, more, fmt: (v) => Math.round(v).toLocaleString("en-US") }; },
+  () => { const m = rnd([["points", 1, 1.5], ["rebounds", 2, 1], ["assists", 3, 1], ["steals", 4, 0.3], ["blocks", 5, 0.3]]), s = rnd(nbhSeasons()), more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && p.ss && p.ss[s] && p.ss[s][m[1]] > 0), r = nbhFind(pool, (p) => p.ss[s][m[1]], NBH_DIFF(1.6, 1.3, 1.15, 1.07), m[2]); return r && { ...r, text: `Who averaged ${more ? "more" : "fewer"} ${m[0]} a game in ${s}?`, more, fmt: (v) => v.toFixed(1), ctx: (x) => `${x.club ? "" : ""}` }; },
+  () => { const more = Math.random() < 0.7, pool = playerPool("ALL", (p) => poolOK(p)), r = nbhFind(pool, (p) => (p.ti || []).length, 1, 1); return r && Math.max(r.va, r.vb) >= 1 && { ...r, text: `Who has won ${more ? "more" : "fewer"} NBA titles since ${COVER}?`, more, fmt: (v) => String(Math.round(v)) }; },
+  () => { const more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && p.h), r = nbhFind(pool, (p) => p.h, 1, NBH_DIFF(12, 8, 5, 3)); return r && { ...r, text: `Who is ${more ? "taller" : "shorter"}?`, more, fmt: (v) => `${ftIn(v)} (${Math.round(v)} cm)` }; },
+  () => { const more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p)), r = nbhFind(pool, (p) => Date.parse(p.dob) / 31557600000 + 1970, 1, NBH_DIFF(8, 5, 3, 1)); return r && { ...r, text: `Who is ${more ? "younger" : "older"}?`, more: more, fmt: (v) => `born ${Math.floor(v)}`, flip: true }; },
+  () => { const s = rnd(nbhSeasons()), rows = LG.NBA.tables[s], m = rnd([["won", "won", 1, (r) => r[4], NBH_DIFF(14, 9, 5, 3), "games"], ["scored", "scored", 2, (r) => r[2], NBH_DIFF(6, 4, 2.5, 1.5), "points a game"], ["allowed", "allowed", 3, (r) => r[3], NBH_DIFF(6, 4, 2.5, 1.5), "points a game"]]), more = Math.random() < 0.5, r = nbhFind(rows.filter((x) => clubOK(x[0])), m[3], 1, m[4]); return r && { ...r, team: true, text: `Which team ${m[1]} ${more ? "more" : "fewer"} ${m[5]} in ${s}?`, more, fmt: (v) => (m[2] === 1 ? String(v) : v.toFixed(1)) }; },
+];
+const NBH_W = [3, 6, 1, 2, 2, 4];
+function nbhPair() {
+  for (let t = 0; t < 40; t++) { let k = Math.random() * NBH_W.reduce((a, b) => a + b, 0), i = 0; while ((k -= NBH_W[i]) > 0) i++; if (i === S.nbhLast && t < 20) continue; const q = NBH_KINDS[i](); if (q) { S.nbhLast = i; const better = q.va > q.vb ? "a" : "b", worse = better === "a" ? "b" : "a"; q.win = q.more ? better : worse; q.chosen = null; return q; } }
+  return null;
+}
+function renderHOL2() {
+  const s = S.nbh = S.nbh || { streak: 0, q: null }; if (!s.q) s.q = nbhPair(); const q = s.q, best = (store.items["nbbest_nbhol"] || { best: 0 }).best;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const side = (x, k, v) => { const rev = q.chosen != null, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : "", pic = q.team ? badge(x[0], "xl") : playerPic(x, "xl"), nm = q.team ? x[0] : x.n, sub = q.team ? "" : `${esc(x.sub || x.pos)} · ${esc(x.club || "")}`;
+    return `<button type="button" class="holc ${cls}" data-nbh="${k}" ${rev ? "disabled" : ""}>${pic}<b>${esc(nm)}</b><span class="fine">${sub}</span><span class="num holv">${rev ? q.fmt(v) : "?"}</span></button>`; };
+  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub" style="font-size:18px"><b>${esc(q.text)}</b></p><div class="holpair">${side(q.a, "a", q.va)}<span class="vs">or</span>${side(q.b, "b", q.vb)}</div>
+    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${s.streak}</b><button class="btn" id="nbhNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
+}
+HOWTO["g:nbhol"] = ["Higher or lower", ["What you do", "Two players or two teams and one question. It changes every round: more or fewer points in a season, career totals, titles, height, age, or a team's wins. Read the question, it can ask for the lower one."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Career numbers count games since ${COVER} only, for both players.`]];

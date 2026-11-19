@@ -1729,13 +1729,15 @@ function renderTableVerdict(d) {
 }
 
 /* ---------- Higher or lower ---------- */
-const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8]];
+const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8],
+  /* real match counts that say little about how good a team is (2017-18 on) */
+  ["yc", "got more yellow cards", 1, 12], ["yc", "got fewer yellow cards", -1, 12], ["fl", "committed more fouls", 1, 25], ["fl", "committed fewer fouls", -1, 25], ["co", "won more corners", 1, 25], ["co", "won fewer corners", -1, 25], ["sh", "had more shots", 1, 60], ["sh", "had fewer shots", -1, 60], ["so", "had more shots on target", 1, 25], ["so", "had fewer shots on target", -1, 25]];
 function newHol(c) {
   const lg = lgs(c)[Math.floor(Math.random() * lgs(c).length)], tabs = lgOf(lg).tables, keys = Object.keys(tabs);
   for (let tries = 0; tries < 300; tries++) {
-    const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => ({ t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3] })), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
+    const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => { const ts = ((lgOf(lg).tstats || {})[sn] || {})[r[0]]; return { t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3], ...(ts ? { yc: ts[0], fl: ts[1], co: ts[2], sh: ts[3], so: ts[4] } : {}) }; }), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
     const a = rows[Math.floor(Math.random() * rows.length)], b = rows[Math.floor(Math.random() * rows.length)];
-    if (a === b || Math.abs(a[key] - b[key]) < gap) continue;
+    if (a === b || a[key] == null || b[key] == null || Math.abs(a[key] - b[key]) < gap) continue;
     return { c: lg, sn, key, text, a, b, win: dir * (a[key] - b[key]) > 0 ? a : b, chosen: null };
   }
   return null;

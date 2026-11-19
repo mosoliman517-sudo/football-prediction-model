@@ -316,3 +316,180 @@ function recordLine(c, id) {
     hubOld();
   };
 }
+
+/* =====================================================================================================================
+   Call it, version 2: predict the final score and who wins each quarter (real quarter scores exist from about 2019-20 on).
+   Points: right winner 2, each quarter right 1 (a tied quarter scores nobody), score error (both teams added up) <=8: 3, <=16: 2, <=28: 1. Max 9 a game.
+   ===================================================================================================================== */
+const NBQ = NM.quarters || {};
+const nbScorePts = (hs, as_, gh, ga, qp, real) => {
+  const win = hs > as_ ? "h" : as_ > hs ? "a" : null, rw = real.hs > real.as ? "h" : "a", err = Math.abs(hs - real.hs) + Math.abs(as_ - real.as);
+  let q = 0; qp.forEach((k, i) => { const a = real.q[0][i], b = real.q[1][i]; if (a !== b && k === (a > b ? "h" : "a")) q++; });
+  const w = win === rw ? 2 : 0, sc = err <= 8 ? 3 : err <= 16 ? 2 : err <= 28 ? 1 : 0;
+  return { total: w + q + sc, w, q, sc, err };
+};
+const nbRealOf = (g) => ({ hs: g[3], as: g[4], q: g[13] });
+Object.assign(HOWTO, {
+  "g:nbcall": ["Call it", ["What you do", "A real NBA game from the past appears with both teams' records going in. Predict the final score and tap who wins each quarter. You can't see the result."], ["Scoring", "Up to 9 points a game: 2 for the right winner, 1 for each quarter you get right (a tied quarter scores nobody), and up to 3 for how close your score is (both teams' points added up: within 8 points: 3, within 16: 2, within 28: 1). The model plays the same games and scores the same way."], ["Good to know", `Quarter scores exist only from ${seasonLab(NBQ.from || 2020)} on, so older games aren't used. Teams appear under today's names.`], ["The model", `A rating that only ever saw games before this one. Over ${(NBQ.n || 0).toLocaleString()} games its scores were off by ${NBQ.score_err || "?"} points (both teams added up) and it picked ${Math.round((NBQ.q_acc || 0) * 1000) / 10}% of quarter winners.`]],
+  "g:nbdaily": ["Daily 5", ["What you do", "Five real games, the same for everyone today. Predict each score and quarter winners."], ["Scoring", "Same as Call it: up to 9 a game, 45 in all."], ["Tip", "Share your score with a friend and see who did better."]],
+});
+HOWTO["g:nbbracket"][3] = ["Good to know", "Teams appear under today's names, so the 2009 Hornets show as the Pelicans."];
+GAMES.find((x) => x.id === "nbcall").tag = "Five real NBA games. Predict the score and who wins each quarter, then see what the model said.";
+GAMES.find((x) => x.id === "nbdaily").tag = "The same five games for everyone today: score and quarters. Beat the model and share your result.";
+BOARD_GAMES.forEach((b) => { if (b[0] === "nbcall" || b[0] === "nbdaily") b[2] = "points (of 45)"; });
+function nbStart(game) {
+  const daily = game === "nbdaily", key = "nbd_" + todayKey();
+  if (daily && store.items[key]) { S.nb = { game, phase: "done", ...store.items[key] }; return; }
+  if (game === "nbbracket") { S.nb = nbBracketNew(); return; }
+  const rng = daily ? mulberry(hash("nbd" + todayKey())) : Math.random;
+  S.nb = { game, round: 1, rounds: game === "nbrapid" ? 999 : 5, items: nbItems(game === "nbrapid" ? 400 : 5, rng), ypts: 0, mpts: 0, phase: game === "nbrapid" ? "intro" : "ask", log: [], you: 0, mod: 0, n: 0, streak: 0, best: 0, left: 60 };
+  nbResetGuess(S.nb);
+}
+const nbResetGuess = (s) => { s.gh = 110; s.ga = 108; s.qp = [null, null, null, null]; };
+function renderNB() {
+  const g = S.game;
+  if (!S.nb || S.nb.game !== g) { if (S.nb && S.nb.timer) clearInterval(S.nb.timer); nbStart(g); }
+  const s = S.nb; if (g === "nbrapid") return renderNBRapid(); if (g === "nbbracket") return renderNBBracket();
+  if (s.phase === "done") return renderNBDone();
+  const it = s.items[s.round - 1], H = it[1], A = it[2], hud = `<div class="qhud"><span class="label">Game ${s.round} of ${s.rounds}</span><span class="num qscore"><small>You</small> <b>${s.ypts}</b></span><span class="num qscore"><small>Model</small> <b>${s.mpts}</b></span></div>`;
+  const ctx = `<div class="fine" style="text-align:center">${esc(nbDate(it[0]))} · ${seasonLab(it[10])} ${it[9] === 3 ? "· Playoffs" : "· Regular season"}</div>`;
+  const head = (rev) => `<div class="nbscore"><div class="nbtm">${nbLogo(A, "xl")}<b>${esc(A)}</b><span class="fine">Away · ${esc(it[8])}</span></div><div class="nbvs">at</div><div class="nbtm">${nbLogo(H, "xl")}<b>${esc(H)}</b><span class="fine">Home · ${esc(it[7])}</span></div></div>`;
+  if (s.phase === "reveal") {
+    const r = s.last, real = nbRealOf(it), mp = s.mpred;
+    const qrow = (i) => { const a = real.q[1][i], h = real.q[0][i], w = h > a ? "h" : a > h ? "a" : "t"; const mark = (k) => (k === "t" || w === "t" ? "–" : k === w ? "✓" : "✗"); return `<tr><td>Q${i + 1}</td><td class="num">${a}</td><td class="num">${h}</td><td>${w === "t" ? "tie" : esc(w === "h" ? H : A)}</td><td>${s.qp[i] === "h" ? esc(H) : esc(A)} ${mark(s.qp[i])}</td><td>${mp.q[i] === "h" ? esc(H) : esc(A)} ${mark(mp.q[i])}</td></tr>`; };
+    $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}${head()}
+      <div class="rcard on" style="margin-top:12px"><div class="label">Final: ${esc(A)} ${real.as} – ${real.hs} ${esc(H)}${(real.q[0].reduce((a, b) => a + b, 0) !== real.hs) ? " (overtime)" : ""}</div>
+      <div class="nbtable"><table><thead><tr><th></th><th>${esc(A)}</th><th>${esc(H)}</th><th>Won by</th><th>You</th><th>Model</th></tr></thead><tbody>${[0, 1, 2, 3].map(qrow).join("")}</tbody></table></div>
+      <div class="verdicts" style="margin-top:10px"><div class="vd ${r.you.total >= r.mod.total ? "ok" : "no"}"><span class="label">You: ${esc(A)} ${s.ga} – ${s.gh} ${esc(H)}</span><b class="num">+${r.you.total}</b><span class="fine">winner ${r.you.w}, quarters ${r.you.q}, score ${r.you.sc} (off by ${r.you.err})</span></div>
+      <div class="vd ${r.mod.total >= r.you.total ? "ok" : "no"}"><span class="label">Model: ${esc(A)} ${Math.round(it[12])} – ${Math.round(it[11])} ${esc(H)}</span><b class="num">+${r.mod.total}</b><span class="fine">winner ${r.mod.w}, quarters ${r.mod.q}, score ${r.mod.sc} (off by ${r.mod.err})</span></div></div></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="nbNext" type="button">${s.round >= s.rounds ? "See the final score" : "Next game"}</button></div></div>`; return;
+  }
+  const step = (k, v) => `<div class="nbstep"><button type="button" class="btn ghost" data-nbstep="${k}|-1" aria-label="minus one">−</button><input class="num" id="nbS${k}" inputmode="numeric" value="${v}" aria-label="${k === "h" ? H : A} points"><button type="button" class="btn ghost" data-nbstep="${k}|1" aria-label="plus one">+</button></div>`;
+  const qbtn = (i, k) => `<button type="button" class="holc nbq ${s.qp[i] === k ? "sel" : ""}" data-nbq="${i}|${k}">${nbLogo(k === "h" ? H : A, "sm")}<b>${esc(k === "h" ? H : A)}</b></button>`;
+  const ready = s.qp.every(Boolean) && s.gh !== s.ga;
+  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}${head()}
+    <div class="label" style="margin:12px 0 6px">Final score</div><div class="nbscore"><div class="nbtm">${step("a", s.ga)}</div><div class="nbvs">–</div><div class="nbtm">${step("h", s.gh)}</div></div>
+    <div class="label" style="margin:12px 0 6px">Who wins each quarter?</div>${[0, 1, 2, 3].map((i) => `<div class="nbqrow"><span class="num">Q${i + 1}</span>${qbtn(i, "a")}${qbtn(i, "h")}</div>`).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn" id="nbLock" type="button" ${ready ? "" : "disabled"}>Lock it in</button>${ready ? "" : `<span class="fine">${s.gh === s.ga ? "Someone has to win: change a score. " : ""}${s.qp.every(Boolean) ? "" : "Pick all four quarters."}</span>`}</div></div>`;
+}
+function nbLock() {
+  const s = S.nb, it = s.items[s.round - 1]; if (!s.qp.every(Boolean) || s.gh === s.ga) return; const real = nbRealOf(it);
+  const mp = { gh: Math.round(it[11]), ga: Math.round(it[12]), q: [0, 1, 2, 3].map(() => (it[6] > 0 ? "h" : "a")) }; if (mp.gh === mp.ga) it[6] > 0 ? mp.gh++ : mp.ga++;
+  const you = nbScorePts(s.gh, s.ga, s.gh, s.ga, s.qp, real), mod = nbScorePts(mp.gh, mp.ga, mp.gh, mp.ga, mp.q, real);
+  s.ypts += you.total; s.mpts += mod.total; s.last = { you, mod }; s.mpred = mp; s.log.push([it[0], it[1], it[2], `${s.ga}-${s.gh}`, you.err, you.total, mod.total, `${real.as}-${real.hs}`]); s.phase = "reveal"; Snd.lock(); renderNB();
+  setTimeout(() => { you.total >= 7 ? (Snd.win(), confetti()) : you.total > 0 ? Snd.right() : Snd.wrong(); }, 350);
+}
+function nbNext() { const s = S.nb; if (s.round >= s.rounds) return nbFinish(); s.round++; nbResetGuess(s); s.phase = "ask"; renderNB(); }
+function renderNBDone() {
+  const s = S.nb, f = s.final || s, win = f.ypts > f.mpts, tie = f.ypts === f.mpts;
+  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[s.game])}<div class="rcard on"><div class="label">Final score</div><b style="font-size:26px">${win ? "You beat the model" : tie ? "A tie with the model" : "The model won"}</b>
+    <div class="tiles" style="margin-top:10px"><div class="tile"><b class="num">${f.ypts}</b><small>you, of 45</small></div><div class="tile"><b class="num">${f.mpts}</b><small>model</small></div></div>
+    <div class="lb" style="margin-top:10px">${(f.log || []).map((r) => `<div class="lbrow"><span class="fine">${esc(nbDate(r[0]))}</span><span>${esc(r[2])} at ${esc(r[1])}: real ${esc(r[7])}</span><span class="fine">You ${esc(r[3])} (+${r[5]}) · Model +${r[6]}</span></div>`).join("")}</div></div>
+    <div class="row" style="margin-top:12px">${s.game === "nbdaily" ? '<span class="fine">Come back tomorrow for a fresh five.</span>' : '<button class="btn" id="nbAgain" type="button">Play again</button>'}<button class="btn ghost" id="nbShare" type="button">Copy my result</button></div></div>`;
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("[data-nbstep],[data-nbq]"); if (!t || !S.nb || S.nb.phase !== "ask" || !NB_TITLE[S.game]) return; const s = S.nb;
+  if (t.dataset.nbstep) { const [k, d] = t.dataset.nbstep.split("|"), key = k === "h" ? "gh" : "ga"; s[key] = Math.max(60, Math.min(170, s[key] + +d)); Snd.tick(); return renderNB(); }
+  if (t.dataset.nbq) { const [i, k] = t.dataset.nbq.split("|"); s.qp[+i] = k; Snd.tick(); return renderNB(); }
+});
+document.addEventListener("change", (e) => { const m = /^nbS([ha])$/.exec(e.target.id || ""); if (m && S.nb) { const v = Math.max(60, Math.min(170, parseInt(e.target.value, 10) || 100)); S.nb[m[1] === "h" ? "gh" : "ga"] = v; renderNB(); } });
+
+/* =====================================================================================================================
+   The basketball look: hardwood, a hoop that swishes, jersey type, scoreboard numbers. (Football keeps its floodlit stadium.)
+   ===================================================================================================================== */
+{ const css = document.createElement("style"); css.textContent = `
+:root{--display:"Anton","Barlow Condensed",Impact,sans-serif}
+:root[data-league]{--display:"Anton","Barlow Condensed",Impact,sans-serif}
+body{background:
+  repeating-linear-gradient(90deg,rgba(255,170,90,.035) 0 2px,transparent 2px 64px),
+  repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 7px),
+  radial-gradient(1100px 520px at 50% -8%,rgba(255,138,61,.16),transparent 70%),var(--bg)}
+h1,h2,h3,.dname,.gname,.name,.big,.big2,.bigpos{font-family:var(--display);letter-spacing:.015em;text-transform:uppercase;font-weight:400}
+h1{font-size:clamp(54px,11vw,110px);line-height:.95}
+h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
+.label,.gmodes,.qhud .label{font-family:"Barlow Condensed",var(--body);letter-spacing:.12em;text-transform:uppercase}
+.num{font-family:"Barlow Condensed",var(--mono);font-weight:700;letter-spacing:.02em}
+.card,.gcard,.door,.gpick,.rcard,.howcard{border-radius:14px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 92%,#fff 3%),var(--surface))}
+.gcard,.door,.gpick{position:relative;overflow:hidden;transition:transform .28s cubic-bezier(.3,1.6,.5,1),border-color .2s,box-shadow .2s}
+.gcard::after,.door::after,.gpick::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:repeating-linear-gradient(90deg,var(--accent) 0 14px,transparent 14px 20px);opacity:.85}
+.gcard:hover,.door:hover,.gpick:hover{transform:translateY(-6px) scale(1.015);border-color:var(--accent);box-shadow:0 18px 40px -18px var(--accent)}
+.gcard:active,.door:active,.gpick:active{transform:translateY(2px) scale(.985)}
+.btn{border-radius:10px;font-family:"Barlow Condensed",var(--body);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:1.02em;transition:transform .2s cubic-bezier(.3,1.7,.5,1)}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(2px) scale(.97)}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+.badge.hface img{object-fit:cover}
+.photowall .wtile{border-radius:12px}
+#scorebox{display:none}
+.homehero h1{animation:nbdrop .9s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes nbdrop{0%{transform:translateY(-60px) scaleY(1.15);opacity:0}55%{transform:translateY(0) scaleY(.9)}75%{transform:translateY(-12px) scaleY(1.04)}100%{transform:none;opacity:1}}
+.gfaces .badge{animation:nbhop 2.8s ease-in-out infinite}.gfaces .badge:nth-child(2){animation-delay:.25s}.gfaces .badge:nth-child(3){animation-delay:.5s}
+@keyframes nbhop{0%,100%{transform:translateY(0)}12%{transform:translateY(-8px)}24%{transform:translateY(0) scale(1.04,.94)}30%{transform:none}}
+.nbscore{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:#0a0603;border:2px solid color-mix(in srgb,var(--accent) 50%,#000);border-radius:12px;padding:12px}
+.nbtm{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.nbtm b{font-family:var(--display);text-transform:uppercase;font-weight:400;letter-spacing:.03em;font-size:20px}
+.nbvs{font:700 22px "Barlow Condensed",sans-serif;color:var(--muted)}
+.nbstep{display:flex;align-items:center;gap:6px}.nbstep input{width:88px;text-align:center;font-size:44px;line-height:1;background:transparent;border:0;border-bottom:3px solid var(--accent);color:#ffd23f;text-shadow:0 0 14px rgba(255,138,61,.55)}
+.nbstep .btn{width:38px;height:38px;padding:0;font-size:22px}
+.nbqrow{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.nbq{flex-direction:row;gap:8px;padding:8px 10px;min-height:0}.nbq b{font-size:15px}.nbq.sel{outline:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
+.nbtable{overflow-x:auto}.nbtable table{width:100%;border-collapse:collapse;font-size:14px}.nbtable th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px}.nbtable td{padding:6px;border-top:1px solid var(--line)}
+.nbbars{display:grid;gap:6px}.nbbar{display:grid;grid-template-columns:78px 1fr 56px;gap:8px;align-items:center;font-size:14px}.nbbar i{display:block;height:12px;border-radius:3px;background:var(--line);overflow:hidden}.nbbar b{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:var(--w);transform-origin:left;animation:nbgrow .9s cubic-bezier(.2,.9,.3,1) both}
+@keyframes nbgrow{from{transform:scaleX(0)}}
+.nbrate{display:grid;grid-template-columns:28px 40px 1fr 60px;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.court-rim{animation:none}.nbnet{transform-origin:50% 0;animation:nbswish 2.4s ease-in-out infinite}
+@keyframes nbswish{0%,52%,100%{transform:scaleY(1) scaleX(1)}58%{transform:scaleY(1.22) scaleX(.9)}66%{transform:scaleY(.92) scaleX(1.06)}74%{transform:none}}
+.nbball{animation:nbball 2.4s cubic-bezier(.35,.1,.55,1) infinite}
+@keyframes nbball{0%{transform:translate(-340px,150px)}30%{transform:translate(-170px,-60px)}52%{transform:translate(0,40px)}58%{transform:translate(0,95px)}74%{transform:translate(-28px,215px)}84%{transform:translate(-48px,150px)}100%{transform:translate(-340px,150px)}}
+@media(prefers-reduced-motion:reduce){.nbball,.nbnet,.gfaces .badge,.homehero h1{animation:none}}
+:root[data-motion=reduced] .nbball,:root[data-motion=reduced] .nbnet,:root[data-motion=reduced] .gfaces .badge{animation:none}
+`; document.head.appendChild(css); }
+function paintStadium(code) {
+  const el = $("#stadium"); if (!el) return; const r = mulberry(hash("court" + code)), W = 1200, H = 360;
+  let crowd = ""; for (let k = 0; k < 150; k++) { const x = r() * W, y = 150 + r() * 70, col = r() < 0.3 ? "var(--accent)" : r() < 0.5 ? "var(--accent2)" : "#fff"; crowd += `<circle class="fan" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.6 + r() * 2).toFixed(1)}" fill="${col}" style="animation-delay:${(r() * 3).toFixed(2)}s;animation-duration:${(1.4 + r() * 2).toFixed(2)}s"/>`; }
+  const net = [0, 1, 2, 3, 4].map((i) => `<path d="M${960 + i * 20} 156 L${970 + i * 15} 205" stroke="#fff" stroke-opacity=".8" stroke-width="2" fill="none"/>`).join("") + `<path d="M964 172h72M968 188h64" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="floor" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8a5a2b"/><stop offset="1" stop-color="#4a2c12"/></linearGradient></defs>
+    ${crowd}
+    <path d="M0 ${H} L0 250 L${W} 250 L${W} ${H}Z" fill="url(#floor)" opacity=".9"/>
+    <g stroke="#ffe9c9" stroke-opacity=".55" stroke-width="3" fill="none"><path d="M0 252H${W}"/><ellipse cx="420" cy="300" rx="120" ry="30"/><path d="M60 ${H}L180 252M${W - 60} ${H}L${W - 180} 252"/><path d="M860 252L820 ${H}M1140 252L1180 ${H}"/><ellipse cx="1000" cy="300" rx="90" ry="22"/></g>
+    <rect x="996" y="96" width="8" height="160" fill="#2b2b2b"/><rect x="940" y="70" width="120" height="76" rx="6" fill="#f5f5f5" fill-opacity=".92" stroke="#bbb" stroke-width="3"/><rect x="975" y="108" width="50" height="34" fill="none" stroke="#e8542e" stroke-width="3"/>
+    <g class="nbnet">${net}</g><ellipse cx="1000" cy="156" rx="42" ry="7" fill="none" stroke="#ff6a1a" stroke-width="5"/>
+    <g transform="translate(1000 0)"><g class="nbball"><circle r="17" fill="#ff7a1a" stroke="#6b2f08" stroke-width="2"/><path d="M-17 0H17M0-17V17M-12-12Q0 0 -12 12M12-12Q0 0 12 12" stroke="#6b2f08" stroke-width="1.6" fill="none"/></g></g></svg>`;
+}
+
+/* ---------- Our model (replaces the football About page) ---------- */
+ABOUT_TABS.length = 0; ABOUT_TABS.push(["how", "How the model works"], ["acc", "How good is it?"], ["rate", "Team ratings"], ["limits", "Honest limits and sources"], ["road", "Roadmap and votes"]);
+ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and careers from 25 seasons of box scores, plus Beat the Model."], ["next", "Starting five", "Name the five who started a Finals game."], ["next", "Who did it", "Who led the scoring in a famous game?"], ["next", "NBA awards", "Needs a complete source for MVPs, Finals MVPs and more."], ["later", "Higher or lower", "Two players, one stat."]);
+{ const aboutOld = renderAboutPage;
+  renderAboutPage = function () {
+    if (!ABOUT_TABS.some((t) => t[0] === S.abTab)) S.abTab = "how";
+    if (S.abTab === "road") return aboutOld();
+    const el = $("#aboutPage"), tab = S.abTab, per = NM.summary.perSeason || {}, o = NBO;
+    const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${tab === k}">${n}</button>`).join("")}</div>`;
+    let body = "";
+    if (tab === "how") body = `<div class="card abx"><h2>How the model works</h2>
+      <p>Every team has a <b>rating</b>, a single number that says how good it is. Everyone starts at 1,500. After each game the winner's rating goes up and the loser's goes down. Beat a strong team, or win by a lot, and it moves more. This is called an <b>Elo rating</b>.</p>
+      <h3>What it adds</h3><ul><li><b>Home court.</b> The home team gets a boost worth about 70 rating points.</li><li><b>Tired legs.</b> A team playing the second night of a back-to-back gets a small penalty.</li><li><b>New seasons.</b> Ratings slide a quarter of the way back toward average each summer, because rosters change.</li></ul>
+      <h3>From a rating to a score</h3><p>The rating gap gives a predicted <b>margin</b>. Each team's recent scoring and defence give a predicted <b>total</b>. Together they make a predicted score for both teams. To call a <b>quarter</b>, the model picks the team it expects to lead: a quarter is about a quarter of the game, so it mostly follows the favourite.</p>
+      <h3>The rule that keeps it honest</h3><p>When the model predicts a game it only uses games played <b>before</b> it. It never sees the result, so beating it means something.</p></div>`;
+    else if (tab === "acc") {
+      const seasons = Object.keys(per).filter((y) => +y >= 2003 && +y <= 2026).sort(), pct = (v) => Math.round(v * 1000) / 10;
+      body = `<div class="card abx"><h2>How good is it?</h2><div class="tiles"><div class="tile"><b class="num">${pct(o.acc || 0)}%</b><small>winners right, ${(o.n || 0).toLocaleString()} games</small></div><div class="tile"><b class="num">${pct(o.home || 0)}%</b><small>always pick the home team</small></div><div class="tile"><b class="num">${NBQ.score_err || "?"}</b><small>points off, both teams added up</small></div><div class="tile"><b class="num">${pct(NBQ.q_acc || 0)}%</b><small>quarter winners right</small></div></div>
+      <p class="fine" style="margin-top:10px">Every number is from games the model had never seen. Basketball has a lot of luck in it, so even good models are wrong about one winner in three. A season here is named by the year it ends, and the model uses earlier seasons only.</p>
+      <h3>Winners right, by season</h3><div class="nbbars">${seasons.map((y) => `<div class="nbbar"><span class="fine">${seasonLab(+y)}</span><i><b style="--w:${pct(per[y].acc) * 1.3}%"></b></i><em class="num">${pct(per[y].acc)}%</em></div>`).join("")}</div></div>`;
+    } else if (tab === "rate") {
+      const list = Object.entries(NM.elo || {}).sort((a, b) => b[1] - a[1]), top = list[0] ? list[0][1] : 1700, lo = list.length ? list[list.length - 1][1] : 1300;
+      body = `<div class="card abx"><h2>Team ratings</h2><p class="fine">The model's rating for every team after the latest game in the data. Higher means stronger.</p>${list.map(([t, v], i) => `<div class="nbrate"><span class="num">${i + 1}</span>${badge(t, "sm")}<span>${esc(t)}</span><b class="num">${v}</b></div>`).join("")}</div>`;
+    } else body = `<div class="card abx"><h2>Honest limits and sources</h2><ul>
+      <li><b>Box scores.</b> Players, teams, scores and titles come from ESPN box scores (via the sportsdataverse project), from the 2001-02 season on. Nothing earlier is used, so career totals say "since 2001-02", and careers that began earlier are left out of Career path.</li>
+      <li><b>Bios.</b> Birth dates, heights, birthplaces and nationalities come from Wikidata. If a player has none, he is left out of games that need them.</li>
+      <li><b>Quarters.</b> Real quarter scores exist from about ${seasonLab(NBQ.from || 2020)} on, so score and quarter games use those seasons only.</li>
+      <li><b>Titles.</b> A player counts as a champion if he played in the playoffs for the title team.</li>
+      <li><b>Awards.</b> MVPs and other awards are not used yet: the free source I found was incomplete, and a wrong answer is worse than none.</li>
+      <li><b>Names.</b> Teams appear under today's names, so the Sonics show as the Thunder.</li>
+      <li><b>Not affiliated.</b> Team logos and player photos belong to their owners. This is an independent student project, not endorsed by the NBA, any team or any player.</li></ul>
+      <p class="fine">Built by moisback22. The model is simple on purpose: it can be explained in a minute, and its accuracy is shown above, not hidden.</p></div>`;
+    el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}${body}`;
+  };
+}
+{ const homeOld = renderHome;
+  renderHome = function () { homeOld(); const d = $("#doors"); if (d && !d.querySelector('[data-door="about"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">Our model</div><div class="dtag">How the prediction model works, how good it really is, team ratings, and what the data does not cover.</div><span class="dgo">Read</span></button>`); };
+}

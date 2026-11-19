@@ -305,7 +305,7 @@ function renderPlayRoom() {
   ({ finish: renderFinish, roulette: renderRoulette, ttt: renderTTT })[S.game]();
 }
 function recordLine(c, id) {
-  if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish" || id === "scramble") { const b = store.items[`best_${id}_${c}_${S.diff}`]; return b ? `best ${b.best} (${S.diff})` : "not played yet"; }
+  if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish" || id === "scramble" || id === "dropped") { const b = store.items[`best_${id}_${c}_${S.diff}`]; return b ? `best ${b.best} (${S.diff})` : "not played yet"; }
   if (NB_TITLE[id]) { const b = store.items[`nbbest_${id}`]; return b ? `best ${b.best}` : "not played yet"; }
   return "";
 }
@@ -493,3 +493,89 @@ ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and
 { const homeOld = renderHome;
   renderHome = function () { homeOld(); const d = $("#doors"); if (d && !d.querySelector('[data-door="about"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">Our model</div><div class="dtag">How the prediction model works, how good it really is, team ratings, and what the data does not cover.</div><span class="dgo">Read</span></button>`); };
 }
+
+/* =====================================================================================================================
+   More NBA games: Who dropped it? (a hidden stat line), Starting five, Higher or lower.  All from real box scores.
+   ===================================================================================================================== */
+const NBX = DATA.nbaXI || [], NBPERF = DATA.nbaPerf || [];
+const PBYID = Object.fromEntries(QZ.players.map((p) => [p.id, p]));
+const espnFace = (id) => `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png`;
+/* ---- Who dropped it? (runs on the shared quiz engine: solo, two players, online) ---- */
+function droppedClues(r) {
+  const g = r.g, p = r.p, cl = [];
+  cl.push(["Stat line", `${g.pts} points, ${g.reb} rebounds and ${g.ast} assists`]);
+  cl.push(["Shooting", `${g.fg[0]} of ${g.fg[1]} from the field, ${g.tp[0]} of ${g.tp[1]} from three, in ${g.min} minutes`]);
+  if (g.stl >= 3 || g.blk >= 3) cl.push(["Defence", `${g.stl} steal${g.stl === 1 ? "" : "s"} and ${g.blk} block${g.blk === 1 ? "" : "s"}`]);
+  cl.push(["Game", `${g.home ? "At home against" : "On the road at"} the ${g.opp}${g.po ? " in the playoffs" : ""}, ${nbDate(g.date)}`]);
+  cl.push(["Result", `${g.won ? "Won" : "Lost"} ${Math.max(...g.score)}-${Math.min(...g.score)}`]);
+  if (p.h) cl.push(["Height", `${ftIn(p.h)} tall`]);
+  cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
+  cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
+  cl.push(["Team", `Played for the ${g.team}`, clubBadgeFor(g.team, "sm")]);
+  cl.push(["Name", `${p.n.split(" ").length} words, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
+  return cl;
+}
+QDEF.dropped = { name: "Who dropped it?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => { const pool = NBPERF.filter((g) => PBYID[g.pid] && playerOK(PBYID[g.pid])); const g = rnd(pool.length ? pool : NBPERF.filter((x) => PBYID[x.pid])); return { p: PBYID[g.pid], g }; }, clues: (r) => droppedClues(r), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) };
+/* ---- Starting five ---- */
+function nbxStart() {
+  const row = rnd(NBX), t = rnd(row.teams), o = row.teams.find((x) => x !== t);
+  S.nbx = { row, t, o, slots: t.starters.map(() => null), wrong: 0, hints: 0, phase: "play", score: 0 };
+}
+function renderXI5() {
+  if (!S.nbx) nbxStart(); const s = S.nbx, r = s.row, t = s.t, o = s.o, filled = s.slots.filter(Boolean).length;
+  const slot = (st, i) => { const f = s.slots[i], hint = s.hints > 0 || s.phase === "done"; return `<div class="nbslot ${f ? "got" : s.phase === "done" ? "miss" : ""}"><span class="fine">${esc(st.pos || "")}</span>${f || s.phase === "done" ? `<img src="${espnFace(st.id)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()"><b>${esc(st.n)}</b>` : `<span class="num nbq">${hint ? esc(st.n[0]) + " " + "_ ".repeat(Math.max(1, st.n.split(" ").slice(-1)[0].length - 1)) : "?"}</span>`}</div>`; };
+  $("#room").innerHTML = `<div class="card">${gamesBar("Starting five")}<div class="qhud"><span class="label">${esc(r.label)} · ${esc(r.season)}</span><span class="num qscore"><small>Score</small> <b>${Math.max(0, filled * 100 - s.wrong * 20 - s.hints * 30)}</b></span></div>
+    <div class="nbscore"><div class="nbtm">${nbLogo(t.team, "xl")}<b>${esc(t.team)}</b><span class="fine">${t.side === "home" ? "Home" : "Away"} · ${t.score}</span></div><div class="nbvs">${t.won ? "beat" : "lost to"}</div><div class="nbtm">${nbLogo(o.team, "xl")}<b>${esc(o.team)}</b><span class="fine">${o.score}</span></div></div>
+    <p class="sub" style="margin-top:10px">${nbDate(r.date)}. Name the five players who started for the ${esc(t.team)}.</p><div class="nbslots">${t.starters.map(slot).join("")}</div>
+    ${s.phase === "done" ? `<div class="row" style="margin-top:12px"><b>${filled === 5 ? "All five!" : filled + " of 5"}</b><button class="btn" id="nbxNext" type="button">Next game</button></div>` : `<div class="row" style="margin-top:12px"><input id="nbxIn" autocomplete="off" placeholder="Type a surname and press Enter" aria-label="Player name" style="flex:1"><button class="btn" id="nbxGo" type="button">Guess</button><button class="btn ghost" id="nbxHint" type="button">Hint (−30)</button><button class="btn ghost" id="nbxGive" type="button">Give up</button></div><p class="fine" id="nbxMsg">${s.msg || "&nbsp;"}</p>`}</div>`;
+  const i = $("#nbxIn"); if (i) i.focus();
+}
+function nbxGuess() {
+  const s = S.nbx, i = $("#nbxIn"); if (!s || s.phase !== "play" || !i || !i.value.trim()) return; const v = i.value.trim(), idx = s.t.starters.findIndex((st, k) => !s.slots[k] && nameMatch(v, st.n));
+  if (idx >= 0) { s.slots[idx] = s.t.starters[idx].n; s.msg = ""; Snd.right(); } else { s.wrong++; s.msg = `Not a starter in this game (−20).`; Snd.wrong(); }
+  if (s.slots.every(Boolean)) nbxEnd(); else renderXI5();
+}
+function nbxEnd() { const s = S.nbx; s.phase = "done"; const sc = Math.max(0, s.slots.filter(Boolean).length * 100 - s.wrong * 20 - s.hints * 30); s.score = sc; const k = "nbbest_nbxi", cur = store.items[k] || { best: 0 }; if (sc > cur.best) lockIn(k, { best: sc }); reward(10 + Math.round(sc / 25), "Starting five", null); Board.submit({ game: "nbxi", league: "all", score: sc }); if (sc >= 500) { Snd.win(); confetti(); } renderXI5(); }
+/* ---- Higher or lower ---- */
+const NBH = [["pts", "career points since 2001-02", (p) => p.pts], ["reb", "career rebounds since 2001-02", (p) => p.reb], ["ast", "career assists since 2001-02", (p) => p.ast], ["gp", "regular-season games played since 2001-02", (p) => p.gp], ["bp", "best scoring season since 2001-02 (points a game)", (p) => (p.bp ? p.bp.avg : 0)]];
+function nbhPair() {
+  const m = rnd(NBH), pool = playerPool("ALL", (p) => playerOK(p) && m[2](p) > 0), ratio = { easy: 1.6, medium: 1.3, hard: 1.12, elite: 1.04 }[S.diff] || 1.3, seen = S.nbhSeen = S.nbhSeen || [];
+  for (let t = 0; t < 400; t++) { const a = rnd(pool), b = rnd(pool), va = m[2](a), vb = m[2](b); if (a.id !== b.id && va !== vb && Math.max(va, vb) / Math.min(va, vb) >= ratio && (t > 250 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.nbhSeen = seen.slice(-60); return { m, a, b, va, vb, win: va > vb ? "a" : "b", chosen: null }; } }
+  return null;
+}
+function renderHOL2() {
+  const s = S.nbh = S.nbh || { streak: 0, q: nbhPair() }; if (!s.q) s.q = nbhPair(); const q = s.q, best = (store.items["nbbest_nbhol"] || { best: 0 }).best;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const side = (p, k, v) => { const rev = q.chosen != null, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : ""; return `<button type="button" class="holc ${cls}" data-nbh="${k}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)} · ${esc(p.club || "")}</span><span class="num holv" data-v="${v}">${rev ? Math.round(v * 10) / 10 : "?"}</span></button>`; };
+  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Who has more: <b>${q.m[1]}</b>?</p><div class="holpair">${side(q.a, "a", q.va)}<span class="vs">or</span>${side(q.b, "b", q.vb)}</div>
+    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${s.streak}</b><button class="btn" id="nbhNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
+}
+function nbhAnswer(k) {
+  const s = S.nbh, q = s.q; if (!q || q.chosen != null) return; q.chosen = k; const ok = k === q.win; s.streak = ok ? s.streak + 1 : 0;
+  const cur = store.items["nbbest_nbhol"] || { best: 0 }; if (s.streak > cur.best) lockIn("nbbest_nbhol", { best: s.streak });
+  reward(5 + (ok ? 5 + 2 * Math.min(s.streak, 10) : 0), "Higher or lower", null); if (ok) Board.submit({ game: "nbhol", league: "all", score: s.streak });
+  Snd.flip(); renderHOL2(); setTimeout(() => { ok ? (s.streak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && s.streak >= 5 && s.streak % 5 === 0) confetti(); }, 450);
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("[data-nbh],#nbhNext,#nbxGo,#nbxHint,#nbxGive,#nbxNext"); if (!t) return;
+  if (S.game === "nbhol") { if (t.dataset.nbh) return nbhAnswer(t.dataset.nbh); if (t.id === "nbhNext") { S.nbh.q = null; return renderHOL2(); } }
+  if (S.game === "nbxi" && S.nbx) { if (t.id === "nbxGo") return nbxGuess(); if (t.id === "nbxHint") { S.nbx.hints = Math.min(3, S.nbx.hints + 1); return renderXI5(); } if (t.id === "nbxGive") return nbxEnd(); if (t.id === "nbxNext") { S.nbx = null; return renderXI5(); } }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "nbxIn") { e.preventDefault(); nbxGuess(); } });
+{ const old = renderNB; renderNB = function () { if (S.game === "nbxi") return renderXI5(); if (S.game === "nbhol") return renderHOL2(); old(); }; }
+{ const css = document.createElement("style"); css.textContent = `.nbslots{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}.nbslot{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:12px;border:1px dashed var(--line);min-height:128px;justify-content:center;text-align:center}.nbslot.got{border-style:solid;border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}.nbslot.miss{border-color:var(--bad)}.nbslot img{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top;background:var(--surface2)}.nbslot b{font-size:13px}`; document.head.appendChild(css); }
+Object.assign(NB_TITLE, { nbxi: "Starting five", nbhol: "Higher or lower" });
+["dropped", "nbxi", "nbhol"].forEach((id) => GAME_IDS.push(id));
+QUIZ_GAMES.push(
+  { id: "dropped", name: "Who dropped it?", modes: "Solo streak · 2 players", tag: "A real stat line with the name hidden: points, rebounds, assists. Clues get easier. Who was it?", faces: () => heroFaces(2) },
+  { id: "nbxi", name: "Starting five", modes: "Solo", tag: "A Finals clincher or a Game 7. Name the five who started.", faces: () => heroFaces(3) },
+  { id: "nbhol", name: "Higher or lower", modes: "Solo streak", tag: "Two players, one stat. Who has more? Keep the streak alive.", faces: () => heroFaces(2) },
+);
+Object.assign(HOWTO, {
+  "g:dropped": ["Who dropped it?", ["What you do", "A real box-score line from a real game, with the player hidden. The first clue is the stat line; later clues add the game, his height, his team and more. Buzz when you know it and type the name."], ["Scoring", "Up to 1,000 points, falling as clues appear. A wrong guess costs 150."], ["Good to know", `Only big games count: 45+ points, triple-doubles, 24+ rebounds, 20+ assists and similar, from ${COVER} on.`]],
+  "g:nbxi": ["Starting five", ["What you do", "A Game 7 or a conference finals or Finals clincher, and one of its teams. Type the surnames of the five players who started."], ["Scoring", "100 per player, minus 20 per wrong guess and 30 per hint. A hint shows each missing player's first letter."], ["Good to know", `Starters come from the real box score. Games are from ${COVER} on.`]],
+  "g:nbhol": ["Higher or lower", ["What you do", "Two players and one stat. Pick the one with more. Easy compares superstars with big gaps; Elite compares close numbers."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Career numbers count games since ${COVER} only, for both players.`]],
+});
+BOARD_GAMES.push(["dropped", "Who dropped it?", "points"], ["nbxi", "Starting five", "best score"], ["nbhol", "Higher or lower", "best streak"]);
+RK_GAMES.push(["dropped", "Who dropped it?"]);
+BK_LABELS.push("Who dropped it?", "Starting five", "Higher or lower");

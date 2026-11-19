@@ -59,6 +59,9 @@ data = {"sport": "nba", "leagues": {"NBA": league}, "profiles": {}, "summary": {
         "baselines": {}, "quiz": {"players": P, "clubs": clubs, "alias": alias, "asOf": nd["asOf"]}, "xi": [], "bracket": [], "highlights": [], "about": {}, "audit": None, "gn": []}
 nm = json.load(open("02_processed_data/nba_model.json"))
 data["nbaModel"] = {"games": nm["games"], "summary": nm["summary"], "quarters": nm["quarters"], "elo": nm["elo_final"], "po_elo": nm["po_elo"], "series": nd["series"]}
+ids = {p["id"] for p in P}
+data["nbaXI"] = json.load(open("02_processed_data/nba_xi.json"))
+data["nbaPerf"] = [x for x in json.load(open("02_processed_data/nba_perf.json")) if x["pid"] in ids]
 cfg = "site/board_config.json"
 if os.path.exists(cfg): data["board"] = json.load(open(cfg))
 if os.environ.get("BOARD_URL") and os.environ.get("BOARD_KEY"): data["board"] = {"url": os.environ["BOARD_URL"].rstrip("/"), "key": os.environ["BOARD_KEY"]}

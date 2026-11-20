@@ -81,6 +81,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .lvwrap{position:relative;max-width:560px;margin:0 auto}.lvrow{display:flex;gap:8px;align-items:stretch;max-width:600px;margin:0 auto}
 .evbar{width:22px;border-radius:5px;overflow:hidden;background:#222;display:flex;flex-direction:column-reverse;flex:none;box-shadow:0 8px 20px -12px #000}.evbar i{display:block;background:#f1f1f1;transition:height .35s ease;width:100%}
 .mvbar{display:flex;gap:4px;overflow-x:auto;white-space:nowrap;max-width:560px;margin:0 auto 8px;padding:6px 8px;background:#1b251f;border-radius:10px;scrollbar-width:none;font:600 13.5px Inter}.mvbar::-webkit-scrollbar{display:none}
+.clk{margin-left:auto;font:800 20px Fraunces,serif;background:#1b251f;border:1px solid var(--line);border-radius:8px;padding:2px 10px;min-width:70px;text-align:center}.clk.low{color:var(--bad)}
 .mvbar .n{color:var(--muted);padding:2px 2px 2px 6px;font-weight:500}.mvbar .m{padding:2px 6px;border-radius:5px;color:var(--ink)}.mvbar .m.cur{background:rgba(232,195,90,.25);color:#fff}.mvbar .m[data-ply]{cursor:pointer}.mvbar:empty::before{content:"Moves appear here";color:var(--muted);font-weight:400}
 .mat{display:inline-flex;align-items:center;margin-left:8px;height:16px}.mat .mp{width:15px;height:15px;background-size:contain;background-repeat:no-repeat;margin-right:-6px}.mat b{margin-left:9px;color:var(--muted);font:600 12px Inter}
 .pbar .nm{display:flex;flex-direction:column;line-height:1.2}.pbar .nm span{display:flex;align-items:center}
@@ -98,7 +99,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .progress{height:8px;border-radius:6px;background:var(--line);overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#ff8a3d);width:0;transition:width .2s}
 </style>
 <div class="wrap">
- <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a></div>
+ <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button></div>
  <main id="app"></main>
  <div class="foot">Games come from the Lichess open database (CC0): rated games, January 2024 (first 250 MB), official tournament broadcasts, and the puzzle database. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. Engine evaluations are Stockfish's, recorded in Lichess games. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser only.</div>
 </div>
@@ -115,6 +116,7 @@ const nice = (n) => { const m = /^(.+?),\s*(.+)$/.exec(n || ""); return m ? m[2]
 /* ---------- icons: small line drawings so the page reads as a game, not a data sheet ---------- */
 const P_ = { trophy: "M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0V2Z", target: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z", bolt: "M13 2 3 14h9l-1 8 10-12h-9l1-8Z", book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z", chart: "M3 3v18h18M7 15v3M12 9v9M17 5v13", clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 6v6l4 2", crown: "M2 18 4 7l5 5 3-8 3 8 5-5 2 11ZM4 21h16", bulb: "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z", puzzle: "M19.4 13a2 2 0 0 0-2.4-2.2V8a1 1 0 0 0-1-1h-2.8A2 2 0 1 0 9.4 5.2V4H4v5.2h1.2A2 2 0 1 1 5.2 13H4v7h7v-1.2a2 2 0 1 1 4 0V20h5v-5.2a2 2 0 0 0-.6-1.8Z", robot: "M12 8V4M8 2h8M5 8h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2ZM9 14h.01M15 14h.01M2 14h1M21 14h1", eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", warn: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01", arrow: "M5 12h14M12 5l7 7-7 7", compass: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM16 8l-2 6-6 2 2-6 6-2Z", brain: "M9.5 2A2.5 2.5 0 0 0 7 4.5 3 3 0 0 0 4 7.5c0 1 .5 1.800 1.200 2.400A3 3 0 0 0 4 12.500a3 3 0 0 0 1.500 2.600A3 3 0 0 0 8 19a3 3 0 0 0 4 1V4.500A2.500 2.500 0 0 0 9.500 2ZM14.500 2A2.500 2.500 0 0 1 17 4.500a3 3 0 0 1 3 3c0 1-.500 1.800-1.200 2.400A3 3 0 0 1 20 12.500a3 3 0 0 1-1.500 2.600A3 3 0 0 1 16 19a3 3 0 0 1-4 1", user: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", flag: "M4 22V4M4 4h12l-2 4 2 4H4", swords: "M14.500 17.500 3 6V3h3l11.500 11.500M13 19l6-6M16 16l4 4M19 21l2-2M14.500 6.500 18 3h3v3l-3.500 3.500M5 14l4 4M7 17l-3 3M3 19l2 2" };
 const ic = (n) => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${P_[n] || P_.target}"/></svg>`;
+const paintSnd = () => { $("#sndBtn").innerHTML = `<svg class="ic" viewBox="0 0 24 24"><path d="${Snd.on ? "M11 5 6 9H2v6h4l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" : "M11 5 6 9H2v6h4l5 4V5ZM22 9l-6 6M16 9l6 6"}"/></svg>${Snd.on ? "Sound on" : "Sound off"}`; };
 $("#logo").innerHTML = ic("crown"); $("#compass").innerHTML = ic("compass");
 let st = {};
 /* ---------- the board (drawn, and clickable when a game needs moves) ---------- */
@@ -143,6 +145,7 @@ const CG = [
   { id: "trainer", g: "bk", ic: "bulb", name: "Opening trainer", modes: "Solo", tag: "Play the known moves of an opening, move by move.", best: "trainer" },
   { id: "mate", g: "bk", ic: "bolt", name: "Mate puzzles", modes: "Solo streak", tag: "Real puzzles: checkmate in 1, 2 or 3.", best: "mate" },
   { id: "elo", g: "bk", ic: "brain", name: "Estimate my Elo", modes: "Solo · 10 puzzles", tag: "Puzzles that adapt to you, then an estimate of your level.", best: "elo" },
+  { id: "review", g: "bk", ic: "chart", name: "Review a game", modes: "Paste a PGN or use a real game", tag: "Every move graded, with an evaluation graph and the engine's preferred move.", best: "none" },
   { id: "ai", g: "bk", ic: "robot", name: "Play my AI", modes: "Solo vs engine", tag: "A small chess engine with three levels. Can you beat it?", best: "ai_rec" },
   { id: "who", g: "bk", ic: "user", name: "Who is this player?", modes: "Solo · 5 rounds", tag: "Clues appear on their own. Buzz when you know the grandmaster.", best: "who", faces: true },
 ];
@@ -233,7 +236,12 @@ function openRender() {
   $("#app").innerHTML = `<div class="card">${backRow("Name the opening", "book", `Streak ${st.streak} · best ${bestOf("open")}`)}${boardHTML(q.c, {})}<div class="moves">${esc(o.pgn)}</div><div class="opts">${q.opts.map((x, k) => `<button class="opt ${rev ? (x === o ? "ok" : x === q.chosen ? "no" : "") : ""}" data-o="${k}" ${rev ? "disabled" : ""}>${esc(x.name)}</button>`).join("")}</div>${rev ? `<div class="row"><b>${q.chosen === o ? "Right!" : "It was " + esc(o.name) + "."}</b><span class="fine">ECO ${esc(o.eco)} · played in ${o.n.toLocaleString()} of the sample's games</span><button class="btn" id="onext">${q.chosen === o ? "Next" : "Try again"}</button></div>` : ""}</div>`;
 }
 /* interactive boards: click a piece, click a square */
-const Snd = { ctx: null, move(mv) { try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); const o = this.ctx.createOscillator(), g = this.ctx.createGain(); o.type = "triangle"; o.frequency.value = mv && mv.captured ? 150 : 260; g.gain.setValueAtTime(0.12, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.1); } catch (e) { /* no audio */ } } };
+const Snd = { ctx: null, on: store.get("snd", true),
+  tone(f, d, v, type, when) { try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + (when || 0); o.type = type || "triangle"; o.frequency.value = f; g.gain.setValueAtTime(v || 0.12, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + d); o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) { /* no audio */ } },
+  buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* no haptics */ } },
+  move(mv, c) { if (!this.on) return; const cap = mv && (mv.captured || /e/.test(mv.flags || "")); this.tone(cap ? 140 : 250, cap ? 0.12 : 0.08, cap ? 0.2 : 0.12); this.buzz(cap ? 18 : 8); if (c && c.in_checkmate && c.in_checkmate()) this.end(true); else if (c && c.in_check && c.in_check()) { this.tone(520, 0.1, 0.12, "square", 0.08); this.buzz(30); } },
+  end(win) { if (!this.on) return; [0, 0.12, 0.24].forEach((d, k) => this.tone(win ? [392, 494, 659][k] : [330, 262, 196][k], 0.3, 0.14, "triangle", d)); this.buzz(win ? [20, 40, 20] : 60); },
+  ok() { if (this.on) { this.tone(523, 0.12, 0.12); this.tone(784, 0.18, 0.12, "triangle", 0.1); } this.buzz(15); }, bad() { if (this.on) this.tone(160, 0.25, 0.15, "sawtooth"); this.buzz(50); } };
 let live = null;   // { c, color, onMove(move) -> bool, sel, targets, last }
 function liveRender(extraTop, extraBottom, bars, opts = {}) {
   const L = live, app = $("#app"); if (!L.id) L.id = ++LIVEID; let card = app.querySelector("[data-live]");
@@ -264,11 +272,12 @@ const PV = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 function matHTML(c, side) { const start = { p: 8, n: 2, b: 2, r: 2, q: 1 }, have = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } }; c.board().forEach((r) => r.forEach((p) => { if (p && p.type !== "k") have[p.color][p.type]++; }));
   const other = side === "w" ? "b" : "w", took = ["q", "r", "b", "n", "p"].map((k) => Math.max(0, start[k] - have[other][k] - (k === "p" ? 0 : 0))), score = (col) => Object.keys(PV).reduce((a, k) => a + PV[k] * have[col][k], 0), diff = score(side) - score(other);
   const icons = ["q", "r", "b", "n", "p"].map((k, i) => `<b class="mp pc-${other}${k}"></b>`.repeat(took[i])).join(""); return `<span class="mat">${icons}${diff > 0 ? `<b>+${diff}</b>` : ""}</span>`; }
-const pbar = (icn, name, sub, c, side) => `<div class="pbar"><div class="av">${ic(icn)}</div><div class="nm"><span><b>${name}</b><small>${sub}</small></span><span>${matHTML(c, side)}</span></div></div>`;
+const fmtClk = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const pbar = (icn, name, sub, c, side, clk) => `<div class="pbar"><div class="av">${ic(icn)}</div><div class="nm"><span><b>${name}</b><small>${sub}</small></span><span>${matHTML(c, side)}</span></div>${clk ? `<span class="clk" data-clk-side="${side}">${fmtClk(clk)}</span>` : ""}</div>`;
 function liveClick(sq) {
   if (live && document.querySelector(".ghost")) live.skipAnim = true;
   const L = live; if (!L || L.lock) return; const c = L.c, p = c.get(sq);
-  if (L.sel && L.targets.includes(sq)) { const mv = c.move({ from: L.sel, to: sq, promotion: "q" }); L.sel = null; L.targets = []; L.caps = []; if (mv) { L.last = [mv.from, mv.to]; Snd.move(mv); L.onMove(mv); } return; }
+  if (L.sel && L.targets.includes(sq)) { const mv = c.move({ from: L.sel, to: sq, promotion: "q" }); L.sel = null; L.targets = []; L.caps = []; if (mv) { L.last = [mv.from, mv.to]; Snd.move(mv, c); L.onMove(mv); } return; }
   if (p && p.color === L.color) { L.sel = sq; const ms = c.moves({ square: sq, verbose: true }); L.targets = ms.map((m) => m.to); L.caps = ms.filter((m) => m.captured || /e/.test(m.flags)).map((m) => m.to); L.refresh(); } else { L.sel = null; L.targets = []; L.caps = []; L.refresh(); }
 }
 function trainerStart() { st = { game: "trainer", done: 0 }; trainerNext(); }
@@ -334,24 +343,27 @@ function aiEnd(){}
 function aiPaint(){}
 
 function aiMenu() {
-  clearInterval(st.timer); live = null; st = { game: "ai", level: store.get("ai_level", 2), color: store.get("ai_color", "w") };
+  clearInterval(st.timer); live = null; st = { game: "ai", level: store.get("ai_level", 2), color: store.get("ai_color", "w"), clock: store.get("ai_clock", 0) };
   const o = [[1, "Pawn Pusher", "Looks no moves ahead and loves captures."], [2, "Club Player", "Looks two moves ahead."], [3, "Tactician", "Looks three moves ahead. The toughest."]];
-  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play my AI</h2><p class="sub">Choose your opponent. It is a small engine I wrote, not Stockfish.</p><div class="opps">${o.map(([l, n, d]) => `<button class="opp ${st.level === l ? "on" : ""}" data-lv="${l}"><div class="av">${ic("robot")}</div><b>${n}</b><span class="fine">${d}</span></button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play my AI</h2><p class="sub">Choose your opponent. It is a small engine I wrote, not Stockfish.</p><div class="opps">${o.map(([l, n, d]) => `<button class="opp ${st.level === l ? "on" : ""}" data-lv="${l}"><div class="av">${ic("robot")}</div><b>${n}</b><span class="fine">${d}</span></button>`).join("")}</div><h3>${ic("clock")}Clock</h3><div class="chips">${[[0, "No clock"], [180, "3 min"], [300, "5 min"], [600, "10 min"]].map(([s, n]) => `<button class="chip ${(st.clock || 0) === s ? "on" : ""}" data-clk="${s}" type="button">${n}</button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
 }
 function aiStart(level, color) {
-  clearInterval(st.timer); const c = new Chess(); level = level || store.get("ai_level", 2); color = color || store.get("ai_color", "w"); store.set("ai_level", level); store.set("ai_color", color); const me = color === "r" ? (Math.random() < 0.5 ? "w" : "b") : color;
-  st = { game: "ai", level, msg: "", me, over: null, think: false };
-  live = { c, color: me, sel: null, targets: [], last: null, lock: false, refresh: aiPaint, onMove: () => { if (aiEnd()) return; aiThink(); } };
-  $("#app").className = "fresh"; aiPaint(); if (me === "b") aiThink();
+  const clockSecs = st.clock || 0; clearInterval(st.timer); const c = new Chess(); level = level || store.get("ai_level", 2); color = color || store.get("ai_color", "w"); store.set("ai_level", level); store.set("ai_color", color); const me = color === "r" ? (Math.random() < 0.5 ? "w" : "b") : color;
+  st = { game: "ai", level, msg: "", me, over: null, think: false, clockSecs, ms: { w: clockSecs * 1000, b: clockSecs * 1000 }, last: performance.now() };
+  live = { c, color: me, sel: null, targets: [], last: null, lock: false, refresh: aiPaint, onMove: () => { if (st.clockSecs) { const now = performance.now(); st.ms[live.color] -= now - st.last; st.last = now; } if (aiEnd()) return; aiThink(); } };
+  $("#app").className = "fresh"; aiPaint(); if (clockSecs) st.timer = setInterval(aiTick, 200); if (me === "b") aiThink();
 }
-function aiThink() { live.lock = true; st.think = true; aiPaint(); setTimeout(() => { if (!live || st.game !== "ai") return; askEngine({ type: "move", fen: live.c.fen(), level: st.level }, (r) => { if (!live || st.game !== "ai" || r.type !== "move") return; const m = live.c.move({ from: r.from, to: r.to, promotion: r.promotion || "q" }); live.last = [m.from, m.to]; Snd.move(m); st.think = false; live.lock = false; if (!aiEnd()) aiPaint(); }); }, 200); }
+function aiThink() { live.lock = true; st.think = true; aiPaint(); setTimeout(() => { if (!live || st.game !== "ai") return; askEngine({ type: "move", fen: live.c.fen(), level: st.level }, (r) => { if (!live || st.game !== "ai" || r.type !== "move") return; const m = live.c.move({ from: r.from, to: r.to, promotion: r.promotion || "q" }); live.last = [m.from, m.to]; Snd.move(m, live.c); st.think = false; live.lock = false; if (!aiEnd()) aiPaint(); }); }, 200); }
+
+function aiTick() { if (st.game !== "ai" || !live || st.over) return clearInterval(st.timer); const now = performance.now(), turn = live.c.turn(); st.ms[turn] -= now - st.last; st.last = now; document.querySelectorAll("[data-clk-side]").forEach((el) => { el.textContent = fmtClk(st.ms[el.dataset.clkSide]); el.classList.toggle("low", st.ms[el.dataset.clkSide] < 20000); });
+  if (st.ms[turn] <= 0) { st.ms[turn] = 0; const youLost = turn === live.color, rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }); youLost ? rec.l++ : rec.w++; store.set("ai_rec", rec); st.over = { won: !youLost, lost: youLost, why: "on time" }; live.lock = true; clearInterval(st.timer); Snd.end(!youLost); aiPaint(); } }
 function aiEnd() {
   const c = live.c; if (!c.game_over()) return false; const rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }), mate = c.in_checkmate(), won = mate && c.turn() !== live.color, lost = mate && c.turn() === live.color;
-  won ? rec.w++ : lost ? rec.l++ : rec.d++; store.set("ai_rec", rec); st.over = { won, lost, why: mate ? "by checkmate" : c.in_stalemate() ? "by stalemate" : c.insufficient_material() ? "by insufficient material" : c.in_threefold_repetition() ? "by repetition" : "by the 50-move rule" }; live.lock = true; aiPaint(); return true;
+  won ? rec.w++ : lost ? rec.l++ : rec.d++; store.set("ai_rec", rec); st.over = { won, lost, why: mate ? "by checkmate" : c.in_stalemate() ? "by stalemate" : c.insufficient_material() ? "by insufficient material" : c.in_threefold_repetition() ? "by repetition" : "by the 50-move rule" }; live.lock = true; Snd.end(won); aiPaint(); return true;
 }
 function aiPaint() {
   const rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }), L = live, c = L.c, opp = L.color === "w" ? "b" : "w", o = st.over;
-  const bars = { top: pbar("robot", "Computer", LVL[st.level], c, opp), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color) };
+  const bars = { top: pbar("robot", "Computer", LVL[st.level], c, opp, st.clockSecs ? st.ms[opp] : 0), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, st.clockSecs ? st.ms[L.color] : 0) };
   const over = o ? `<div class="endov ${o.won ? "win" : o.lost ? "loss" : "draw"}">${o.won ? Array.from({ length: 26 }, (_, i) => `<i class="conf" style="left:${(i * 37) % 100}%;background:${["#e8c35a", "#5ee6a8", "#ff8a3d", "#fff"][i % 4]};animation-delay:${(i % 9) * 0.18}s"></i>`).join("") : ""}<div class="crown">${ic(o.won ? "crown" : o.lost ? "robot" : "flag")}</div><h3>${o.won ? "You win!" : o.lost ? "You lost" : "A draw"}</h3><p class="fine" style="color:#ddd">${o.why}</p><div class="row" style="justify-content:center"><button class="btn" id="aiReview">${ic("chart")}Game review</button><button class="btn ghost" id="aiAgain">Rematch</button><button class="btn ghost" data-go="home">Menu</button></div></div>` : "";
   liveRender(backRow("Play my AI", "robot", `Record ${rec.w}-${rec.d}-${rec.l}`), `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? "The AI is thinking…" : c.in_check() ? "Check!" : o ? "" : L.color === c.turn() ? "Your move." : ""}</span><button class="btn ghost" id="aiNew">New game</button></div>`, bars, { over });
 }
@@ -467,31 +479,39 @@ function modelPage() {
 }
 /* ---------- events ---------- */
 function fresh() { const a = $("#app"); a.className = "fresh"; clearTimeout(fresh.t); fresh.t = setTimeout(() => { a.className = ""; }, 500); }
-const GO = { call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, who: whoStart, model: modelPage, home };
+function reviewIntro() {
+  clearInterval(st.timer); live = null; st = { game: "reviewIntro" };
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("chart")}Review a game</h2><p class="sub">Paste a game in PGN or just the moves (like <span class="fine">1. e4 e5 2. Nf3 Nc6</span>), or take a real game between top players.</p><textarea id="pgnIn" rows="6" placeholder="Paste your PGN here" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px;font:13px ui-monospace,Menlo,monospace"></textarea><p class="fine" id="pgnMsg"></p><div class="row"><button class="btn" id="pgnGo">Review it</button><button class="btn ghost" id="pgnElite">Use a real top-level game</button></div></div>`;
+}
+const GO = { call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rv && rv.data) { rv.i = +mvp.dataset.ply; return reviewRender(); }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.lk) { const k = t.dataset.lk; $("#lkRes").innerHTML = k[0] === "p" ? lkPlayer(+k.slice(1)) : lkEvent(+k.slice(1)); $("#lkRes").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
   if (t.dataset.lv) { st.level = +t.dataset.lv; store.set("ai_level", st.level); document.querySelectorAll("[data-lv]").forEach((x) => x.classList.toggle("on", x.dataset.lv === t.dataset.lv)); return; }
+  if (t.dataset.clk != null) { st.clock = +t.dataset.clk; store.set("ai_clock", st.clock); document.querySelectorAll("[data-clk]").forEach((x) => x.classList.toggle("on", x.dataset.clk === t.dataset.clk)); return; }
   if (t.dataset.col) { st.color = t.dataset.col; store.set("ai_color", st.color); document.querySelectorAll("[data-col]").forEach((x) => x.classList.toggle("on", x.dataset.col === t.dataset.col)); return; }
+  if (t.id === "pgnGo") { const c = new Chess(), txt = $("#pgnIn").value.trim(); if (!txt || !(c.load_pgn(txt, { sloppy: true }) || c.load_pgn("1. " + txt.replace(/^1\.\s*/, ""), { sloppy: true }))) { $("#pgnMsg").textContent = "I could not read that game. Paste a PGN or a list of moves."; return; } const sans = c.history(); if (sans.length < 4) { $("#pgnMsg").textContent = "The game is too short to review."; return; } return reviewStart(sans.slice(0, 160), "w"); }
+  if (t.id === "pgnElite") { const g = rnd(EM); return reviewStart(g.moves.slice(0, 90), "w"); }
   if (t.id === "aiGo") return aiStart(st.level, st.color);
   if (t.id === "aiAgain" || t.id === "aiNew") return aiMenu();
   if (t.id === "aiReview") return reviewStart(live.c.history(), live.color);
-  if (t.id === "rvBack") { rv = null; return aiMenu(); }
+  if (t.id === "rvBack") { const was = rv && rv.from; rv = null; return was === "pgn" ? reviewIntro() : aiMenu(); }
   if (t.dataset.rv && rv && rv.data) { const v = +t.dataset.rv; rv.i = v === 0 ? 0 : v === 9999 ? rv.sans.length : Math.max(0, Math.min(rv.sans.length, rv.i + v)); return reviewRender(); }
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }
   if (t.dataset.intro) { fresh(); return intro(t.dataset.intro); }
+  if (t.id === "sndBtn") { Snd.on = !Snd.on; store.set("snd", Snd.on); paintSnd(); if (Snd.on) Snd.ok(); return; }
   if (t.id === "home") { live = null; clearInterval(st.timer); fresh(); return home(); }
   if (t.dataset.go) { live = null; clearInterval(st.timer); fresh(); return GO[t.dataset.go](); }
   const g = st.game;
   if (g === "call") { if (t.dataset.r != null) { st.pick = +t.dataset.r; return callRender(); } if (t.dataset.l != null) { st.len = +t.dataset.l; return callRender(); } if (t.id === "lock") return callLock(); if (t.id === "next") return callNext(); }
   if (g === "elite") { if (t.dataset.er != null) { st.pick = +t.dataset.er; return eliteRender(); } if (t.id === "elock") { const x = st.items[st.i], real = x.result === "1-0" ? 2 : x.result === "0-1" ? 0 : 1, [pw, pd, pb] = x.p; st.you += st.pick === real ? 2 : 0; st.mod += [pb, pd, pw].indexOf(Math.max(pb, pd, pw)) === real ? 2 : 0; st.phase = "reveal"; return eliteRender(); } if (t.id === "enext") { if (st.i >= 4) return finish("Predict who won", st.you, st.mod, 10, "elite", "elite"); st.i++; st.pick = null; st.phase = "ask"; return eliteRender(); } }
-  if (g === "next") { if (t.dataset.nm != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.nm]; st.streak = st.q.chosen === st.q.real ? st.streak + 1 : 0; bump("next", st.streak); return nextRender(); } if (t.id === "nmnext") return nextQ(); }
+  if (g === "next") { if (t.dataset.nm != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.nm]; st.streak = st.q.chosen === st.q.real ? st.streak + 1 : 0; st.q.chosen === st.q.real ? Snd.ok() : Snd.bad(); bump("next", st.streak); return nextRender(); } if (t.id === "nmnext") return nextQ(); }
   if (g === "recog") { if (t.dataset.rc != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.rc]; st.streak = st.q.chosen === st.q.ans ? st.streak + 1 : 0; bump("recog", st.streak); return recogRender(); } if (t.id === "rcnext") return recogQ(); }
   if (g === "blunder") { if (t.dataset.bl && st.q.chosen == null) { st.q.chosen = t.dataset.bl; st.streak = st.q.chosen === st.q.cls ? st.streak + 1 : 0; bump("blunder", st.streak); return blunderRender(); } if (t.id === "blnext") return blunderQ(); }
-  if (g === "open") { if (t.dataset.o != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.o]; st.streak = st.q.chosen === st.q.o ? st.streak + 1 : 0; bump("open", st.streak); return openRender(); } if (t.id === "onext") { if (st.q.chosen !== st.q.o) st.streak = 0; return openNext(); } }
+  if (g === "open") { if (t.dataset.o != null && st.q.chosen == null) { st.q.chosen = st.q.opts[+t.dataset.o]; st.streak = st.q.chosen === st.q.o ? st.streak + 1 : 0; st.q.chosen === st.q.o ? Snd.ok() : Snd.bad(); bump("open", st.streak); return openRender(); } if (t.id === "onext") { if (st.q.chosen !== st.q.o) st.streak = 0; return openNext(); } }
   if (g === "trainer") { if (t.id === "trnext") return trainerNext(); if (t.id === "trhint") { st.msg = `Hint: ${st.book[st.i]}`; return trainerPaint(); } }
   if (g === "mate") { if (t.dataset.mn) { st.n = +t.dataset.mn; return mateNext(); } if (t.id === "mnext") return mateNext(); }
   if (g === "elo" && t.id === "enext2") return eloNext();
@@ -506,6 +526,7 @@ document.addEventListener("pointerdown", (e) => {
   document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault();
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "win") { e.preventDefault(); whoGuess(); } else if (e.code === "Space" && st.game === "who" && st.q && st.q.phase === "play" && !/INPUT|TEXTAREA/.test(e.target.tagName || "")) { e.preventDefault(); whoBuzz(); } });
+paintSnd();
 home();
 /* slow device? measure two seconds while the tab is visible, and switch to lighter visuals only if it is clearly low */
 setTimeout(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) return; let n = 0, t0 = performance.now(), aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis); const f = (ts) => { n++; if (aborted) return; if (ts - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); if (n * 1000 / (ts - t0) < 30) document.documentElement.dataset.perf = "low"; } }; requestAnimationFrame(f); }, 3000);

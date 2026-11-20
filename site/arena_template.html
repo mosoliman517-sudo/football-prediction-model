@@ -1576,7 +1576,7 @@ const QUIZ_GAMES = [
 let heroQueue = [];
 const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img && !x.photo); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
 const MODEL_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "rapid", "bracket"];
-const gameName = (id) => ([...GAMES, ...QUIZ_GAMES].find((g) => g.id === id) || {}).name || "";
+const gameName = (id) => (window.VERSNAME && VERSNAME[id]) || ([...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].find((g) => g.id === id) || {}).name || "";
 function renderHub() {
   heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
@@ -2374,7 +2374,7 @@ function searchItems(q) {
   const n = qnorm(q), out = [];
   const pages = [["Menu", "⌂", () => go("")], ["Games", "<svg class=ic><use href=#i-games></use></svg>", () => go("games")], ["ballknowledge originals", "<svg class=ic><use href=#i-brain></use></svg>", () => go("games-all-leagues-bk")], ["Beat the Model", "🆚", () => go("games-all-leagues-model")], ["Ranked", "<svg class=ic><use href=#i-trophy></use></svg>", () => go("games-all-leagues-ranked")], ["Live predictions", "<svg class=ic><use href=#i-live></use></svg>", () => go("games-all-leagues-live")], ["Our model", "<svg class=ic><use href=#i-chart></use></svg>", () => go("lab")], ["Time machine", "<svg class=ic><use href=#i-hourglass></use></svg>", () => go("lab-premier-league-replay")], ["Title race", "<svg class=ic><use href=#i-flag></use></svg>", () => go("lab-premier-league-race")], ["How the model works", "<svg class=ic><use href=#i-bulb></use></svg>", () => go("lab-all-leagues-about")], ["Leaderboard", "<svg class=ic><use href=#i-medal></use></svg>", () => go("games-all-leagues-boards")], ["My profile", "<svg class=ic><use href=#i-user></use></svg>", () => go("profile")], ["Appearance and settings", "<svg class=ic><use href=#i-palette></use></svg>", () => go("profile")], ["Sticker album", "<svg class=ic><use href=#i-album></use></svg>", () => go("album")], ["Replay the tour", "<svg class=ic><use href=#i-compass></use></svg>", () => startTour()]];
   pages.forEach(([name, ic, fn]) => { if (!n || qnorm(name).includes(n)) out.push({ ic, name, sub: "Page", fn }); });
-  [...GAMES, ...QUIZ_GAMES].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
+  [...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
   if (n.length >= 2) {
     Object.keys(QZ.clubs).filter((c) => CREST[c] && qnorm(c).includes(n)).slice(0, 4).forEach((c) => out.push({ ic: badge(c, "sm"), name: c, sub: "Club in the sticker album", fn: () => { S.alb = { lg: QZ.clubs[c].lg, club: c, more: 1 }; go("album"); renderAlbum && S.alb && setTimeout(renderAlbum, 50); } }));
     suggestions(q, QZ.players, (x) => x.n).forEach((p) => out.push({ ic: avatarHTML("", "xs", p.n[0]), name: p.n, sub: `Player · ${p.club || ""}`, fn: () => playerCard(p) }));

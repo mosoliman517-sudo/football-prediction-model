@@ -1541,7 +1541,7 @@ const QUIZ_GAMES = [
 let heroQueue = [];
 const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img && !x.photo); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
 const MODEL_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "rapid", "bracket"];
-const gameName = (id) => ([...GAMES, ...QUIZ_GAMES].find((g) => g.id === id) || {}).name || "";
+const gameName = (id) => (window.VERSNAME && VERSNAME[id]) || ([...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].find((g) => g.id === id) || {}).name || "";
 function renderHub() {
   heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
@@ -2337,7 +2337,7 @@ function searchItems(q) {
   const n = qnorm(q), out = [];
   const pages = [["Menu", "⌂", () => go("")], ["Games", "<svg class=ic><use href=#i-games></use></svg>", () => go("games")], ["ballknowledge originals", "<svg class=ic><use href=#i-brain></use></svg>", () => go("games-all-leagues-bk")], ["Beat the Model", "🆚", () => go("games-all-leagues-model")], ["Ranked", "<svg class=ic><use href=#i-trophy></use></svg>", () => go("games-all-leagues-ranked")], ["Live predictions", "<svg class=ic><use href=#i-live></use></svg>", () => go("games-all-leagues-live")], ["Our model", "<svg class=ic><use href=#i-chart></use></svg>", () => go("lab")], ["Time machine", "<svg class=ic><use href=#i-hourglass></use></svg>", () => go("lab-premier-league-replay")], ["Title race", "<svg class=ic><use href=#i-flag></use></svg>", () => go("lab-premier-league-race")], ["How the model works", "<svg class=ic><use href=#i-bulb></use></svg>", () => go("lab-all-leagues-about")], ["Leaderboard", "<svg class=ic><use href=#i-medal></use></svg>", () => go("games-all-leagues-boards")], ["My profile", "<svg class=ic><use href=#i-user></use></svg>", () => go("profile")], ["Appearance and settings", "<svg class=ic><use href=#i-palette></use></svg>", () => go("profile")], ["Sticker album", "<svg class=ic><use href=#i-album></use></svg>", () => go("album")], ["Replay the tour", "<svg class=ic><use href=#i-compass></use></svg>", () => startTour()]];
   pages.forEach(([name, ic, fn]) => { if (!n || qnorm(name).includes(n)) out.push({ ic, name, sub: "Page", fn }); });
-  [...GAMES, ...QUIZ_GAMES].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
+  [...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
   if (n.length >= 2) {
     Object.keys(QZ.clubs).filter((c) => CREST[c] && qnorm(c).includes(n)).slice(0, 4).forEach((c) => out.push({ ic: badge(c, "sm"), name: c, sub: "Club in the sticker album", fn: () => { S.alb = { lg: QZ.clubs[c].lg, club: c, more: 1 }; go("album"); renderAlbum && S.alb && setTimeout(renderAlbum, 50); } }));
     suggestions(q, QZ.players, (x) => x.n).forEach((p) => out.push({ ic: avatarHTML("", "xs", p.n[0]), name: p.n, sub: `Player · ${p.club || ""}`, fn: () => playerCard(p) }));
@@ -3174,7 +3174,7 @@ function renderQuiz() {
   const head = gamesBar(d.name) ;
   if (S_.phase === "intro") {
     const clue = S_.game === "blur" ? "A team logo starts blurred and sharpens." : S_.game === "scramble" ? "A player or a team with the letters shuffled. Hints only arrive when everyone agrees." : "Clues start hard and get easier.";
-    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above.${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
+    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
       ...(getResume(S_.game, S_.scope) ? [{ id: "qResume", t: `Resume your streak (${getResume(S_.game, S_.scope).streak}, ${getResume(S_.game, S_.scope).score} pts)`, d: "Pick up where you stopped." }] : []),
       { id: "qSolo", t: "Solo streak", d: "Keep going for as long as you can. The run ends the first time a round runs out of time." },
       { id: "qDuo", t: "Two players, one device", d: "Five rounds. Race to buzz: A for player 1, L for player 2. The first right answer takes the points." },

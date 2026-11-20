@@ -97,7 +97,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .rv{display:grid;grid-template-columns:1fr;gap:12px}.rvgraph{width:100%;height:90px;background:#1b251f;border-radius:10px}.rvbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}.rvbtns .btn{min-width:48px;justify-content:center}
 .cls{display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;font:800 11px/18px Inter;color:#fff;vertical-align:middle}.cls.best{background:#5ee6a8;color:#06281a}.cls.good{background:#8fb37a}.cls.inaccuracy{background:#e8c35a;color:#241c00}.cls.mistake{background:#ff9f45}.cls.blunder{background:#ff5b6e}
 .rvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.rvsum .tile b{font-size:24px}
-.rvcard{max-width:1080px;margin:0 auto}.rvgrid{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:18px;align-items:start}@media(max-width:900px){.rvgrid{grid-template-columns:minmax(0,1fr)}}
+.evv.hb{cursor:ns-resize;touch-action:none;width:36px}.evv.hb i{transition:none}.evm{position:absolute;left:0;right:0;height:4px;background:#e8c35a;box-shadow:0 0 10px #e8c35a;transform:translateY(50%);animation:evm .6s ease}@keyframes evm{from{opacity:0}}
+.board i.mk{box-shadow:inset 0 0 0 4px #e8c35a;background-image:radial-gradient(circle,rgba(232,195,90,.35),transparent 70%)}.board i.hit{box-shadow:inset 0 0 0 4px #5ee6a8}.board i.fp{box-shadow:inset 0 0 0 4px #ff5b6e}.board i.ms{box-shadow:inset 0 0 0 4px #ff9f45}
+.pals{display:grid;grid-template-columns:repeat(13,1fr);gap:3px;margin:8px 0}@media(max-width:560px){.pals{grid-template-columns:repeat(7,1fr)}}.pal{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:0;aspect-ratio:1;position:relative;cursor:pointer;color:var(--ink);font:700 16px Inter}.pal.on{outline:2px solid var(--gold);background:#2b3d33}.pal .pcz{position:absolute;inset:0;background-size:86%;background-position:center;background-repeat:no-repeat}
+.rvcard{max-width:1080px;margin:0 auto}.rvcard .lvwrap{max-width:max(300px,min(100%,calc(100vh - 290px)))}.rvgrid{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:18px;align-items:start}@media(max-width:900px){.rvgrid{grid-template-columns:minmax(0,1fr)}}
 .rvleft{display:flex;flex-direction:column;gap:6px;min-width:0}.rvbd{display:flex;gap:8px;align-items:stretch}.rvbd .lvwrap{flex:1;margin:0;max-width:none}
 .evv{position:relative;width:28px;border-radius:6px;overflow:hidden;background:#262421;display:flex;flex-direction:column;justify-content:flex-end;flex:none;box-shadow:0 8px 20px -12px #000}.evv.flip{justify-content:flex-start}.evv i{display:block;background:#f1eee6;height:50%;transition:height .5s cubic-bezier(.3,.7,.2,1)}
 .evl{position:absolute;left:0;right:0;text-align:center;font:800 10.5px Inter;padding:4px 0;letter-spacing:-.03em;transition:color .2s}.evl.top{top:0}.evl.bot{bottom:0}.evl.onw{color:#262421}.evl.onb{color:#f1eee6}
@@ -216,7 +219,18 @@ const CG = [
   { id: "review", g: "bk", ic: "chart", name: "Review a game", modes: "Paste a PGN or use a real game", tag: "Every move graded, with an evaluation graph and the engine's preferred move.", best: "none" },
   { id: "ai", g: "bk", ic: "robot", name: "Play my AI", modes: "Solo vs engine", tag: "A small chess engine with three levels. Can you beat it?", best: "ai_rec" },
   { id: "who", g: "bk", ic: "user", name: "Who is this player?", modes: "Solo · 5 rounds", tag: "Clues appear on their own. Buzz when you know the grandmaster.", best: "who", faces: true },
+  { id: "hbar", g: "bk", ic: "chart", name: "Human bar", modes: "Solo · 5 positions", tag: "Drag the evaluation bar to where Stockfish puts the position. The closest guess scores most.", best: "hbar" },
+  { id: "tact", g: "bk", ic: "target", name: "Spot the tactic", modes: "Solo · 6 positions, timed", tag: "Tap every piece you could win for free before the clock runs out.", best: "tact" },
+  { id: "endg", g: "bk", ic: "crown", name: "Endgame verdict", modes: "Solo · 5 endgames", tag: "Win, draw or lose with best play? Call it, then play it out against Stockfish.", best: "endg" },
+  { id: "blind", g: "bk", ic: "eye", name: "Blindfold memory", modes: "Solo · 5 boards", tag: "A position flashes up, then vanishes. Rebuild every piece from memory.", best: "blind" },
 ];
+const CGALL = CG.map((x) => ({ ...x })), VERSOF = {}, VERSNAME = {};
+[{ lead: "next", name: "Position quiz", tag: "Four ways to read a real position: the next move, who played it, blunder or fine, or the opening's name.", vers: [["next", "Next move"], ["recog", "Who played it"], ["blunder", "Blunder or fine?"], ["open", "Name the opening"]] },
+ { lead: "mate", name: "Puzzles", tag: "Real Lichess puzzles: checkmate in 1, 2 or 3, or let ten puzzles estimate your level.", vers: [["mate", "Mate puzzles"], ["elo", "Estimate my Elo"]] },
+ { lead: "call", name: "Call it", tag: "Predict a result against the model: from two ratings, or from the real games of the biggest events.", vers: [["call", "From ratings"], ["elite", "Real games"]] }].forEach((g) => {
+  const lead = CG.find((x) => x.id === g.lead); g.vers.forEach(([id, l]) => { VERSOF[id] = g; VERSNAME[id] = l; });
+  g.vers.forEach(([id]) => { if (id !== g.lead) CG.splice(CG.findIndex((x) => x.id === id), 1); }); lead.name = g.name; lead.tag = g.tag; lead.modes = g.vers.length + " versions";
+});
 const faces = (n) => shuffle(PLAYERS.filter((p) => p.img).slice(0, 60)).slice(0, n).map((p) => `<img class="pf" src="${esc(p.img.replace("http://", "https://"))}?width=120" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`).join("");
 const recLine = (x) => { if (x.id === "ai") { const r = store.get("ai_rec", null); return r ? `record ${r.w}-${r.d}-${r.l}` : "not played yet"; } const b = bestOf(x.best); return b ? `best ${b}` : "not played yet"; };
 function wallHTML() { const tiles = PLAYERS.filter((p) => p.img).slice(0, 30).map((p) => `<img class="wt" src="${esc(p.img.replace("http://", "https://"))}?width=120" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`); return [0, 1, 2].map((r) => { const list = tiles.filter((_, i) => i % 3 === r); return `<div class="wrow ${r === 1 ? "rev" : ""}">${list.concat(list).join("")}</div>`; }).join(""); }
@@ -229,8 +243,8 @@ function hub(g) {
   $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic(g === "model" ? "target" : "puzzle")}${g === "model" ? "Beat the model" : "ballknowledge originals"}</h2><p class="sub">${g === "model" ? `Real games and a model that never saw them. On everyday games it picks ${pct(S.acc)} of results right (always White: ${pct(S.white)}).` : "Pick a difficulty, then a game."}</p>${diffBar()}<div class="hubgrid">${list.map((x, k) => `<button class="gcard" data-intro="${x.id}" style="animation-delay:${k * 50}ms"><div class="gi">${x.faces ? faces(3) : `<div class="di">${ic(x.ic)}</div>`}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recLine(x)}</div></button>`).join("")}</div>`;
 }
 function intro(id) {
-  const x = CG.find((y) => y.id === id); clearInterval(st.timer); live = null; st = { hub: x.g, intro: id };
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="${x.g}">← Back</button></div><div class="card"><h2>${ic(x.ic)}${x.name}</h2><p class="sub">${x.tag}</p>${id === "ai" ? "" : diffBar()}${id === "ai" ? `<p class="fine">Pick the AI's level inside the game.</p>` : ""}<div class="row"><button class="btn" data-go="${id}">Start</button><span class="fine">${recLine(x)}</span></div></div>`;
+  const x0 = CGALL.find((y) => y.id === id), gp = VERSOF[id], x = gp ? { ...x0, name: VERSNAME[id] } : x0; clearInterval(st.timer); live = null; st = { hub: x.g, intro: id };
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="${x.g}">← Back</button></div><div class="card"><h2>${ic(x.ic)}${x.name}</h2><p class="sub">${x.tag}</p>${gp ? `<div class="chips" role="group" aria-label="Version">${gp.vers.map(([vid, l]) => `<button class="chip ${vid === id ? "on" : ""}" data-intro="${vid}" type="button">${l}</button>`).join("")}</div>` : ""}${id === "ai" ? "" : diffBar()}${id === "ai" ? `<p class="fine">Pick the AI's level inside the game.</p>` : ""}<div class="row"><button class="btn" data-go="${id}">Start</button><span class="fine">${recLine(x)}</span></div></div>`;
 }
 const backRow = (title, i, extra = "") => `<div class="row" style="justify-content:space-between"><h2>${ic(i)}${title}</h2><span class="fine">${extra}</span></div>`;
 const bestOf = (k) => store.get("best_" + k, 0), bump = (k, v) => { if (v > bestOf(k)) store.set("best_" + k, v); };
@@ -778,7 +792,165 @@ function reviewIntro() {
   rvStop(); clearInterval(st.timer); live = null; st = { game: "reviewIntro" };
   $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("chart")}Review a game</h2><p class="sub">Paste a game in PGN or just the moves (like <span class="fine">1. e4 e5 2. Nf3 Nc6</span>), or take a real game between top players.</p><textarea id="pgnIn" rows="6" placeholder="Paste your PGN here" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px;font:13px ui-monospace,Menlo,monospace"></textarea><p class="fine" id="pgnMsg"></p><div class="row"><button class="btn" id="pgnGo">Review it</button><button class="btn ghost" id="pgnElite">Use a real top-level game</button></div></div>`;
 }
-const GO = { call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+/* =====================================================================================================================
+   Four games with four different mechanics:
+   Human bar (drag the evaluation bar), Spot the tactic (tap free pieces against a clock), Blindfold memory (rebuild a board
+   from memory), Endgame verdict (call the result, then play it out against Stockfish).
+   ===================================================================================================================== */
+const cpFromW = (w) => { const x = Math.max(0.5, Math.min(99.5, w)); return Math.round(-Math.log(2 / ((x - 50) / 50 + 1) - 1) / 0.00368208); };
+const evTxt = (cp) => (cp > 0 ? "+" : cp < 0 ? "-" : "") + Math.abs(cp / 100).toFixed(1);
+const sumCard = (title, icn, score, outOf, key, rows, again) => { bump(key, score); return `<div class="card">${backRow(title, icn, "")}<div class="tiles"><div class="tile"><small>Score</small><b>${score}</b><span class="fine">of ${outOf}</span></div><div class="tile"><small>Best</small><b>${bestOf(key)}</b></div></div>${rows}<div class="row" style="margin-top:12px"><button class="btn" data-go="${again}">Play again</button><button class="btn ghost" data-hub="bk">All games</button></div></div>`; };
+const needNet = (title) => `<div class="card">${backRow(title, "warn", "")}<p class="sub"><b>Stockfish could not load.</b> This game needs an internet connection to download the engine (about 1.5 MB).</p><div class="row"><button class="btn" data-go="${st.game}">Try again</button><button class="btn ghost" data-hub="bk">Back</button></div></div>`;
+
+/* ---------- Human bar ---------- */
+function hbCand() { const g = rnd(EM.filter((x) => x.moves.length >= 44)), ply = 14 + Math.floor(Math.random() * Math.min(44, g.moves.length - 16)), c = fenOf(g.moves.slice(0, ply)); return c.game_over() ? hbCand() : { fen: c.fen(), g, ply }; }
+async function hbPick() {
+  const band = dpick([240, 900], [110, 320], [40, 160], [0, 80]);
+  const res = (await Promise.all(Array.from({ length: 4 }, hbCand).map((c) => Sf.analyse(c.fen, { multipv: 1, depth: 11, ms: 1800 }).then((l) => (l.length ? { c, ev: lineW(l[0], new Chess(c.fen).turn()), l } : null)).catch(() => null)))).filter(Boolean);
+  if (!res.length) throw new Error("engine");
+  const dist = (r) => { const a = Math.min(1000, Math.abs(r.ev.cp)); return a < band[0] ? band[0] - a : a > band[1] ? a - band[1] : 0; };
+  return res.sort((x, y) => dist(x) - dist(y))[0];
+}
+function hbStart() { st = { game: "hbar", round: 0, score: 0, rounds: 5, log: [] }; hbNext(); }
+async function hbNext() {
+  const me = st; me.round++; me.phase = "load"; me.cur = null; hbPaint();
+  try { me.cur = await (me.pre || hbPick()); } catch (e) { if (st === me) $("#app").innerHTML = needNet("Human bar"); return; }
+  if (st !== me) return; me.pre = me.round < me.rounds ? hbPick().catch(() => null) : null; me.gw = 50; me.phase = "ask"; hbPaint();
+}
+function hbPaint() {
+  const s = st, cur = s.cur, c = new Chess(cur ? cur.c.fen : undefined), head = backRow("Human bar", "chart", `Round ${s.round} of ${s.rounds} · ${s.score} points`);
+  const turn = cur ? sideName(c) : "";
+  let msg, btn;
+  if (s.phase === "load") { msg = `<p class="sub"><span class="spin"></span> Stockfish is choosing a position…</p>`; btn = ""; }
+  else if (s.phase === "ask") { msg = `<p class="sub">${turn} to move. Drag the bar to where you think Stockfish puts this position. Top is Black winning, bottom is White winning.</p>`; btn = `<div class="row"><b class="num" id="hbVal">${evTxt(cpFromW(s.gw))}</b><button class="btn" id="hbLock" type="button">Lock it in</button></div>`; }
+  else {
+    const t = cur.ev, d = Math.abs(s.gw - t.w), pts = s.pts;
+    msg = `<p class="sub"><b>${d < 6 ? "Spot on." : d < 15 ? "Close." : d < 30 ? "A bit off." : "Way off."}</b> Stockfish says <b>${fmtEv(t)}</b> (White's winning chances ${Math.round(t.w)}%). You said <b>${evTxt(cpFromW(s.gw))}</b>. <span class="fine">Best line: ${esc(pvLine(cur.c.fen, cur.l[0].pv, 5))}</span></p>`;
+    btn = `<div class="row"><b>+${pts}</b><button class="btn" id="hbNext" type="button">${s.round >= s.rounds ? "See results" : "Next position"}</button></div>`;
+  }
+  $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}${msg}<div class="rvbd"><div class="evv hb" id="hbBar"><i id="hbFill" style="height:${s.phase === "reveal" ? s.gw : s.gw || 50}%"></i>${s.phase === "reveal" ? `<u class="evm" style="bottom:${cur.ev.w}%"></u>` : ""}</div><div class="lvwrap" id="rvWrap">${s.phase === "load" ? `<div class="board" style="opacity:.45"></div>` : boardHTML(c, {})}</div></div>${btn}</div>`;
+}
+document.addEventListener("pointerdown", (e) => {
+  const bar = e.target.closest && e.target.closest("#hbBar"); if (!bar || st.game !== "hbar" || st.phase !== "ask") return;
+  const set = (ev) => { const r = bar.getBoundingClientRect(), w = Math.max(0, Math.min(100, 100 - 100 * (ev.clientY - r.top) / r.height)); st.gw = w; $("#hbFill").style.height = w + "%"; $("#hbVal").textContent = evTxt(cpFromW(w)); };
+  set(e); const mv = (ev) => set(ev), up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); }; addEventListener("pointermove", mv); addEventListener("pointerup", up);
+});
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("button"); if (!t || st.game !== "hbar") return;
+  if (t.id === "hbLock") { const d = Math.abs(st.gw - st.cur.ev.w); st.pts = Math.max(0, Math.round(100 - d * 3)); st.score += st.pts; st.phase = "reveal"; st.log.push([evTxt(cpFromW(st.gw)), fmtEv(st.cur.ev), st.pts]); Snd.ok && Snd.ok(); hbPaint(); }
+  else if (t.id === "hbNext") { if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Human bar", "chart", st.score, 500, "hbar", `<table class="tb"><tr><th>Round</th><th>You</th><th>Stockfish</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">Stockfish 10, searched to about 11 moves deep, so close calls can differ from a stronger engine.</p>`, "hbar"); else hbNext(); }
+});
+
+/* ---------- Spot the tactic ---------- */
+function freeSquares(c, minNet) {
+  const out = new Set();
+  c.moves({ verbose: true }).forEach((m) => {
+    if (!m.captured || m.captured === "k" || m.promotion || /e/.test(m.flags) || out.has(m.to)) return;
+    const val = VAL[m.captured]; c.move(m); const recap = c.moves({ verbose: true }).some((x) => x.to === m.to && x.captured); c.undo();
+    if (val - (recap ? VAL[m.piece] : 0) >= minNet) out.add(m.to);
+  });
+  return [...out];
+}
+function tactPos(minNet) {
+  const pool = shuffle(PZ.filter((p) => pzBand(p)).concat(PZ.slice(0, 200)));
+  for (let k = 0; k < pool.length && k < 700; k++) { const p = pool[k], c = new Chess(p.fen), f = p.moves[0]; c.move(uciMv(f)); const free = freeSquares(c, minNet); if (free.length) return { c, free, last: [f.slice(0, 2), f.slice(2, 4)] }; }
+  return null;
+}
+function tactStart() { st = { game: "tact", round: 0, score: 0, rounds: 6, log: [], minNet: dpick(300, 200, 100, 100), secs: dpick(30, 22, 16, 12) }; tactNext(); }
+function tactNext() {
+  const s = st; s.round++; s.pos = tactPos(s.minNet); if (!s.pos) { $("#app").innerHTML = `<div class="card">${backRow("Spot the tactic", "target", "")}<p class="sub">I could not find a position. Try again.</p><button class="btn" data-go="tact">Retry</button></div>`; return; }
+  s.marks = new Set(); s.phase = "ask"; s.left = s.secs * 1000; s.t0 = Date.now(); clearInterval(s.timer); s.timer = setInterval(tactTick, 100); tactPaint();
+}
+function tactTick() { const s = st; if (s.game !== "tact" || s.phase !== "ask") return clearInterval(s.timer); s.left = Math.max(0, s.secs * 1000 - (Date.now() - s.t0)); const b = $("#tbar"), l = $("#tleft"); if (b) b.style.width = (100 * s.left / (s.secs * 1000)) + "%"; if (l) l.textContent = Math.ceil(s.left / 1000) + "s"; if (s.left <= 0) tactReveal(); }
+function tactPaint() {
+  const s = st, c = s.pos.c, side = sideName(c), foe = side === "White" ? "Black" : "White";
+  $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${backRow("Spot the tactic", "target", `Position ${s.round} of ${s.rounds} · ${s.score} points`)}<p class="sub">${side} to move. Tap every ${foe} piece you could win for free: nothing can take it back, or it is worth more than the piece that takes it. Then press Done.</p><div class="meter"><i id="tbar" style="width:100%"></i></div><div class="lvwrap" id="rvWrap">${boardHTML(c, { flip: c.turn() === "b", last: s.pos.last })}</div><div class="row" style="justify-content:space-between;margin-top:8px"><span class="fine">Free pieces: ${s.pos.free.length > 1 ? "more than one" : "at least one"} · <b id="tleft">${s.secs}s</b></span><button class="btn" id="tactDone" type="button">Done</button></div></div>`;
+}
+function tactReveal() {
+  const s = st; if (s.phase !== "ask") return; s.phase = "reveal"; clearInterval(s.timer);
+  const free = new Set(s.pos.free), hit = [...s.marks].filter((x) => free.has(x)), bad = [...s.marks].filter((x) => !free.has(x)), miss = s.pos.free.filter((x) => !s.marks.has(x));
+  const bonus = !bad.length && !miss.length ? Math.round(40 * s.left / (s.secs * 1000)) : 0, pts = Math.max(0, hit.length * 100 - bad.length * 60 + bonus); s.score += pts; s.log.push([hit.length, free.size, bad.length, pts]);
+  document.querySelectorAll("#rvWrap i[data-sq]").forEach((el) => { const q = el.dataset.sq; el.classList.remove("mk"); if (hit.includes(q)) el.classList.add("hit"); else if (bad.includes(q)) el.classList.add("fp"); else if (miss.includes(q)) el.classList.add("ms"); });
+  const row = document.querySelector("#app .row:last-child"); row.innerHTML = `<span><b>+${pts}</b> · ${hit.length} of ${free.size} found${bad.length ? `, ${bad.length} wrong` : ""}${bonus ? `, +${bonus} speed` : ""}</span><button class="btn" id="tactNext" type="button">${s.round >= s.rounds ? "See results" : "Next position"}</button>`;
+  Snd.ok && (!bad.length && !miss.length ? Snd.ok() : 0);
+}
+document.addEventListener("click", (e) => {
+  if (st.game !== "tact") return; const sq = e.target.closest && e.target.closest("#rvWrap i[data-sq]");
+  if (sq && st.phase === "ask") { const q = sq.dataset.sq; if (st.marks.has(q)) { st.marks.delete(q); sq.classList.remove("mk"); } else { st.marks.add(q); sq.classList.add("mk"); } return; }
+  const t = e.target.closest && e.target.closest("button"); if (!t) return;
+  if (t.id === "tactDone") tactReveal(); else if (t.id === "tactNext") { if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Spot the tactic", "target", st.score, 6 * 340, "tact", `<table class="tb"><tr><th>Position</th><th>Found</th><th>Wrong taps</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]} / ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "tact"); else tactNext(); }
+});
+
+/* ---------- Blindfold memory ---------- */
+const BL_PCS = ["wk", "wq", "wr", "wb", "wn", "wp", "bk", "bq", "br", "bb", "bn", "bp"];
+function blindPos() {
+  const n = dpick(6 + Math.floor(Math.random() * 3), 10 + Math.floor(Math.random() * 4), 15 + Math.floor(Math.random() * 5), 22 + Math.floor(Math.random() * 4)), g = rnd(EM.filter((x) => x.moves.length >= 40)), c = fenOf(g.moves.slice(0, dpick(36, 30, 26, 18)));
+  const list = []; c.board().forEach((r, ri) => r.forEach((p, fi) => { if (p) list.push({ sq: "abcdefgh"[fi] + (8 - ri), p }); }));
+  const keep = shuffle(list.filter((x) => x.p.type !== "k")).slice(0, Math.max(0, n - 2)).concat(list.filter((x) => x.p.type === "k")), b = new Chess(); b.clear(); keep.forEach((x) => b.put(x.p, x.sq));
+  return { c: b, n: keep.length };
+}
+function blindStart() { st = { game: "blind", round: 0, score: 0, rounds: 5, log: [] }; blindNext(); }
+function blindNext() {
+  const s = st; s.round++; s.pos = blindPos(); s.cb = new Chess(); s.cb.clear(); s.tool = "wp"; s.phase = "show"; s.secs = dpick(14, 10, 8, 7); s.t0 = Date.now(); clearInterval(s.timer); s.timer = setInterval(() => { const left = s.secs * 1000 - (Date.now() - s.t0), b = $("#tbar"); if (b) b.style.width = Math.max(0, 100 * left / (s.secs * 1000)) + "%"; if (left <= 0) { clearInterval(s.timer); blindBuild(); } }, 100); blindPaint();
+}
+function blindBuild() { st.phase = "build"; blindPaint(); }
+function blindPaint() {
+  const s = st, head = backRow("Blindfold memory", "eye", `Board ${s.round} of ${s.rounds} · ${s.score} points`);
+  if (s.phase === "show") { $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}<p class="sub">Memorise the ${s.pos.n} pieces. The board disappears when the bar runs out.</p><div class="meter"><i id="tbar" style="width:100%"></i></div><div class="lvwrap" id="rvWrap">${boardHTML(s.pos.c, {})}</div><div class="row"><button class="btn ghost" id="blSkip" type="button">I have it</button></div></div>`; return; }
+  const pal = [...BL_PCS.map((k) => `<button type="button" class="pal ${s.tool === k ? "on" : ""}" data-pal="${k}" title="${k}"><b class="pcz pc-${k}"></b></button>`), `<button type="button" class="pal ${s.tool === "x" ? "on" : ""}" data-pal="x" title="Erase">✕</button>`].join("");
+  if (s.phase === "build") { $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}<p class="sub">Rebuild the position. Pick a piece, then tap squares. There were <b>${s.pos.n}</b> pieces.</p><div class="lvwrap" id="rvWrap">${boardHTML(s.cb, {})}</div><div class="pals">${pal}</div><div class="row"><span class="fine">${s.cb.board().flat().filter(Boolean).length} placed</span><button class="btn" id="blDone" type="button">Check it</button></div></div>`; return; }
+  const want = {}, got = {}; s.pos.c.board().forEach((r, ri) => r.forEach((p, fi) => { if (p) want["abcdefgh"[fi] + (8 - ri)] = p.color + p.type; })); s.cb.board().forEach((r, ri) => r.forEach((p, fi) => { if (p) got["abcdefgh"[fi] + (8 - ri)] = p.color + p.type; }));
+  $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}<p class="sub"><b>${s.ok} of ${s.pos.n} right</b>${s.extra ? `, ${s.extra} in the wrong place` : ""}. Green is correct, red is wrong, amber is what you missed. Points: <b>+${s.pts}</b></p><div class="lvwrap" id="rvWrap">${boardHTML(s.cb, {})}</div><div class="row"><span></span><button class="btn" id="blNext" type="button">${s.round >= s.rounds ? "See results" : "Next board"}</button></div></div>`;
+  document.querySelectorAll("#rvWrap i[data-sq]").forEach((el) => { const q = el.dataset.sq; if (got[q] && got[q] === want[q]) el.classList.add("hit"); else if (got[q]) el.classList.add("fp"); else if (want[q]) { el.classList.add("ms"); el.insertAdjacentHTML("afterbegin", `<b class="pcz pc-${want[q]}" style="opacity:.55"></b>`); } });
+}
+document.addEventListener("click", (e) => {
+  if (st.game !== "blind") return; const t = e.target.closest && e.target.closest("button"), sq = e.target.closest && e.target.closest("#rvWrap i[data-sq]");
+  if (sq && st.phase === "build") { const q = sq.dataset.sq, cur = st.cb.get(q), want = st.tool; if (want === "x" || (cur && cur.color + cur.type === want)) st.cb.remove(q); else st.cb.put({ color: want[0], type: want[1] }, q); const keep = $("#rvWrap"); keep.innerHTML = boardHTML(st.cb, {}); const f = $("#app .fine"); if (f) f.textContent = st.cb.board().flat().filter(Boolean).length + " placed"; return; }
+  if (!t) return;
+  if (t.dataset.pal) { st.tool = t.dataset.pal; document.querySelectorAll(".pal").forEach((x) => x.classList.toggle("on", x.dataset.pal === st.tool)); return; }
+  if (t.id === "blSkip") { clearInterval(st.timer); blindBuild(); }
+  else if (t.id === "blDone") { const want = {}, got = {}; st.pos.c.board().forEach((r, ri) => r.forEach((p, fi) => { if (p) want["abcdefgh"[fi] + (8 - ri)] = p.color + p.type; })); st.cb.board().forEach((r, ri) => r.forEach((p, fi) => { if (p) got["abcdefgh"[fi] + (8 - ri)] = p.color + p.type; })); st.ok = Object.keys(got).filter((q) => got[q] === want[q]).length; st.extra = Object.keys(got).length - st.ok; st.pts = Math.round(100 * Math.max(0, st.ok - 0.5 * st.extra) / st.pos.n); st.score += st.pts; st.log.push([st.ok, st.pos.n, st.extra, st.pts]); st.phase = "reveal"; blindPaint(); }
+  else if (t.id === "blNext") { if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Blindfold memory", "eye", st.score, 500, "blind", `<table class="tb"><tr><th>Board</th><th>Right</th><th>Misplaced</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]} / ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "blind"); else blindNext(); }
+});
+
+/* ---------- Endgame verdict: call the result, then play it out against Stockfish ---------- */
+function egCand() { const g = rnd(EM.filter((x) => x.moves.length >= 70)), c = fenOf(g.moves.slice(0, g.moves.length - Math.floor(Math.random() * 14))); return { fen: c.fen(), n: c.board().flat().filter(Boolean).length, over: c.game_over() }; }
+async function egPick() {
+  const want = rnd(["w", "d", "b"]), cands = []; for (let k = 0; k < 60 && cands.length < 4; k++) { const x = egCand(); if (!x.over && x.n <= dpick(7, 9, 11, 13) && x.n >= 3) cands.push(x); }
+  if (!cands.length) throw new Error("none");
+  const res = (await Promise.all(cands.map((c) => Sf.analyse(c.fen, { depth: 14, ms: 2500 }).then((l) => (l.length ? { c, ev: lineW(l[0], new Chess(c.fen).turn()), l } : null)).catch(() => null)))).filter(Boolean);
+  if (!res.length) throw new Error("engine");
+  const vd = (r) => (r.ev.cp >= 150 ? "w" : r.ev.cp <= -150 ? "b" : Math.abs(r.ev.cp) <= 50 ? "d" : null), ok = res.filter((r) => vd(r)); const pick = ok.find((r) => vd(r) === want) || ok[0]; if (!pick) return egPick(); pick.v = vd(pick); return pick;
+}
+function egStart() { st = { game: "endg", round: 0, score: 0, rounds: 5, log: [] }; egNext(); }
+async function egNext() {
+  const me = st; me.round++; me.phase = "load"; me.cur = null; live = null; egPaint();
+  try { me.cur = await (me.pre || egPick()); } catch (e) { if (st === me) $("#app").innerHTML = needNet("Endgame verdict"); return; }
+  if (st !== me) return; me.pre = me.round < me.rounds ? egPick().catch(() => null) : null; me.phase = "ask"; egPaint();
+}
+const EGV = { w: "White wins", d: "Draw", b: "Black wins" };
+function egPaint() {
+  const s = st, cur = s.cur, c = new Chess(cur ? cur.c.fen : undefined), head = backRow("Endgame verdict", "crown", `Endgame ${s.round} of ${s.rounds} · ${s.score} points`);
+  if (s.phase === "load") { $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}<p class="sub"><span class="spin"></span> Stockfish is finding an endgame…</p></div>`; return; }
+  if (s.phase === "play") { liveRender(head + `<p class="sub">You are ${sideName(c)}. Stockfish plays the other side. Click a piece, then a square.</p>`, `<div class="row"><span class="fine">${esc(s.msg || "Stockfish thinks quickly, so be careful.")}</span><button class="btn ghost" id="egStop" type="button">Stop</button></div>`, null, { moves: false }); return; }
+  const info = s.phase === "ask" ? `<p class="sub">${sideName(c)} to move. With best play, how does this end?</p><div class="row">${["w", "d", "b"].map((k) => `<button class="btn ghost" data-egv="${k}" type="button">${EGV[k]}</button>`).join("")}</div>` : `<p class="sub"><b>${s.pick === cur.v ? "Right." : "Not quite."}</b> Stockfish says <b>${EGV[cur.v]}</b> (${fmtEv(cur.ev)}). You said ${EGV[s.pick]}. <span class="fine">Best line: ${esc(pvLine(cur.c.fen, cur.l[0].pv, 6))}</span></p><div class="row"><button class="btn" id="egPlay" type="button">Play it out</button><button class="btn ghost" id="egNext" type="button">${s.round >= s.rounds ? "See results" : "Next endgame"}</button></div>${s.result ? `<p class="fine">${esc(s.result)}</p>` : ""}`;
+  $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}<div class="lvwrap" id="rvWrap">${boardHTML(c, { flip: c.turn() === "b" })}</div>${info}</div>`;
+}
+function egEndPlay(msg) { live = null; st.result = msg; st.phase = "reveal"; egPaint(); }
+function egMachine() {
+  const L = live; if (!L) return; const c = L.c; if (c.game_over()) return egEndPlay(c.in_checkmate() ? (c.turn() === L.color ? "Stockfish checkmated you." : "You checkmated Stockfish!") : "The game ended in a draw."); if (c.history().length >= 80) return egEndPlay("Stopped after 40 moves each.");
+  L.lock = true; st.msg = "Stockfish is thinking…"; egPaint();
+  Sf.analyse(c.fen(), { depth: 9, ms: 400 }).then((l) => { if (live !== L) return; const m = l.length ? c.move(uciMv(l[0].pv[0])) : null; L.lock = false; if (m) { L.last = [m.from, m.to]; Snd.move(m, c); } st.msg = ""; if (c.game_over() || c.history().length >= 80) return egMachine(); egPaint(); }).catch(() => egEndPlay("Stockfish stopped responding."));
+}
+document.addEventListener("click", (e) => {
+  if (st.game !== "endg") return; const t = e.target.closest && e.target.closest("button"); if (!t) return;
+  if (t.dataset.egv) { st.pick = t.dataset.egv; const ok = st.pick === st.cur.v; st.pts = ok ? 100 : 0; st.score += st.pts; st.log.push([EGV[st.pick], EGV[st.cur.v], fmtEv(st.cur.ev), st.pts]); st.phase = "reveal"; egPaint(); }
+  else if (t.id === "egPlay") { const c = new Chess(st.cur.c.fen); st.phase = "play"; st.msg = ""; live = { c, color: c.turn(), sel: null, targets: [], caps: [], last: null, lock: false, refresh: () => egPaint(), onMove: () => { egMachine(); } }; egPaint(); }
+  else if (t.id === "egStop") egEndPlay("You stopped the game.");
+  else if (t.id === "egNext") { live = null; if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Endgame verdict", "crown", st.score, 500, "endg", `<table class="tb"><tr><th>#</th><th>You said</th><th>Stockfish</th><th>Eval</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "endg"); else { st.result = ""; egNext(); } }
+});
+
+const GO = { hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);

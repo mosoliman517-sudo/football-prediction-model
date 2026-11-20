@@ -32,3 +32,30 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
   document.addEventListener("input", (e) => { const m = { mixFx: "fx", mixMus: "music", mixVoice: "voice" }[e.target.id]; if (!m) return; Mix[m] = e.target.value / 100; const l = document.getElementById(e.target.id + "V"); if (l) l.textContent = e.target.value + "%"; applyMix(); });
   document.addEventListener("click", (e) => { if (e.target.id === "mixSay") { Mix.say = !Mix.say; applyMix(); e.target.setAttribute("aria-pressed", Mix.say); e.target.textContent = "Announcer voice: " + (Mix.say ? "On" : "Off"); if (Mix.say) Voice.say("Game on"); } else if (e.target.id === "mixTest") { Snd.right(); setTimeout(() => Snd.win(), 500); } });
 }
+
+/* ---- games that share a core are merged into one card with several versions (football and basketball) ---- */
+(function () {
+  if (typeof QUIZ_GAMES === "undefined" || typeof renderRoom !== "function") return;
+  const nba = QUIZ_GAMES.some((g) => g.id === "dropped");
+  const GROUPS = nba ? [
+    { lead: "who", name: "Name it", tag: "Six ways to name a mystery: player clues, a career path, team stats, a real stat line, a blurred logo or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Team stats"], ["dropped", "Stat line"], ["blur", "Logo blur"], ["scramble", "Scramble"]] },
+  ] : [
+    { lead: "who", name: "Name it", tag: "Five ways to name a mystery: player clues, a career path, club stats, a blurred badge or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Club stats"], ["blur", "Badge blur"], ["scramble", "Scramble"]] },
+    { lead: "xi", name: "Match recall", tag: "Name the eleven who started a big final, or the scorers, assisters and red cards of a classic match.", vers: [["xi", "Starting XI"], ["iconic", "Who did it"]] },
+  ];
+  window.QUIZ_HIDDEN = []; window.VERSNAME = {}; window.VERSOF = {};
+  GROUPS.forEach((g) => {
+    const lead = QUIZ_GAMES.find((x) => x.id === g.lead); if (!lead) return;
+    g.vers.forEach(([id, label]) => { VERSNAME[id] = label; VERSOF[id] = g; });
+    g.vers.forEach(([id]) => { if (id === g.lead) return; const k = QUIZ_GAMES.findIndex((x) => x.id === id); if (k >= 0) QUIZ_HIDDEN.push(QUIZ_GAMES.splice(k, 1)[0]); });
+    lead.name = g.name; lead.tag = g.tag; lead.modes = g.vers.length + " versions · solo or 2 players";
+  });
+  const rr = renderRoom;
+  renderRoom = function () {
+    rr.apply(this, arguments);
+    try {
+      const g = S.game && VERSOF[S.game], sub = $("#room #diffNote") && $("#room .card .sub"); if (!g || !sub || $("#room .vers")) return;
+      sub.insertAdjacentHTML("afterend", `<div class="vers"><div class="label" style="margin-top:12px">Version</div><div class="diffbar" role="group" aria-label="Version">${g.vers.map(([id, label]) => `<button type="button" class="chip" data-game="${id}" aria-pressed="${id === S.game}">${label}</button>`).join("")}</div></div>`);
+    } catch (e) { /* chips are optional */ }
+  };
+})();

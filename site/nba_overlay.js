@@ -744,3 +744,11 @@ function nbLkTeam(t) {
 S.abTab = "look";
 document.addEventListener("input", (e) => { if (e.target.id !== "nbLk") return; $("#nbLkSug").innerHTML = nbLkSearch(e.target.value).map((x) => `<button type="button" class="chip" data-nbl="${esc(x.k)}">${esc(x.label)} <span class="fine">${esc(x.sub)}</span></button>`).join(""); });
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbl]"); if (!b) return; const [k, v] = b.dataset.nbl.split("|"); $("#nbLkRes").innerHTML = k === "p" ? nbLkPlayer(+v) : nbLkTeam(v); $("#nbLkRes").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
+
+/* ---------- basketball sound effects: a swish for a right answer, a buzzer for a wrong one, a crowd swell for a win ---------- */
+{ const n = Snd._n;
+  Snd.swish = () => n.run((t) => { n.noise(t, 0.28, 2500, 7000, 0.05, 1.5); n.note(96, t + 0.02, 0.16, "sine", 0.025); n.note(103, t + 0.06, 0.16, "sine", 0.02); });
+  Snd.buzzer = () => n.run((t) => { n.note(43, t, 0.5, "sawtooth", 0.07); n.note(43.2, t, 0.5, "square", 0.03); n.noise(t, 0.5, 200, 400, 0.03, 0.5); });
+  Snd.crowd = () => n.run((t) => { n.noise(t, 1.6, 400, 1400, 0.045, 0.4); n.noise(t + 0.4, 1.4, 900, 2400, 0.025, 0.4); });
+  const r = Snd.right, w = Snd.wrong, wi = Snd.win; Snd.right = function () { r.apply(Snd, arguments); Snd.swish(); }; Snd.wrong = function () { w.apply(Snd, arguments); Snd.buzzer(); }; Snd.win = function () { wi.apply(Snd, arguments); Snd.crowd(); };
+}

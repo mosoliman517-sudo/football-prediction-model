@@ -883,7 +883,7 @@ const REDUCED = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduc
 const Snd = (() => {
   let ctx = null, master = null, level = 1;           // 0 off, 1 soft, 2 full
   try { const v = localStorage.getItem("arena-nba-sound"); if (v != null) level = +v; } catch (e) { /* storage unavailable */ }
-  const gainFor = () => [0, 0.5, 1][level];
+  const gainFor = () => [0, 0.5, 1][level] * (window.MIXFX == null ? 1 : window.MIXFX);
   function init() {
     if (ctx) { if (ctx.state === "suspended") ctx.resume(); return true; }
     try {
@@ -910,14 +910,14 @@ const Snd = (() => {
     const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     s.connect(f); f.connect(g); g.connect(master); s.start(t0);
   }
-  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
-  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
+  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 3, 5, 6, 7, 10] };
+  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 57 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "triangle" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
   /* Generative background music: calm lobby loop and a slightly more driven game loop. Nothing is downloaded; it is played live. */
   let mus = 1, mg = null, mode = "lobby", want = "lobby", timer = null, nextT = 0, step = 0, pend = null;
   try { const v = localStorage.getItem("arena-nba-music"); if (v != null) mus = +v; } catch (e) { /* storage unavailable */ }
-  const LOBBY = { bpm: 68, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
-  const GAME = { bpm: 88, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
+  const LOBBY = { bpm: 84, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
+  const GAME = { bpm: 108, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
   function mnote(n, t0, dur, type, vol, att) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(midi(n), t0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + dur + 0.05); }
   function mkick(t0, vol) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(42, t0 + 0.14); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + 0.25); }
   function mhat(t0, vol) { const len = Math.floor(ctx.sampleRate * 0.05), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ctx.createBufferSource(); s.buffer = b; const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6500; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(mg); s.start(t0); }
@@ -927,7 +927,7 @@ const Snd = (() => {
     else ch.slice(1).forEach((n) => mnote(n, t0, beat * 1.9, "triangle", 0.012, 0.05));
     mnote(ch[0] - 12, t0, beat * (game ? 1.6 : 3.4), "sine", game ? 0.07 : 0.06, 0.03);
     if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.07); mkick(t0 + beat * 2, 0.05); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.012)); }
-    else [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.006));
+    else { mkick(t0, 0.035); mkick(t0 + beat * 2, 0.03); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.008)); }   // a soft arena thump under the lobby loop
     const eighth = beat / 2, n8 = 8;
     for (let i = 0; i < n8; i++) {
       const sw = i % 2 ? eighth * 0.12 : 0, tt = t0 + i * eighth + sw;
@@ -940,13 +940,15 @@ const Snd = (() => {
     if (nextT < now) nextT = now + 0.05;
     while (nextT < now + 1.2) { bar(mode, step, nextT, spb); step++; nextT += spb * 4; }
   }
-  function mStart() { if (!mus || level === 0 || !init()) return; if (!mg) { mg = ctx.createGain(); mg.gain.value = 0.0001; mg.connect(master); } if (!timer) { mode = want; nextT = ctx.currentTime + 0.1; step = 0; timer = setInterval(sched, 300); sched(); } mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.8); }
+  function mStart() { if (!mus || level === 0 || !init()) return; if (!mg) { mg = ctx.createGain(); mg.gain.value = 0.0001; mg.connect(master); } if (!timer) { mode = want; nextT = ctx.currentTime + 0.1; step = 0; timer = setInterval(sched, 300); sched(); } mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.8); }
   function mStop() { if (mg && ctx) { mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); } clearInterval(timer); timer = null; }
-  function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.6); }, 700); }
+  function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.6); }, 700); }
   document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else if (level) ctx.resume(); });
   const vib = (p) => { try { if (level && navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } };
   return {
     get level() { return level; },
+    remix() { if (master) master.gain.value = gainFor(); if (mg && timer) mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.1); },
+    _n: { note: (...a) => note(...a), noise: (...a) => noise(...a), run: (f) => run(f) },
     cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-nba-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
     unlock() { if (level) { init(); mStart(); } },
     get music() { return mus; }, mode(m) { mSet(m); },

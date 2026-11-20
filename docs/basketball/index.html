@@ -836,7 +836,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 10:11 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 10:16 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -883,7 +883,7 @@ const REDUCED = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduc
 const Snd = (() => {
   let ctx = null, master = null, level = 1;           // 0 off, 1 soft, 2 full
   try { const v = localStorage.getItem("arena-nba-sound"); if (v != null) level = +v; } catch (e) { /* storage unavailable */ }
-  const gainFor = () => [0, 0.5, 1][level];
+  const gainFor = () => [0, 0.5, 1][level] * (window.MIXFX == null ? 1 : window.MIXFX);
   function init() {
     if (ctx) { if (ctx.state === "suspended") ctx.resume(); return true; }
     try {
@@ -910,14 +910,14 @@ const Snd = (() => {
     const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     s.connect(f); f.connect(g); g.connect(master); s.start(t0);
   }
-  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
-  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
+  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 3, 5, 6, 7, 10] };
+  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 57 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "triangle" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
   /* Generative background music: calm lobby loop and a slightly more driven game loop. Nothing is downloaded; it is played live. */
   let mus = 1, mg = null, mode = "lobby", want = "lobby", timer = null, nextT = 0, step = 0, pend = null;
   try { const v = localStorage.getItem("arena-nba-music"); if (v != null) mus = +v; } catch (e) { /* storage unavailable */ }
-  const LOBBY = { bpm: 68, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
-  const GAME = { bpm: 88, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
+  const LOBBY = { bpm: 84, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
+  const GAME = { bpm: 108, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
   function mnote(n, t0, dur, type, vol, att) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(midi(n), t0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + dur + 0.05); }
   function mkick(t0, vol) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(42, t0 + 0.14); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + 0.25); }
   function mhat(t0, vol) { const len = Math.floor(ctx.sampleRate * 0.05), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ctx.createBufferSource(); s.buffer = b; const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6500; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(mg); s.start(t0); }
@@ -927,7 +927,7 @@ const Snd = (() => {
     else ch.slice(1).forEach((n) => mnote(n, t0, beat * 1.9, "triangle", 0.012, 0.05));
     mnote(ch[0] - 12, t0, beat * (game ? 1.6 : 3.4), "sine", game ? 0.07 : 0.06, 0.03);
     if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.07); mkick(t0 + beat * 2, 0.05); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.012)); }
-    else [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.006));
+    else { mkick(t0, 0.035); mkick(t0 + beat * 2, 0.03); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.008)); }   // a soft arena thump under the lobby loop
     const eighth = beat / 2, n8 = 8;
     for (let i = 0; i < n8; i++) {
       const sw = i % 2 ? eighth * 0.12 : 0, tt = t0 + i * eighth + sw;
@@ -940,13 +940,15 @@ const Snd = (() => {
     if (nextT < now) nextT = now + 0.05;
     while (nextT < now + 1.2) { bar(mode, step, nextT, spb); step++; nextT += spb * 4; }
   }
-  function mStart() { if (!mus || level === 0 || !init()) return; if (!mg) { mg = ctx.createGain(); mg.gain.value = 0.0001; mg.connect(master); } if (!timer) { mode = want; nextT = ctx.currentTime + 0.1; step = 0; timer = setInterval(sched, 300); sched(); } mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.8); }
+  function mStart() { if (!mus || level === 0 || !init()) return; if (!mg) { mg = ctx.createGain(); mg.gain.value = 0.0001; mg.connect(master); } if (!timer) { mode = want; nextT = ctx.currentTime + 0.1; step = 0; timer = setInterval(sched, 300); sched(); } mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.8); }
   function mStop() { if (mg && ctx) { mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); } clearInterval(timer); timer = null; }
-  function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9, ctx.currentTime, 0.6); }, 700); }
+  function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.6); }, 700); }
   document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else if (level) ctx.resume(); });
   const vib = (p) => { try { if (level && navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } };
   return {
     get level() { return level; },
+    remix() { if (master) master.gain.value = gainFor(); if (mg && timer) mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.1); },
+    _n: { note: (...a) => note(...a), noise: (...a) => noise(...a), run: (f) => run(f) },
     cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-nba-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
     unlock() { if (level) { init(); mStart(); } },
     get music() { return mus; }, mode(m) { mSet(m); },
@@ -4835,6 +4837,14 @@ S.abTab = "look";
 document.addEventListener("input", (e) => { if (e.target.id !== "nbLk") return; $("#nbLkSug").innerHTML = nbLkSearch(e.target.value).map((x) => `<button type="button" class="chip" data-nbl="${esc(x.k)}">${esc(x.label)} <span class="fine">${esc(x.sub)}</span></button>`).join(""); });
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbl]"); if (!b) return; const [k, v] = b.dataset.nbl.split("|"); $("#nbLkRes").innerHTML = k === "p" ? nbLkPlayer(+v) : nbLkTeam(v); $("#nbLkRes").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
 
+/* ---------- basketball sound effects: a swish for a right answer, a buzzer for a wrong one, a crowd swell for a win ---------- */
+{ const n = Snd._n;
+  Snd.swish = () => n.run((t) => { n.noise(t, 0.28, 2500, 7000, 0.05, 1.5); n.note(96, t + 0.02, 0.16, "sine", 0.025); n.note(103, t + 0.06, 0.16, "sine", 0.02); });
+  Snd.buzzer = () => n.run((t) => { n.note(43, t, 0.5, "sawtooth", 0.07); n.note(43.2, t, 0.5, "square", 0.03); n.noise(t, 0.5, 200, 400, 0.03, 0.5); });
+  Snd.crowd = () => n.run((t) => { n.noise(t, 1.6, 400, 1400, 0.045, 0.4); n.noise(t + 0.4, 1.4, 900, 2400, 0.025, 0.4); });
+  const r = Snd.right, w = Snd.wrong, wi = Snd.win; Snd.right = function () { r.apply(Snd, arguments); Snd.swish(); }; Snd.wrong = function () { w.apply(Snd, arguments); Snd.buzzer(); }; Snd.win = function () { wi.apply(Snd, arguments); Snd.crowd(); };
+}
+
 /* ===== two players on one device can type their own names (shared by football and basketball) ===== */
 const PN = ["Player 1", "Player 2"];
 try { PN[0] = localStorage.getItem("bk_pn1") || PN[0]; PN[1] = localStorage.getItem("bk_pn2") || PN[1]; } catch (e) { /* storage blocked */ }
@@ -4851,6 +4861,24 @@ function askNames(then) {
 }
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button.mode"); if (!b || b.dataset.named || !/one device/i.test(b.textContent)) return; e.stopPropagation(); e.preventDefault(); askNames(() => { b.dataset.named = "1"; b.click(); delete b.dataset.named; }); }, true);
 nameFix(document.body);
+
+/* ===== audio mixer and announcer voice (football and basketball) ===== */
+const Mix = { fx: 1, music: 1, voice: 0.9, say: false };
+try { Object.assign(Mix, JSON.parse(localStorage.getItem("bk_mix") || "{}")); } catch (e) { /* storage blocked */ }
+function applyMix() { window.MIXFX = Mix.fx; window.MIXMUS = Mix.music; try { Snd.remix(); } catch (e) { /* audio not started */ } try { localStorage.setItem("bk_mix", JSON.stringify(Mix)); } catch (e) { /* storage blocked */ } }
+applyMix();
+const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level === 0) return; try { const u = new SpeechSynthesisUtterance(text), vs = speechSynthesis.getVoices(); u.volume = Mix.voice; u.rate = 1.04; const v = vs.find((x) => /^en/i.test(x.lang) && /Samantha|Google US|Daniel|Natural|Aria|Alex/i.test(x.name)) || vs.find((x) => /^en/i.test(x.lang)); if (v) u.voice = v; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { /* no voice */ } } };
+{ const pick = (a) => a[Math.floor(Math.random() * a.length)], win0 = Snd.win, right0 = Snd.right;
+  Snd.win = function () { win0.apply(Snd, arguments); Voice.say(pick(["Winner!", "Brilliant!", "Nice one!", "What a finish!"])); };
+  Snd.right = function () { right0.apply(Snd, arguments); try { const n = Q && Q.s && Q.s.streak; if (n >= 3 && n % 3 === 0) Voice.say("Streak of " + n); } catch (e) { /* no quiz */ } };
+  const toast0 = toast; toast = function (html, kind) { try { const txt = String(html).replace(/<[^>]*>/g, " "); if (/Rank up/i.test(txt)) Voice.say(txt.replace(/\s+/g, " ").trim()); else if (/Secret found/i.test(txt)) Voice.say("Secret found. The Notebook."); } catch (e) { /* ok */ } return toast0.apply(this, arguments); };
+}
+{ const rs0 = renderSettings;
+  renderSettings = function () { rs0(); const el = $("#setPage"); if (!el || document.getElementById("mixCard")) return; const sl = (id, label, v) => `<label class="fine" style="display:grid;grid-template-columns:96px 1fr 40px;gap:10px;align-items:center;margin:8px 0">${label}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}" style="width:100%"><span class="num" id="${id}V">${Math.round(v * 100)}%</span></label>`;
+    el.insertAdjacentHTML("beforeend", `<div class="card" id="mixCard"><h3>Audio mixer</h3><p class="fine">Set effects, music and voice separately. Everything is made live in your browser, nothing is downloaded.</p>${sl("mixFx", "Effects", Mix.fx)}${sl("mixMus", "Music", Mix.music)}${sl("mixVoice", "Voice", Mix.voice)}<div class="row" style="margin-top:6px"><button class="chip" id="mixSay" type="button" aria-pressed="${Mix.say}">Announcer voice: ${Mix.say ? "On" : "Off"}</button><button class="chip" id="mixTest" type="button">Test sound</button></div></div>`); };
+  document.addEventListener("input", (e) => { const m = { mixFx: "fx", mixMus: "music", mixVoice: "voice" }[e.target.id]; if (!m) return; Mix[m] = e.target.value / 100; const l = document.getElementById(e.target.id + "V"); if (l) l.textContent = e.target.value + "%"; applyMix(); });
+  document.addEventListener("click", (e) => { if (e.target.id === "mixSay") { Mix.say = !Mix.say; applyMix(); e.target.setAttribute("aria-pressed", Mix.say); e.target.textContent = "Announcer voice: " + (Mix.say ? "On" : "Off"); if (Mix.say) Voice.say("Game on"); } else if (e.target.id === "mixTest") { Snd.right(); setTimeout(() => Snd.win(), 500); } });
+}
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
  route(); setTimeout(finishSplash, 300);

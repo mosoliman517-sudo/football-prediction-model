@@ -1098,6 +1098,7 @@ function route(ev) {
   if (h === "admin") return showAdmin(ev);
   if (h === "about") return showAbout(ev);
   if (h === "settings") return showSettings(ev);
+  if (h === "daily" && typeof showDaily === "function") return showDaily(ev);
   if (h === "discover") return showDiscover(ev);
   if (h === "album") return showAlbum(ev);
   let mode = null, rest = h;

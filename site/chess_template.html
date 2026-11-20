@@ -97,6 +97,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .rv{display:grid;grid-template-columns:1fr;gap:12px}.rvgraph{width:100%;height:90px;background:#1b251f;border-radius:10px}.rvbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}.rvbtns .btn{min-width:48px;justify-content:center}
 .cls{display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;font:800 11px/18px Inter;color:#fff;vertical-align:middle}.cls.best{background:#5ee6a8;color:#06281a}.cls.good{background:#8fb37a}.cls.inaccuracy{background:#e8c35a;color:#241c00}.cls.mistake{background:#ff9f45}.cls.blunder{background:#ff5b6e}
 .rvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.rvsum .tile b{font-size:24px}
+.cmodal{position:fixed;inset:0;z-index:99998;background:rgba(2,6,16,.72);display:flex;align-items:center;justify-content:center;padding:16px}.cmodal[hidden]{display:none}.cmodal .sheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:440px;width:100%;box-shadow:0 30px 80px #000a}.cmodal input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px 12px;font:15px Inter;margin:4px 0}.authf{display:grid;gap:4px;margin:10px 0}
+.tb tr.me td{background:rgba(232,195,90,.14);font-weight:700}.dots{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}.dd{width:18px;height:18px;border-radius:5px;background:var(--panel2);border:1px solid var(--line)}.dd.some{background:rgba(232,195,90,.45)}.dd.full{background:var(--gold)}.dd.today{outline:2px solid var(--ink)}.bigstreak{font:800 30px Inter;display:flex;gap:8px;align-items:center}.gcard.done{outline:2px solid var(--ok)}
 #cyb{display:none}
 :root[data-theme=cyber]{--bg:#060a18;--panel:#0d1430;--panel2:#131d44;--ink:#e6f0ff;--muted:#8da2d0;--gold:#3df5ff;--ok:#4dffb0;--bad:#ff4d8d;--line:#22346b}
 :root[data-theme=cyber] body{background:linear-gradient(rgba(61,245,255,.055) 1px,transparent 1px) 0 0/46px 46px,linear-gradient(90deg,rgba(61,245,255,.055) 1px,transparent 1px) 0 0/46px 46px,radial-gradient(900px 480px at 50% -10%,rgba(61,245,255,.17),transparent 70%),radial-gradient(700px 400px at 100% 100%,rgba(255,77,141,.13),transparent 70%),var(--bg)}
@@ -187,7 +189,7 @@ table.tb{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit
 </style>
 <div id="splash" role="status" aria-live="polite"><div class="cs-brand"><span id="spLogo"></span>ball<b>knowledge</b> chess</div><div class="cs-art" id="csArt"></div><div class="cs-foot"><div class="cs-tip" id="csTip">Loading…</div><div class="cs-bar"><i id="csBar"></i></div><div class="cs-meta"><span id="csName"></span><span class="rar" id="csRar"></span><span class="cs-new" id="csNew"></span></div><div class="cs-meta" style="opacity:.7">Tap to skip</div></div></div>
 <div class="wrap">
- <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button><button class="pill" id="thBtn" type="button" title="Switch the look"><span id="thLab"></span></button></div>
+ <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button><button class="pill" id="thBtn" type="button" title="Switch the look"><span id="thLab"></span></button><button class="pill" id="acctBtn" type="button" title="Account"><span id="acctLab">Sign in</span></button></div>
  <main id="app"></main>
  <div class="foot">Games come from the Lichess open database (CC0): rated games, January 2024 (first 250 MB), official tournament broadcasts, and the puzzle database. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. Engine evaluations are Stockfish's, recorded in Lichess games. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser only.</div>
 </div>
@@ -254,7 +256,7 @@ const recLine = (x) => { if (x.id === "ai") { const r = store.get("ai_rec", null
 function wallHTML() { const tiles = PLAYERS.filter((p) => p.img).slice(0, 30).map((p) => `<img class="wt" src="${esc(p.img.replace("http://", "https://"))}?width=120" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`); return [0, 1, 2].map((r) => { const list = tiles.filter((_, i) => i % 3 === r); return `<div class="wrow ${r === 1 ? "rev" : ""}">${list.concat(list).join("")}</div>`; }).join(""); }
 function home() {
   rvStop(); clearInterval(st.timer); live = null; st = {}; $("#app").innerHTML = `<div class="hero"><div class="wall" aria-hidden="true">${wallHTML()}</div><div class="sec" style="margin-top:0">${ic("crown")}Chess, predicted and played</div><h1>ball<em>knowledge</em></h1><p class="sub" style="font-size:17px;max-width:600px">Out-call a model on real games, guess a grandmaster's next move, solve puzzles and test your level. Everything comes from real data; nothing is made up.</p>
-    <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button></div></div>`;
+    <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button><button class="door" data-go="daily"><div class="di">${ic("clock")}</div><div class="dname">Daily challenges</div><div class="dtag">A puzzle, a position to judge and a tactic to spot, new every day, with a streak.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
 }
 function hub(g) {
   clearInterval(st.timer); live = null; st = { hub: g }; const list = CG.filter((x) => x.g === g);
@@ -265,7 +267,7 @@ function intro(id) {
   $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="${x.g}">← Back</button></div><div class="card"><h2>${ic(x.ic)}${x.name}</h2><p class="sub">${x.tag}</p>${gp ? `<div class="chips" role="group" aria-label="Version">${gp.vers.map(([vid, l]) => `<button class="chip ${vid === id ? "on" : ""}" data-intro="${vid}" type="button">${l}</button>`).join("")}</div>` : ""}${id === "ai" ? "" : diffBar()}${id === "ai" ? `<p class="fine">Pick the AI's level inside the game.</p>` : ""}<div class="row"><button class="btn" data-go="${id}">Start</button><span class="fine">${recLine(x)}</span></div></div>`;
 }
 const backRow = (title, i, extra = "") => `<div class="row" style="justify-content:space-between"><h2>${ic(i)}${title}</h2><span class="fine">${extra}</span></div>`;
-const bestOf = (k) => store.get("best_" + k, 0), bump = (k, v) => { if (v > bestOf(k)) store.set("best_" + k, v); };
+const bestOf = (k) => store.get("best_" + k, 0), bump = (k, v) => { if (v > bestOf(k)) { store.set("best_" + k, v); Cloud.submit(k, v); } };
 /* ---------- Call it (rating model, Lichess sample) ---------- */
 const LEN = ["Short (under 30 moves)", "Medium (30 to 50)", "Long (over 50 moves)"], lenOf = (p) => (p < 60 ? 0 : p < 100 ? 1 : 2), RES = ["Black wins", "Draw", "White wins"];
 function callStart() { const gap = (x) => Math.abs(x[0] - x[1]), pool = GAMES.filter((x) => (DIFF === "easy" ? gap(x) >= 200 && gap(x) <= 500 : DIFF === "medium" ? gap(x) >= 90 && gap(x) < 250 : DIFF === "hard" ? gap(x) >= 30 && gap(x) < 120 : gap(x) < 50)); st = { game: "call", items: shuffle(pool.length >= 20 ? pool : GAMES.filter((x) => gap(x) <= 400)).slice(0, 5), i: 0, you: 0, mod: 0, pick: null, len: null, phase: "ask" }; callRender(); }
@@ -442,12 +444,13 @@ function puzzleMove(mv, pz) {
   else { live.c.undo(); pz.fail = true; pz.done = true; pz.ok = false; live.lock = true; live.last = null; st.msg = `Not that one. The answer was ${solSAN(pz)}.`; puzzleEnd(pz); }
 }
 function solSAN(pz) { const c = new Chess(pz.p.fen), m0 = pz.p.moves[0]; c.move({ from: m0.slice(0, 2), to: m0.slice(2, 4), promotion: m0[4] }); const m = pz.p.moves[1], r = c.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] }); return r ? r.san : m; }
-function puzzlePaint() { const pz = st.pz, g = st.game; const top = g === "mate" ? backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<div class="row" style="margin-bottom:6px">${[1, 2, 3].map((n) => `<button class="btn ${st.n === n ? "" : "ghost"}" data-mn="${n}">Mate in ${n}</button>`).join("")}</div>` : backRow("Estimate my Elo", "brain", `Puzzle ${st.k + 1} of ${st.total}`); liveRender(top + `<p class="sub">${sideName(live.c)} to move${g === "mate" ? ` and mate in ${st.n}` : ""}. Click a piece, then a square.${g === "elo" ? "" : ""}</p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span></div>`, null, { moves: false }); }
+function puzzlePaint() { const pz = st.pz, g = st.game; const top = st.daily ? backRow("Daily puzzle", "bolt", "Same for everyone today") : g === "mate" ? backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<div class="row" style="margin-bottom:6px">${[1, 2, 3].map((n) => `<button class="btn ${st.n === n ? "" : "ghost"}" data-mn="${n}">Mate in ${n}</button>`).join("")}</div>` : backRow("Estimate my Elo", "brain", `Puzzle ${st.k + 1} of ${st.total}`); liveRender(top + `<p class="sub">${sideName(live.c)} to move${g === "mate" && !st.daily ? ` and mate in ${st.n}` : ""}. Click a piece, then a square.${g === "elo" ? "" : ""}</p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span></div>`, null, { moves: false }); }
 function mateStart(n) { st = { game: "mate", streak: st.streak || 0, n: n || 2 }; mateNext(); }
 const pzBand = (p) => (DIFF === "easy" ? p.rating < 1300 : DIFF === "medium" ? p.rating >= 1200 && p.rating < 1800 : DIFF === "hard" ? p.rating >= 1700 && p.rating < 2200 : p.rating >= 2100);
 function mateNext() { let pool = PZ.filter((p) => p.themes.includes("mateIn" + st.n) && pzBand(p)); if (pool.length < 5) pool = PZ.filter((p) => p.themes.includes("mateIn" + st.n)); puzzleLoad(rnd(pool)); st.msg = ""; puzzlePaint(); }
 function puzzleEnd(pz) {
   setTimeout(() => { const b = document.getElementById("bd"); if (b) { b.classList.remove("flashok", "flashbad"); void b.offsetWidth; b.classList.add(pz.ok ? "flashok" : "flashbad"); } }, 30);
+  if (st.daily) { dailyMark("p", pz.ok ? 1 : 0); liveRender(backRow("Daily puzzle", "bolt", "") + `<p class="sub"><b>${pz.ok ? "Solved!" : "Missed it."}</b> A new puzzle arrives tomorrow.</p>`, `<div class="row"><button class="btn" data-go="daily">Back to daily</button></div>`); return; }
   if (st.game === "mate") { st.streak = pz.ok ? st.streak + 1 : 0; bump("mate", st.streak); st.msg = pz.ok ? "Checkmate!" : st.msg; liveRender(backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<p class="sub"><b>${pz.ok ? "Solved!" : "Missed it."}</b></p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span><button class="btn" id="mnext">Next puzzle</button></div>`); }
   else eloAfter(pz);
 }
@@ -846,7 +849,7 @@ function hbPaint() {
   else {
     const t = cur.ev, d = Math.abs(s.gw - t.w), pts = s.pts;
     msg = `<p class="sub"><b>${d < 6 ? "Spot on." : d < 15 ? "Close." : d < 30 ? "A bit off." : "Way off."}</b> Stockfish says <b>${fmtEv(t)}</b> (White's winning chances ${Math.round(t.w)}%). You said <b>${evTxt(cpFromW(s.gw))}</b>. <span class="fine">Best line: ${esc(pvLine(cur.c.fen, cur.l[0].pv, 5))}</span></p>`;
-    btn = `<div class="row"><b>+${pts}</b><button class="btn" id="hbNext" type="button">${s.round >= s.rounds ? "See results" : "Next position"}</button></div>`;
+    btn = `<div class="row"><b>+${pts}</b><button class="btn" id="hbNext" type="button">${s.daily ? "Back to daily" : s.round >= s.rounds ? "See results" : "Next position"}</button></div>`;
   }
   $("#app").innerHTML = `<div class="card rvcard" style="max-width:640px">${head}${msg}<div class="rvbd"><div class="evv hb" id="hbBar"><i id="hbFill" style="height:${s.phase === "reveal" ? s.gw : s.gw || 50}%"></i>${s.phase === "reveal" ? `<u class="evm" style="bottom:${cur.ev.w}%"></u>` : ""}</div><div class="lvwrap" id="rvWrap">${s.phase === "load" ? `<div class="board" style="opacity:.45"></div>` : boardHTML(c, {})}</div></div>${btn}</div>`;
 }
@@ -858,7 +861,7 @@ document.addEventListener("pointerdown", (e) => {
 document.addEventListener("click", (e) => {
   const t = e.target.closest && e.target.closest("button"); if (!t || st.game !== "hbar") return;
   if (t.id === "hbLock") { const d = Math.abs(st.gw - st.cur.ev.w); st.pts = Math.max(0, Math.round(100 - d * 3)); st.score += st.pts; st.phase = "reveal"; st.log.push([evTxt(cpFromW(st.gw)), fmtEv(st.cur.ev), st.pts]); Snd.ok && Snd.ok(); hbPaint(); }
-  else if (t.id === "hbNext") { if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Human bar", "chart", st.score, 500, "hbar", `<table class="tb"><tr><th>Round</th><th>You</th><th>Stockfish</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">Stockfish 10, searched to about 11 moves deep, so close calls can differ from a stronger engine.</p>`, "hbar"); else hbNext(); }
+  else if (t.id === "hbNext") { if (st.daily) { dailyMark("h", st.score); return dailyPage(); } if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Human bar", "chart", st.score, 500, "hbar", `<table class="tb"><tr><th>Round</th><th>You</th><th>Stockfish</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">Stockfish 10, searched to about 11 moves deep, so close calls can differ from a stronger engine.</p>`, "hbar"); else hbNext(); }
 });
 
 /* ---------- Spot the tactic ---------- */
@@ -878,7 +881,7 @@ function tactPos(minNet) {
 }
 function tactStart() { st = { game: "tact", round: 0, score: 0, rounds: 6, log: [], minNet: dpick(300, 200, 100, 100), secs: dpick(30, 22, 16, 12) }; tactNext(); }
 function tactNext() {
-  const s = st; s.round++; s.pos = tactPos(s.minNet); if (!s.pos) { $("#app").innerHTML = `<div class="card">${backRow("Spot the tactic", "target", "")}<p class="sub">I could not find a position. Try again.</p><button class="btn" data-go="tact">Retry</button></div>`; return; }
+  const s = st; s.round++; s.pos = s.daily ? seeded(todayK() + "t", () => tactPos(s.minNet)) : tactPos(s.minNet); if (!s.pos) { $("#app").innerHTML = `<div class="card">${backRow("Spot the tactic", "target", "")}<p class="sub">I could not find a position. Try again.</p><button class="btn" data-go="tact">Retry</button></div>`; return; }
   s.marks = new Set(); s.phase = "ask"; s.left = s.secs * 1000; s.t0 = Date.now(); clearInterval(s.timer); s.timer = setInterval(tactTick, 100); tactPaint();
 }
 function tactTick() { const s = st; if (s.game !== "tact" || s.phase !== "ask") return clearInterval(s.timer); s.left = Math.max(0, s.secs * 1000 - (Date.now() - s.t0)); const b = $("#tbar"), l = $("#tleft"); if (b) b.style.width = (100 * s.left / (s.secs * 1000)) + "%"; if (l) l.textContent = Math.ceil(s.left / 1000) + "s"; if (s.left <= 0) tactReveal(); }
@@ -891,14 +894,14 @@ function tactReveal() {
   const free = new Set(s.pos.free), hit = [...s.marks].filter((x) => free.has(x)), bad = [...s.marks].filter((x) => !free.has(x)), miss = s.pos.free.filter((x) => !s.marks.has(x));
   const bonus = !bad.length && !miss.length ? Math.round(40 * s.left / (s.secs * 1000)) : 0, pts = Math.max(0, hit.length * 100 - bad.length * 60 + bonus); s.score += pts; s.log.push([hit.length, free.size, bad.length, pts]);
   document.querySelectorAll("#rvWrap i[data-sq]").forEach((el) => { const q = el.dataset.sq; el.classList.remove("mk"); if (hit.includes(q)) el.classList.add("hit"); else if (bad.includes(q)) el.classList.add("fp"); else if (miss.includes(q)) el.classList.add("ms"); });
-  const row = document.querySelector("#app .row:last-child"); row.innerHTML = `<span><b>+${pts}</b> · ${hit.length} of ${free.size} found${bad.length ? `, ${bad.length} wrong` : ""}${bonus ? `, +${bonus} speed` : ""}</span><button class="btn" id="tactNext" type="button">${s.round >= s.rounds ? "See results" : "Next position"}</button>`;
+  const row = document.querySelector("#app .row:last-child"); row.innerHTML = `<span><b>+${pts}</b> · ${hit.length} of ${free.size} found${bad.length ? `, ${bad.length} wrong` : ""}${bonus ? `, +${bonus} speed` : ""}</span><button class="btn" id="tactNext" type="button">${s.daily ? "Back to daily" : s.round >= s.rounds ? "See results" : "Next position"}</button>`;
   Snd.ok && (!bad.length && !miss.length ? Snd.ok() : 0);
 }
 document.addEventListener("click", (e) => {
   if (st.game !== "tact") return; const sq = e.target.closest && e.target.closest("#rvWrap i[data-sq]");
   if (sq && st.phase === "ask") { const q = sq.dataset.sq; if (st.marks.has(q)) { st.marks.delete(q); sq.classList.remove("mk"); } else { st.marks.add(q); sq.classList.add("mk"); } return; }
   const t = e.target.closest && e.target.closest("button"); if (!t) return;
-  if (t.id === "tactDone") tactReveal(); else if (t.id === "tactNext") { if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Spot the tactic", "target", st.score, 6 * 340, "tact", `<table class="tb"><tr><th>Position</th><th>Found</th><th>Wrong taps</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]} / ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "tact"); else tactNext(); }
+  if (t.id === "tactDone") tactReveal(); else if (t.id === "tactNext") { if (st.daily) { dailyMark("t", st.score); return dailyPage(); } if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Spot the tactic", "target", st.score, 6 * 340, "tact", `<table class="tb"><tr><th>Position</th><th>Found</th><th>Wrong taps</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]} / ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "tact"); else tactNext(); }
 });
 
 /* ---------- Blindfold memory ---------- */
@@ -970,7 +973,102 @@ document.addEventListener("click", (e) => {
   else if (t.id === "egNext") { live = null; if (st.round >= st.rounds) $("#app").innerHTML = sumCard("Endgame verdict", "crown", st.score, 500, "endg", `<table class="tb"><tr><th>#</th><th>You said</th><th>Stockfish</th><th>Eval</th><th>Points</th></tr>${st.log.map((r, i) => `<tr><td>${i + 1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table>`, "endg"); else { st.result = ""; egNext(); } }
 });
 
-const GO = { hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+/* =====================================================================================================================
+   Chess accounts and leaderboards (a separate `chess` schema in the same Supabase project; logins are shared with the other sports),
+   and the Daily challenges page (three things, the same for everyone today, with a streak).
+   ===================================================================================================================== */
+const mb32 = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const hashS = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+const seeded = (key, fn) => { const o = Math.random; Math.random = mb32(hashS(key)); try { return fn(); } finally { Math.random = o; } };
+const todayK = () => new Date().toISOString().slice(0, 10);
+const weekK = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return t.getUTCFullYear() * 100 + Math.ceil(((t - y) / 864e5 + 1) / 7); };
+const Cloud = {
+  cfg: DATA.board || null, session: null, nick: store.get("nick", ""), live: null,
+  get on() { return !!(this.cfg && this.cfg.url && this.cfg.key); },
+  get signedIn() { return !!(this.session && this.session.user); },
+  hdr(t) { return { apikey: this.cfg.key, Authorization: "Bearer " + (t || this.cfg.key), "Content-Type": "application/json", "Accept-Profile": "chess", "Content-Profile": "chess" }; },
+  authHdr(t) { return { apikey: this.cfg.key, Authorization: "Bearer " + (t || this.cfg.key), "Content-Type": "application/json" }; },
+  load() { try { const s = JSON.parse(localStorage.getItem("arena-session") || "null"); if (s && s.refresh_token) this.session = s; } catch (e) { /* storage unavailable */ } },
+  persist() { try { if (this.session) localStorage.setItem("arena-session", JSON.stringify(this.session)); else localStorage.removeItem("arena-session"); } catch (e) { /* storage unavailable */ } },
+  take(j) { if (!j || !j.access_token) return false; this.session = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600), user: { id: j.user.id, email: j.user.email } }; this.persist(); return true; },
+  async auth(path, body) { const r = await fetch(`${this.cfg.url}/auth/v1/${path}`, { method: "POST", headers: this.authHdr(), body: JSON.stringify(body) }); let j = {}; try { j = await r.json(); } catch (e) { /* empty body */ } return { ok: r.ok, j }; },
+  err(j) { return (j && (j.error_description || j.msg || j.message)) || "Something went wrong. Please try again."; },
+  async token() { if (!this.session) return null; if (this.session.expires_at - 60 > Date.now() / 1000) return this.session.access_token; const { ok, j } = await this.auth("token?grant_type=refresh_token", { refresh_token: this.session.refresh_token }); if (ok && this.take(j)) return this.session.access_token; this.session = null; this.persist(); acctPaint(); return null; },
+  async signUp(email, pw) { const { ok, j } = await this.auth("signup", { email, password: pw }); if (!ok) return { error: this.err(j) }; if (this.take(j)) { await this.after(); return { ok: true }; } return { ok: true, confirm: true }; },
+  async signIn(email, pw) { const { ok, j } = await this.auth("token?grant_type=password", { email, password: pw }); if (!ok || !this.take(j)) return { error: this.err(j) }; await this.after(); return { ok: true }; },
+  async signOut() { try { if (this.session) await fetch(`${this.cfg.url}/auth/v1/logout`, { method: "POST", headers: this.authHdr(this.session.access_token) }); } catch (e) { /* offline */ } this.session = null; this.persist(); this.nick = ""; store.set("nick", ""); acctPaint(); },
+  async rpc(fn, args, tok) { try { const r = await fetch(`${this.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: this.hdr(tok), body: JSON.stringify(args || {}) }); if (!r.ok) { this.live = false; return null; } this.live = true; const t = await r.text(); return t ? JSON.parse(t) : null; } catch (e) { this.live = false; return null; } },
+  async setNick(n) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; const j = await this.rpc("set_nickname", { p_nick: n }, t); if (j === "ok") { this.nick = n; store.set("nick", n); acctPaint(); return { ok: true }; } if (j == null) return { error: "Leaderboards are not switched on yet. Your nickname will work once they are." }; return { error: j === "taken" ? "That nickname is taken. Try another." : "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." }; },
+  async after() { await this.pull(); acctPaint(); if (!this.nick) { const base = ((this.session.user.email || "player").split("@")[0].replace(/[^A-Za-z0-9]/g, "").slice(0, 10) || "player").padEnd(3, "x"); for (let k = 0; k < 5; k++) { const r = await this.setNick(k ? base + Math.floor(10 + Math.random() * 990) : base); if (r.ok || /not switched/.test(r.error || "")) break; } } await this.push(); },
+  bests() { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("bkc_best_")) { try { o[k.slice(4)] = JSON.parse(localStorage.getItem(k)); } catch (e) { /* skip */ } } } return o; },
+  async pull() { const t = await this.token(); if (!t) return; try { const r = await fetch(`${this.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); const d = rows[0] && rows[0].data; if (d) Object.entries(d).forEach(([k, v]) => { if (k.startsWith("best_") && typeof v === "number" && v > store.get(k, 0)) store.set(k, v); }); } catch (e) { /* offline */ } },
+  async push() { const t = await this.token(); if (!t) return; try { await fetch(`${this.cfg.url}/rest/v1/progress`, { method: "POST", headers: { ...this.hdr(t), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: this.session.user.id, data: this.bests(), updated_at: new Date().toISOString() }) }); } catch (e) { /* offline */ } },
+  async submit(game, score) {
+    if (!this.on || !this.signedIn || !/^[a-z0-9_]{2,24}$/.test(game)) return; const t = await this.token(); if (!t) return;
+    try { await fetch(`${this.cfg.url}/rest/v1/results`, { method: "POST", headers: { ...this.hdr(t), Prefer: "return=minimal" }, body: JSON.stringify({ game, score, week: weekK(), day: todayK() }) }); clearTimeout(this.pt); this.pt = setTimeout(() => this.push(), 3000); } catch (e) { /* offline: the best stays on this device */ }
+  },
+  async top(game, period) { return this.on ? this.rpc("leaderboard", { p_game: game, p_period: period, p_week: weekK(), p_day: todayK() }) : null; },
+};
+Cloud.load();
+function acctPaint() { const b = document.getElementById("acctLab"); if (b) b.textContent = Cloud.signedIn ? (Cloud.nick || "Account") : "Sign in"; }
+function acctModal(mode) {
+  const up = mode === "up", m = document.getElementById("cmodal") || Object.assign(document.body.appendChild(document.createElement("div")), { id: "cmodal", className: "cmodal" });
+  if (!Cloud.on) { m.innerHTML = `<div class="sheet"><h2>${ic("user")}Accounts</h2><p class="sub">Accounts are not switched on for this copy of the site, so your results stay on this device.</p><div class="row"><button class="btn" data-cm="close" type="button">OK</button></div></div>`; m.hidden = false; return; }
+  if (Cloud.signedIn) { m.innerHTML = `<div class="sheet"><h2>${ic("user")}${esc(Cloud.nick || "Your account")}</h2><p class="fine">Signed in as ${esc(Cloud.session.user.email)}. Your best scores sync to your chess profile and appear on the leaderboards.</p><label class="fine">Nickname</label><div class="row"><input id="cNick" value="${esc(Cloud.nick)}" maxlength="16" placeholder="3 to 16 characters"><button class="btn" data-cm="nick" type="button">Save</button></div><p class="fine" id="cMsg"></p><div class="row"><button class="btn ghost" data-cm="out" type="button">Sign out</button><button class="btn ghost" data-cm="close" type="button">Close</button></div></div>`; m.hidden = false; return; }
+  m.innerHTML = `<div class="sheet"><h2>${ic("user")}${up ? "Create an account" : "Sign in"}</h2><p class="fine">Your football, basketball and chess profiles are separate, but one login works for all of them. Guests can keep playing without one.</p><div class="authf"><input id="cEmail" type="email" autocomplete="email" placeholder="Email"><input id="cPass" type="password" autocomplete="${up ? "new-password" : "current-password"}" placeholder="Password (6 or more characters)"></div><p class="fine" id="cMsg"></p><div class="row"><button class="btn" data-cm="${up ? "up" : "in"}" type="button">${up ? "Create account" : "Sign in"}</button><button class="btn ghost" data-cm="${up ? "swin" : "swup"}" type="button">${up ? "I have an account" : "Create an account"}</button><button class="btn ghost" data-cm="close" type="button">Cancel</button></div></div>`; m.hidden = false;
+}
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest && e.target.closest("[data-cm],#acctBtn"); if (!t) return; if (t.id === "acctBtn") return acctModal(Cloud.signedIn ? "in" : "in");
+  const k = t.dataset.cm, m = document.getElementById("cmodal"), msg = document.getElementById("cMsg");
+  if (k === "close") { m.hidden = true; return; } if (k === "swup") return acctModal("up"); if (k === "swin") return acctModal("in");
+  if (k === "out") { await Cloud.signOut(); m.hidden = true; return; }
+  if (k === "nick") { const r = await Cloud.setNick((document.getElementById("cNick").value || "").trim()); msg.textContent = r.ok ? "Saved." : r.error; return; }
+  if (k === "in" || k === "up") {
+    const email = (document.getElementById("cEmail").value || "").trim(), pw = document.getElementById("cPass").value || "";
+    if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = "Please enter a valid email address."; return; } if (pw.length < 6) { msg.textContent = "The password needs at least 6 characters."; return; }
+    t.disabled = true; msg.textContent = "One moment…"; const r = k === "up" ? await Cloud.signUp(email, pw) : await Cloud.signIn(email, pw); t.disabled = false;
+    if (r.error) { msg.textContent = r.error; return; } if (r.confirm) { msg.textContent = "Check your email to confirm the account, then sign in."; return; } m.hidden = true; if (st.game === "board") boardPage();
+  }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const m = document.getElementById("cmodal"); if (m) m.hidden = true; } });
+
+/* ---------- Leaderboards ---------- */
+const BOARDS = [["hbar", "Human bar", "points (of 500)"], ["tact", "Spot the tactic", "points"], ["blind", "Blindfold memory", "points (of 500)"], ["endg", "Endgame verdict", "points (of 500)"], ["next", "Next move", "best streak"], ["recog", "Who played it", "best streak"], ["blunder", "Blunder or fine?", "best streak"], ["open", "Name the opening", "best streak"], ["mate", "Mate puzzles", "best streak"], ["elo", "Estimate my Elo", "best estimate"], ["call", "Call it", "points ahead"], ["elite", "Real games", "points"], ["who", "Who is this player?", "points"]];
+function boardPage(game, period) {
+  clearInterval(st.timer); live = null; rvStop(); game = game || (st.game === "board" && st.bg) || "hbar"; period = period || (st.game === "board" && st.bp) || "all"; st = { game: "board", bg: game, bp: period };
+  const nm = (BOARDS.find((x) => x[0] === game) || [])[1] || game;
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("trophy")}Leaderboards</h2><p class="sub">Best scores from signed-in players. Each game has its own board.</p>
+    <div class="chips">${BOARDS.map(([id, n]) => `<button class="chip ${id === game ? "on" : ""}" data-bg="${id}" type="button">${n}</button>`).join("")}</div><div class="chips">${[["all", "All time"], ["week", "This week"], ["day", "Today"]].map(([id, n]) => `<button class="chip ${id === period ? "on" : ""}" data-bp="${id}" type="button">${n}</button>`).join("")}</div>
+    <div class="card" id="bdRows"><p class="fine"><span class="spin"></span> Loading ${esc(nm)}…</p></div>`;
+  Cloud.top(game, period).then((rows) => {
+    const el = document.getElementById("bdRows"); if (!el || st.game !== "board" || st.bg !== game || st.bp !== period) return;
+    if (rows == null) { el.innerHTML = `<p class="sub"><b>Leaderboards are not switched on yet.</b> Once the chess database is set up, signed-in players' best scores appear here. Your own bests are still saved on this device.</p>`; return; }
+    if (!rows.length) { el.innerHTML = `<p class="sub">Nobody has a score here yet. ${Cloud.signedIn ? "Be the first." : "Sign in and be the first."}</p>`; return; }
+    el.innerHTML = `<table class="tb"><tr><th>#</th><th>Player</th><th>${esc((BOARDS.find((x) => x[0] === game) || [, , "score"])[2])}</th></tr>${rows.map((r, i) => `<tr class="${r.nick === Cloud.nick ? "me" : ""}"><td>${i + 1}</td><td>${esc(r.nick)}</td><td>${Math.round(+r.value)}</td></tr>`).join("")}</table>`;
+  });
+}
+document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-bg],[data-bp]"); if (!t || st.game !== "board") return; boardPage(t.dataset.bg || st.bg, t.dataset.bp || st.bp); });
+
+/* ---------- Daily challenges: three things, the same for everyone today ---------- */
+const dGet = (k) => store.get("daily_" + k, {});
+function dailyMark(id, val) { const k = todayK(), d = dGet(k); if (d[id] != null) return; d[id] = val; store.set("daily_" + k, d); Cloud.submit("daily_" + id, val); }
+function dStreak() { let s = 0; const now = Date.now(); for (let k = 0; k < 400; k++) { const key = new Date(now - k * 864e5).toISOString().slice(0, 10); if (Object.keys(dGet(key)).length) s++; else if (k > 0) break; } return s; }
+const DAILIES = [["p", "Daily puzzle", "bolt", "Today's puzzle, the same for everyone. Find the winning moves.", "dp", (v) => (v ? "Solved" : "Missed")], ["h", "Daily bar", "chart", "One position. Drag the bar to Stockfish's evaluation.", "dh", (v) => v + " / 100"], ["t", "Daily tactic", "target", "One position. Tap every piece you could win for free.", "dt", (v) => v + " points"]];
+function dailyPage() {
+  clearInterval(st.timer); live = null; rvStop(); st = { game: "daily" }; const key = todayK(), d = dGet(key), n = DAILIES.filter((x) => d[x[0]] != null).length, streak = dStreak();
+  const dots = Array.from({ length: 14 }, (_, i) => { const k = new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10), c = Object.keys(dGet(k)).length; return `<i class="dd ${c >= 3 ? "full" : c ? "some" : ""} ${k === key ? "today" : ""}" title="${k}: ${c} of 3"></i>`; }).join("");
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("clock")}Daily challenges</h2><p class="sub">Three short challenges, the same for everyone, new every day. Do any one to keep your streak.</p>
+    <div class="card"><div class="row" style="justify-content:space-between"><div><div class="label">Streak</div><div class="bigstreak"><span class="flame">🔥</span> <b class="num">${streak}</b> day${streak === 1 ? "" : "s"}</div></div><div style="text-align:right"><div class="label">Today</div><b class="num" style="font-size:28px">${n} / 3</b></div></div><div class="dots">${dots}</div></div>
+    <div class="hubgrid" style="margin-top:12px">${DAILIES.map(([id, name, icn, tag, go, fmt]) => `<button class="gcard ${d[id] != null ? "done" : ""}" data-go="${go}"><div class="gi"><div class="di">${ic(icn)}</div></div><div class="gname">${name}</div><div class="gtag">${tag}</div><div class="grec">${d[id] != null ? "Done · " + fmt(d[id]) : "Play"}</div></button>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="dShare" type="button">Copy today's result</button><span class="fine" id="dMsg"></span></div>`;
+}
+document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("#dShare"); if (!t) return; const d = dGet(todayK()), txt = `ballknowledge chess daily ${todayK()}: ` + DAILIES.map(([id, name, , , , fmt]) => `${name} ${d[id] != null ? fmt(d[id]) : "-"}`).join(" · ") + ` · streak ${dStreak()}`; const done = (ok) => { const m = document.getElementById("dMsg"); if (m) m.textContent = ok ? "Copied." : txt; }; try { navigator.clipboard.writeText(txt).then(() => done(true), () => done(false)); } catch (err) { done(false); } });
+const dpStart = () => { const key = todayK(), pool = PZ.filter((p) => p.rating >= 1100 && p.rating < 1900 && p.themes.some((x) => /^mateIn[123]$/.test(x))); st = { game: "mate", streak: 0, n: 0, daily: "p" }; puzzleLoad(seeded(key + "p", () => rnd(pool))); st.msg = ""; puzzlePaint(); };
+const dhStart = () => { st = { game: "hbar", round: 0, score: 0, rounds: 1, log: [], daily: "h" }; st.pre = seeded(todayK() + "h", () => hbPick()); hbNext(); };
+const dtStart = () => { st = { game: "tact", round: 0, score: 0, rounds: 1, log: [], minNet: 200, secs: 25, daily: "t" }; tactNext(); };
+
+acctPaint(); if (Cloud.signedIn) Cloud.pull().then(acctPaint);
+const GO = { daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);

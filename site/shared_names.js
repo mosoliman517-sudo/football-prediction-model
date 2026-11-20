@@ -108,3 +108,33 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-door],[data-game],[data-group],.gcard,.gpick,.door,[data-crumb],#gamesBack,.mode")) sweep(); }, true);
   addEventListener("hashchange", sweep);
 })();
+
+/* ---- Daily challenges (football and basketball): today's three things, a streak and a 14-day calendar, built from what each sport already has ---- */
+(function dailyHub() {
+  if (typeof QUIZ_GAMES === "undefined" || typeof renderHome !== "function") return;
+  const nba = typeof NBH_DIFF !== "undefined";
+  const css = document.createElement("style"); css.textContent = `.dhd{width:18px;height:18px;border-radius:5px;background:var(--surface2,#222);border:1px solid var(--line,#fff3)}.dhd.some{background:var(--accent);opacity:.55}.dhd.full{background:var(--accent)}.dhd.today{outline:2px solid var(--ink)}.dhcard.done{outline:2px solid var(--accent)}.dhstreak{font:800 34px/1 var(--display,Inter),sans-serif;display:flex;gap:8px;align-items:center}`; document.head.appendChild(css);
+  const safe = (f) => { try { return !!f(); } catch (e) { return false; } };
+  const ITEMS = nba ? [
+    { n: "Daily 5", d: "Five real games, the same for everyone today. Call the score and the quarter winners.", slug: "games-all-leagues-nbdaily", ic: "#i-trophy", done: (k) => !!store.items["nbd_" + k] },
+    { n: "Question of the day", d: "A fun fact, a spotlight player and one question, the same for everyone.", slug: "discover", ic: "#i-bulb", done: (k) => !!store.items["dq_" + k] },
+    { n: "Play any game", d: "Any game counts. Rank the five, Name it, Over or under, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
+  ] : [
+    { n: "Daily 5", d: "Five real matches, the same for everyone today. Beat the model.", slug: "games-all-leagues-daily", ic: "#i-trophy", done: (k) => safe(() => dailyState("ALL", k).n === 5) },
+    { n: "Question of the day", d: "The daily feed: an on this day fact and a question, the same for everyone.", slug: "discover", ic: "#i-bulb", done: (k) => !!dfDays(prof())[k] },
+    { n: "Play any game", d: "Any game counts. Name it, Match recall, Higher or lower, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
+  ];
+  const count = (k) => ITEMS.filter((x) => x.done(k)).length, dayKey = (off) => new Date(Date.now() - off * 864e5).toISOString().slice(0, 10);
+  const streak = () => { let s = 0; for (let k = 0; k < 400; k++) { if (count(dayKey(k))) s++; else if (k > 0) break; } return s; };
+  window.showDaily = function (ev) {
+    S.code = null; S.mode = null; S.cur = null; setTheme("HOME", ev); ["#home", "#lobby", "#league", "#profilePage", "#albumPage", "#adminPage", "#aboutPage", "#setPage"].forEach((s) => { const e = $(s); if (e) e.hidden = true; });
+    const el = $("#discPage"); el.hidden = false; window.scrollTo(0, 0); const k = dayKey(0), n = count(k), st_ = streak();
+    const dots = Array.from({ length: 14 }, (_, i) => { const d = dayKey(13 - i), c = count(d); return `<i class="dhd ${c >= 3 ? "full" : c ? "some" : ""} ${d === k ? "today" : ""}" title="${d}: ${c} of 3"></i>`; }).join("");
+    el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Daily challenges</span></div></nav>
+      <div class="card abx"><div class="label">Every day</div><h2><svg class=ic><use href=#i-bulb></use></svg> Daily challenges</h2><p class="fine">Three short things, new every day. Do any one to keep your streak going.</p>
+      <div class="row" style="justify-content:space-between;margin:10px 0"><div><div class="label">Streak</div><div class="dhstreak">🔥 <span class="num">${st_}</span> <small style="font-size:15px;font-weight:600">day${st_ === 1 ? "" : "s"}</small></div></div><div style="text-align:right"><div class="label">Today</div><b class="num" style="font-size:30px">${n} / 3</b></div></div><div class="row" style="gap:6px;flex-wrap:wrap">${dots}</div></div>
+      <div class="hub" style="margin-top:12px">${ITEMS.map((x, i) => `<button type="button" class="gcard dhcard ${x.done(k) ? "done" : ""}" data-door="${x.slug}" style="--d:${i * 60}ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href="${x.ic}"></use></svg></span></div><div class="gname">${x.n}</div><div class="gtag">${x.d}</div><div class="grec num">${x.done(k) ? "Done today" : "Not done yet"}</div></button>`).join("")}</div>`;
+  };
+  const home = renderHome;
+  renderHome = function () { home.apply(this, arguments); const d = $("#doors"); if (d && !d.querySelector('[data-door="daily"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="daily"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="dname">Daily challenges</div><div class="dtag">Three short things, new every day, with a streak: ${streak()} day${streak() === 1 ? "" : "s"} so far.</div></button>`); };
+})();

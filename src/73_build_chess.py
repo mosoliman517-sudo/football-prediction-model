@@ -46,6 +46,8 @@ data = {"lookup": lookup, "model": model, "openings": openings, "players": playe
 import base64, glob
 pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(data:image/svg+xml;base64,{base64.b64encode(open(f,'rb').read()).decode()})}}" for f in sorted(glob.glob("01_data_chess/pieces/*.svg")))
 html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss)
+import os
+data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC: html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + html + "</html>"
 os.makedirs(os.path.dirname(OUT), exist_ok=True); open(OUT, "w", encoding="utf-8").write(html); print("wrote", OUT, f"{len(html)/1e6:.2f} MB")

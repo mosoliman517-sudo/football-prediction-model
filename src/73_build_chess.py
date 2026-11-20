@@ -38,8 +38,9 @@ print("elite games for the model:", len(em["games"]), "| with moves:", len(elite
 evs = sorted({g["event"] for g in allg}); evi = {e: i for i, e in enumerate(evs)}
 names = sorted({g["white"] for g in allg} | {g["black"] for g in allg}); ni = {n: i for i, n in enumerate(names)}
 kinds = {g["event"]: g["kind"] for g in allg}
+EXP = json.load(open("02_processed_data/chess_exp.json"))     # held-out expected White score per game (src/75)
 lookup = {"events": [{"n": e, "kind": kinds[e]} for e in evs], "players": names,
-          "games": [[evi[g["event"]], g["date"] if re.match(r"\d{4}-\d\d-\d\d", g["date"]) else "", ni[g["white"]], ni[g["black"]], {"1-0": 1, "0-1": 0, "1/2-1/2": 2}[g["result"]], g["we"], g["be"], str(g["round"]).split(".")[0], len(g["moves"]) // 2] for g in allg]}
+          "games": [[evi[g["event"]], g["date"] if re.match(r"\d{4}-\d\d-\d\d", g["date"]) else "", ni[g["white"]], ni[g["black"]], {"1-0": 1, "0-1": 0, "1/2-1/2": 2}[g["result"]], g["we"], g["be"], str(g["round"]).split(".")[0], len(g["moves"]) // 2, int(round(EXP[k] * 1000))] for k, g in enumerate(allg)]}
 print("lookup:", len(evs), "events,", len(names), "players,", len(lookup["games"]), "games")
 data = {"lookup": lookup, "model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
 import base64, glob

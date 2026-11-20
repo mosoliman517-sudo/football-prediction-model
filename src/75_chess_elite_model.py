@@ -21,3 +21,15 @@ for j, i in enumerate(te):
 pool.sort(key=lambda r: ({"World Championship": 0, "Candidates": 1, "Norway Chess": 2, "Tata Steel": 3}.get(r["kind"], 4), -(r["we"] + r["be"])))
 json.dump({"summary": {"n": len(te), "train": len(tr), "acc": round(acc, 4), "white": round(white, 4), "draw": round(draw, 4), "higher": round(higher, 4), "byEvent": by, "events": sorted({x["event"] for x in g})}, "games": pool}, open("02_processed_data/chess_elite_model.json", "w"), ensure_ascii=False, separators=(",", ":"))
 print("pool", len(pool))
+
+# ---- tournament tables: the model's EXPECTED score for every game, with the event held out (trained on all the other events) ----
+ev_names = sorted({x["event"] for x in g})
+exp_white = np.zeros(len(g)); fam = np.array([x["event"] for x in g])
+for ev in ev_names:
+    mk = fam == ev
+    if mk.sum() < 2 or (~mk).sum() < 200: exp_white[mk] = 0.5; continue
+    yy = y[~mk]; m2 = LogisticRegression(max_iter=400).fit(X[~mk], yy); P2 = m2.predict_proba(X[mk]); cls = list(m2.classes_)
+    pw = P2[:, cls.index(2)] if 2 in cls else 0; pdw = P2[:, cls.index(1)] if 1 in cls else 0
+    exp_white[mk] = pw + pdw / 2
+json.dump([round(float(v), 3) for v in exp_white], open("02_processed_data/chess_exp.json", "w"))
+print("expected scores written for", len(ev_names), "events (each predicted by a model that never saw it)")

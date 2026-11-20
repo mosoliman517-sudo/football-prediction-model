@@ -809,7 +809,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 19 Nov 2026 17:00 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 08:22 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -4788,13 +4788,14 @@ function nbLkPlayer(id) {
   <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Team</th><th>GP</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th></tr>${seasons.map(row).join("")}</table></div>
   <p class="fine" style="margin-top:8px">Per-game averages for seasons with 20+ games, ${COVER} on. Anything before ${COVER} is not in the data${p.partial ? ", so this career is only partly shown" : ""}.</p></div>`;
 }
+const NB_EXP = (() => { const m = {}; (NM.games || []).forEach((g) => { if (g[9] !== 2) return; const s = seasonLab(g[10]); [[g[1], g[5]], [g[2], 1 - g[5]]].forEach(([t, e]) => { const k = s + "|" + t; (m[k] = m[k] || { e: 0, n: 0 }); m[k].e += e; m[k].n++; }); }); return m; })();
 function nbLkTeam(t) {
   const f = QZ.clubs[t]; if (!f) return ""; const rows = Object.entries(LG.NBA.tables).map(([s, tb]) => { const i = tb.findIndex((r) => r[0] === t); return i < 0 ? null : { s, r: tb[i], pos: i + 1 }; }).filter(Boolean);
   const champs = rows.filter((x) => (x.r[7] | 0) === 5).map((x) => x.s), best = rows.slice().sort((a, b) => b.r[4] - a.r[4])[0];
   return `<div class="card abx" style="margin-top:12px"><div class="row" style="gap:14px">${badge(t, "xl")}<div><h3 style="font-size:28px;margin:0">${esc(f.full || t)}</h3><div class="fine">${esc(f.loc || "")} · ${rows.length} seasons in the data</div></div></div>
   <div class="tiles"><div class="tile"><b class="num">${champs.length}</b><small>titles since ${COVER}</small></div>${best ? `<div class="tile"><b class="num">${best.r[4]}-${best.r[6]}</b><small>best record (${best.s})</small></div>` : ""}<div class="tile"><b class="num">${rows.filter((x) => (x.r[7] | 0) > 0).length}</b><small>playoff seasons</small></div></div>${champs.length ? `<p><b>Champions:</b> ${champs.join(", ")}</p>` : ""}
-  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Record</th><th>Rank</th><th>PPG</th><th>Opp PPG</th><th>How it ended</th></tr>${rows.map((x) => `<tr><td>${x.s}</td><td><b>${x.r[4]}-${x.r[6]}</b></td><td>${ordn(x.pos)}</td><td>${x.r[2].toFixed(1)}</td><td>${x.r[3].toFixed(1)}</td><td>${PLAYOFF_ROUND[x.r[7] | 0]}</td></tr>`).join("")}</table></div>
-  <p class="fine" style="margin-top:8px">Rank is by wins among the 30 teams. Seasons with fewer than 60 games in the data are left out. ${f.old && f.old.length ? "Earlier names: " + esc(f.old.join(", ")) + "." : ""}</p></div>`;
+  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Record</th><th>Model expected wins</th><th>Rank</th><th>PPG</th><th>Opp PPG</th><th>How it ended</th></tr>${rows.map((x) => { const ex = NB_EXP[x.s + "|" + t]; const full = ex && ex.n === x.r[4] + x.r[6]; return `<tr><td>${x.s}</td><td><b>${x.r[4]}-${x.r[6]}</b></td><td>${full ? ex.e.toFixed(1) : ""}</td><td>${ordn(x.pos)}</td><td>${x.r[2].toFixed(1)}</td><td>${x.r[3].toFixed(1)}</td><td>${PLAYOFF_ROUND[x.r[7] | 0]}</td></tr>`; }).join("")}</table></div>
+  <p class="fine" style="margin-top:8px">Rank is by wins among the 30 teams. Seasons with fewer than 60 games in the data are left out. "Model expected wins" is the sum of the model\'s win chances for the season, shown only where our data holds every game of it (2019-20 on). ${f.old && f.old.length ? "Earlier names: " + esc(f.old.join(", ")) + "." : ""}</p></div>`;
 }
 { const css = document.createElement("style"); css.textContent = `.nbtb{width:100%;border-collapse:collapse;font-size:14px}.nbtb th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px}.nbtb td{padding:6px;border-top:1px solid var(--line);white-space:nowrap}`; document.head.appendChild(css); }
 { const old = renderAboutPage; renderAboutPage = function () {

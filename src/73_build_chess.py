@@ -48,6 +48,8 @@ pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(dat
 html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss)
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
+_a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
+html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC: html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + html + "</html>"
 os.makedirs(os.path.dirname(OUT), exist_ok=True); open(OUT, "w", encoding="utf-8").write(html); print("wrote", OUT, f"{len(html)/1e6:.2f} MB")

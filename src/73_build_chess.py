@@ -19,7 +19,12 @@ for n_, c_ in _cnt.most_common():
     if k_ not in _pref or ("(" in _pref[k_] and "(" not in n_): _pref[k_] = n_
 fixn = lambda n: _pref.get(_key(n), n)                         # one spelling per player: "Carlsen, Magnus" and "Carlsen Magnus (NOR)" are the same person
 em = json.load(open("02_processed_data/chess_elite_model.json"))
-for g in em["games"]: g["white"] = fixn(g["white"]); g["black"] = fixn(g["black"]); g["plies"] = len(g["moves"]); g.pop("moves", None)       # the prediction game needs only how long the game was
+_bigk = ("World Championship", "Candidates", "Norway Chess", "Tata Steel"); random.seed(21)
+_keep = {id(g) for g in em["games"] if len(g["moves"]) >= 44 and g["kind"] in _bigk} | {id(g) for g in random.sample([g for g in em["games"] if len(g["moves"]) >= 44 and g["kind"] not in _bigk and min(g["we"], g["be"]) >= 2450], 380)}
+for g in em["games"]:
+    g["white"] = fixn(g["white"]); g["black"] = fixn(g["black"]); g["plies"] = len(g["moves"])
+    if id(g) in _keep: g["moves"] = g["moves"][:90]          # watchable games the model never trained on
+    else: g.pop("moves", None)       # the prediction game needs only how long the game was
 allg = json.load(open("02_processed_data/chess_elite.json")); random.seed(4)
 for g in allg: g["white"] = fixn(g["white"]); g["black"] = fixn(g["black"])
 big = [g for g in allg if g["kind"] in ("World Championship", "Candidates", "Norway Chess", "Tata Steel")]

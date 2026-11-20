@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@500;600;700&family=Caveat:wght@600;700&family=Bricolage+Grotesque:wght@700;800&family=Big+Shoulders+Display:wght@800&family=Fraunces:opsz,wght@9..144,700&family=DM+Serif+Display&family=Syne:wght@800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@500;600;700&family=Caveat:wght@600;700&family=Permanent+Marker&family=Bricolage+Grotesque:wght@700;800&family=Big+Shoulders+Display:wght@800&family=Fraunces:opsz,wght@9..144,700&family=DM+Serif+Display&family=Syne:wght@800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: a lobby of five league worlds; choosing one repaints the whole page (palette, display face, lamp glow,
    drifting particles, sounds) and opens that league's four rooms: Call it, Daily 5, Replay, Review.
@@ -836,7 +836,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 15:03 UTC · private · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 15:14 UTC · private · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -2003,7 +2003,7 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
 addEventListener("keydown", (e) => { if ($("#xp")) { if (e.key === "Escape") closeTour(); else if (e.key === "ArrowRight") xGo(XX.i + 1); else if (e.key === "ArrowLeft") xGo(XX.i - 1); else if (e.key === " " && !/BUTTON/.test(e.target.tagName)) { e.preventDefault(); const p = document.querySelector('[data-x="play"]'); if (p) p.click(); } } });
 function offerTour() {
   const nm = prof().nick, el = document.createElement("div"); el.id = "xoffer"; el.className = "xoffer";
-  el.innerHTML = `<div class="tcard"><b>${nm ? "Welcome back, " + esc(nm) : "Welcome to ballknowledge"}</b><p>What would you like to do first? Pick one and I'll show you around in about a minute. Every game also explains itself the first time you open it.</p><div class="xpath"><button type="button" class="btn" data-o="quiz">Test my football knowledge</button><button type="button" class="btn" data-o="predict">Predict matches</button><button type="button" class="btn ghost" data-o="both">A bit of both</button></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost" data-o="skip">Skip, I'll explore</button></div></div>`; document.body.appendChild(el);
+  el.innerHTML = `<div class="tcard"><b>${nm ? "Welcome back, " + esc(nm) : "Welcome to ballknowledge"}</b><p>What would you like to do first? Pick one and I'll show you around in about a minute. Every game also explains itself the first time you open it.</p><div class="xpath"><button type="button" class="btn" data-o="quiz">Test my basketball knowledge</button><button type="button" class="btn" data-o="predict">Predict games</button><button type="button" class="btn ghost" data-o="both">A bit of both</button></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost" data-o="skip">Skip, I'll explore</button></div></div>`; document.body.appendChild(el);
   el.addEventListener("click", (e) => { const b = e.target.closest("[data-o]"); if (!b) return; el.remove(); if (b.dataset.o === "skip") { try { localStorage.setItem("bkn_tour", "1"); } catch (err) { /* blocked */ } } else startTour(b.dataset.o); });
 }
 function finishSplash() {
@@ -3174,7 +3174,7 @@ function renderQuiz() {
   const head = gamesBar(d.name) ;
   if (S_.phase === "intro") {
     const clue = S_.game === "blur" ? "A team logo starts blurred and sharpens." : S_.game === "scramble" ? "A player or a team with the letters shuffled. Hints only arrive when everyone agrees." : "Clues start hard and get easier.";
-    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above.${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
+    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
       ...(getResume(S_.game, S_.scope) ? [{ id: "qResume", t: `Resume your streak (${getResume(S_.game, S_.scope).streak}, ${getResume(S_.game, S_.scope).score} pts)`, d: "Pick up where you stopped." }] : []),
       { id: "qSolo", t: "Solo streak", d: "Keep going for as long as you can. The run ends the first time a round runs out of time." },
       { id: "qDuo", t: "Two players, one device", d: "Five rounds. Race to buzz: A for player 1, L for player 2. The first right answer takes the points." },
@@ -4845,6 +4845,112 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
   const r = Snd.right, w = Snd.wrong, wi = Snd.win; Snd.right = function () { r.apply(Snd, arguments); Snd.swish(); }; Snd.wrong = function () { w.apply(Snd, arguments); Snd.buzzer(); }; Snd.win = function () { wi.apply(Snd, arguments); Snd.crowd(); };
 }
 
+/* =====================================================================================================================
+   Three more games with three different mechanics:
+   Rank the five (put five players in order), Career timeline (place each stint on a line of seasons),
+   Over or under (bet against the model's line with a bankroll).
+   ===================================================================================================================== */
+{ const css = document.createElement("style"); css.textContent = `.holc{position:relative}.rkn{position:absolute;top:8px;left:8px;min-width:30px;height:30px;border-radius:50%;background:var(--accent,#ff7a1a);color:#111;font:800 16px/30px Inter,sans-serif;text-align:center;box-shadow:0 4px 12px #0008;animation:rkpop .25s cubic-bezier(.3,1.6,.5,1)}@keyframes rkpop{from{transform:scale(.2)}}.holc.rkok{outline:3px solid #5ee6a8}.holc.rkno{outline:3px solid #ff6b7f}.tlrow{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line,#ffffff22)}.tlrow input[type=range]{width:100%;grid-column:1/-1}.tlrow .tv{font:700 15px Inter,sans-serif}.tlrow .tn{display:flex;gap:10px;align-items:center}.ouline{font:800 44px/1 Inter,sans-serif;letter-spacing:-.03em}.oubank{font:800 26px Inter,sans-serif}`; document.head.appendChild(css); }
+const nbEnd = (title, score, outOf, key, rows, again) => { const cur = store.items["nbbest_" + key] || { best: 0 }; if (score > cur.best) lockIn("nbbest_" + key, { best: score }); Board.submit({ game: key, league: "all", score }); reward(15 + Math.round(score / 10), title, null);
+  return `<div class="card">${gamesBar(title)}<div class="tiles"><div class="tile"><small>Score</small><b>${score}</b><span class="fine">of ${outOf}</span></div><div class="tile"><small>Best</small><b>${Math.max(score, cur.best)}</b></div></div>${rows}<div class="row" style="margin-top:12px"><button class="btn" id="nbAgain" type="button">Play again</button></div></div>`; };
+
+/* ---------- Rank the five ---------- */
+const NBR_KINDS = [
+  ["career points", (p) => p.pts, (v) => v.toLocaleString("en-US")], ["career rebounds", (p) => p.reb, (v) => v.toLocaleString("en-US")], ["career assists", (p) => p.ast, (v) => v.toLocaleString("en-US")],
+  ["regular-season games played", (p) => p.gp, (v) => v.toLocaleString("en-US")], ["best scoring season, in points a game", (p) => p.bp && p.bp.avg, (v) => v.toFixed(1)], ["height", (p) => p.h, (v) => `${ftIn(v)} (${Math.round(v)} cm)`],
+];
+function nbrNew() {
+  const gap = NBH_DIFF(1.4, 1.18, 1.07, 1.02), span = NBH_DIFF(1, .5, .2, .08);
+  for (let t = 0; t < 160; t++) {
+    const k = rnd(NBR_KINDS), pool = playerPool("ALL", (p) => playerOK(p) && k[1](p) > 0).sort((a, b) => k[1](a) - k[1](b)); if (pool.length < 12) continue;
+    const w = Math.max(5, Math.floor(pool.length * span)), start = Math.floor(Math.random() * (pool.length - w + 1)), pick = shuffle(pool.slice(start, start + w)).slice(0, 5).sort((a, b) => k[1](a) - k[1](b)); let ok = true;
+    for (let i = 1; i < 5; i++) if (k[1](pick[i]) / k[1](pick[i - 1]) < (t > 100 ? 1.01 : gap)) ok = false;
+    if (ok) return { k, items: shuffle(pick), truth: pick.slice().reverse(), order: [], done: false };
+  }
+  return null;
+}
+function renderRANK() {
+  const s = S.nbr = S.nbr || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbrNew(); s.round++; } const q = s.q;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const cards = q.items.map((p) => { const n = q.order.indexOf(p) + 1, tr = q.truth.indexOf(p), rev = q.done; return `<button type="button" class="holc ${rev ? (tr === q.order.indexOf(p) ? "rkok" : "rkno") : ""}" data-nbr="${p.id}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)} · ${esc(p.club || "")}</span>${rev ? `<span class="num holv">${q.k[2](q.k[1](p))}</span><span class="fine">#${tr + 1}</span>` : ""}${n ? `<span class="rkn">${n}</span>` : ""}</button>`; }).join("");
+  const pts = q.done ? q.pts : 0;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><p class="sub" style="font-size:18px"><b>Tap the players from the most to the fewest: ${esc(q.k[0])}.</b></p><div class="holpair" style="flex-wrap:wrap">${cards}</div>
+    <div class="row" style="margin-top:14px">${q.done ? `<b>+${pts} points</b><button class="btn" id="nbrNext" type="button">${s.round >= 5 ? "See results" : "Next round"}</button>` : `<button class="btn ghost" id="nbrReset" type="button">Start over</button><button class="btn" id="nbrCheck" type="button" ${q.order.length < 5 ? "disabled" : ""}>Check my order</button>`}</div></div>`;
+}
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbrank") return; const t = e.target.closest && e.target.closest("[data-nbr],#nbrReset,#nbrCheck,#nbrNext,#nbAgain"); if (!t) return; const s = S.nbr, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbr = null; return renderRANK(); }
+  if (t.id === "nbrNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Rank the five", s.score, 500, "nbrank", `<table class="tb"><tr><th>Round</th><th>Stat</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderRANK(); }
+  if (!q) return; if (t.id === "nbrReset") { q.order = []; return renderRANK(); }
+  if (t.id === "nbrCheck") { const off = q.order.reduce((a, p, i) => a + Math.abs(i - q.truth.indexOf(p)), 0); q.pts = Math.round(100 * (1 - off / 12)); q.done = true; s.score += q.pts; s.log.push([q.k[0], q.pts]); Snd.flip(); renderRANK(); setTimeout(() => { q.pts >= 80 ? Snd.right() : Snd.wrong(); if (q.pts === 100) confetti(); }, 350); return; }
+  if (q.done) return; const p = q.items.find((x) => String(x.id) === t.dataset.nbr), i = q.order.indexOf(p); if (i >= 0) q.order.splice(i, 1); else q.order.push(p); Snd.tick && Snd.tick(); renderRANK();
+});
+
+/* ---------- Career timeline ---------- */
+const nbtYear = (s) => +String(s).slice(0, 4);
+function nbtNew() {
+  const mn = NBH_DIFF(3, 4, 5, 5); let pool = playerPool("ALL", (p) => playerOK(p) && !p.partial && p.cr && p.cr.length >= mn && p.cr.length <= 8); if (pool.length < 6) pool = playerPool("ALL", (p) => !p.partial && p.cr && p.cr.length >= 3 && p.cr.length <= 8);
+  if (!pool.length) return null; const p = rnd(pool), stints = p.cr.map(([team, from, to]) => ({ team, from: nbtYear(from), to: nbtYear(to) })), y0 = stints[0].from, y1 = stints[stints.length - 1].from;
+  const lo = NBH_DIFF(y0, y0, 2001, 2001), hi = NBH_DIFF(y1, y1, 2026, 2026), tol = NBH_DIFF(5, 4, 3, 2);
+  return { p, stints, lo, hi, tol, guess: stints.map((s, i) => (i === 0 && S.diff === "easy" ? s.from : Math.round((lo + hi) / 2))), done: false };
+}
+function renderTIME() {
+  const s = S.nbt = S.nbt || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbtNew(); s.round++; } const q = s.q;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const rows = q.stints.map((x, i) => { const locked = i === 0 && S.diff === "easy", g = q.guess[i], er = q.done ? Math.abs(g - x.from) : 0; return `<div class="tlrow"><span class="tn">${clubBadgeFor(x.team, "sm")}<b>${esc(x.team)}</b></span><span class="tv" id="tlv${i}">${q.done ? `<span class="${er === 0 ? "up" : er <= 1 ? "" : "down"}">you ${seasonLab(g + 1)} · actual ${seasonLab(x.from + 1)}</span>` : `joined ${seasonLab(g + 1)}${locked ? " (given)" : ""}`}</span>${q.done ? "" : `<input type="range" data-tl="${i}" min="${q.lo}" max="${q.hi}" value="${g}" ${locked ? "disabled" : ""}>`}</div>`; }).join("");
+  $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><div class="row" style="gap:14px;margin:8px 0">${playerPic(q.p, "xl")}<div><h3 style="font-size:26px">${esc(q.p.n)}</h3><div class="fine">${esc(q.p.sub || q.p.pos)} · ${q.stints.length} stints with teams</div></div></div><p class="sub">Slide each team to the season he joined it. Within ${q.tol - 1} seasons still earns points.</p>${rows}
+    <div class="row" style="margin-top:12px">${q.done ? `<b>+${q.pts} points</b><button class="btn" id="nbtNext" type="button">${s.round >= 5 ? "See results" : "Next player"}</button>` : `<span class="fine">Closer is better.</span><button class="btn" id="nbtLock" type="button">Lock it in</button>`}</div></div>`;
+}
+document.addEventListener("input", (e) => { const r = e.target.closest && e.target.closest("[data-tl]"); if (!r || S.game !== "nbtime" || !S.nbt || !S.nbt.q) return; const i = +r.dataset.tl; S.nbt.q.guess[i] = +r.value; const l = document.getElementById("tlv" + i); if (l) l.textContent = "joined " + seasonLab(+r.value + 1); });
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbtime") return; const t = e.target.closest && e.target.closest("#nbtLock,#nbtNext,#nbAgain"); if (!t) return; const s = S.nbt, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbt = null; return renderTIME(); }
+  if (t.id === "nbtNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Career timeline", s.score, 500, "nbtime", `<table class="tb"><tr><th>Round</th><th>Player</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderTIME(); }
+  if (t.id === "nbtLock" && q && !q.done) { const sc = q.stints.map((x, i) => Math.max(0, 1 - Math.abs(q.guess[i] - x.from) / q.tol)); q.pts = Math.round(100 * sc.reduce((a, b) => a + b, 0) / sc.length); q.done = true; s.score += q.pts; s.log.push([q.p.n, q.pts]); Snd.flip(); renderTIME(); setTimeout(() => { q.pts >= 70 ? Snd.right() : Snd.wrong(); if (q.pts >= 95) confetti(); }, 350); }
+});
+
+/* ---------- Over or under: bet against the model's line ---------- */
+const nbuGames = () => NM.games.filter((g) => typeof g[11] === "number" && typeof g[12] === "number" && g[3] > 0);
+function nbuNew() {
+  const pool = nbuGames(), spread = Math.random() < 0.45, tight = S.diff === "elite", wide = 7;
+  for (let t = 0; t < 300; t++) {
+    const g = rnd(pool), line = spread ? Math.floor(g[11] - g[12]) + 0.5 : Math.floor(g[11] + g[12]) + 0.5, real = spread ? g[3] - g[4] : g[3] + g[4], d = Math.abs(real - line); if (tight ? d > 4 : t < 200 && S.diff === "hard" && d < 2) continue;
+    return { g, spread, line, real, over: real > line, pick: null, stake: 100 };
+  }
+  return null;
+}
+function renderOU() {
+  const s = S.nbu = S.nbu || { round: 0, bank: 1000, log: [], q: null }; if (!s.q) { s.q = nbuNew(); s.round++; } const q = s.q, g = q.g, ctx = S.diff === "easy" || S.diff === "medium";
+  const tbl = (LG.NBA.tables[seasonLab(g[10])] || []), row = (n) => tbl.find((r) => r[0] === n), line = (n) => { const r = row(n); return r ? `${esc(n)}: scores ${r[2].toFixed(1)}, allows ${r[3].toFixed(1)} a game` : esc(n); };
+  const stakes = [100, 250, 500].filter((v) => v <= s.bank || v === 100), sign = q.line > 0 ? "-" : "+";
+  const ask = q.spread ? `Do the <b>${esc(g[1])}</b> win by more than <b>${Math.abs(q.line)}</b>?` : `Will the two teams score more than <b>${q.line}</b> points together?`, yes = q.spread ? "Cover" : "Over", no = q.spread ? "Don't cover" : "Under";
+  const resTxt = q.pick ? `${esc(g[1])} ${g[3]}, ${esc(g[2])} ${g[4]} · ${q.spread ? "margin " + (g[3] - g[4] > 0 ? "+" : "") + (g[3] - g[4]) : "total " + (g[3] + g[4])}` : "";
+  $("#room").innerHTML = `<div class="card">${gamesBar("Over or under")}<div class="row" style="justify-content:space-between"><span class="fine">Game ${s.round} of 10</span><span class="oubank num">${s.bank} coins</span></div>
+    <div class="row" style="gap:14px;justify-content:center;margin:10px 0">${badge(g[1], "xl")}<span class="vs">at home vs</span>${badge(g[2], "xl")}</div><div class="fine" style="text-align:center">${esc(nbDate(g[0]))} · ${esc(g[1])} vs ${esc(g[2])}</div>
+    <div style="text-align:center;margin:10px 0"><div class="label">The model's line</div><div class="ouline">${q.spread ? `${esc(g[1])} ${sign}${Math.abs(q.line)}` : q.line}</div></div><p class="sub" style="text-align:center">${ask}</p>
+    ${ctx ? `<p class="fine" style="text-align:center">${line(g[1])}<br>${line(g[2])} <span>(season averages)</span></p>` : ""}
+    ${q.pick ? `<div class="rcard on" style="text-align:center"><b class="${q.pick === (q.over ? "y" : "n") ? "up" : "down"}">${q.pick === (q.over ? "y" : "n") ? "+" : "-"}${q.stake} coins</b> · it was ${q.over ? yes : no}<br><span class="fine">${resTxt}</span></div><div class="row" style="margin-top:12px;justify-content:center"><button class="btn" id="nbuNext" type="button">${s.round >= 10 || s.bank < 100 ? "See results" : "Next game"}</button></div>`
+    : `<div class="row" style="justify-content:center;margin:8px 0"><span class="fine">Stake</span>${stakes.map((v) => `<button type="button" class="chip" data-nbustake="${v}" aria-pressed="${q.stake === v}">${v}</button>`).join("")}</div><div class="row" style="justify-content:center;gap:12px"><button class="btn" data-nbu="y" type="button">${yes}</button><button class="btn" data-nbu="n" type="button">${no}</button></div>`}</div>`;
+}
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbou") return; const t = e.target.closest && e.target.closest("[data-nbu],[data-nbustake],#nbuNext,#nbAgain"); if (!t) return; const s = S.nbu, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbu = null; return renderOU(); }
+  if (t.id === "nbuNext") { if (s.round >= 10 || s.bank < 100) { $("#room").innerHTML = nbEnd("Over or under", s.bank, 3000, "nbou", `<table class="tb"><tr><th>Game</th><th>Bet</th><th>Result</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">The line is our model's own predicted score for each real game, so on average it is fair: no edge either way.</p>`); return; } s.q = null; return renderOU(); }
+  if (!q || q.pick) return; if (t.dataset.nbustake) { q.stake = Math.min(+t.dataset.nbustake, Math.max(100, s.bank)); return renderOU(); }
+  if (t.dataset.nbu) { q.pick = t.dataset.nbu; q.stake = Math.min(q.stake, Math.max(100, s.bank)); const win = q.pick === (q.over ? "y" : "n"); s.bank += win ? q.stake : -q.stake; if (s.bank < 0) s.bank = 0; s.log.push([`${q.pick === "y" ? (q.spread ? "Cover" : "Over") : (q.spread ? "Don't cover" : "Under")} ${q.stake}`, `${win ? "+" : "-"}${q.stake}`]); Snd.flip(); renderOU(); setTimeout(() => { win ? Snd.right() : Snd.wrong(); }, 350); }
+});
+{ const old3 = renderNB; renderNB = function () { if (S.game === "nbrank") return renderRANK(); if (S.game === "nbtime") return renderTIME(); if (S.game === "nbou") return renderOU(); old3(); }; }
+Object.assign(NB_TITLE, { nbrank: "Rank the five", nbtime: "Career timeline", nbou: "Over or under" }); ["nbrank", "nbtime", "nbou"].forEach((id) => GAME_IDS.push(id)); MODEL_IDS.push("nbou");
+QUIZ_GAMES.push({ id: "nbrank", name: "Rank the five", modes: "Solo · 5 rounds", tag: "Five players and one stat. Tap them in order, most to fewest. Closer to the truth scores more.", faces: () => heroFaces(3) },
+  { id: "nbtime", name: "Career timeline", modes: "Solo · 5 players", tag: "A player's teams, shuffled. Slide each one to the season he joined it.", faces: () => heroFaces(2) });
+GAMES.push({ id: "nbou", name: "Over or under", modes: "Solo, against the model", tag: "The model sets a line for a real game. Bet over or under with a bankroll that grows or shrinks." });
+Object.assign(HOWTO, {
+  "g:nbrank": ["Rank the five", ["What you do", "Five players and one stat, like career points or height. Tap them from the highest to the lowest, then check."], ["Scoring", "Up to 100 a round. Every place you are off costs points. Five rounds."], ["Difficulty", "Easy has big gaps between the players. Elite picks players whose numbers are almost the same."]],
+  "g:nbtime": ["Career timeline", ["What you do", "A player and the teams he played for, out of order. Slide each team to the season he joined it."], ["Scoring", "Exactly right is full points for that team. Each season you are off loses some, and easy is more forgiving."], ["Good to know", "Careers before 2001-02 are only partly in the data, so those players are left out."]],
+  "g:nbou": ["Over or under", ["What you do", "A real past game and a line from our model: its predicted total points, or the predicted margin. Choose over or under (cover or don't cover) and a stake."], ["Scoring", "You start with 1,000 coins and play 10 games. A right call wins your stake, a wrong one loses it."], ["Good to know", "The line is the model's own prediction, so it is fair on average. Easy and medium show each team's season averages. Elite only uses close calls."]],
+});
+BOARD_GAMES.push(["nbrank", "Rank the five", "best score (of 500)"], ["nbtime", "Career timeline", "best score (of 500)"], ["nbou", "Over or under", "best bankroll"]); BK_LABELS.push("Rank the five", "Career timeline", "Over or under");
+
 /* ===== two players on one device can type their own names (shared by football and basketball) ===== */
 const PN = ["Player 1", "Player 2"];
 try { PN[0] = localStorage.getItem("bk_pn1") || PN[0]; PN[1] = localStorage.getItem("bk_pn2") || PN[1]; } catch (e) { /* storage blocked */ }
@@ -4905,6 +5011,55 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
       sub.insertAdjacentHTML("afterend", `<div class="vers"><div class="label" style="margin-top:12px">Version</div><div class="diffbar" role="group" aria-label="Version">${g.vers.map(([id, label]) => `<button type="button" class="chip" data-game="${id}" aria-pressed="${id === S.game}">${label}</button>`).join("")}</div></div>`);
     } catch (e) { /* chips are optional */ }
   };
+})();
+
+/* ---- themes: floodlit night (football) and neon street court (basketball). Cheap layers: transform and opacity only. ---- */
+(function themeFX() {
+  const root = document.documentElement, nba = typeof NBH_DIFF !== "undefined"; root.setAttribute("data-sport", nba ? "nba" : "fb");
+  const on = ":root[data-sport=" + (nba ? "nba" : "fb") + "]" + (nba ? ":not([data-style=minimal])" : "[data-style=flood]");
+  const css = nba ? `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-neon{position:absolute;right:3vw;top:76px;width:min(240px,34vw);opacity:.9;animation:tflick 7s infinite;filter:drop-shadow(0 0 7px #ff7a1a) drop-shadow(0 0 18px rgba(255,122,26,.55))}
+${on} #tfx .tx-court{position:absolute;left:0;right:0;bottom:0;height:38vh;opacity:.16;transform:perspective(600px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballb{position:absolute;left:4vw;bottom:2vh;width:44px;height:44px;animation:tbounce 2.2s cubic-bezier(.3,0,.5,1) infinite;filter:drop-shadow(0 0 8px rgba(255,122,26,.7))}
+${on} #tfx .tx-glow{position:absolute;inset:0;background:radial-gradient(520px 300px at 88% 14%,rgba(255,122,26,.16),transparent 70%),radial-gradient(700px 360px at 10% 100%,rgba(255,60,120,.10),transparent 70%)}
+@keyframes tflick{0%,100%{opacity:.95}44%{opacity:.95}46%{opacity:.5}48%{opacity:.95}70%{opacity:.8}72%{opacity:.95}}
+@keyframes tbounce{0%,100%{transform:translateY(0) scale(1.12,.88)}12%{transform:translateY(0) scale(1)}50%{transform:translateY(-150px) rotate(180deg)}88%{transform:translateY(0) rotate(340deg) scale(1)}}
+${on} h2.sec,${on} .gpick .gname,${on} .door .dname{font-family:"Permanent Marker","Anton",system-ui,sans-serif!important;letter-spacing:.01em;text-shadow:0 0 14px rgba(255,122,26,.45)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,122,26,.28),0 0 24px -6px rgba(255,122,26,.28),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateY(-105%);opacity:0}
+${on} #tsw{background:repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px),repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent);mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent)}
+#tsw.go{animation:tswv .62s cubic-bezier(.5,0,.3,1)}@keyframes tswv{10%{opacity:.9}to{transform:translateY(105%);opacity:.9}}
+:root[data-perf=low] #tfx .tx-ballb,:root[data-perf=low] #tfx .tx-glow,:root[data-perf=low] #tsw{display:none}:root[data-perf=low] #tfx .tx-neon{animation:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-ballb,#tfx .tx-neon{animation:none!important}#tsw{display:none}}
+@media (max-width:640px){#tfx .tx-neon{top:64px;width:30vw}#tfx .tx-ballb{width:34px;height:34px}}
+` : `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-beam{position:absolute;top:-8vh;width:50vw;height:112vh;background:linear-gradient(180deg,rgba(255,244,205,.20),rgba(255,244,205,.05) 55%,transparent 82%);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);transform-origin:50% 0;opacity:.75;animation:tbeam 11s ease-in-out infinite alternate}
+${on} #tfx .tx-b1{left:-8vw;--r0:-17deg;--r1:-8deg}${on} #tfx .tx-b2{right:-8vw;--r0:17deg;--r1:8deg;animation-delay:-5.5s}
+@keyframes tbeam{from{transform:rotate(var(--r0))}to{transform:rotate(var(--r1))}}
+${on} #tfx .tx-pitch{position:absolute;left:0;right:0;bottom:0;height:36vh;opacity:.10;transform:perspective(560px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballf{position:absolute;left:0;top:0;width:30px;height:30px;opacity:0;animation:tball 24s linear infinite;animation-delay:4s}
+@keyframes tball{0%{opacity:0;transform:translate(-6vw,64vh) rotate(0)}4%{opacity:1}50%{transform:translate(50vw,12vh) rotate(540deg)}96%{opacity:1}100%{opacity:0;transform:translate(106vw,66vh) rotate(1000deg)}}
+${on} #fx{display:none}
+${on} h2.sec::after{content:"";display:block;height:3px;width:60px;margin-top:6px;border-radius:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,244,205,.10),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateX(-105%);opacity:0}
+${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38%,rgba(255,244,205,.42) 50%,rgba(255,244,205,.20) 62%,transparent)}
+#tsw.go{animation:tswh .6s cubic-bezier(.5,0,.3,1)}@keyframes tswh{10%{opacity:1}to{transform:translateX(105%);opacity:1}}
+:root[data-perf=low] #tfx,:root[data-perf=low] #tsw{display:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-beam,#tfx .tx-ballf{animation:none!important}#tsw{display:none}}
+`;
+  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const hoop = `<svg class="tx-neon" viewBox="0 0 240 200" fill="none" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round" aria-hidden="true"><rect x="40" y="6" width="160" height="104" rx="6" stroke="#ffd0a0"/><rect x="88" y="52" width="64" height="48" rx="3" stroke="#ffd0a0" stroke-width="3"/><ellipse cx="120" cy="124" rx="52" ry="12" stroke="#ff5a1a" stroke-width="6"/><path d="M70 128l16 62M96 134l10 58M120 136v58M144 134l-10 58M170 128l-16 62M82 150l76 0M90 172l60 0" stroke-width="2.4" stroke="#ffe2c4"/></svg>`;
+  const ball = `<svg class="tx-ballb" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#2a1200" stroke-width="2"/><path d="M2 24h44M24 2v44M8 8c10 9 10 23 0 32M40 8c-10 9-10 23 0 32" stroke="#2a1200" stroke-width="2" fill="none"/></svg>`;
+  const court = `<svg class="tx-court" viewBox="0 0 400 220" fill="none" stroke="#ff9a3c" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><rect x="140" y="2" width="120" height="110"/><circle cx="200" cy="112" r="44"/><path d="M40 2c0 90 70 140 160 140s160-50 160-140"/><circle cx="200" cy="10" r="10"/></svg>`;
+  const beams = `<i class="tx-beam tx-b1"></i><i class="tx-beam tx-b2"></i><svg class="tx-pitch" viewBox="0 0 400 220" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><path d="M200 2v216"/><circle cx="200" cy="110" r="38"/><rect x="2" y="60" width="64" height="100"/><rect x="334" y="60" width="64" height="100"/></svg><svg class="tx-ballf" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#fff" stroke="#222" stroke-width="2"/><path d="M24 12l9 7-3 11H18l-3-11z" fill="#222"/><path d="M24 12V3M33 19l9-3M30 30l6 8M18 30l-6 8M15 19l-9-3" stroke="#222" stroke-width="2"/></svg>`;
+  const mount = () => { if (document.getElementById("tfx")) return; const f = document.createElement("div"); f.id = "tfx"; f.setAttribute("aria-hidden", "true"); f.innerHTML = nba ? `<div class="tx-glow"></div>${court}${hoop}${ball}` : beams; document.body.prepend(f); const s = document.createElement("div"); s.id = "tsw"; document.body.appendChild(s); };
+  if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
+  let lock = 0; const sweep = () => { const el = document.getElementById("tsw"); if (!el || root.getAttribute("data-perf") === "low" || matchMedia("(prefers-reduced-motion:reduce)").matches || Date.now() - lock < 700) return; if (!(nba ? root.getAttribute("data-style") !== "minimal" : root.getAttribute("data-style") === "flood")) return; lock = Date.now(); el.classList.remove("go"); void el.offsetWidth; el.classList.add("go"); };
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-door],[data-game],[data-group],.gcard,.gpick,.door,[data-crumb],#gamesBack,.mode")) sweep(); }, true);
+  addEventListener("hashchange", sweep);
 })();
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });

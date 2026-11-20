@@ -59,3 +59,52 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
     } catch (e) { /* chips are optional */ }
   };
 })();
+
+/* ---- themes: floodlit night (football) and neon street court (basketball). Cheap layers: transform and opacity only. ---- */
+(function themeFX() {
+  const root = document.documentElement, nba = typeof NBH_DIFF !== "undefined"; root.setAttribute("data-sport", nba ? "nba" : "fb");
+  const on = ":root[data-sport=" + (nba ? "nba" : "fb") + "]" + (nba ? ":not([data-style=minimal])" : "[data-style=flood]");
+  const css = nba ? `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-neon{position:absolute;right:3vw;top:76px;width:min(240px,34vw);opacity:.9;animation:tflick 7s infinite;filter:drop-shadow(0 0 7px #ff7a1a) drop-shadow(0 0 18px rgba(255,122,26,.55))}
+${on} #tfx .tx-court{position:absolute;left:0;right:0;bottom:0;height:38vh;opacity:.16;transform:perspective(600px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballb{position:absolute;left:4vw;bottom:2vh;width:44px;height:44px;animation:tbounce 2.2s cubic-bezier(.3,0,.5,1) infinite;filter:drop-shadow(0 0 8px rgba(255,122,26,.7))}
+${on} #tfx .tx-glow{position:absolute;inset:0;background:radial-gradient(520px 300px at 88% 14%,rgba(255,122,26,.16),transparent 70%),radial-gradient(700px 360px at 10% 100%,rgba(255,60,120,.10),transparent 70%)}
+@keyframes tflick{0%,100%{opacity:.95}44%{opacity:.95}46%{opacity:.5}48%{opacity:.95}70%{opacity:.8}72%{opacity:.95}}
+@keyframes tbounce{0%,100%{transform:translateY(0) scale(1.12,.88)}12%{transform:translateY(0) scale(1)}50%{transform:translateY(-150px) rotate(180deg)}88%{transform:translateY(0) rotate(340deg) scale(1)}}
+${on} h2.sec,${on} .gpick .gname,${on} .door .dname{font-family:"Permanent Marker","Anton",system-ui,sans-serif!important;letter-spacing:.01em;text-shadow:0 0 14px rgba(255,122,26,.45)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,122,26,.28),0 0 24px -6px rgba(255,122,26,.28),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateY(-105%);opacity:0}
+${on} #tsw{background:repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px),repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent);mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent)}
+#tsw.go{animation:tswv .62s cubic-bezier(.5,0,.3,1)}@keyframes tswv{10%{opacity:.9}to{transform:translateY(105%);opacity:.9}}
+:root[data-perf=low] #tfx .tx-ballb,:root[data-perf=low] #tfx .tx-glow,:root[data-perf=low] #tsw{display:none}:root[data-perf=low] #tfx .tx-neon{animation:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-ballb,#tfx .tx-neon{animation:none!important}#tsw{display:none}}
+@media (max-width:640px){#tfx .tx-neon{top:64px;width:30vw}#tfx .tx-ballb{width:34px;height:34px}}
+` : `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-beam{position:absolute;top:-8vh;width:50vw;height:112vh;background:linear-gradient(180deg,rgba(255,244,205,.30),rgba(255,244,205,.07) 55%,transparent 82%);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);transform-origin:50% 0;opacity:.75;animation:tbeam 11s ease-in-out infinite alternate}
+${on} #tfx .tx-b1{left:-8vw;--r0:-17deg;--r1:-8deg}${on} #tfx .tx-b2{right:-8vw;--r0:17deg;--r1:8deg;animation-delay:-5.5s}
+@keyframes tbeam{from{transform:rotate(var(--r0))}to{transform:rotate(var(--r1))}}
+${on} #tfx .tx-pitch{position:absolute;left:0;right:0;bottom:0;height:36vh;opacity:.10;transform:perspective(560px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballf{position:absolute;left:0;top:0;width:30px;height:30px;opacity:0;animation:tball 24s linear infinite;animation-delay:4s}
+@keyframes tball{0%{opacity:0;transform:translate(-6vw,64vh) rotate(0)}4%{opacity:1}50%{transform:translate(50vw,12vh) rotate(540deg)}96%{opacity:1}100%{opacity:0;transform:translate(106vw,66vh) rotate(1000deg)}}
+${on} #fx{display:none}
+${on} h2.sec::after{content:"";display:block;height:3px;width:60px;margin-top:6px;border-radius:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,244,205,.10),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateX(-105%);opacity:0}
+${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38%,rgba(255,244,205,.42) 50%,rgba(255,244,205,.20) 62%,transparent)}
+#tsw.go{animation:tswh .6s cubic-bezier(.5,0,.3,1)}@keyframes tswh{10%{opacity:1}to{transform:translateX(105%);opacity:1}}
+:root[data-perf=low] #tfx,:root[data-perf=low] #tsw{display:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-beam,#tfx .tx-ballf{animation:none!important}#tsw{display:none}}
+`;
+  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const hoop = `<svg class="tx-neon" viewBox="0 0 240 200" fill="none" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round" aria-hidden="true"><rect x="40" y="6" width="160" height="104" rx="6" stroke="#ffd0a0"/><rect x="88" y="52" width="64" height="48" rx="3" stroke="#ffd0a0" stroke-width="3"/><ellipse cx="120" cy="124" rx="52" ry="12" stroke="#ff5a1a" stroke-width="6"/><path d="M70 128l16 62M96 134l10 58M120 136v58M144 134l-10 58M170 128l-16 62M82 150l76 0M90 172l60 0" stroke-width="2.4" stroke="#ffe2c4"/></svg>`;
+  const ball = `<svg class="tx-ballb" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#2a1200" stroke-width="2"/><path d="M2 24h44M24 2v44M8 8c10 9 10 23 0 32M40 8c-10 9-10 23 0 32" stroke="#2a1200" stroke-width="2" fill="none"/></svg>`;
+  const court = `<svg class="tx-court" viewBox="0 0 400 220" fill="none" stroke="#ff9a3c" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><rect x="140" y="2" width="120" height="110"/><circle cx="200" cy="112" r="44"/><path d="M40 2c0 90 70 140 160 140s160-50 160-140"/><circle cx="200" cy="10" r="10"/></svg>`;
+  const beams = `<i class="tx-beam tx-b1"></i><i class="tx-beam tx-b2"></i><svg class="tx-pitch" viewBox="0 0 400 220" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><path d="M200 2v216"/><circle cx="200" cy="110" r="38"/><rect x="2" y="60" width="64" height="100"/><rect x="334" y="60" width="64" height="100"/></svg><svg class="tx-ballf" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#fff" stroke="#222" stroke-width="2"/><path d="M24 12l9 7-3 11H18l-3-11z" fill="#222"/><path d="M24 12V3M33 19l9-3M30 30l6 8M18 30l-6 8M15 19l-9-3" stroke="#222" stroke-width="2"/></svg>`;
+  const mount = () => { if (document.getElementById("tfx")) return; const f = document.createElement("div"); f.id = "tfx"; f.setAttribute("aria-hidden", "true"); f.innerHTML = nba ? `<div class="tx-glow"></div>${court}${hoop}${ball}` : beams; document.body.prepend(f); const s = document.createElement("div"); s.id = "tsw"; document.body.appendChild(s); };
+  if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
+  let lock = 0; const sweep = () => { const el = document.getElementById("tsw"); if (!el || root.getAttribute("data-perf") === "low" || matchMedia("(prefers-reduced-motion:reduce)").matches || Date.now() - lock < 700) return; if (!(nba ? root.getAttribute("data-style") !== "minimal" : root.getAttribute("data-style") === "flood")) return; lock = Date.now(); el.classList.remove("go"); void el.offsetWidth; el.classList.add("go"); };
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-door],[data-game],[data-group],.gcard,.gpick,.door,[data-crumb],#gamesBack,.mode")) sweep(); }, true);
+  addEventListener("hashchange", sweep);
+})();

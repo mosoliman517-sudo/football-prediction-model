@@ -785,7 +785,7 @@ function paintSplashArt() {
   sp.className = "splash k-" + kind; window.__spCur = cur; document.getElementById("spName").textContent = cur.name;
   const rr = document.getElementById("spRar"); rr.textContent = cur.rar; rr.className = "sp-rar r-" + cur.rar.toLowerCase();
 }
-(function () { try { const d = document.documentElement, g = (k) => localStorage.getItem(k); const th = g("bk_theme") || "dark"; d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : "minimal"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th); if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); } catch (e) { /* storage blocked */ } })();
+(function () { try { const d = document.documentElement, g = (k) => localStorage.getItem(k); const th = g("bk_theme") || "dark"; d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th); if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); } catch (e) { /* storage blocked */ } })();
 (function () { const r = Math.random(); window.__sp = { kind: (Math.random() < 0.012 || (location.hostname === "localhost" && /[?&]secret\b/.test(location.search))) ? "secret" : r < 0.35 ? "star" : r < 0.55 ? "legend" : r < 0.87 ? "rare" : "legendary", r2: Math.random() }; window.__spT0 = performance.now(); document.getElementById("spTip").textContent = SPLASH_TIPS[Math.floor(Math.random() * SPLASH_TIPS.length)]; })();
 </script>
 <div id="stadium" class="stadium" aria-hidden="true"></div>
@@ -848,7 +848,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 10:16 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 15:18 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -1081,7 +1081,7 @@ function teamTheme() {
 }
 function applyAppearance() {
   const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bk_theme") || "dark";
-  d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : "minimal"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
+  d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
   if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
   if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
   d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); teamTheme();
@@ -1576,7 +1576,7 @@ const QUIZ_GAMES = [
 let heroQueue = [];
 const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img && !x.photo); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
 const MODEL_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "rapid", "bracket"];
-const gameName = (id) => ([...GAMES, ...QUIZ_GAMES].find((g) => g.id === id) || {}).name || "";
+const gameName = (id) => (window.VERSNAME && VERSNAME[id]) || ([...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].find((g) => g.id === id) || {}).name || "";
 function renderHub() {
   heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
@@ -2374,7 +2374,7 @@ function searchItems(q) {
   const n = qnorm(q), out = [];
   const pages = [["Menu", "⌂", () => go("")], ["Games", "<svg class=ic><use href=#i-games></use></svg>", () => go("games")], ["ballknowledge originals", "<svg class=ic><use href=#i-brain></use></svg>", () => go("games-all-leagues-bk")], ["Beat the Model", "🆚", () => go("games-all-leagues-model")], ["Ranked", "<svg class=ic><use href=#i-trophy></use></svg>", () => go("games-all-leagues-ranked")], ["Live predictions", "<svg class=ic><use href=#i-live></use></svg>", () => go("games-all-leagues-live")], ["Our model", "<svg class=ic><use href=#i-chart></use></svg>", () => go("lab")], ["Time machine", "<svg class=ic><use href=#i-hourglass></use></svg>", () => go("lab-premier-league-replay")], ["Title race", "<svg class=ic><use href=#i-flag></use></svg>", () => go("lab-premier-league-race")], ["How the model works", "<svg class=ic><use href=#i-bulb></use></svg>", () => go("lab-all-leagues-about")], ["Leaderboard", "<svg class=ic><use href=#i-medal></use></svg>", () => go("games-all-leagues-boards")], ["My profile", "<svg class=ic><use href=#i-user></use></svg>", () => go("profile")], ["Appearance and settings", "<svg class=ic><use href=#i-palette></use></svg>", () => go("profile")], ["Sticker album", "<svg class=ic><use href=#i-album></use></svg>", () => go("album")], ["Replay the tour", "<svg class=ic><use href=#i-compass></use></svg>", () => startTour()]];
   pages.forEach(([name, ic, fn]) => { if (!n || qnorm(name).includes(n)) out.push({ ic, name, sub: "Page", fn }); });
-  [...GAMES, ...QUIZ_GAMES].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
+  [...GAMES, ...QUIZ_GAMES, ...(window.QUIZ_HIDDEN || [])].forEach((g) => { if (!n || qnorm(g.name).includes(n)) out.push({ ic: "<svg class=ic><use href=#i-dice></use></svg>", name: g.name, sub: "Game", fn: () => go("games-all-leagues-" + g.id) }); });
   if (n.length >= 2) {
     Object.keys(QZ.clubs).filter((c) => CREST[c] && qnorm(c).includes(n)).slice(0, 4).forEach((c) => out.push({ ic: badge(c, "sm"), name: c, sub: "Club in the sticker album", fn: () => { S.alb = { lg: QZ.clubs[c].lg, club: c, more: 1 }; go("album"); renderAlbum && S.alb && setTimeout(renderAlbum, 50); } }));
     suggestions(q, QZ.players, (x) => x.n).forEach((p) => out.push({ ic: avatarHTML("", "xs", p.n[0]), name: p.n, sub: `Player · ${p.club || ""}`, fn: () => playerCard(p) }));
@@ -2777,7 +2777,7 @@ function avatarHTML(av, size = "md", nick = "") {
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); syncBadges(); }
 function appearanceHTML() {
   const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "dark"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
-  return `<label class="pfl">Style</label>${seg("style", [["minimal", "Minimal"], ["classic", "Classic"]], g("bk_style", "minimal") === "classic" ? "classic" : "minimal")}<div class="fine" style="margin:4px 0 0">Minimal is calm and quiet. Classic brings back the glow, effects and stadium backdrop.</div><label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
+  return `<label class="pfl">Style</label>${seg("style", [["flood", "Floodlit"], ["classic", "Classic"], ["minimal", "Minimal"]], g("bk_style", "flood") === "classic" ? "classic" : g("bk_style", "flood") === "minimal" ? "minimal" : "flood")}<div class="fine" style="margin:4px 0 0">Floodlit is a night match with light beams and a flying ball. Classic is the glow and stadium backdrop. Minimal is calm and quiet.</div><label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
   <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bk_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
 }
 const signedIn0 = () => !!(Account.signedIn || Account.claude);
@@ -4161,6 +4161,82 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
   document.addEventListener("input", (e) => { const m = { mixFx: "fx", mixMus: "music", mixVoice: "voice" }[e.target.id]; if (!m) return; Mix[m] = e.target.value / 100; const l = document.getElementById(e.target.id + "V"); if (l) l.textContent = e.target.value + "%"; applyMix(); });
   document.addEventListener("click", (e) => { if (e.target.id === "mixSay") { Mix.say = !Mix.say; applyMix(); e.target.setAttribute("aria-pressed", Mix.say); e.target.textContent = "Announcer voice: " + (Mix.say ? "On" : "Off"); if (Mix.say) Voice.say("Game on"); } else if (e.target.id === "mixTest") { Snd.right(); setTimeout(() => Snd.win(), 500); } });
 }
+
+/* ---- games that share a core are merged into one card with several versions (football and basketball) ---- */
+(function () {
+  if (typeof QUIZ_GAMES === "undefined" || typeof renderRoom !== "function") return;
+  const nba = QUIZ_GAMES.some((g) => g.id === "dropped");
+  const GROUPS = nba ? [
+    { lead: "who", name: "Name it", tag: "Six ways to name a mystery: player clues, a career path, team stats, a real stat line, a blurred logo or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Team stats"], ["dropped", "Stat line"], ["blur", "Logo blur"], ["scramble", "Scramble"]] },
+  ] : [
+    { lead: "who", name: "Name it", tag: "Five ways to name a mystery: player clues, a career path, club stats, a blurred badge or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Club stats"], ["blur", "Badge blur"], ["scramble", "Scramble"]] },
+    { lead: "xi", name: "Match recall", tag: "Name the eleven who started a big final, or the scorers, assisters and red cards of a classic match.", vers: [["xi", "Starting XI"], ["iconic", "Who did it"]] },
+  ];
+  window.QUIZ_HIDDEN = []; window.VERSNAME = {}; window.VERSOF = {};
+  GROUPS.forEach((g) => {
+    const lead = QUIZ_GAMES.find((x) => x.id === g.lead); if (!lead) return;
+    g.vers.forEach(([id, label]) => { VERSNAME[id] = label; VERSOF[id] = g; });
+    g.vers.forEach(([id]) => { if (id === g.lead) return; const k = QUIZ_GAMES.findIndex((x) => x.id === id); if (k >= 0) QUIZ_HIDDEN.push(QUIZ_GAMES.splice(k, 1)[0]); });
+    lead.name = g.name; lead.tag = g.tag; lead.modes = g.vers.length + " versions · solo or 2 players";
+  });
+  const rr = renderRoom;
+  renderRoom = function () {
+    rr.apply(this, arguments);
+    try {
+      const g = S.game && VERSOF[S.game], sub = $("#room #diffNote") && $("#room .card .sub"); if (!g || !sub || $("#room .vers")) return;
+      sub.insertAdjacentHTML("afterend", `<div class="vers"><div class="label" style="margin-top:12px">Version</div><div class="diffbar" role="group" aria-label="Version">${g.vers.map(([id, label]) => `<button type="button" class="chip" data-game="${id}" aria-pressed="${id === S.game}">${label}</button>`).join("")}</div></div>`);
+    } catch (e) { /* chips are optional */ }
+  };
+})();
+
+/* ---- themes: floodlit night (football) and neon street court (basketball). Cheap layers: transform and opacity only. ---- */
+(function themeFX() {
+  const root = document.documentElement, nba = typeof NBH_DIFF !== "undefined"; root.setAttribute("data-sport", nba ? "nba" : "fb");
+  const on = ":root[data-sport=" + (nba ? "nba" : "fb") + "]" + (nba ? ":not([data-style=minimal])" : "[data-style=flood]");
+  const css = nba ? `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-neon{position:absolute;right:3vw;top:76px;width:min(240px,34vw);opacity:.9;animation:tflick 7s infinite;filter:drop-shadow(0 0 7px #ff7a1a) drop-shadow(0 0 18px rgba(255,122,26,.55))}
+${on} #tfx .tx-court{position:absolute;left:0;right:0;bottom:0;height:38vh;opacity:.16;transform:perspective(600px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballb{position:absolute;left:4vw;bottom:2vh;width:44px;height:44px;animation:tbounce 2.2s cubic-bezier(.3,0,.5,1) infinite;filter:drop-shadow(0 0 8px rgba(255,122,26,.7))}
+${on} #tfx .tx-glow{position:absolute;inset:0;background:radial-gradient(520px 300px at 88% 14%,rgba(255,122,26,.16),transparent 70%),radial-gradient(700px 360px at 10% 100%,rgba(255,60,120,.10),transparent 70%)}
+@keyframes tflick{0%,100%{opacity:.95}44%{opacity:.95}46%{opacity:.5}48%{opacity:.95}70%{opacity:.8}72%{opacity:.95}}
+@keyframes tbounce{0%,100%{transform:translateY(0) scale(1.12,.88)}12%{transform:translateY(0) scale(1)}50%{transform:translateY(-150px) rotate(180deg)}88%{transform:translateY(0) rotate(340deg) scale(1)}}
+${on} h2.sec,${on} .gpick .gname,${on} .door .dname{font-family:"Permanent Marker","Anton",system-ui,sans-serif!important;letter-spacing:.01em;text-shadow:0 0 14px rgba(255,122,26,.45)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,122,26,.28),0 0 24px -6px rgba(255,122,26,.28),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateY(-105%);opacity:0}
+${on} #tsw{background:repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px),repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.6) 8px 9.2px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent);mask-image:linear-gradient(180deg,transparent,#000 35%,#000 65%,transparent)}
+#tsw.go{animation:tswv .62s cubic-bezier(.5,0,.3,1)}@keyframes tswv{10%{opacity:.9}to{transform:translateY(105%);opacity:.9}}
+:root[data-perf=low] #tfx .tx-ballb,:root[data-perf=low] #tfx .tx-glow,:root[data-perf=low] #tsw{display:none}:root[data-perf=low] #tfx .tx-neon{animation:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-ballb,#tfx .tx-neon{animation:none!important}#tsw{display:none}}
+@media (max-width:640px){#tfx .tx-neon{top:64px;width:30vw}#tfx .tx-ballb{width:34px;height:34px}}
+` : `
+#tfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+${on} #tfx .tx-beam{position:absolute;top:-8vh;width:50vw;height:112vh;background:linear-gradient(180deg,rgba(255,244,205,.30),rgba(255,244,205,.07) 55%,transparent 82%);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);transform-origin:50% 0;opacity:.75;animation:tbeam 11s ease-in-out infinite alternate}
+${on} #tfx .tx-b1{left:-8vw;--r0:-17deg;--r1:-8deg}${on} #tfx .tx-b2{right:-8vw;--r0:17deg;--r1:8deg;animation-delay:-5.5s}
+@keyframes tbeam{from{transform:rotate(var(--r0))}to{transform:rotate(var(--r1))}}
+${on} #tfx .tx-pitch{position:absolute;left:0;right:0;bottom:0;height:36vh;opacity:.10;transform:perspective(560px) rotateX(58deg);transform-origin:50% 100%}
+${on} #tfx .tx-ballf{position:absolute;left:0;top:0;width:30px;height:30px;opacity:0;animation:tball 24s linear infinite;animation-delay:4s}
+@keyframes tball{0%{opacity:0;transform:translate(-6vw,64vh) rotate(0)}4%{opacity:1}50%{transform:translate(50vw,12vh) rotate(540deg)}96%{opacity:1}100%{opacity:0;transform:translate(106vw,66vh) rotate(1000deg)}}
+${on} #fx{display:none}
+${on} h2.sec::after{content:"";display:block;height:3px;width:60px;margin-top:6px;border-radius:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+${on} .card,${on} .gcard,${on} .gpick,${on} .door{box-shadow:0 0 0 1px rgba(255,244,205,.10),0 14px 30px -20px #000}
+#tsw{position:fixed;inset:0;z-index:9000;pointer-events:none;transform:translateX(-105%);opacity:0}
+${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38%,rgba(255,244,205,.42) 50%,rgba(255,244,205,.20) 62%,transparent)}
+#tsw.go{animation:tswh .6s cubic-bezier(.5,0,.3,1)}@keyframes tswh{10%{opacity:1}to{transform:translateX(105%);opacity:1}}
+:root[data-perf=low] #tfx,:root[data-perf=low] #tsw{display:none}
+@media (prefers-reduced-motion:reduce){#tfx .tx-beam,#tfx .tx-ballf{animation:none!important}#tsw{display:none}}
+`;
+  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const hoop = `<svg class="tx-neon" viewBox="0 0 240 200" fill="none" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round" aria-hidden="true"><rect x="40" y="6" width="160" height="104" rx="6" stroke="#ffd0a0"/><rect x="88" y="52" width="64" height="48" rx="3" stroke="#ffd0a0" stroke-width="3"/><ellipse cx="120" cy="124" rx="52" ry="12" stroke="#ff5a1a" stroke-width="6"/><path d="M70 128l16 62M96 134l10 58M120 136v58M144 134l-10 58M170 128l-16 62M82 150l76 0M90 172l60 0" stroke-width="2.4" stroke="#ffe2c4"/></svg>`;
+  const ball = `<svg class="tx-ballb" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#2a1200" stroke-width="2"/><path d="M2 24h44M24 2v44M8 8c10 9 10 23 0 32M40 8c-10 9-10 23 0 32" stroke="#2a1200" stroke-width="2" fill="none"/></svg>`;
+  const court = `<svg class="tx-court" viewBox="0 0 400 220" fill="none" stroke="#ff9a3c" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><rect x="140" y="2" width="120" height="110"/><circle cx="200" cy="112" r="44"/><path d="M40 2c0 90 70 140 160 140s160-50 160-140"/><circle cx="200" cy="10" r="10"/></svg>`;
+  const beams = `<i class="tx-beam tx-b1"></i><i class="tx-beam tx-b2"></i><svg class="tx-pitch" viewBox="0 0 400 220" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><path d="M200 2v216"/><circle cx="200" cy="110" r="38"/><rect x="2" y="60" width="64" height="100"/><rect x="334" y="60" width="64" height="100"/></svg><svg class="tx-ballf" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#fff" stroke="#222" stroke-width="2"/><path d="M24 12l9 7-3 11H18l-3-11z" fill="#222"/><path d="M24 12V3M33 19l9-3M30 30l6 8M18 30l-6 8M15 19l-9-3" stroke="#222" stroke-width="2"/></svg>`;
+  const mount = () => { if (document.getElementById("tfx")) return; const f = document.createElement("div"); f.id = "tfx"; f.setAttribute("aria-hidden", "true"); f.innerHTML = nba ? `<div class="tx-glow"></div>${court}${hoop}${ball}` : beams; document.body.prepend(f); const s = document.createElement("div"); s.id = "tsw"; document.body.appendChild(s); };
+  if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
+  let lock = 0; const sweep = () => { const el = document.getElementById("tsw"); if (!el || root.getAttribute("data-perf") === "low" || matchMedia("(prefers-reduced-motion:reduce)").matches || Date.now() - lock < 700) return; if (!(nba ? root.getAttribute("data-style") !== "minimal" : root.getAttribute("data-style") === "flood")) return; lock = Date.now(); el.classList.remove("go"); void el.offsetWidth; el.classList.add("go"); };
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-door],[data-game],[data-group],.gcard,.gpick,.door,[data-crumb],#gamesBack,.mode")) sweep(); }, true);
+  addEventListener("hashchange", sweep);
+})();
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
 try { fetch(ASSET_BASE + "data/photos.json").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.p) { QZ.players.forEach((p) => { const x = j.p[p.id]; if (x) { p.ph = x[0]; p.pq = x[1]; p.pd = x[2]; } }); window.__photosV = j.v; } }).catch(() => {}); } catch (e) { /* offline or blocked */ } route(); setTimeout(finishSplash, 300);

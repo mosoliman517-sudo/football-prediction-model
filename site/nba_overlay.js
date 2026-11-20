@@ -752,3 +752,109 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
   Snd.crowd = () => n.run((t) => { n.noise(t, 1.6, 400, 1400, 0.045, 0.4); n.noise(t + 0.4, 1.4, 900, 2400, 0.025, 0.4); });
   const r = Snd.right, w = Snd.wrong, wi = Snd.win; Snd.right = function () { r.apply(Snd, arguments); Snd.swish(); }; Snd.wrong = function () { w.apply(Snd, arguments); Snd.buzzer(); }; Snd.win = function () { wi.apply(Snd, arguments); Snd.crowd(); };
 }
+
+/* =====================================================================================================================
+   Three more games with three different mechanics:
+   Rank the five (put five players in order), Career timeline (place each stint on a line of seasons),
+   Over or under (bet against the model's line with a bankroll).
+   ===================================================================================================================== */
+{ const css = document.createElement("style"); css.textContent = `.holc{position:relative}.rkn{position:absolute;top:8px;left:8px;min-width:30px;height:30px;border-radius:50%;background:var(--accent,#ff7a1a);color:#111;font:800 16px/30px Inter,sans-serif;text-align:center;box-shadow:0 4px 12px #0008;animation:rkpop .25s cubic-bezier(.3,1.6,.5,1)}@keyframes rkpop{from{transform:scale(.2)}}.holc.rkok{outline:3px solid #5ee6a8}.holc.rkno{outline:3px solid #ff6b7f}.tlrow{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line,#ffffff22)}.tlrow input[type=range]{width:100%;grid-column:1/-1}.tlrow .tv{font:700 15px Inter,sans-serif}.tlrow .tn{display:flex;gap:10px;align-items:center}.ouline{font:800 44px/1 Inter,sans-serif;letter-spacing:-.03em}.oubank{font:800 26px Inter,sans-serif}`; document.head.appendChild(css); }
+const nbEnd = (title, score, outOf, key, rows, again) => { const cur = store.items["nbbest_" + key] || { best: 0 }; if (score > cur.best) lockIn("nbbest_" + key, { best: score }); Board.submit({ game: key, league: "all", score }); reward(15 + Math.round(score / 10), title, null);
+  return `<div class="card">${gamesBar(title)}<div class="tiles"><div class="tile"><small>Score</small><b>${score}</b><span class="fine">of ${outOf}</span></div><div class="tile"><small>Best</small><b>${Math.max(score, cur.best)}</b></div></div>${rows}<div class="row" style="margin-top:12px"><button class="btn" id="nbAgain" type="button">Play again</button></div></div>`; };
+
+/* ---------- Rank the five ---------- */
+const NBR_KINDS = [
+  ["career points", (p) => p.pts, (v) => v.toLocaleString("en-US")], ["career rebounds", (p) => p.reb, (v) => v.toLocaleString("en-US")], ["career assists", (p) => p.ast, (v) => v.toLocaleString("en-US")],
+  ["regular-season games played", (p) => p.gp, (v) => v.toLocaleString("en-US")], ["best scoring season, in points a game", (p) => p.bp && p.bp.avg, (v) => v.toFixed(1)], ["height", (p) => p.h, (v) => `${ftIn(v)} (${Math.round(v)} cm)`],
+];
+function nbrNew() {
+  const gap = NBH_DIFF(1.4, 1.18, 1.07, 1.02), span = NBH_DIFF(1, .5, .2, .08);
+  for (let t = 0; t < 160; t++) {
+    const k = rnd(NBR_KINDS), pool = playerPool("ALL", (p) => playerOK(p) && k[1](p) > 0).sort((a, b) => k[1](a) - k[1](b)); if (pool.length < 12) continue;
+    const w = Math.max(5, Math.floor(pool.length * span)), start = Math.floor(Math.random() * (pool.length - w + 1)), pick = shuffle(pool.slice(start, start + w)).slice(0, 5).sort((a, b) => k[1](a) - k[1](b)); let ok = true;
+    for (let i = 1; i < 5; i++) if (k[1](pick[i]) / k[1](pick[i - 1]) < (t > 100 ? 1.01 : gap)) ok = false;
+    if (ok) return { k, items: shuffle(pick), truth: pick.slice().reverse(), order: [], done: false };
+  }
+  return null;
+}
+function renderRANK() {
+  const s = S.nbr = S.nbr || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbrNew(); s.round++; } const q = s.q;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const cards = q.items.map((p) => { const n = q.order.indexOf(p) + 1, tr = q.truth.indexOf(p), rev = q.done; return `<button type="button" class="holc ${rev ? (tr === q.order.indexOf(p) ? "rkok" : "rkno") : ""}" data-nbr="${p.id}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)} · ${esc(p.club || "")}</span>${rev ? `<span class="num holv">${q.k[2](q.k[1](p))}</span><span class="fine">#${tr + 1}</span>` : ""}${n ? `<span class="rkn">${n}</span>` : ""}</button>`; }).join("");
+  const pts = q.done ? q.pts : 0;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><p class="sub" style="font-size:18px"><b>Tap the players from the most to the fewest: ${esc(q.k[0])}.</b></p><div class="holpair" style="flex-wrap:wrap">${cards}</div>
+    <div class="row" style="margin-top:14px">${q.done ? `<b>+${pts} points</b><button class="btn" id="nbrNext" type="button">${s.round >= 5 ? "See results" : "Next round"}</button>` : `<button class="btn ghost" id="nbrReset" type="button">Start over</button><button class="btn" id="nbrCheck" type="button" ${q.order.length < 5 ? "disabled" : ""}>Check my order</button>`}</div></div>`;
+}
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbrank") return; const t = e.target.closest && e.target.closest("[data-nbr],#nbrReset,#nbrCheck,#nbrNext,#nbAgain"); if (!t) return; const s = S.nbr, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbr = null; return renderRANK(); }
+  if (t.id === "nbrNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Rank the five", s.score, 500, "nbrank", `<table class="tb"><tr><th>Round</th><th>Stat</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderRANK(); }
+  if (!q) return; if (t.id === "nbrReset") { q.order = []; return renderRANK(); }
+  if (t.id === "nbrCheck") { const off = q.order.reduce((a, p, i) => a + Math.abs(i - q.truth.indexOf(p)), 0); q.pts = Math.round(100 * (1 - off / 12)); q.done = true; s.score += q.pts; s.log.push([q.k[0], q.pts]); Snd.flip(); renderRANK(); setTimeout(() => { q.pts >= 80 ? Snd.right() : Snd.wrong(); if (q.pts === 100) confetti(); }, 350); return; }
+  if (q.done) return; const p = q.items.find((x) => String(x.id) === t.dataset.nbr), i = q.order.indexOf(p); if (i >= 0) q.order.splice(i, 1); else q.order.push(p); Snd.tick && Snd.tick(); renderRANK();
+});
+
+/* ---------- Career timeline ---------- */
+const nbtYear = (s) => +String(s).slice(0, 4);
+function nbtNew() {
+  const mn = NBH_DIFF(3, 4, 5, 5); let pool = playerPool("ALL", (p) => playerOK(p) && !p.partial && p.cr && p.cr.length >= mn && p.cr.length <= 8); if (pool.length < 6) pool = playerPool("ALL", (p) => !p.partial && p.cr && p.cr.length >= 3 && p.cr.length <= 8);
+  if (!pool.length) return null; const p = rnd(pool), stints = p.cr.map(([team, from, to]) => ({ team, from: nbtYear(from), to: nbtYear(to) })), y0 = stints[0].from, y1 = stints[stints.length - 1].from;
+  const lo = NBH_DIFF(y0, y0, 2001, 2001), hi = NBH_DIFF(y1, y1, 2026, 2026), tol = NBH_DIFF(5, 4, 3, 2);
+  return { p, stints, lo, hi, tol, guess: stints.map((s, i) => (i === 0 && S.diff === "easy" ? s.from : Math.round((lo + hi) / 2))), done: false };
+}
+function renderTIME() {
+  const s = S.nbt = S.nbt || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbtNew(); s.round++; } const q = s.q;
+  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<p class="sub">Not enough players at this level.</p></div>`; return; }
+  const rows = q.stints.map((x, i) => { const locked = i === 0 && S.diff === "easy", g = q.guess[i], er = q.done ? Math.abs(g - x.from) : 0; return `<div class="tlrow"><span class="tn">${clubBadgeFor(x.team, "sm")}<b>${esc(x.team)}</b></span><span class="tv" id="tlv${i}">${q.done ? `<span class="${er === 0 ? "up" : er <= 1 ? "" : "down"}">you ${seasonLab(g + 1)} · actual ${seasonLab(x.from + 1)}</span>` : `joined ${seasonLab(g + 1)}${locked ? " (given)" : ""}`}</span>${q.done ? "" : `<input type="range" data-tl="${i}" min="${q.lo}" max="${q.hi}" value="${g}" ${locked ? "disabled" : ""}>`}</div>`; }).join("");
+  $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><div class="row" style="gap:14px;margin:8px 0">${playerPic(q.p, "xl")}<div><h3 style="font-size:26px">${esc(q.p.n)}</h3><div class="fine">${esc(q.p.sub || q.p.pos)} · ${q.stints.length} stints with teams</div></div></div><p class="sub">Slide each team to the season he joined it. Within ${q.tol - 1} seasons still earns points.</p>${rows}
+    <div class="row" style="margin-top:12px">${q.done ? `<b>+${q.pts} points</b><button class="btn" id="nbtNext" type="button">${s.round >= 5 ? "See results" : "Next player"}</button>` : `<span class="fine">Closer is better.</span><button class="btn" id="nbtLock" type="button">Lock it in</button>`}</div></div>`;
+}
+document.addEventListener("input", (e) => { const r = e.target.closest && e.target.closest("[data-tl]"); if (!r || S.game !== "nbtime" || !S.nbt || !S.nbt.q) return; const i = +r.dataset.tl; S.nbt.q.guess[i] = +r.value; const l = document.getElementById("tlv" + i); if (l) l.textContent = "joined " + seasonLab(+r.value + 1); });
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbtime") return; const t = e.target.closest && e.target.closest("#nbtLock,#nbtNext,#nbAgain"); if (!t) return; const s = S.nbt, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbt = null; return renderTIME(); }
+  if (t.id === "nbtNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Career timeline", s.score, 500, "nbtime", `<table class="tb"><tr><th>Round</th><th>Player</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderTIME(); }
+  if (t.id === "nbtLock" && q && !q.done) { const sc = q.stints.map((x, i) => Math.max(0, 1 - Math.abs(q.guess[i] - x.from) / q.tol)); q.pts = Math.round(100 * sc.reduce((a, b) => a + b, 0) / sc.length); q.done = true; s.score += q.pts; s.log.push([q.p.n, q.pts]); Snd.flip(); renderTIME(); setTimeout(() => { q.pts >= 70 ? Snd.right() : Snd.wrong(); if (q.pts >= 95) confetti(); }, 350); }
+});
+
+/* ---------- Over or under: bet against the model's line ---------- */
+const nbuGames = () => NM.games.filter((g) => typeof g[11] === "number" && typeof g[12] === "number" && g[3] > 0);
+function nbuNew() {
+  const pool = nbuGames(), spread = Math.random() < 0.45, tight = S.diff === "elite", wide = 7;
+  for (let t = 0; t < 300; t++) {
+    const g = rnd(pool), line = spread ? Math.floor(g[11] - g[12]) + 0.5 : Math.floor(g[11] + g[12]) + 0.5, real = spread ? g[3] - g[4] : g[3] + g[4], d = Math.abs(real - line); if (tight ? d > 4 : t < 200 && S.diff === "hard" && d < 2) continue;
+    return { g, spread, line, real, over: real > line, pick: null, stake: 100 };
+  }
+  return null;
+}
+function renderOU() {
+  const s = S.nbu = S.nbu || { round: 0, bank: 1000, log: [], q: null }; if (!s.q) { s.q = nbuNew(); s.round++; } const q = s.q, g = q.g, ctx = S.diff === "easy" || S.diff === "medium";
+  const tbl = (LG.NBA.tables[seasonLab(g[10])] || []), row = (n) => tbl.find((r) => r[0] === n), line = (n) => { const r = row(n); return r ? `${esc(n)}: scores ${r[2].toFixed(1)}, allows ${r[3].toFixed(1)} a game` : esc(n); };
+  const stakes = [100, 250, 500].filter((v) => v <= s.bank || v === 100), sign = q.line > 0 ? "-" : "+";
+  const ask = q.spread ? `Do the <b>${esc(g[1])}</b> win by more than <b>${Math.abs(q.line)}</b>?` : `Will the two teams score more than <b>${q.line}</b> points together?`, yes = q.spread ? "Cover" : "Over", no = q.spread ? "Don't cover" : "Under";
+  const resTxt = q.pick ? `${esc(g[1])} ${g[3]}, ${esc(g[2])} ${g[4]} · ${q.spread ? "margin " + (g[3] - g[4] > 0 ? "+" : "") + (g[3] - g[4]) : "total " + (g[3] + g[4])}` : "";
+  $("#room").innerHTML = `<div class="card">${gamesBar("Over or under")}<div class="row" style="justify-content:space-between"><span class="fine">Game ${s.round} of 10</span><span class="oubank num">${s.bank} coins</span></div>
+    <div class="row" style="gap:14px;justify-content:center;margin:10px 0">${badge(g[1], "xl")}<span class="vs">at home vs</span>${badge(g[2], "xl")}</div><div class="fine" style="text-align:center">${esc(nbDate(g[0]))} · ${esc(g[1])} vs ${esc(g[2])}</div>
+    <div style="text-align:center;margin:10px 0"><div class="label">The model's line</div><div class="ouline">${q.spread ? `${esc(g[1])} ${sign}${Math.abs(q.line)}` : q.line}</div></div><p class="sub" style="text-align:center">${ask}</p>
+    ${ctx ? `<p class="fine" style="text-align:center">${line(g[1])}<br>${line(g[2])} <span>(season averages)</span></p>` : ""}
+    ${q.pick ? `<div class="rcard on" style="text-align:center"><b class="${q.pick === (q.over ? "y" : "n") ? "up" : "down"}">${q.pick === (q.over ? "y" : "n") ? "+" : "-"}${q.stake} coins</b> · it was ${q.over ? yes : no}<br><span class="fine">${resTxt}</span></div><div class="row" style="margin-top:12px;justify-content:center"><button class="btn" id="nbuNext" type="button">${s.round >= 10 || s.bank < 100 ? "See results" : "Next game"}</button></div>`
+    : `<div class="row" style="justify-content:center;margin:8px 0"><span class="fine">Stake</span>${stakes.map((v) => `<button type="button" class="chip" data-nbustake="${v}" aria-pressed="${q.stake === v}">${v}</button>`).join("")}</div><div class="row" style="justify-content:center;gap:12px"><button class="btn" data-nbu="y" type="button">${yes}</button><button class="btn" data-nbu="n" type="button">${no}</button></div>`}</div>`;
+}
+document.addEventListener("click", (e) => {
+  if (S.game !== "nbou") return; const t = e.target.closest && e.target.closest("[data-nbu],[data-nbustake],#nbuNext,#nbAgain"); if (!t) return; const s = S.nbu, q = s && s.q;
+  if (t.id === "nbAgain") { S.nbu = null; return renderOU(); }
+  if (t.id === "nbuNext") { if (s.round >= 10 || s.bank < 100) { $("#room").innerHTML = nbEnd("Over or under", s.bank, 3000, "nbou", `<table class="tb"><tr><th>Game</th><th>Bet</th><th>Result</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">The line is our model's own predicted score for each real game, so on average it is fair: no edge either way.</p>`); return; } s.q = null; return renderOU(); }
+  if (!q || q.pick) return; if (t.dataset.nbustake) { q.stake = Math.min(+t.dataset.nbustake, Math.max(100, s.bank)); return renderOU(); }
+  if (t.dataset.nbu) { q.pick = t.dataset.nbu; q.stake = Math.min(q.stake, Math.max(100, s.bank)); const win = q.pick === (q.over ? "y" : "n"); s.bank += win ? q.stake : -q.stake; if (s.bank < 0) s.bank = 0; s.log.push([`${q.pick === "y" ? (q.spread ? "Cover" : "Over") : (q.spread ? "Don't cover" : "Under")} ${q.stake}`, `${win ? "+" : "-"}${q.stake}`]); Snd.flip(); renderOU(); setTimeout(() => { win ? Snd.right() : Snd.wrong(); }, 350); }
+});
+{ const old3 = renderNB; renderNB = function () { if (S.game === "nbrank") return renderRANK(); if (S.game === "nbtime") return renderTIME(); if (S.game === "nbou") return renderOU(); old3(); }; }
+Object.assign(NB_TITLE, { nbrank: "Rank the five", nbtime: "Career timeline", nbou: "Over or under" }); ["nbrank", "nbtime", "nbou"].forEach((id) => GAME_IDS.push(id)); MODEL_IDS.push("nbou");
+QUIZ_GAMES.push({ id: "nbrank", name: "Rank the five", modes: "Solo · 5 rounds", tag: "Five players and one stat. Tap them in order, most to fewest. Closer to the truth scores more.", faces: () => heroFaces(3) },
+  { id: "nbtime", name: "Career timeline", modes: "Solo · 5 players", tag: "A player's teams, shuffled. Slide each one to the season he joined it.", faces: () => heroFaces(2) });
+GAMES.push({ id: "nbou", name: "Over or under", modes: "Solo, against the model", tag: "The model sets a line for a real game. Bet over or under with a bankroll that grows or shrinks." });
+Object.assign(HOWTO, {
+  "g:nbrank": ["Rank the five", ["What you do", "Five players and one stat, like career points or height. Tap them from the highest to the lowest, then check."], ["Scoring", "Up to 100 a round. Every place you are off costs points. Five rounds."], ["Difficulty", "Easy has big gaps between the players. Elite picks players whose numbers are almost the same."]],
+  "g:nbtime": ["Career timeline", ["What you do", "A player and the teams he played for, out of order. Slide each team to the season he joined it."], ["Scoring", "Exactly right is full points for that team. Each season you are off loses some, and easy is more forgiving."], ["Good to know", "Careers before 2001-02 are only partly in the data, so those players are left out."]],
+  "g:nbou": ["Over or under", ["What you do", "A real past game and a line from our model: its predicted total points, or the predicted margin. Choose over or under (cover or don't cover) and a stake."], ["Scoring", "You start with 1,000 coins and play 10 games. A right call wins your stake, a wrong one loses it."], ["Good to know", "The line is the model's own prediction, so it is fair on average. Easy and medium show each team's season averages. Elite only uses close calls."]],
+});
+BOARD_GAMES.push(["nbrank", "Rank the five", "best score (of 500)"], ["nbtime", "Career timeline", "best score (of 500)"], ["nbou", "Over or under", "best bankroll"]); BK_LABELS.push("Rank the five", "Career timeline", "Over or under");

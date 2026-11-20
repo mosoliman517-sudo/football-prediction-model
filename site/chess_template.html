@@ -1,9 +1,9 @@
 <title>ballknowledge chess</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Orbitron:wght@700;900&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<style>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("bkc_cyber")==="0"?"classic":"cyber")}catch(e){document.documentElement.setAttribute("data-theme","cyber")}</script><style>
 :root{--bg:#0e1411;--panel:#16201b;--panel2:#1d2a23;--ink:#f3eddc;--muted:#a9b5ab;--gold:#e8c35a;--light:#ead9b0;--dark:#6f8f6a;--ok:#5ee6a8;--bad:#ff6b7f;--line:#2c3d33;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:repeating-conic-gradient(rgba(255,255,255,.025) 0 25%,transparent 0 50%) 0 0/72px 72px,radial-gradient(900px 480px at 50% -10%,rgba(232,195,90,.12),transparent 70%),var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;min-height:100vh;padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
@@ -97,6 +97,24 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .rv{display:grid;grid-template-columns:1fr;gap:12px}.rvgraph{width:100%;height:90px;background:#1b251f;border-radius:10px}.rvbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}.rvbtns .btn{min-width:48px;justify-content:center}
 .cls{display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;font:800 11px/18px Inter;color:#fff;vertical-align:middle}.cls.best{background:#5ee6a8;color:#06281a}.cls.good{background:#8fb37a}.cls.inaccuracy{background:#e8c35a;color:#241c00}.cls.mistake{background:#ff9f45}.cls.blunder{background:#ff5b6e}
 .rvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.rvsum .tile b{font-size:24px}
+#cyb{display:none}
+:root[data-theme=cyber]{--bg:#060a18;--panel:#0d1430;--panel2:#131d44;--ink:#e6f0ff;--muted:#8da2d0;--gold:#3df5ff;--ok:#4dffb0;--bad:#ff4d8d;--line:#22346b}
+:root[data-theme=cyber] body{background:linear-gradient(rgba(61,245,255,.055) 1px,transparent 1px) 0 0/46px 46px,linear-gradient(90deg,rgba(61,245,255,.055) 1px,transparent 1px) 0 0/46px 46px,radial-gradient(900px 480px at 50% -10%,rgba(61,245,255,.17),transparent 70%),radial-gradient(700px 400px at 100% 100%,rgba(255,77,141,.13),transparent 70%),var(--bg)}
+:root[data-theme=cyber] body::before{display:none}
+:root[data-theme=cyber] #cyb{display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px);overflow:hidden}
+#cyb i{position:absolute;left:0;right:0;height:24vh;top:-24vh;background:linear-gradient(180deg,transparent,rgba(61,245,255,.075),transparent);animation:cybscan 9s linear infinite}@keyframes cybscan{to{transform:translateY(135vh)}}
+:root[data-theme=cyber] h2,:root[data-theme=cyber] .gname,:root[data-theme=cyber] .dname,:root[data-theme=cyber] .brand,:root[data-theme=cyber] .accb b{font-family:Orbitron,Inter,sans-serif;letter-spacing:.02em}
+:root[data-theme=cyber] h2,:root[data-theme=cyber] .gname,:root[data-theme=cyber] .dname{text-shadow:0 0 16px rgba(61,245,255,.45)}
+:root[data-theme=cyber] .card,:root[data-theme=cyber] .gcard,:root[data-theme=cyber] .door{box-shadow:0 0 0 1px rgba(61,245,255,.22),0 0 26px -10px rgba(61,245,255,.4)}
+:root[data-theme=cyber] .btn:not(.ghost){color:#02121a;box-shadow:0 0 18px rgba(61,245,255,.38)}
+:root[data-theme=cyber] .board .l{background:#1c2c5a}:root[data-theme=cyber] .board .d{background:#0b1430}
+:root[data-theme=cyber] .board{box-shadow:0 0 0 2px rgba(61,245,255,.5),0 0 34px rgba(61,245,255,.28)}
+:root[data-theme=cyber] .board .pcz[class*=" pc-w"]{filter:drop-shadow(0 0 3px rgba(61,245,255,.95))}:root[data-theme=cyber] .board .pcz[class*=" pc-b"]{filter:drop-shadow(0 0 3px rgba(255,77,141,.95)) brightness(1.5)}
+:root[data-theme=cyber] .board i.last::after,:root[data-theme=cyber] .board i.sel::after{background:rgba(61,245,255,.3)}
+:root[data-theme=cyber] .evv{background:#070c22;box-shadow:0 0 16px rgba(61,245,255,.4)}:root[data-theme=cyber] .evv i{background:linear-gradient(180deg,#f2fdff,#8fe6ff)}:root[data-theme=cyber] .evv::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);pointer-events:none}
+:root[data-theme=cyber] .rvlist,:root[data-theme=cyber] .mvbar{background:#0a1028}
+:root[data-perf=low] #cyb i{animation:none;display:none}
+@media (prefers-reduced-motion:reduce){#cyb i{animation:none}}
 .evv.hb{cursor:ns-resize;touch-action:none;width:36px}.evv.hb i{transition:none}.evm{position:absolute;left:0;right:0;height:4px;background:#e8c35a;box-shadow:0 0 10px #e8c35a;transform:translateY(50%);animation:evm .6s ease}@keyframes evm{from{opacity:0}}
 .board i.mk{box-shadow:inset 0 0 0 4px #e8c35a;background-image:radial-gradient(circle,rgba(232,195,90,.35),transparent 70%)}.board i.hit{box-shadow:inset 0 0 0 4px #5ee6a8}.board i.fp{box-shadow:inset 0 0 0 4px #ff5b6e}.board i.ms{box-shadow:inset 0 0 0 4px #ff9f45}
 .pals{display:grid;grid-template-columns:repeat(13,1fr);gap:3px;margin:8px 0}@media(max-width:560px){.pals{grid-template-columns:repeat(7,1fr)}}.pal{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:0;aspect-ratio:1;position:relative;cursor:pointer;color:var(--ink);font:700 16px Inter}.pal.on{outline:2px solid var(--gold);background:#2b3d33}.pal .pcz{position:absolute;inset:0;background-size:86%;background-position:center;background-repeat:no-repeat}
@@ -169,7 +187,7 @@ table.tb{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit
 </style>
 <div id="splash" role="status" aria-live="polite"><div class="cs-brand"><span id="spLogo"></span>ball<b>knowledge</b> chess</div><div class="cs-art" id="csArt"></div><div class="cs-foot"><div class="cs-tip" id="csTip">Loading…</div><div class="cs-bar"><i id="csBar"></i></div><div class="cs-meta"><span id="csName"></span><span class="rar" id="csRar"></span><span class="cs-new" id="csNew"></span></div><div class="cs-meta" style="opacity:.7">Tap to skip</div></div></div>
 <div class="wrap">
- <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button></div>
+ <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button><button class="pill" id="thBtn" type="button" title="Switch the look"><span id="thLab"></span></button></div>
  <main id="app"></main>
  <div class="foot">Games come from the Lichess open database (CC0): rated games, January 2024 (first 250 MB), official tournament broadcasts, and the puzzle database. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. Engine evaluations are Stockfish's, recorded in Lichess games. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser only.</div>
 </div>
@@ -543,6 +561,8 @@ function bookMap() {
   OPEN.forEach((o) => { const t = (o.pgn || "").replace(/\d+\./g, " ").split(/\s+/).filter(Boolean); for (let k = 1; k <= t.length; k++) { const key = t.slice(0, k).join(" "); if (!BOOKMAP.has(key) || k === t.length) BOOKMAP.set(key, o.name); } });
   return BOOKMAP;
 }
+const thPaint = () => { const l = document.getElementById("thLab"); if (l) l.textContent = document.documentElement.getAttribute("data-theme") === "cyber" ? "Look: Cyber" : "Look: Classic"; };
+{ const L = document.createElement("div"); L.id = "cyb"; L.innerHTML = "<i></i>"; document.body.appendChild(L); thPaint(); }
 let rv = null, RVTOK = 0;
 function rvStop() { if (!rv) return; clearInterval(rv.timer); RVTOK++; Sf.stopAll(); rv = null; }
 function reviewStart(sans, color, o = {}) {
@@ -969,6 +989,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }
   if (t.dataset.intro) { fresh(); return intro(t.dataset.intro); }
+  if (t.id === "thBtn") { const d = document.documentElement, cy = d.getAttribute("data-theme") !== "cyber"; d.setAttribute("data-theme", cy ? "cyber" : "classic"); try { localStorage.setItem("bkc_cyber", cy ? "1" : "0"); } catch (e) { /* storage blocked */ } thPaint(); return; }
   if (t.id === "sndBtn") { const m = document.getElementById("mixPop"); if (m) { m.remove(); return; } const sl = (id, l, v) => `<label class="fine" style="display:grid;grid-template-columns:70px 1fr 38px;gap:8px;align-items:center;margin:6px 0">${l}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}"><span id="${id}V">${Math.round(v * 100)}%</span></label>`; const d = document.createElement("div"); d.id = "mixPop"; d.className = "card"; d.setAttribute("style", "position:fixed;right:12px;top:58px;z-index:9000;width:min(300px,92vw);box-shadow:0 18px 50px -12px #000"); d.innerHTML = `<h3 style="margin-top:0">${ic("bolt")}Sound</h3><div class="row"><button class="chip ${Snd.on ? "on" : ""}" data-snd="1" type="button">Sound ${Snd.on ? "on" : "off"}</button><button class="chip ${Snd.mus ? "on" : ""}" data-mus="1" type="button">Music ${Snd.mus ? "on" : "off"}</button><button class="chip ${Mix.say ? "on" : ""}" data-say="1" type="button">Voice ${Mix.say ? "on" : "off"}</button></div>${sl("mxFx", "Effects", Mix.fx)}${sl("mxMus", "Music", Mix.music)}${sl("mxVoice", "Voice", Mix.voice)}<p class="fine" style="margin:6px 0 0">All sounds are made live in your browser.</p>`; document.body.appendChild(d); return; }
   if (t.dataset.snd) { Snd.on = !Snd.on; store.set("snd", Snd.on); Snd.init(); Snd.remix(); if (!Snd.on) Snd.musicStop(); else Snd.ok(); paintSnd(); t.classList.toggle("on", Snd.on); t.textContent = "Sound " + (Snd.on ? "on" : "off"); return; }
   if (t.dataset.mus) { Snd.mus = !Snd.mus; store.set("mus", Snd.mus); Snd.mus ? Snd.musicStart() : Snd.musicStop(); t.classList.toggle("on", Snd.mus); t.textContent = "Music " + (Snd.mus ? "on" : "off"); return; }

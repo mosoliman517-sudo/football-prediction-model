@@ -97,6 +97,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .rv{display:grid;grid-template-columns:1fr;gap:12px}.rvgraph{width:100%;height:90px;background:#1b251f;border-radius:10px}.rvbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}.rvbtns .btn{min-width:48px;justify-content:center}
 .cls{display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;font:800 11px/18px Inter;color:#fff;vertical-align:middle}.cls.best{background:#5ee6a8;color:#06281a}.cls.good{background:#8fb37a}.cls.inaccuracy{background:#e8c35a;color:#241c00}.cls.mistake{background:#ff9f45}.cls.blunder{background:#ff5b6e}
 .rvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.rvsum .tile b{font-size:24px}
+.chgames{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}.chg{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink);cursor:pointer;font:600 14px Inter;text-align:left}.chg span:last-of-type{text-align:right}.chg b{color:var(--gold);font:800 14px Orbitron,Inter,sans-serif}.chg small{grid-column:1/-1;color:var(--muted);font-weight:500}.chg:hover:not([disabled]){border-color:var(--gold)}.chg[disabled]{opacity:.5;cursor:default}
+.mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}.board{touch-action:manipulation;-webkit-touch-callout:none}
 :root[data-theme=light]{--bg:#f2efe7;--panel:#fffdf8;--panel2:#ebe6d8;--ink:#1f2a24;--muted:#5b675f;--gold:#9a6200;--ok:#1b8f5a;--bad:#cc3049;--line:#d8d0bd;color-scheme:light}
 :root[data-theme=light] body{background:var(--bg)}:root[data-theme=light] body::before{display:none}
 :root[data-theme=light] .btn:not(.ghost){color:#fff}:root[data-theme=light] .card,:root[data-theme=light] .gcard,:root[data-theme=light] .door{box-shadow:0 1px 0 rgba(0,0,0,.05),0 12px 26px -18px rgba(0,0,0,.3)}
@@ -272,7 +274,7 @@ let sy = false; addEventListener("scroll", () => { if (sy) return; sy = true; re
 function home() {
   rvStop(); olClose(); clearInterval(st.timer); live = null; st = {}; $("#app").innerHTML = `<div class="hero"><div class="wall" aria-hidden="true">${wallHTML()}</div><div class="sec" style="margin-top:0">${ic("crown")}Chess, predicted and played</div><h1>ball<em>knowledge</em></h1><p class="sub" style="font-size:17px;max-width:600px">Out-call a model on real games, guess a grandmaster's next move, solve puzzles and test your level. Everything comes from real data; nothing is made up.</p>
     <div class="statstrip" id="statstrip"><div><b class="cu" data-to="${PZ.length}">${PZ.length}</b><span>real puzzles</span></div><div><b class="cu" data-to="${EM.length}">${EM.length}</b><span>top-level games</span></div><div><b class="cu" data-to="${PLAYERS.length}">${PLAYERS.length}</b><span>players profiled</span></div><div><b class="cu" data-to="${Math.round(S.acc * 1000) / 10}" data-dec="1" data-suf="%">${pct(S.acc, 1)}</b><span>model accuracy</span></div></div>
-    <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button><button class="door" data-go="daily"><div class="di">${ic("clock")}</div><div class="dname">Daily challenges</div><div class="dtag">A puzzle, a position to judge and a tactic to spot, new every day, with a streak.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
+    <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button><button class="door" data-go="champ"><div class="di">${ic("crown")}</div><div class="dname">Championships</div><div class="dtag">The Total Chess pilot final, the World Championship match next week, women's titles and the reigning champions.</div></button><button class="door" data-go="daily"><div class="di">${ic("clock")}</div><div class="dname">Daily challenges</div><div class="dtag">A puzzle, a position to judge and a tactic to spot, new every day, with a streak.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
   cuRun($("#app"));
 }
 function hub(g) {
@@ -420,7 +422,7 @@ function boardUpdate(c, o, L) {
     if (!p) { if (pz) pz.remove(); } else if (!pz) { pz = document.createElement("b"); pz.className = want; el.insertBefore(pz, el.firstChild); } else if (pz.className.replace(" slide", "") !== want) pz.className = want;
   });
   const key = (o.last || []).join();
-  if (L && key !== L.lastKey) { L.lastKey = key; if (o.last && !L.skipAnim) { const [a, b] = o.last, from = sqEl(a), to = sqEl(b), pz = to && to.querySelector(".pcz"); if (from && pz) { const fr = from.getBoundingClientRect(), tr = to.getBoundingClientRect(); pz.style.transform = `translate(${fr.left - tr.left}px,${fr.top - tr.top}px)`; pz.getBoundingClientRect(); pz.classList.add("slide"); pz.style.transform = "none"; setTimeout(() => { pz.classList.remove("slide"); }, 220); } } L.skipAnim = false; }
+  if (L && key !== L.lastKey) { mkClear(document.getElementById("bd")); L.lastKey = key; if (o.last && !L.skipAnim) { const [a, b] = o.last, from = sqEl(a), to = sqEl(b), pz = to && to.querySelector(".pcz"); if (from && pz) { const fr = from.getBoundingClientRect(), tr = to.getBoundingClientRect(); pz.style.transform = `translate(${fr.left - tr.left}px,${fr.top - tr.top}px)`; pz.getBoundingClientRect(); pz.classList.add("slide"); pz.style.transform = "none"; setTimeout(() => { pz.classList.remove("slide"); }, 220); } } L.skipAnim = false; }
 }
 /* the list of moves, and the material count */
 function movesHTML(c, cur) { const h = c.history(); let s = ""; h.forEach((m, i) => { if (i % 2 === 0) s += `<span class="n">${i / 2 + 1}.</span>`; s += `<span class="m ${cur === i + 1 || (cur == null && i === h.length - 1) ? "cur" : ""}" ${cur != null ? `data-ply="${i + 1}"` : ""}>${esc(m)}</span>`; }); return s; }
@@ -697,7 +699,7 @@ function rvGraph() {
 }
 function rvGo(i, o = {}) {
   if (!rv) return; i = Math.max(0, Math.min(rv.N, i)); const prev = rv.i, step = i === prev + 1 && o.sound !== false; rv.i = i; rv.c.load(rv.fen[i]);
-  rv.L.skipAnim = !(i === prev + 1); boardUpdate(rv.c, { play: false, last: i ? [rv.mv[i - 1].from, rv.mv[i - 1].to] : null }, rv.L);
+  rv.L.skipAnim = !(i === prev + 1); if (i !== prev) mkClear(document.getElementById("bd")); boardUpdate(rv.c, { play: false, last: i ? [rv.mv[i - 1].from, rv.mv[i - 1].to] : null }, rv.L);
   if (step && typeof Snd !== "undefined") Snd.move(rv.mv[i - 1], rv.c);
   rvPaint();
 }
@@ -725,7 +727,7 @@ function rvPaint() {
   }
   setPart("rvCoach", coach); setPart("rvOv", ov);
 }
-function rvFlip() { rv.flip = !rv.flip; rvEl("rvEv").classList.toggle("flip", rv.flip); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
+function rvFlip() { rv.flip = !rv.flip; rvEl("rvEv").classList.toggle("flip", rv.flip); mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
 function rvPlay() { if (rv.timer) { clearInterval(rv.timer); rv.timer = null; } else { if (rv.i >= rv.N) rvGo(0, { sound: false }); rv.timer = setInterval(() => { if (!rv || rv.i >= rv.N) { if (rv) { clearInterval(rv.timer); rv.timer = null; rvPaint(); } return; } rvGo(rv.i + 1); }, 1100); } rvPaint(); }
 const rvActive = () => rv && rvEl("rvList");
 document.addEventListener("keydown", (e) => {
@@ -1202,7 +1204,102 @@ document.addEventListener("input", (e) => { if (e.target.id === "olCode") e.targ
 addEventListener("pagehide", () => { if (OL && OG && !OG.over) olSend({ k: "leave" }); });
 
 if (/^#join-[A-Za-z]{4}$/.test(location.hash)) { const jc = location.hash.slice(6).toUpperCase(); setTimeout(() => olMenu(jc), 800); }
-const GO = { online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+/* ---------- Arrows and square marks, like chess.com: right-drag draws an arrow, right-click marks a square (Shift red, Ctrl blue, Alt yellow), left-click clears ---------- */
+const MKC = { g: "#6bbf3a", r: "#e5483f", b: "#3a8ee5", y: "#e5b93a" };
+function mkSvg(bd) {
+  const wrap = bd.closest(".lvwrap") || bd.parentElement; let svg = wrap.querySelector(":scope > .mk");
+  if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("class", "mk"); svg.setAttribute("viewBox", "0 0 8 8"); svg.setAttribute("preserveAspectRatio", "none"); svg._m = { sq: [], ar: [] }; wrap.appendChild(svg); }
+  return svg;
+}
+function mkDraw(svg) {
+  const m = svg._m; let h = "";
+  m.sq.forEach(([c, r, k]) => { h += `<rect x="${c}" y="${r}" width="1" height="1" fill="${MKC[k]}" opacity=".55"/>`; });
+  m.ar.forEach(([c1, r1, c2, r2, k]) => {
+    const ax = c1 + .5, ay = r1 + .5, bx = c2 + .5, by = r2 + .5, dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, hl = .42, hw = .27, ex = bx - ux * .1, ey = by - uy * .1, sx = ex - ux * hl, sy = ey - uy * hl;
+    h += `<g opacity=".82" fill="${MKC[k]}" stroke="${MKC[k]}"><line x1="${ax + ux * .12}" y1="${ay + uy * .12}" x2="${sx}" y2="${sy}" stroke-width=".17" stroke-linecap="round"/><polygon stroke="none" points="${ex},${ey} ${sx - uy * hw},${sy + ux * hw} ${sx + uy * hw},${sy - ux * hw}"/></g>`;
+  });
+  svg.innerHTML = h;
+}
+function mkClear(bd) { const w = bd && (bd.closest(".lvwrap") || bd.parentElement), svg = w && w.querySelector(":scope > .mk"); if (svg && (svg._m.sq.length || svg._m.ar.length)) { svg._m = { sq: [], ar: [] }; svg.innerHTML = ""; } }
+const mkCell = (bd, e) => { const r = bd.getBoundingClientRect(), c = Math.floor((e.clientX - r.left) / r.width * 8), q = Math.floor((e.clientY - r.top) / r.height * 8); return c < 0 || c > 7 || q < 0 || q > 7 ? null : [c, q]; };
+const mkKind = (e) => (e.shiftKey ? "r" : e.ctrlKey || e.metaKey ? "b" : e.altKey ? "y" : "g");
+function mkToggle(svg, a, b, k) {
+  const m = svg._m;
+  if (a[0] === b[0] && a[1] === b[1]) { const i = m.sq.findIndex((x) => x[0] === a[0] && x[1] === a[1]); if (i >= 0) { const same = m.sq[i][2] === k; m.sq.splice(i, 1); if (same) return mkDraw(svg); } m.sq.push([a[0], a[1], k]); }
+  else { const i = m.ar.findIndex((x) => x[0] === a[0] && x[1] === a[1] && x[2] === b[0] && x[3] === b[1]); if (i >= 0) { const same = m.ar[i][4] === k; m.ar.splice(i, 1); if (same) return mkDraw(svg); } m.ar.push([a[0], a[1], b[0], b[1], k]); }
+  mkDraw(svg);
+}
+document.addEventListener("contextmenu", (e) => { if (e.target.closest && e.target.closest(".board")) e.preventDefault(); });
+document.addEventListener("pointerdown", (e) => {
+  const bd = e.target.closest && e.target.closest(".board"); if (!bd) return;
+  if (e.button === 0 && e.pointerType === "mouse") { mkClear(bd); return; }
+  const start = mkCell(bd, e); if (!start) return;
+  if (e.button === 2) {
+    const svg = mkSvg(bd), up = (ev) => { removeEventListener("pointerup", up); const end = mkCell(bd, ev); if (end) mkToggle(svg, start, end, mkKind(ev)); }; addEventListener("pointerup", up); return;
+  }
+  if (e.pointerType === "touch") { const svg = mkSvg(bd); let moved = false; const mv = (ev) => { if (Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 10) { moved = true; clearTimeout(tm); } }, tm = setTimeout(() => { if (!moved) { mkToggle(svg, start, start, "g"); try { navigator.vibrate && navigator.vibrate(15); } catch (er) { /* none */ } } cleanup(); }, 450), cleanup = () => { clearTimeout(tm); removeEventListener("pointermove", mv); removeEventListener("pointerup", cleanup); }; addEventListener("pointermove", mv); addEventListener("pointerup", cleanup); }
+});
+/* =====================================================================================================================
+   Championships: the Total Chess World Championship Tour pilot (Budapest, 10 to 20 November 2026), the FIDE World Championship match
+   (Gukesh v Sindarov, Geneva), the women's side, and the reigning champions. Games come live from the Lichess broadcast API (open, no key).
+   Facts that are written here were read from the sources listed on the page on 20 November 2026; nothing is guessed.
+   ===================================================================================================================== */
+const LI = "https://lichess.org/api/broadcast";
+const liJson = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json" } }); if (!r.ok) throw new Error("http " + r.status); return r.json(); };
+const TC_TOURS = [["6PTzCQFL", "Finals"], ["qEXour3L", "Semifinals"], ["9lqCcStZ", "Group A"], ["h7DnvIHQ", "Group B"], ["UPwHJSZj", "Group C"], ["OW6wzikj", "Group D"], ["WbAxpbqH", "Blitz tiebreak"]];
+const TC_GROUPS = { "Group A": [["Firouzja", 15], ["Duda", 14], ["van Foreest", 14], ["Aronian", 11], ["Hong", 11], ["Abdusattorov", 9]], "Group B": [["Caruana", 17], ["Le Quang Liem", 14], ["Rapport", 11], ["Keymer", 10], ["Artemiev", 10], ["Praggnanandhaa", 7]], "Group C": [["Giri", 15], ["Nepomniachtchi", 13], ["Martirosyan", 13], ["Mamedyarov", 11], ["Carlsen", 9], ["Mishra", 8]], "Group D": [["Vachier-Lagrave", 17], ["Niemann", 16], ["Erigaisi", 16], ["So", 13], ["Assaubayeva", 10], ["Vaishali Rameshbabu", 7]] };
+const CH_TABS = [["total", "Total Chess"], ["wcc", "World Championship"], ["women", "Women"], ["champs", "Reigning champions"]];
+let CH = { tab: "total", tour: "6PTzCQFL", round: null, games: [] };
+const chLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
+function champPage(tab) {
+  rvStop(); olClose(); clearInterval(st.timer); live = null; st = { game: "champ" }; if (typeof tab === "string" && tab !== CH.tab) { CH.tab = tab; CH.round = null; } const t = CH.tab;
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("crown")}Championships</h2><div class="chips">${CH_TABS.map(([k, n]) => `<button class="chip ${k === t ? "on" : ""}" data-chtab="${k}" type="button">${n}</button>`).join("")}</div><div id="chBody"></div>`;
+  const b = $("#chBody");
+  if (t === "total") b.innerHTML = chTotal(); else if (t === "wcc") b.innerHTML = chWcc(); else if (t === "women") b.innerHTML = chWomen(); else b.innerHTML = chChamps();
+  if (t === "total") chLoadTour(CH.tour); else if (t === "wcc") chLoadTour("qfkdt8mn");
+}
+const chTotal = () => `<div class="card"><h3>${ic("trophy")}Total Chess World Championship Tour Pilot</h3><p class="sub">Budapest, 10 to 20 November 2026. 24 players, a combined test event from Norway Chess approved by FIDE: Fast Classical (45 min + 30 s a move), rapid and blitz. $650,000 in prizes. The tour proper starts in 2027, and the winner of the tour becomes FIDE World Combined Champion.</p>
+  <p class="fine"><b>How it ran.</b> A 9-round blitz Swiss (Carlsen won it), then four groups of six playing a double round robin (3 points a win, 1 a draw), then six knockout brackets by group place. The winners of the groups play for the title. Each knockout match lasts two days: four blitz games, two rapid and one Fast Classical a day, with a tie decided by Armageddon.</p>
+  <div class="tiles" style="margin:10px 0">${Object.entries(TC_GROUPS).map(([g, rows]) => `<div class="tile" style="text-align:left"><small>${g}</small>${rows.map(([n, p]) => `<div class="fine" style="display:flex;justify-content:space-between;gap:8px"><span>${esc(n)}</span><b>${p}</b></div>`).join("")}</div>`).join("")}</div>
+  <p class="fine"><b>Title match (Knockout 1).</b> Final: Anish Giri v Alireza Firouzja. Third place: Maxime Vachier-Lagrave v Fabiano Caruana. After day one, press reports had Giri ahead 11 to 9 and Caruana ahead 11 to 9. The second and last day is today, 20 November, so <b>the result may not be final</b>; the games below are live from Lichess.</p>
+  <p class="fine">Sources: ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")}, ${chLink("https://en.chessbase.com/post/total-chess-budapest-2026-live", "ChessBase")}, ${chLink("https://www.totalchess.com/tournaments/budapest-2026", "totalchess.com")}.</p></div>
+  <div class="chips" style="margin-top:10px">${TC_TOURS.map(([id, n]) => `<button class="chip ${id === CH.tour ? "on" : ""}" data-chtour="${id}" type="button">${n}</button>`).join("")}</div><div id="chLive" class="card" style="margin-top:8px"></div>`;
+const chWcc = () => `<div class="card"><h3>${ic("crown")}FIDE World Chess Championship 2026</h3><p class="sub">Gukesh Dommaraju (defending champion, India) against Javokhir Sindarov (Uzbekistan, winner of the 2026 Candidates). 14 classical games in Geneva, Switzerland, from 24 November to 11 December 2026, with tiebreaks if it is level.</p><p class="fine">Time control: 120 minutes for 40 moves, then 30 minutes, plus 30 seconds a move from move 41. Game dates below are the Lichess broadcast schedule (UTC). Some news sources gave slightly different dates earlier, so check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for any change. Games appear here as they are played.</p></div><div id="chLive" class="card" style="margin-top:8px"></div>`;
+const chWomen = () => `<div class="card"><h3>${ic("crown")}Women's World Championship</h3><p class="sub">Ju Wenjun (China) holds the title. Vaishali Rameshbabu (India) won the 2026 Women's Candidates with 8.5 out of 14 in Cyprus and is the challenger. The match is 12 games.</p><p class="fine"><b>Dates are not confirmed.</b> Sources disagree (one says November 2026, FIDE's own page says dates and host city are to be announced), and Lichess has no 2026 women's match broadcast yet, so there are no games to show. Check ${chLink("https://www.fide.com/", "FIDE")} for the schedule.</p><p class="fine">Women in the Total Chess pilot: Bibisara Assaubayeva and Vaishali Rameshbabu (both in Group D, finishing 5th and 6th). Sources: ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")}, ${chLink("https://en.wikipedia.org/wiki/Women%27s_World_Chess_Championship_2026", "Wikipedia")}.</p></div>`;
+const chChamps = () => { const rows = (list) => list.map(([t, n, c, note]) => `<tr><td><b>${t}</b></td><td>${esc(n)}</td><td class="fine">${esc(c)}</td><td class="fine">${note}</td></tr>`).join(""); return `<div class="card"><h3>${ic("trophy")}Reigning champions</h3><p class="fine">As of 20 November 2026, from the sources below. The 2026 World Rapid and Blitz Championships are in December, so those two can change.</p>
+  <h4 style="margin:12px 0 4px">Open</h4><table class="tb"><tr><th>Title</th><th>Champion</th><th>Country</th><th>Note</th></tr>${rows([["Classical", "Gukesh Dommaraju", "India", "Defends against Sindarov from 24 November"], ["Rapid", "Magnus Carlsen", "Norway", "Won the 2025 World Rapid"], ["Blitz", "Magnus Carlsen", "Norway", "Won the 2025 World Blitz"], ["Freestyle", "Magnus Carlsen", "Norway", "First official FIDE Freestyle title, February 2026"], ["Combined (Total Chess pilot)", "Not decided yet", "", "Final day is 20 November: Giri v Firouzja"]])}</table>
+  <h4 style="margin:12px 0 4px">Women</h4><table class="tb"><tr><th>Title</th><th>Champion</th><th>Country</th><th>Note</th></tr>${rows([["Classical", "Ju Wenjun", "China", "Challenger Vaishali Rameshbabu; dates not confirmed"], ["Rapid", "Aleksandra Goryachkina", "FIDE", "Won the 2025 Women's World Rapid"], ["Blitz", "Bibisara Assaubayeva", "Kazakhstan", "Won the 2025 Women's World Blitz, her third"]])}</table>
+  <p class="fine" style="margin-top:8px">Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase on the 2025 Rapid and Blitz", "")}, ${chLink("https://en.chessbase.com/post/freestyle-chess-wc-2026-3", "ChessBase on Freestyle", "")}, ${chLink("https://www.chess.com/news/view/geneva-gukesh-sindarov-2026-fide-world-championship", "chess.com on the 2026 match", "")}, ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE on the women's title", "")}. A few classical-title details come from news reports, not from a single official list, so treat them as reported.</p></div>`; };
+async function chLoadTour(id) {
+  const el = document.getElementById("chLive"); if (!el) return; if (CH.tab === "total") CH.tour = id; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;
+  try {
+    const d = await liJson(`${LI}/${id}`); if (document.getElementById("chLive") !== el) return; const rounds = d.rounds || [], now = Date.now();
+    const state = (r) => (r.finished ? "done" : r.ongoing ? "live" : r.startsAt && r.startsAt < now ? "played" : "soon"), fmt = (ms) => (ms ? new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+    const def = CH.round && rounds.find((r) => r.id === CH.round) ? CH.round : d.defaultRoundId || (rounds[0] && rounds[0].id); CH.round = def;
+    el.innerHTML = `<div class="label">${esc(d.tour.name)}</div><div class="chips" id="chRounds">${rounds.map((r) => `<button class="chip ${r.id === def ? "on" : ""}" data-chround="${r.id}" type="button" title="${fmt(r.startsAt)}">${esc(r.name)}${state(r) === "live" ? " ●" : ""}</button>`).join("")}</div><div id="chGames"></div>`;
+    if (def) chLoadRound(def, rounds.find((r) => r.id === def));
+  } catch (e) { el.innerHTML = `<p class="sub"><b>Could not reach Lichess.</b> This page needs an internet connection. <button class="btn" data-chtour="${id}" type="button">Try again</button></p>`; }
+}
+async function chLoadRound(id, r) {
+  const el = document.getElementById("chGames"); if (!el) return; CH.round = id; document.querySelectorAll("#chRounds .chip").forEach((x) => x.classList.toggle("on", x.dataset.chround === id));
+  const when = r && r.startsAt ? new Date(r.startsAt).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  el.innerHTML = `<p class="fine"><span class="spin"></span> Loading games…</p>`;
+  try {
+    const res = await fetch(`${LI}/round/${id}.pgn`); if (!res.ok) throw new Error("http"); const txt = await res.text(); if (document.getElementById("chGames") !== el) return;
+    const games = txt.split(/\n\n(?=\[Event )/).map((g) => g.trim()).filter(Boolean).map((pgn) => { const c = new Chess(); const ok = c.load_pgn(pgn, { sloppy: true }); const h = c.header(); return { ok, sans: ok ? c.history() : [], w: h.White || "White", b: h.Black || "Black", res: h.Result || "*", tc: h.TimeControl || "" }; });
+    CH.games = games;
+    el.innerHTML = games.length ? `<div class="fine" style="margin:6px 0">${when ? "Starts " + esc(when) + " · " : ""}Press a game to step through it and run the Stockfish review.</div><div class="chgames">${games.map((g, i) => `<button class="chg" type="button" data-chg="${i}" ${g.sans.length < 2 ? "disabled" : ""}><span>${esc(g.w)}</span><b>${g.res === "1-0" ? "1-0" : g.res === "0-1" ? "0-1" : g.res === "1/2-1/2" ? "½-½" : g.sans.length ? "live" : "…"}</b><span>${esc(g.b)}</span><small>${g.sans.length ? Math.ceil(g.sans.length / 2) + " moves" : "not started"}</small></button>`).join("")}</div><button class="btn ghost" data-chround="${id}" type="button" style="margin-top:8px">Refresh</button>` : `<p class="fine">${when ? "Scheduled for " + esc(when) + ". " : ""}No games have been published for this round yet.</p>`;
+  } catch (e) { el.innerHTML = `<p class="sub"><b>Could not load the games.</b> <button class="btn" data-chround="${id}" type="button">Try again</button></p>`; }
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("[data-chtab],[data-chtour],[data-chround],[data-chg]"); if (!t || st.game !== "champ") return;
+  if (t.dataset.chtab) return champPage(t.dataset.chtab);
+  if (t.dataset.chtour) { document.querySelectorAll("[data-chtour]").forEach((x) => x.classList.toggle("on", x.dataset.chtour === t.dataset.chtour)); CH.round = null; return chLoadTour(t.dataset.chtour); }
+  if (t.dataset.chround) return chLoadRound(t.dataset.chround, null);
+  if (t.dataset.chg != null) { const g = CH.games[+t.dataset.chg]; if (g && g.sans.length >= 2) reviewStart(g.sans, "w", { from: "champ", names: [g.w, g.b], result: g.res }); }
+});
+
+const GO = { champ: () => champPage(), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);
@@ -1216,7 +1313,7 @@ document.addEventListener("click", (e) => {
   if (t.id === "aiGo") return aiStart(st.level, st.color);
   if (t.id === "aiAgain" || t.id === "aiNew") return aiMenu();
   if (t.id === "aiReview") return reviewStart(live.c.history(), live.color, { from: "ai", names: live.color === "w" ? ["You", "My engine"] : ["My engine", "You"] });
-  if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : reviewIntro(); }
+  if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : was === "champ" ? champPage() : reviewIntro(); }
   if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }

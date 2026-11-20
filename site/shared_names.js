@@ -24,7 +24,7 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
 { const pick = (a) => a[Math.floor(Math.random() * a.length)], win0 = Snd.win, right0 = Snd.right;
   Snd.win = function () { win0.apply(Snd, arguments); Voice.say(pick(["Winner!", "Brilliant!", "Nice one!", "What a finish!"])); };
   Snd.right = function () { right0.apply(Snd, arguments); try { const n = Q && Q.s && Q.s.streak; if (n >= 3 && n % 3 === 0) Voice.say("Streak of " + n); } catch (e) { /* no quiz */ } };
-  const toast0 = toast; toast = function (html, kind) { try { const txt = String(html).replace(/<[^>]*>/g, " "); if (/Rank up/i.test(txt)) Voice.say(txt.replace(/\s+/g, " ").trim()); else if (/Secret found/i.test(txt)) Voice.say("Secret found. The Notebook."); } catch (e) { /* ok */ } return toast0.apply(this, arguments); };
+  const toast0 = toast; toast = function (html, kind) { try { const txt = String(html).replace(/<[^>]*>/g, " "); if (/Rank up/i.test(txt)) Voice.say(txt.replace(/\s+/g, " ").trim()); else if (/Achievement unlocked/i.test(txt)) Voice.say("Achievement unlocked"); else if (/Secret found/i.test(txt)) Voice.say("Secret found. The Notebook."); } catch (e) { /* ok */ } return toast0.apply(this, arguments); };
 }
 { const rs0 = renderSettings;
   renderSettings = function () { rs0(); const el = $("#setPage"); if (!el || document.getElementById("mixCard")) return; const sl = (id, label, v) => `<label class="fine" style="display:grid;grid-template-columns:96px 1fr 40px;gap:10px;align-items:center;margin:8px 0">${label}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}" style="width:100%"><span class="num" id="${id}V">${Math.round(v * 100)}%</span></label>`;
@@ -97,7 +97,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
 :root[data-perf=low] #tfx,:root[data-perf=low] #tsw{display:none}
 @media (prefers-reduced-motion:reduce){#tfx .tx-beam,#tfx .tx-ballf{animation:none!important}#tsw{display:none}}
 `;
-  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const st = document.createElement("style"); st.textContent = css + `:root[data-mode=light] #tfx{opacity:.4}:root[data-mode=light] #tfx .tx-neon{filter:none;opacity:.55}:root[data-mode=light] h2.sec,:root[data-mode=light] .gpick .gname,:root[data-mode=light] .door .dname{text-shadow:none}:root[data-mode=light] .card,:root[data-mode=light] .gcard,:root[data-mode=light] .gpick,:root[data-mode=light] .door{box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 24px -16px rgba(0,0,0,.25)}`; document.head.appendChild(st);
   const hoop = `<svg class="tx-neon" viewBox="0 0 240 200" fill="none" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round" aria-hidden="true"><rect x="40" y="6" width="160" height="104" rx="6" stroke="#ffd0a0"/><rect x="88" y="52" width="64" height="48" rx="3" stroke="#ffd0a0" stroke-width="3"/><ellipse cx="120" cy="124" rx="52" ry="12" stroke="#ff5a1a" stroke-width="6"/><path d="M70 128l16 62M96 134l10 58M120 136v58M144 134l-10 58M170 128l-16 62M82 150l76 0M90 172l60 0" stroke-width="2.4" stroke="#ffe2c4"/></svg>`;
   const ball = `<svg class="tx-ballb" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#2a1200" stroke-width="2"/><path d="M2 24h44M24 2v44M8 8c10 9 10 23 0 32M40 8c-10 9-10 23 0 32" stroke="#2a1200" stroke-width="2" fill="none"/></svg>`;
   const court = `<svg class="tx-court" viewBox="0 0 400 220" fill="none" stroke="#ff9a3c" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><rect x="140" y="2" width="120" height="110"/><circle cx="200" cy="112" r="44"/><path d="M40 2c0 90 70 140 160 140s160-50 160-140"/><circle cx="200" cy="10" r="10"/></svg>`;
@@ -128,7 +128,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   const streak = () => { let s = 0; for (let k = 0; k < 400; k++) { if (count(dayKey(k))) s++; else if (k > 0) break; } return s; };
   window.showDaily = function (ev) {
     S.code = null; S.mode = null; S.cur = null; setTheme("HOME", ev); ["#home", "#lobby", "#league", "#profilePage", "#albumPage", "#adminPage", "#aboutPage", "#setPage"].forEach((s) => { const e = $(s); if (e) e.hidden = true; });
-    const el = $("#discPage"); el.hidden = false; window.scrollTo(0, 0); const k = dayKey(0), n = count(k), st_ = streak();
+    const el = $("#discPage"); el.hidden = false; window.scrollTo(0, 0); const k = dayKey(0), n = count(k), st_ = streak(); if (n === 3 && !store.items["dsay_" + k]) { lockIn("dsay_" + k, 1); Voice.say("All three dailies done. Streak of " + st_); }
     const dots = Array.from({ length: 14 }, (_, i) => { const d = dayKey(13 - i), c = count(d); return `<i class="dhd ${c >= 3 ? "full" : c ? "some" : ""} ${d === k ? "today" : ""}" title="${d}: ${c} of 3"></i>`; }).join("");
     el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Daily challenges</span></div></nav>
       <div class="card abx"><div class="label">Every day</div><h2><svg class=ic><use href=#i-bulb></use></svg> Daily challenges</h2><p class="fine">Three short things, new every day. Do any one to keep your streak going.</p>
@@ -137,4 +137,56 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   };
   const home = renderHome;
   renderHome = function () { home.apply(this, arguments); const d = $("#doors"); if (d && !d.querySelector('[data-door="daily"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="daily"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="dname">Daily challenges</div><div class="dtag">Three short things, new every day, with a streak: ${streak()} day${streak() === 1 ? "" : "s"} so far.</div></button>`); };
+})();
+
+/* ---- home screen: a bolder stats strip whose numbers count up when scrolled into view, and parallax layers that drift as you scroll ---- */
+(function homeFX() {
+  if (typeof renderHome !== "function") return;
+  const css = document.createElement("style"); css.textContent = `
+#ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:900px;margin:18px auto 0}
+#ribbon span{background:var(--surface,#1c1c1c);border:1px solid var(--line,#fff2);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);text-align:center}
+#ribbon span b.num{order:-1;font-size:28px;line-height:1.1;letter-spacing:0;color:var(--accent);text-transform:none}
+@media (prefers-reduced-motion:no-preference){:root:not([data-perf=low]) #photowall{transform:translate3d(0,calc(var(--sy,0)*.16px),0);will-change:transform}:root:not([data-perf=low]) #home .hero h1,:root:not([data-perf=low]) #home .lhead h1{transform:translate3d(0,calc(var(--sy,0)*.07px),0)}:root:not([data-perf=low]) #tfx{transform:translate3d(0,calc(var(--sy,0)*-.06px),0)}}`;
+  document.head.appendChild(css);
+  let tick = false; addEventListener("scroll", () => { if (tick) return; tick = true; requestAnimationFrame(() => { document.documentElement.style.setProperty("--sy", Math.min(scrollY, 800)); tick = false; }); }, { passive: true });
+  const run = (el) => { const m = /^(\D*)([\d,]*\.?\d+)(\D*)$/.exec(el.textContent.trim()); if (!m) return; const end = parseFloat(m[2].replace(/,/g, "")), dec = (m[2].split(".")[1] || "").length, comma = m[2].includes(","), t0 = performance.now(), fmt = (v) => (comma ? v.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec));
+    const step = (now) => { const k = Math.min(1, (now - t0) / 1100), e = 1 - Math.pow(1 - k, 3); el.textContent = m[1] + fmt(end * e) + m[3]; if (k < 1) requestAnimationFrame(step); }; el.textContent = m[1] + fmt(0) + m[3]; requestAnimationFrame(step); };
+  const old = renderHome;
+  renderHome = function () {
+    old.apply(this, arguments); const r = document.getElementById("ribbon"); if (!r || matchMedia("(prefers-reduced-motion:reduce)").matches || document.documentElement.getAttribute("data-perf") === "low") return;
+    const io = new IntersectionObserver((es) => { es.forEach((x) => { if (x.isIntersecting) { io.disconnect(); r.querySelectorAll("b.num").forEach(run); } }); }, { threshold: 0.4 }); io.observe(r);
+  };
+})();
+
+/* ---- football: shorter how-to cards, and icons next to headings and card titles ---- */
+(function footballPolish() {
+  if (typeof NBH_DIFF !== "undefined" || typeof HOWTO === "undefined") return;
+  Object.assign(HOWTO, {
+    "g:iconic": ["Who did it", ["What you do", "A famous match and its goals and red cards by minute. Name the player for each."], ["Scoring", "100 a right answer, minus 15 per wrong guess and 30 per hint."], ["Good to know", "Matches with own goals or shoot-outs are left out."]],
+    "g:xi": ["Starting XI", ["What you do", "A big match and one of its teams. Type the surnames of the eleven who started."], ["Clues", "Easy shows first letters and shirt numbers, Hard only positions. A hint costs 30 points."], ["Scoring", "100 per player, a time bonus for a perfect XI, minus 20 per wrong guess."]],
+    "g:scramble": ["Scramble", ["What you do", "A club, player or manager with the letters shuffled. Buzz in and type the real name."], ["Hints", "Press Hint when you want one. In a duel it appears once both players ask. Each takes off a few points."], ["Two players", "A wrong answer costs 150 and locks you out of that round."]],
+    "g:who": ["Who am I?", ["What you do", "A mystery player. Clues go from hard to easy. Buzz in, type the name, press Enter. Small typos are fine."], ["Scoring", "Up to 1,000, falling as clues appear. A wrong guess costs 150."], ["Tip", "New here? Pick Easy: it only asks about superstars."]],
+    "g:call": ["Call it", ["What you do", "Pick the result of a real past match before you see it: Home, Draw or Away. You can guess the score too."], ["Scoring", "1 point for the result, 2 more for the exact score. The model picks too."], ["Good to know", "Draws happen about 26 in 100 matches, so a draw is never a silly pick."]],
+    "g:table": ["Guess the table", ["What you do", "Rebuild the final table. Start from last season's and drag clubs up or down."], ["Scoring", "The closer to the real table, the better. The model builds one too."], ["Tip", "Last year's table is a strong guess. Change only what you are sure about."]],
+    "ranked": ["Ranked", ["What it is", "Play real people online. Create a lobby or join one."], ["Public or private", "Public lobbies change your rating. A private code lobby for friends never does."], ["Rating", "Everyone starts at 1,000 Elo. Ranks run from Bronze to Legend."]],
+    "g:bracket": ["Bracket buster", ["What you do", "A real Champions League knockout. Pick who goes through in each tie, round by round."], ["The model", "A plain Elo rating picks the higher-rated club."], ["Scoring", "Round of 16 is 1 point, quarters 2, semis 3, the final 4."]],
+    "g:upset": ["Spot the upset", ["What you do", "Five real results. Pick the one the model thought least likely."], ["Scoring", "A point for each upset you spot."]],
+    "g:finish": ["Where did they finish?", ["What you do", "A club and a season. Slide to where it finished in the table."], ["Scoring", "Closer scores more. Solo, your run continues while you stay within a few places."], ["Two players", "Each slide in turn. Closest wins the round."]],
+    "live": ["Live predictions", ["What you do", "Pick Home, Draw or Away for upcoming matches. You can change it until kickoff."], ["Scoring", "One point per right result. The model's score is pinned on the leaderboard."]],
+    "g:value": ["Market value", ["What it is", "Transfermarkt's estimate of what a player or squad is worth."], ["Solo", "Pick the one worth more and keep the streak alive."], ["Two players", "Each type a value in millions of euros. Closest wins."]],
+  });
+  const MAP = [[/ranked|leader|board|rank/i, "rank"], [/daily|streak/i, "calendar"], [/discover/i, "compass"], [/about/i, "bulb"], [/model|lab/i, "chart"], [/name it|scramble/i, "brain"], [/who am|player|who did/i, "user"], [/club|team|badge/i, "shield"], [/career|path/i, "trend"], [/table|finish/i, "chart"], [/value|market/i, "star"], [/xi|recall|lineup/i, "users"], [/roulette/i, "dice"], [/tic/i, "cross"], [/higher|lower/i, "trend"], [/upset/i, "flame"], [/bracket|final/i, "finals"], [/rapid/i, "timer"], [/call|match|predict/i, "target"], [/game|play/i, "games"], [/setting/i, "gear"], [/profile/i, "user"], [/achiev/i, "medal"], [/album|collect/i, "album"]];
+  let queued = false;
+  const iconize = () => { queued = false; document.querySelectorAll("h2:not([data-ic]), .gname:not([data-ic]), .dname:not([data-ic])").forEach((el) => { el.setAttribute("data-ic", "1"); if (el.querySelector("svg")) return; const t = el.textContent || "", m = MAP.find((x) => x[0].test(t)); if (m) el.insertAdjacentHTML("afterbegin", `<svg class="ic" aria-hidden="true"><use href="#i-${m[1]}"></use></svg> `); }); };
+  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(iconize); } }).observe(document.body, { childList: true, subtree: true }); iconize();
+})();
+
+/* ---- football: automatic lite mode, like basketball. If the page runs under 30 frames a second while you are looking at it, the heavy effects switch off. ---- */
+(function footballLite() {
+  if (typeof NBH_DIFF !== "undefined") return; const root = document.documentElement;
+  const css = document.createElement("style"); css.textContent = `:root[data-perf=low] .stadium,:root[data-perf=low] #fx,:root[data-perf=low] .photowall,:root[data-perf=low] body::before{display:none!important}:root[data-perf=low] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;backdrop-filter:none!important}`; document.head.appendChild(css);
+  try { const q = new URLSearchParams(location.search).get("lite"); if (q === "1") localStorage.setItem("bk_perf", "low"); if (q === "0") localStorage.removeItem("bk_perf"); if (localStorage.getItem("bk_perf") === "low") { root.setAttribute("data-perf", "low"); return; } } catch (e) { /* storage blocked */ }
+  let n = 0, t0 = 0, aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis);
+  const f = (t) => { n++; if (aborted) return; if (!t0) t0 = t; if (t - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); const fps = n * 1000 / (t - t0); if (fps < 30 && !document.hidden) { root.setAttribute("data-perf", "low"); try { localStorage.setItem("bk_perf", "low"); } catch (e) { /* storage blocked */ } try { toast("<b>Lite mode on</b><br>This device looked slow, so I switched off the heavy effects. Add ?lite=0 to the address to turn them back on."); } catch (e) { /* no toast */ } } } };
+  setTimeout(() => { if (!document.hidden) requestAnimationFrame(f); else aborted = true; }, 4000);
 })();

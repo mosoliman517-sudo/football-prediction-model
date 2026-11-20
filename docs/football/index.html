@@ -785,7 +785,7 @@ function paintSplashArt() {
   sp.className = "splash k-" + kind; window.__spCur = cur; document.getElementById("spName").textContent = cur.name;
   const rr = document.getElementById("spRar"); rr.textContent = cur.rar; rr.className = "sp-rar r-" + cur.rar.toLowerCase();
 }
-(function () { try { const d = document.documentElement, g = (k) => localStorage.getItem(k); const th = g("bk_theme") || "dark"; d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th); if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); } catch (e) { /* storage blocked */ } })();
+(function () { try { const d = document.documentElement, g = (k) => localStorage.getItem(k); const th = g("bk_theme") || "auto"; d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th); if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); } catch (e) { /* storage blocked */ } })();
 (function () { const r = Math.random(); window.__sp = { kind: (Math.random() < 0.012 || (location.hostname === "localhost" && /[?&]secret\b/.test(location.search))) ? "secret" : r < 0.35 ? "star" : r < 0.55 ? "legend" : r < 0.87 ? "rare" : "legendary", r2: Math.random() }; window.__spT0 = performance.now(); document.getElementById("spTip").textContent = SPLASH_TIPS[Math.floor(Math.random() * SPLASH_TIPS.length)]; })();
 </script>
 <div id="stadium" class="stadium" aria-hidden="true"></div>
@@ -848,7 +848,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 15:48 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 20 Nov 2026 16:10 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -947,7 +947,7 @@ const Snd = (() => {
     if (!game) ch.slice(1).forEach((n, i) => mnote(n + 12, t0 + i * 0.03, beat * 4.2, "sine", 0.022, 1.1));
     else ch.slice(1).forEach((n) => mnote(n, t0, beat * 1.9, "triangle", 0.012, 0.05));
     mnote(ch[0] - 12, t0, beat * (game ? 1.6 : 3.4), "sine", game ? 0.07 : 0.06, 0.03);
-    if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.07); mkick(t0 + beat * 2, 0.05); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.012)); }
+    if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.09); mkick(t0 + beat, 0.09); mhat(t0 + beat * 2, 0.05); mhat(t0 + beat * 2.02, 0.035); mhat(t0 + beat * 3.5, 0.012); }
     else [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.006));
     const eighth = beat / 2, n8 = 8;
     for (let i = 0; i < n8; i++) {
@@ -1080,13 +1080,14 @@ function teamTheme() {
   root.style.setProperty("--accent", a0); root.style.setProperty("--accent2", a1); root.style.setProperty("--glow", base[0]); root.style.setProperty("--on-accent", light ? "#ffffff" : lum(base[0]) > 150 ? "#101010" : "#ffffff");
 }
 function applyAppearance() {
-  const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bk_theme") || "dark";
+  try { const L = prof().look; if (L) Object.entries(L).forEach(([k, v]) => { if (!localStorage.getItem("bk_" + k)) localStorage.setItem("bk_" + k, v); }); } catch (e) { /* profile not ready */ }
+  const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bk_theme") || "auto";
   d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
   if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
   if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
   d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); teamTheme();
 }
-try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if ((localStorage.getItem("bk_theme") || "dark") === "auto") applyAppearance(); }); } catch (e) { /* old browser */ }
+try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if ((localStorage.getItem("bk_theme") || "auto") === "auto") applyAppearance(); }); } catch (e) { /* old browser */ }
 function paintStadium(code) {
   const el = $("#stadium"); if (!el) return; const r = mulberry(hash("stadium" + code)), W = 1200, H = 360;
   const towers = [150, 420, 780, 1050].map((x, i) => `<g><rect x="${x}" y="${70 + (i % 2) * 20}" width="8" height="${H - 90 - (i % 2) * 20}" fill="#0b0f1a"/><g class="lamp" style="animation-delay:${i * 0.7}s"><circle cx="${x + 4}" cy="${64 + (i % 2) * 20}" r="46" fill="url(#glow)"/><rect x="${x - 22}" y="${54 + (i % 2) * 20}" width="52" height="14" rx="3" fill="#fff7d6"/></g></g>`).join("");
@@ -1163,9 +1164,9 @@ function renderHome() {
   $("#photowall").innerHTML = rows.join("");
   const sm = DATA.summary.ALL, clubs = Object.keys(CREST);
   const faces = (seed) => [0, 1, 2].map((j) => badge(clubs[hash(seed + j) % clubs.length], "md")).join("");
-  $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Call real matches against the model, then test your ball knowledge: who am I, market values, football tic-tac-toe and more. Solo or against a friend.</div><span class="dgo">Play</span></button>
-    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Our model</div><div class="dtag">See what the model predicts: title-race odds, the Time machine (any season replayed beside the model's table), how it stacks up against the bookmakers, how it works and who made it possible.</div><span class="dgo">Explore</span></button>
-    <button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">About</div><div class="dtag">Why ballknowledge exists, how the model works with two tools to play with, what the data does not cover, and a roadmap you can vote on.</div><span class="dgo">Read</span></button>
+  $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Call real matches against the model, then test your ball knowledge. Solo or with a friend.</div><span class="dgo">Play</span></button>
+    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Our model</div><div class="dtag">Title-race odds, a time machine for any season, and how we compare with the bookmakers.</div><span class="dgo">Explore</span></button>
+    <button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">About</div><div class="dtag">Why this exists, how the model works, and what the data does not cover.</div><span class="dgo">Read</span></button>
     <button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">New here? A daily feed with one fun stat, a spotlight and a question, plus a short quiz that matches you to a club.</div><span class="dgo">Open</span></button>`;
   $("#ribbon").innerHTML = `<span><b class="num">${sm.n.toLocaleString()}</b> matches tested</span><span>model <b class="num">${pct(sm.pooled_acc, 1)}</b></span><span>bookmakers <b class="num">${pct(sm.market_acc, 1)}</b></span><span><b class="num">5</b> leagues</span><span><b class="num">10</b> seasons</span>`;
 }
@@ -2777,7 +2778,7 @@ function avatarHTML(av, size = "md", nick = "") {
 }
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); syncBadges(); }
 function appearanceHTML() {
-  const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "dark"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
+  const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "auto"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
   return `<label class="pfl">Style</label>${seg("style", [["flood", "Floodlit"], ["classic", "Classic"], ["minimal", "Minimal"]], g("bk_style", "flood") === "classic" ? "classic" : g("bk_style", "flood") === "minimal" ? "minimal" : "flood")}<div class="fine" style="margin:4px 0 0">Floodlit is a night match with light beams and a flying ball. Classic is the glow and stadium backdrop. Minimal is calm and quiet.</div><label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
   <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bk_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
 }
@@ -2916,7 +2917,7 @@ const Account = {
   },
   async flush() { if (this.pushTimer) { clearTimeout(this.pushTimer); this.pushTimer = null; await this.push(); } },
   async signOut() { await this.flush(); try { if (this.session) await fetch(`${Board.cfg.url}/auth/v1/logout`, { method: "POST", headers: this.hdr(this.session.access_token) }); } catch (e) { /* offline */ } this.session = null; this.persist(); this.status = ""; paintProfileBtn(); },
-  async afterSignIn() { await this.pull(); await this.push(); paintProfileBtn(); paintScore(); ensureNick(); Ranked.refresh(); checkAdmin(); },
+  async afterSignIn() { await this.pull(); try { applyAppearance(); } catch (e) { /* ignore */ } await this.push(); paintProfileBtn(); paintScore(); ensureNick(); Ranked.refresh(); checkAdmin(); },
   async pull() {
     const t = await this.token(); if (!t) return;
     try { const r = await fetch(`${Board.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); if (rows[0] && rows[0].data) mergeProgress(rows[0].data); this.status = "Progress synced."; await this.syncNick(t); } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
@@ -3928,7 +3929,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
   if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
-  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
+  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
   if (b.dataset.chal) { Snd.tick(); challengeModal(b.dataset.chal); return; }
   if (b.id === "chGo") { const g = $("#chGame").value, d = $("#chDiff").value, nick = b.dataset.nick; closeModal(); rankedStart(g, d, false); const link = inviteLink(Net.code, g), msg = `${nick}, join my ballknowledge room: ${link}`; try { navigator.clipboard.writeText(msg).then(() => toast("Invite link copied. Send it to " + esc(nick))); } catch (e) { toast("Copy the link from the room screen"); } try { if (navigator.share) navigator.share({ title: "ballknowledge", text: msg, url: link }).catch(() => {}); } catch (e) { /* not supported */ } return; }
   if (b.id === "pfShare") { const p = prof(), lv = levelOf(p.xp), signed = Account.signedIn && Board.mode === "rest", fav = QZ.players.find((x) => x.id === +p.favP); showCard("record", { lg: p.favT ? (QZ.clubs[p.favT] || {}).lg || "ALL" : "ALL", title: p.nick || "My profile", big: signed ? `${Ranked.elo} Elo` : lv.name, sub: `${signed ? rankOf(Ranked.elo).name + " · " : ""}${lv.name} · ${p.xp} XP`, tiles: [[`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"], [String(dayStreak(p)), "day streak"], [String(Object.keys(p.stickers || {}).length), "stickers"]], line: fav ? `Favourite player: ${fav.n}${p.favT ? " · " + p.favT : ""}` : p.favT ? `Favourite team: ${p.favT}` : "Think you know more football than me?", share: `My ballknowledge profile: ${signed ? Ranked.elo + " Elo, " : ""}${Object.keys(p.ach).length} achievements. Think you know more?` }); return; }
@@ -4154,7 +4155,7 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
 { const pick = (a) => a[Math.floor(Math.random() * a.length)], win0 = Snd.win, right0 = Snd.right;
   Snd.win = function () { win0.apply(Snd, arguments); Voice.say(pick(["Winner!", "Brilliant!", "Nice one!", "What a finish!"])); };
   Snd.right = function () { right0.apply(Snd, arguments); try { const n = Q && Q.s && Q.s.streak; if (n >= 3 && n % 3 === 0) Voice.say("Streak of " + n); } catch (e) { /* no quiz */ } };
-  const toast0 = toast; toast = function (html, kind) { try { const txt = String(html).replace(/<[^>]*>/g, " "); if (/Rank up/i.test(txt)) Voice.say(txt.replace(/\s+/g, " ").trim()); else if (/Secret found/i.test(txt)) Voice.say("Secret found. The Notebook."); } catch (e) { /* ok */ } return toast0.apply(this, arguments); };
+  const toast0 = toast; toast = function (html, kind) { try { const txt = String(html).replace(/<[^>]*>/g, " "); if (/Rank up/i.test(txt)) Voice.say(txt.replace(/\s+/g, " ").trim()); else if (/Achievement unlocked/i.test(txt)) Voice.say("Achievement unlocked"); else if (/Secret found/i.test(txt)) Voice.say("Secret found. The Notebook."); } catch (e) { /* ok */ } return toast0.apply(this, arguments); };
 }
 { const rs0 = renderSettings;
   renderSettings = function () { rs0(); const el = $("#setPage"); if (!el || document.getElementById("mixCard")) return; const sl = (id, label, v) => `<label class="fine" style="display:grid;grid-template-columns:96px 1fr 40px;gap:10px;align-items:center;margin:8px 0">${label}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}" style="width:100%"><span class="num" id="${id}V">${Math.round(v * 100)}%</span></label>`;
@@ -4227,7 +4228,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
 :root[data-perf=low] #tfx,:root[data-perf=low] #tsw{display:none}
 @media (prefers-reduced-motion:reduce){#tfx .tx-beam,#tfx .tx-ballf{animation:none!important}#tsw{display:none}}
 `;
-  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const st = document.createElement("style"); st.textContent = css + `:root[data-mode=light] #tfx{opacity:.4}:root[data-mode=light] #tfx .tx-neon{filter:none;opacity:.55}:root[data-mode=light] h2.sec,:root[data-mode=light] .gpick .gname,:root[data-mode=light] .door .dname{text-shadow:none}:root[data-mode=light] .card,:root[data-mode=light] .gcard,:root[data-mode=light] .gpick,:root[data-mode=light] .door{box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 24px -16px rgba(0,0,0,.25)}`; document.head.appendChild(st);
   const hoop = `<svg class="tx-neon" viewBox="0 0 240 200" fill="none" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round" aria-hidden="true"><rect x="40" y="6" width="160" height="104" rx="6" stroke="#ffd0a0"/><rect x="88" y="52" width="64" height="48" rx="3" stroke="#ffd0a0" stroke-width="3"/><ellipse cx="120" cy="124" rx="52" ry="12" stroke="#ff5a1a" stroke-width="6"/><path d="M70 128l16 62M96 134l10 58M120 136v58M144 134l-10 58M170 128l-16 62M82 150l76 0M90 172l60 0" stroke-width="2.4" stroke="#ffe2c4"/></svg>`;
   const ball = `<svg class="tx-ballb" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#2a1200" stroke-width="2"/><path d="M2 24h44M24 2v44M8 8c10 9 10 23 0 32M40 8c-10 9-10 23 0 32" stroke="#2a1200" stroke-width="2" fill="none"/></svg>`;
   const court = `<svg class="tx-court" viewBox="0 0 400 220" fill="none" stroke="#ff9a3c" stroke-width="3" aria-hidden="true"><rect x="2" y="2" width="396" height="216"/><rect x="140" y="2" width="120" height="110"/><circle cx="200" cy="112" r="44"/><path d="M40 2c0 90 70 140 160 140s160-50 160-140"/><circle cx="200" cy="10" r="10"/></svg>`;
@@ -4258,7 +4259,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   const streak = () => { let s = 0; for (let k = 0; k < 400; k++) { if (count(dayKey(k))) s++; else if (k > 0) break; } return s; };
   window.showDaily = function (ev) {
     S.code = null; S.mode = null; S.cur = null; setTheme("HOME", ev); ["#home", "#lobby", "#league", "#profilePage", "#albumPage", "#adminPage", "#aboutPage", "#setPage"].forEach((s) => { const e = $(s); if (e) e.hidden = true; });
-    const el = $("#discPage"); el.hidden = false; window.scrollTo(0, 0); const k = dayKey(0), n = count(k), st_ = streak();
+    const el = $("#discPage"); el.hidden = false; window.scrollTo(0, 0); const k = dayKey(0), n = count(k), st_ = streak(); if (n === 3 && !store.items["dsay_" + k]) { lockIn("dsay_" + k, 1); Voice.say("All three dailies done. Streak of " + st_); }
     const dots = Array.from({ length: 14 }, (_, i) => { const d = dayKey(13 - i), c = count(d); return `<i class="dhd ${c >= 3 ? "full" : c ? "some" : ""} ${d === k ? "today" : ""}" title="${d}: ${c} of 3"></i>`; }).join("");
     el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Daily challenges</span></div></nav>
       <div class="card abx"><div class="label">Every day</div><h2><svg class=ic><use href=#i-bulb></use></svg> Daily challenges</h2><p class="fine">Three short things, new every day. Do any one to keep your streak going.</p>
@@ -4267,6 +4268,58 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   };
   const home = renderHome;
   renderHome = function () { home.apply(this, arguments); const d = $("#doors"); if (d && !d.querySelector('[data-door="daily"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="daily"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="dname">Daily challenges</div><div class="dtag">Three short things, new every day, with a streak: ${streak()} day${streak() === 1 ? "" : "s"} so far.</div></button>`); };
+})();
+
+/* ---- home screen: a bolder stats strip whose numbers count up when scrolled into view, and parallax layers that drift as you scroll ---- */
+(function homeFX() {
+  if (typeof renderHome !== "function") return;
+  const css = document.createElement("style"); css.textContent = `
+#ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:900px;margin:18px auto 0}
+#ribbon span{background:var(--surface,#1c1c1c);border:1px solid var(--line,#fff2);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);text-align:center}
+#ribbon span b.num{order:-1;font-size:28px;line-height:1.1;letter-spacing:0;color:var(--accent);text-transform:none}
+@media (prefers-reduced-motion:no-preference){:root:not([data-perf=low]) #photowall{transform:translate3d(0,calc(var(--sy,0)*.16px),0);will-change:transform}:root:not([data-perf=low]) #home .hero h1,:root:not([data-perf=low]) #home .lhead h1{transform:translate3d(0,calc(var(--sy,0)*.07px),0)}:root:not([data-perf=low]) #tfx{transform:translate3d(0,calc(var(--sy,0)*-.06px),0)}}`;
+  document.head.appendChild(css);
+  let tick = false; addEventListener("scroll", () => { if (tick) return; tick = true; requestAnimationFrame(() => { document.documentElement.style.setProperty("--sy", Math.min(scrollY, 800)); tick = false; }); }, { passive: true });
+  const run = (el) => { const m = /^(\D*)([\d,]*\.?\d+)(\D*)$/.exec(el.textContent.trim()); if (!m) return; const end = parseFloat(m[2].replace(/,/g, "")), dec = (m[2].split(".")[1] || "").length, comma = m[2].includes(","), t0 = performance.now(), fmt = (v) => (comma ? v.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec));
+    const step = (now) => { const k = Math.min(1, (now - t0) / 1100), e = 1 - Math.pow(1 - k, 3); el.textContent = m[1] + fmt(end * e) + m[3]; if (k < 1) requestAnimationFrame(step); }; el.textContent = m[1] + fmt(0) + m[3]; requestAnimationFrame(step); };
+  const old = renderHome;
+  renderHome = function () {
+    old.apply(this, arguments); const r = document.getElementById("ribbon"); if (!r || matchMedia("(prefers-reduced-motion:reduce)").matches || document.documentElement.getAttribute("data-perf") === "low") return;
+    const io = new IntersectionObserver((es) => { es.forEach((x) => { if (x.isIntersecting) { io.disconnect(); r.querySelectorAll("b.num").forEach(run); } }); }, { threshold: 0.4 }); io.observe(r);
+  };
+})();
+
+/* ---- football: shorter how-to cards, and icons next to headings and card titles ---- */
+(function footballPolish() {
+  if (typeof NBH_DIFF !== "undefined" || typeof HOWTO === "undefined") return;
+  Object.assign(HOWTO, {
+    "g:iconic": ["Who did it", ["What you do", "A famous match and its goals and red cards by minute. Name the player for each."], ["Scoring", "100 a right answer, minus 15 per wrong guess and 30 per hint."], ["Good to know", "Matches with own goals or shoot-outs are left out."]],
+    "g:xi": ["Starting XI", ["What you do", "A big match and one of its teams. Type the surnames of the eleven who started."], ["Clues", "Easy shows first letters and shirt numbers, Hard only positions. A hint costs 30 points."], ["Scoring", "100 per player, a time bonus for a perfect XI, minus 20 per wrong guess."]],
+    "g:scramble": ["Scramble", ["What you do", "A club, player or manager with the letters shuffled. Buzz in and type the real name."], ["Hints", "Press Hint when you want one. In a duel it appears once both players ask. Each takes off a few points."], ["Two players", "A wrong answer costs 150 and locks you out of that round."]],
+    "g:who": ["Who am I?", ["What you do", "A mystery player. Clues go from hard to easy. Buzz in, type the name, press Enter. Small typos are fine."], ["Scoring", "Up to 1,000, falling as clues appear. A wrong guess costs 150."], ["Tip", "New here? Pick Easy: it only asks about superstars."]],
+    "g:call": ["Call it", ["What you do", "Pick the result of a real past match before you see it: Home, Draw or Away. You can guess the score too."], ["Scoring", "1 point for the result, 2 more for the exact score. The model picks too."], ["Good to know", "Draws happen about 26 in 100 matches, so a draw is never a silly pick."]],
+    "g:table": ["Guess the table", ["What you do", "Rebuild the final table. Start from last season's and drag clubs up or down."], ["Scoring", "The closer to the real table, the better. The model builds one too."], ["Tip", "Last year's table is a strong guess. Change only what you are sure about."]],
+    "ranked": ["Ranked", ["What it is", "Play real people online. Create a lobby or join one."], ["Public or private", "Public lobbies change your rating. A private code lobby for friends never does."], ["Rating", "Everyone starts at 1,000 Elo. Ranks run from Bronze to Legend."]],
+    "g:bracket": ["Bracket buster", ["What you do", "A real Champions League knockout. Pick who goes through in each tie, round by round."], ["The model", "A plain Elo rating picks the higher-rated club."], ["Scoring", "Round of 16 is 1 point, quarters 2, semis 3, the final 4."]],
+    "g:upset": ["Spot the upset", ["What you do", "Five real results. Pick the one the model thought least likely."], ["Scoring", "A point for each upset you spot."]],
+    "g:finish": ["Where did they finish?", ["What you do", "A club and a season. Slide to where it finished in the table."], ["Scoring", "Closer scores more. Solo, your run continues while you stay within a few places."], ["Two players", "Each slide in turn. Closest wins the round."]],
+    "live": ["Live predictions", ["What you do", "Pick Home, Draw or Away for upcoming matches. You can change it until kickoff."], ["Scoring", "One point per right result. The model's score is pinned on the leaderboard."]],
+    "g:value": ["Market value", ["What it is", "Transfermarkt's estimate of what a player or squad is worth."], ["Solo", "Pick the one worth more and keep the streak alive."], ["Two players", "Each type a value in millions of euros. Closest wins."]],
+  });
+  const MAP = [[/ranked|leader|board|rank/i, "rank"], [/daily|streak/i, "calendar"], [/discover/i, "compass"], [/about/i, "bulb"], [/model|lab/i, "chart"], [/name it|scramble/i, "brain"], [/who am|player|who did/i, "user"], [/club|team|badge/i, "shield"], [/career|path/i, "trend"], [/table|finish/i, "chart"], [/value|market/i, "star"], [/xi|recall|lineup/i, "users"], [/roulette/i, "dice"], [/tic/i, "cross"], [/higher|lower/i, "trend"], [/upset/i, "flame"], [/bracket|final/i, "finals"], [/rapid/i, "timer"], [/call|match|predict/i, "target"], [/game|play/i, "games"], [/setting/i, "gear"], [/profile/i, "user"], [/achiev/i, "medal"], [/album|collect/i, "album"]];
+  let queued = false;
+  const iconize = () => { queued = false; document.querySelectorAll("h2:not([data-ic]), .gname:not([data-ic]), .dname:not([data-ic])").forEach((el) => { el.setAttribute("data-ic", "1"); if (el.querySelector("svg")) return; const t = el.textContent || "", m = MAP.find((x) => x[0].test(t)); if (m) el.insertAdjacentHTML("afterbegin", `<svg class="ic" aria-hidden="true"><use href="#i-${m[1]}"></use></svg> `); }); };
+  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(iconize); } }).observe(document.body, { childList: true, subtree: true }); iconize();
+})();
+
+/* ---- football: automatic lite mode, like basketball. If the page runs under 30 frames a second while you are looking at it, the heavy effects switch off. ---- */
+(function footballLite() {
+  if (typeof NBH_DIFF !== "undefined") return; const root = document.documentElement;
+  const css = document.createElement("style"); css.textContent = `:root[data-perf=low] .stadium,:root[data-perf=low] #fx,:root[data-perf=low] .photowall,:root[data-perf=low] body::before{display:none!important}:root[data-perf=low] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;backdrop-filter:none!important}`; document.head.appendChild(css);
+  try { const q = new URLSearchParams(location.search).get("lite"); if (q === "1") localStorage.setItem("bk_perf", "low"); if (q === "0") localStorage.removeItem("bk_perf"); if (localStorage.getItem("bk_perf") === "low") { root.setAttribute("data-perf", "low"); return; } } catch (e) { /* storage blocked */ }
+  let n = 0, t0 = 0, aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis);
+  const f = (t) => { n++; if (aborted) return; if (!t0) t0 = t; if (t - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); const fps = n * 1000 / (t - t0); if (fps < 30 && !document.hidden) { root.setAttribute("data-perf", "low"); try { localStorage.setItem("bk_perf", "low"); } catch (e) { /* storage blocked */ } try { toast("<b>Lite mode on</b><br>This device looked slow, so I switched off the heavy effects. Add ?lite=0 to the address to turn them back on."); } catch (e) { /* no toast */ } } } };
+  setTimeout(() => { if (!document.hidden) requestAnimationFrame(f); else aborted = true; }, 4000);
 })();
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull(); ensureNick(); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });

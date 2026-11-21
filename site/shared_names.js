@@ -39,10 +39,7 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
   const nba = QUIZ_GAMES.some((g) => g.id === "dropped");
   const GROUPS = nba ? [
     { lead: "who", name: "Name it", tag: "Six ways to name a mystery: player clues, a career path, team stats, a real stat line, a blurred logo or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Team stats"], ["dropped", "Stat line"], ["blur", "Logo blur"], ["scramble", "Scramble"]] },
-  ] : [
-    { lead: "who", name: "Name it", tag: "Five ways to name a mystery: player clues, a career path, club stats, a blurred badge or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Club stats"], ["blur", "Badge blur"], ["scramble", "Scramble"]] },
-    { lead: "xi", name: "Match recall", tag: "Name the eleven who started a big final, or the scorers, assisters and red cards of a classic match.", vers: [["xi", "Starting XI"], ["iconic", "Who did it"]] },
-  ];
+  ] : [];   // football: every game has its own card again (owner's call, 21 Nov 2026); the merge into Name it / Match recall is undone
   window.QUIZ_HIDDEN = []; window.VERSNAME = {}; window.VERSOF = {};
   GROUPS.forEach((g) => {
     const lead = QUIZ_GAMES.find((x) => x.id === g.lead); if (!lead) return;
@@ -122,7 +119,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   ] : [
     { n: "Daily 5", d: "Five real matches, the same for everyone today. Beat the model.", slug: "games-all-leagues-daily", ic: "#i-trophy", done: (k) => safe(() => dailyState("ALL", k).n === 5) },
     { n: "Question of the day", d: "The daily feed: an on this day fact and a question, the same for everyone.", slug: "discover", ic: "#i-bulb", done: (k) => !!dfDays(prof())[k] },
-    { n: "Play any game", d: "Any game counts. Name it, Match recall, Higher or lower, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
+    { n: "Play any game", d: "Any game counts. Who am I?, Badge blur, Starting XI, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
   ];
   const count = (k) => ITEMS.filter((x) => x.done(k)).length, dayKey = (off) => new Date(Date.now() - off * 864e5).toISOString().slice(0, 10);
   const streak = () => { let s = 0; for (let k = 0; k < 400; k++) { if (count(dayKey(k))) s++; else if (k > 0) break; } return s; };

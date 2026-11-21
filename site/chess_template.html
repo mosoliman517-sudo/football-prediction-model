@@ -126,6 +126,56 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 .cptitles{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:4px}.cptitles span{display:inline-flex;align-items:center;gap:4px;font:800 10px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:99px;background:var(--gold);color:#241c00}.cptitles .ic{width:11px;height:11px}
 @media(max-width:600px){.cpform-h{display:none}.cpt{font-size:13px}.cpt .cpf{width:28px;height:28px}.cpt .cpwho{gap:7px}.cpt td:nth-child(2){width:62%}.cpbr{grid-template-columns:1fr}.cpstats{grid-template-columns:repeat(5,1fr);padding:8px 4px}.cpstats b{font-size:17px}.cpf.big{width:78px;height:78px}.cppod.p1 .cpf.big{width:92px;height:92px}.cppod b{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.cpcard,.cpchamp,.cpsheet,.cpov{animation:none;transition:none}}
+/* ---- World rankings and profiles ---- */
+.rkper{align-items:center}.rkchg{margin-bottom:12px}.rkchg h3{margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.rkbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}.rkbar .chips{margin:6px 0}.rkq{flex:1;min-width:180px;max-width:280px}
+.rkpod{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.rkpc{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px 14px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 14%,var(--panel2)),var(--panel));color:inherit;font:inherit;cursor:pointer;text-align:center;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;animation:fadein .4s both}
+.rkpc:hover{transform:translateY(-5px);border-color:var(--gold)}.rkpc.p1{border-color:var(--gold);box-shadow:0 18px 40px -24px var(--gold)}.rkpc b{font-size:16px}
+.rkpc .rkn{position:absolute;top:10px;left:12px;font:900 15px Fraunces,serif;color:var(--gold)}.rkpc .rkr{font:900 28px/1 Fraunces,serif;color:var(--gold);margin-top:4px}
+.rklist{padding:6px}.rkrow{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border:0;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:10px;transition:background .15s}
+.rkrow:hover{background:color-mix(in srgb,var(--gold) 9%,transparent)}.rkrow .rkn{width:30px;text-align:right;color:var(--muted);font-weight:700}.rkrow.top .rkn{color:var(--gold)}
+.rknm{display:flex;flex-direction:column;min-width:0;flex:1}.rknm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rknm small{color:var(--muted);font-size:12px}
+.rkrow .rkr{font:800 18px Fraunces,serif;min-width:52px;text-align:right}
+.rkd{font:700 11px Inter,system-ui,sans-serif;color:var(--muted);white-space:nowrap}.rkd.up{color:var(--ok)}.rkd.dn{color:var(--bad)}
+.rkhero{display:flex;align-items:center;gap:22px;background:radial-gradient(600px 240px at 0 0,color-mix(in srgb,var(--gold) 20%,transparent),transparent 70%),linear-gradient(180deg,var(--panel2),var(--panel))}
+.rkhero .cpf.big{width:128px;height:128px}.rkhi h2{margin:0 0 6px;font-size:clamp(26px,5vw,38px)}
+.rkplaces{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.rkplaces span{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font-size:13px}.rkplaces span.gold{border-color:var(--gold);color:var(--gold)}
+.rktiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.rktile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}.rktile small{font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.rktile b{font:900 32px/1.1 Fraunces,serif;color:var(--gold)}
+.rkch{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}.rkch h3{margin:0;display:flex;align-items:center;gap:6px}
+.rkchart{width:100%;height:auto;margin-top:6px;overflow:visible}.rkgl{stroke:var(--line);stroke-width:1}.rkax{fill:var(--muted);font:600 11px Inter,system-ui,sans-serif}
+.rkline{fill:none;stroke:var(--gold);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.rkpk{fill:var(--gold);stroke:var(--panel);stroke-width:2}.rknow{fill:var(--ok);stroke:var(--panel);stroke-width:2}.rklab{fill:var(--gold);font:800 12px Inter,system-ui,sans-serif}
+.rksh{display:flex;align-items:center;gap:8px;margin:22px 0 10px;flex-wrap:wrap}.cpdots.big i{width:12px;height:12px}
+.rkms{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.rkm{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);animation:fadein .4s both}.rkm .ic{width:22px;height:22px;color:var(--muted)}.rkm small{color:var(--muted);font-size:12px}
+.rkm.gold{border-color:var(--gold);background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 22%,var(--panel2)),var(--panel2))}.rkm.gold .ic{color:var(--gold)}
+.cpgame.static{cursor:default}.cpgame.static:hover{border-color:var(--line)}
+.cpprof{margin-top:12px;width:100%}
+@media(max-width:600px){.rkpod{gap:6px}.rkpc{padding:14px 4px 10px}.rkpc .cpf.big{width:64px;height:64px}.rkpc b{font-size:13px}.rkpc .rkr{font-size:22px}.rkhero{flex-direction:column;text-align:center}.rkhero .cpmeta,.rkplaces{justify-content:center}.rkhero .cpf.big{width:110px;height:110px}.rkq{max-width:none}}
+/* ---- Pip and the game report ---- */
+.pipbox{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px}.pip{width:64px;height:77px;flex:none;animation:pipBob 2.6s ease-in-out infinite;transform-origin:50% 100%}
+.pip .pe{fill:none;stroke:#3b2a06;stroke-width:3;stroke-linecap:round}.pip .pf{fill:#3b2a06}
+.pip.wow,.pip.happy{animation:pipHop .6s cubic-bezier(.3,1.6,.5,1) 1,pipBob 2.6s ease-in-out .6s infinite}.pip.shock{animation:pipShake .5s ease 1,pipBob 2.6s ease-in-out .5s infinite}.pip.sad{animation:pipBob 3.4s ease-in-out infinite;filter:saturate(.7)}
+@keyframes pipBob{50%{transform:translateY(-3px) rotate(-2deg)}}@keyframes pipHop{40%{transform:translateY(-14px) scale(1.06,.94)}70%{transform:translateY(0) scale(.96,1.04)}}@keyframes pipShake{20%,60%{transform:rotate(-8deg)}40%,80%{transform:rotate(8deg)}}
+.pipsay{position:relative;flex:1;padding:10px 12px;border-radius:14px 14px 14px 4px;background:var(--panel2);border:1px solid var(--line);font-size:14px;line-height:1.45;animation:fadein .3s both}.pipsay b{display:block;font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.rvrep{margin:10px 0;padding:12px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
+.rvelo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rvel{display:flex;flex-direction:column;align-items:center;padding:10px;border-radius:12px;background:#f3f1ec;color:#1b1b1b}.rvel.dk{background:#2b2926;color:#f3f1ec}.rvel b{font:900 30px/1 Fraunces,serif}.rvel small,.rvel span{font-size:11px;opacity:.75}
+.rvph{width:100%;margin-top:10px;border-collapse:collapse;font-size:14px}.rvph td,.rvph th{padding:6px;text-align:center;border-bottom:1px solid var(--line)}.rvph td:first-child{text-align:left;font-weight:600}.rvph th{font:700 11px Inter,system-ui,sans-serif;color:var(--muted);text-transform:uppercase}
+.rvnotes{margin:10px 0 6px;padding-left:18px;font-size:14px}.rvnotes li{margin:3px 0}
+.rvkm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}.rvkmb{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:inherit;font:600 13px Inter,system-ui,sans-serif;cursor:pointer}.rvkmb:hover{border-color:var(--gold)}
+@media(prefers-reduced-motion:reduce){.pip{animation:none!important}}
+/* ---- tournament rounds ---- */
+.evrounds{max-height:120px;overflow:auto}
+.evg{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:inherit;font:inherit;cursor:pointer;transition:border-color .2s,transform .2s}.evg:hover{border-color:var(--gold);transform:translateY(-1px)}
+.evside{display:flex;align-items:center;gap:8px;min-width:0}.evside.r{justify-content:flex-end}.evside .cpwho{min-width:0}
+.evres{display:flex;flex-direction:column;align-items:center;font:900 17px Fraunces,serif;white-space:nowrap}.evres small{display:flex;align-items:center;gap:3px;font:600 10px Inter,system-ui,sans-serif;color:var(--muted)}.evres .ic{width:11px;height:11px}
+@media(max-width:600px){.evg{grid-template-columns:1fr;gap:4px}.evside.r{justify-content:flex-start;flex-direction:row-reverse}.evres{flex-direction:row;gap:8px}}
+.tpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.tpopt{display:flex;flex-direction:column;gap:4px;padding:8px 8px 10px;border-radius:16px;border:2px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.5,.5,1),border-color .2s}.tpopt:hover{transform:translateY(-3px)}.tpopt[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}.tpopt small{color:var(--muted);font-size:12px;line-height:1.3}
+.tpprev{position:relative;display:block;height:74px;border-radius:10px;background:var(--a);overflow:hidden}.tpprev i{position:absolute;display:block;border-radius:6px}.tpprev i:nth-child(1){left:8px;top:8px;width:46%;height:9px;background:var(--b)}.tpprev i:nth-child(2){left:8px;top:24px;right:8px;height:40px;background:var(--c);box-shadow:0 4px 10px #0003}.tpprev i:nth-child(3){right:16px;top:34px;width:30%;height:12px;background:var(--b);border-radius:99px}
+.tpauto{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px}
+.gpk{min-height:190px}.gpki{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold);margin-bottom:6px}.gpki .ic{width:28px;height:28px}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -262,7 +312,7 @@ table.tb{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit
 <div class="wrap">
  <div class="bar"><button class="brand" id="home" type="button"><span id="logo"></span>ball<b>knowledge</b> chess</button><span class="tag">Beta</span><a class="pill" href="../"><span id="compass"></span>Pick your sport</a><span style="flex:1"></span><button class="pill" id="sndBtn" type="button" aria-label="Sound"></button><button class="pill" id="thBtn" type="button" title="Switch the look"><span id="thLab"></span></button><button class="pill" id="acctBtn" type="button" title="Account"><span id="acctLab">Sign in</span></button></div>
  <main id="app"></main>
- <div class="foot">Games come from the Lichess open database (CC0): rated games, January 2024 (first 250 MB), official tournament broadcasts, and the puzzle database. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. Engine evaluations are Stockfish's, recorded in Lichess games. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser only.</div>
+ <div class="foot">Games come from the Lichess open database (CC0): rated games, January 2024 (first 250 MB), official tournament broadcasts, and the puzzle database. Opening names come from the lichess-org chess-openings list. Player facts come from Wikidata; photos from Wikimedia Commons. Engine evaluations are Stockfish's, recorded in Lichess games. This is an independent student project, not affiliated with Lichess, FIDE or any player. Progress is saved in this browser, and to your account when you sign in.</div>
 </div>
 <script>
 const DATA = /*__DATA__*/null;
@@ -334,15 +384,15 @@ function cuRun(root) {
 }
 let sy = false; addEventListener("scroll", () => { if (sy) return; sy = true; requestAnimationFrame(() => { document.documentElement.style.setProperty("--sy", Math.min(scrollY, 800)); sy = false; }); }, { passive: true });
 function home() {
-  try { CH.v = "home"; cpClose(); } catch (e) { /* not set up yet */ }
+  try { CH.v = "home"; cpClose(); RKS.prof = null; } catch (e) { /* not set up yet */ }
   rvStop(); olClose(); clearInterval(st.timer); live = null; st = {}; $("#app").innerHTML = `<div class="hero"><div class="wall" aria-hidden="true">${wallHTML()}</div><div class="sec" style="margin-top:0">${ic("crown")}Chess, predicted and played</div><h1>ball<em>knowledge</em></h1><p class="sub" style="font-size:17px;max-width:600px">Out-call a model on real games, guess a grandmaster's next move, solve puzzles and test your level. Everything comes from real data; nothing is made up.</p>
     <div class="statstrip" id="statstrip"><div><b class="cu" data-to="${PZ.length}">${PZ.length}</b><span>real puzzles</span></div><div><b class="cu" data-to="${EM.length}">${EM.length}</b><span>top-level games</span></div><div><b class="cu" data-to="${PLAYERS.length}">${PLAYERS.length}</b><span>players profiled</span></div><div><b class="cu" data-to="${Math.round(S.acc * 1000) / 10}" data-dec="1" data-suf="%">${pct(S.acc, 1)}</b><span>model accuracy</span></div></div>
-    <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button><button class="door" data-go="champ"><div class="di">${ic("crown")}</div><div class="dname">Championships</div><div class="dtag">Firouzja's Total Chess title, the World Championship match from 24 November, women's titles and the reigning champions.</div></button><button class="door" data-go="daily"><div class="di">${ic("clock")}</div><div class="dname">Daily challenges</div><div class="dtag">A puzzle, a position to judge and a tactic to spot, new every day, with a streak.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
+    <div class="doors"><button class="door" data-go="games"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">The originals, Beat the model and the daily challenges, all in one place.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button>${(RK.lists.open || []).length ? `<button class="door" data-go="rank"><div class="di">${ic("chart")}</div><div class="dname">World rankings</div><div class="dtag">The FIDE top 100, men and women, classical, rapid and blitz. Tap anyone for their profile.</div></button>` : ""}<button class="door" data-go="champ"><div class="di">${ic("crown")}</div><div class="dname">Championships</div><div class="dtag">Firouzja's Total Chess title, the World Championship match from 24 November, women's titles and the reigning champions.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
   cuRun($("#app"));
 }
 function hub(g) {
   clearInterval(st.timer); live = null; st = { hub: g }; const ord = Usage.order(CG.filter((x) => x.g === g), "ch"), list = ord.list;
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic(g === "model" ? "target" : "puzzle")}${g === "model" ? "Beat the model" : "ballknowledge originals"}</h2><p class="sub">${g === "model" ? `Real games and a model that never saw them. On everyday games it picks ${pct(S.acc)} of results right (always White: ${pct(S.white)}).` : "Pick a difficulty, then a game."}</p>${diffBar()}<div class="hubgrid">${list.map((x, k) => `<button class="gcard" data-intro="${x.id}" style="animation-delay:${k * 50}ms"><div class="gi">${x.faces ? faces(3) : `<div class="di">${ic(x.ic)}</div>`}</div>${x.id === ord.fav ? '<span class="gfav">Your go-to</span>' : x.id === ord.next ? '<span class="gfav try">Try next</span>' : ""}<div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recLine(x)}</div></button>`).join("")}</div>`;
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="games">← Games</button></div><h2 style="font-size:32px">${ic(g === "model" ? "target" : "puzzle")}${g === "model" ? "Beat the model" : "ballknowledge originals"}</h2><p class="sub">${g === "model" ? `Real games and a model that never saw them. On everyday games it picks ${pct(S.acc)} of results right (always White: ${pct(S.white)}).` : "Pick a difficulty, then a game."}</p>${diffBar()}<div class="hubgrid">${list.map((x, k) => `<button class="gcard" data-intro="${x.id}" style="animation-delay:${k * 50}ms"><div class="gi">${x.faces ? faces(3) : `<div class="di">${ic(x.ic)}</div>`}</div>${x.id === ord.fav ? '<span class="gfav">Your go-to</span>' : x.id === ord.next ? '<span class="gfav try">Try next</span>' : ""}<div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recLine(x)}</div></button>`).join("")}</div>`;
 }
 function intro(id) {
   const x0 = CGALL.find((y) => y.id === id), gp = VERSOF[id], x = gp ? { ...x0, name: VERSNAME[id] } : x0; clearInterval(st.timer); live = null; st = { hub: x.g, intro: id };
@@ -599,15 +649,20 @@ function aiPaint() {
 }
 /* ---------- Game review: real Stockfish (version 10, loaded from a CDN on first use), move by move ---------- */
 const SF_URL = "https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js";
+/* Stockfish 17.1 lite (NNUE, single-threaded, GPL-3, docs/engine/), served from this site; Stockfish 10 from the CDN is the fallback */
+const SF17_URL = new URL("../engine/stockfish-17.1-lite-single.js", location.href).href;
+let SF_MODERN = location.protocol !== "file:";
 const mkSf = () => {
   let w = null, dead = false, cur = null, ready = null, pend = 0; const queue = [];
   const boot = () => {
     if (ready) return ready;
     ready = new Promise((res) => {
-      try { w = new Worker(URL.createObjectURL(new Blob([`importScripts("${SF_URL}");`], { type: "text/javascript" }))); } catch (e) { dead = true; return res(false); }
-      const to = setTimeout(() => { dead = true; res(false); }, 30000);
-      w.onmessage = (e) => { const s = String(e.data); if (s === "uciok") { w.postMessage("setoption name Contempt value 0"); w.postMessage("setoption name Analysis Contempt value Off"); w.postMessage("isready"); } else if (s === "readyok") { clearTimeout(to); res(true); } else onLine(s); };
-      w.onerror = () => { dead = true; clearTimeout(to); res(false); if (cur) { const c = cur; cur = null; c.rej(new Error("engine")); } };
+      const legacy = () => new Worker(URL.createObjectURL(new Blob([`importScripts("${SF_URL}");`], { type: "text/javascript" })));
+      let modern = SF_MODERN; try { w = modern ? new Worker(SF17_URL) : legacy(); } catch (e) { try { modern = SF_MODERN = false; w = legacy(); } catch (e2) { dead = true; return res(false); } }
+      const fallback = () => { if (!modern) return false; modern = SF_MODERN = false; try { w.terminate(); } catch (e) { /* gone */ } ready = null; boot().then(res); return true; };   // Stockfish 17 missing (private copy) or refused: use Stockfish 10
+      const to = setTimeout(() => { if (!fallback()) { dead = true; res(false); } }, modern ? 20000 : 30000);
+      w.onmessage = (e) => { const s = String(e.data); if (s === "uciok") { if (modern) w.postMessage("setoption name Hash value 32"); else { w.postMessage("setoption name Contempt value 0"); w.postMessage("setoption name Analysis Contempt value Off"); } w.postMessage("isready"); } else if (s === "readyok") { clearTimeout(to); res(true); } else onLine(s); };
+      w.onerror = () => { clearTimeout(to); if (fallback()) return; dead = true; res(false); if (cur) { const c = cur; cur = null; c.rej(new Error("engine")); } };
       w.postMessage("uci");
     });
     return ready;
@@ -630,7 +685,7 @@ const mkSf = () => {
   };
 };
 const Sf = (() => {
-  const n = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 2)), ws = Array.from({ length: n }, mkSf);
+  const n = Math.max(1, Math.min(innerWidth < 700 ? 2 : 3, (navigator.hardwareConcurrency || 4) - 2)), ws = Array.from({ length: n }, mkSf);
   return { analyse(fen, o) { return ws.reduce((a, b) => (b.load() < a.load() ? b : a)).analyse(fen, o); }, stopAll() { ws.forEach((x) => x.stopAll()); } };
 })();
 const MATE_CP = 100000;
@@ -655,6 +710,18 @@ function bookMap() {
   return BOOKMAP;
 }
 const LOOKS = [["auto", "Auto"], ["cyber", "Cyber"], ["classic", "Classic"], ["light", "Light"]], lookNow = () => { try { return localStorage.getItem("bkc_look") || "auto"; } catch (e) { return "auto"; } };
+/* ---------- first visit: pick a look (the Look button at the top changes it later) ---------- */
+const CTP = [["cyber", "Cyber", "Neon glow on a dark board", ["#0a0f1f", "#3ef2ff", "#141b33"]], ["classic", "Classic", "Gold and deep green, like a club at night", ["#0e1411", "#e8c35a", "#16201b"]], ["light", "Light", "Warm paper and ink", ["#f2efe7", "#9a6200", "#fffdf8"]]];
+function chessThemePick() {
+  let picked = "1"; try { picked = localStorage.getItem("bkc_picked"); } catch (e) { /* blocked */ } if (picked) return;
+  const m = Object.assign(document.body.appendChild(document.createElement("div")), { id: "ctp", className: "cmodal" });
+  m.innerHTML = `<div class="sheet" style="max-width:560px"><h2>${ic("crown")}Pick your look</h2><p class="fine">Tap one to preview it. The Look button at the top changes it any time.</p><div class="tpgrid">${CTP.map(([k, n, d, c]) => `<button type="button" class="tpopt" data-ctp="${k}" aria-pressed="${lookNow() === k}"><span class="tpprev" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div><label class="tpauto"><input type="checkbox" id="ctpAuto"> Follow my device's light and dark mode</label><div class="row" style="margin-top:12px"><button class="btn" id="ctpGo" type="button">Let's go</button></div></div>`;
+}
+document.addEventListener("click", (e) => {
+  const o = e.target.closest && e.target.closest("[data-ctp]");
+  if (o) { const k = o.dataset.ctp; try { localStorage.setItem("bkc_look", k); } catch (er) { /* blocked */ } document.documentElement.setAttribute("data-theme", lookResolve(k)); thPaint(); document.querySelectorAll("[data-ctp]").forEach((x) => x.setAttribute("aria-pressed", x === o)); return; }
+  if (e.target.id === "ctpGo") { if (document.getElementById("ctpAuto")?.checked) { try { localStorage.setItem("bkc_look", "auto"); } catch (er) { /* blocked */ } document.documentElement.setAttribute("data-theme", lookResolve("auto")); thPaint(); } try { localStorage.setItem("bkc_picked", "1"); } catch (er) { /* blocked */ } document.getElementById("ctp")?.remove(); }
+});
 const thPaint = () => { const l = document.getElementById("thLab"); if (l) l.textContent = "Look: " + (LOOKS.find((x) => x[0] === lookNow()) || LOOKS[0])[1]; };
 try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if (lookNow() === "auto") { document.documentElement.setAttribute("data-theme", lookResolve("auto")); } }); } catch (e) { /* old browser */ }
 { const L = document.createElement("div"); L.id = "cyb"; L.innerHTML = "<i></i>"; document.body.appendChild(L); thPaint(); }
@@ -668,7 +735,7 @@ function reviewStart(sans, color, o = {}) {
   $("#app").className = "fresh"; rvShell(); rvGo(0, { sound: false }); rvAnalyse(rv.tok);
 }
 async function rvAnalyse(tok) {
-  const jobs = rv.fen.map((fen) => (new Chess(fen).game_over() ? null : Sf.analyse(fen, { multipv: 2, depth: 12, ms: 2200 }).catch(() => "fail")));
+  const jobs = rv.fen.map((fen) => (new Chess(fen).game_over() ? null : Sf.analyse(fen, SF_MODERN ? { multipv: 2, depth: 16, ms: 2600 } : { multipv: 2, depth: 12, ms: 2200 }).catch(() => "fail")));
   for (let i = 0; i <= rv.N; i++) {
     if (!rv || rv.tok !== tok) return;
     const c = new Chess(rv.fen[i]); let pos;
@@ -682,12 +749,75 @@ async function rvAnalyse(tok) {
     rv.pos[i] = pos; if (i > 0) rv.data[i - 1] = rvDerive(i);
     rvProg(); rvList(i); rvGraph(); rvSummary(); if (i === rv.i || i === rv.i + 1) rvPaint();
   }
-  if (rv && rv.tok === tok) { rv.done = true; rvProg(); rvSummary(); Voice.say("Review ready"); }
+  if (rv && rv.tok === tok) { rv.done = true; rvProg(); rvSummary(); const l = rv.data.filter((x) => x && x.cls !== "book"), a = l.length ? l.reduce((q, x) => q + x.acc, 0) / l.length : 0; pipSay(pipPick(a >= 85 ? "great_game" : a >= 70 ? "ok_game" : "rough_game", rv.N)); }
 }
 function rvSac(i) {
   const c = new Chess(rv.fen[i - 1]), col = i % 2 === 1 ? "w" : "b", m0 = matOf(c, col); c.move(rv.mv[i - 1]);
   const pv = rv.pos[i].lines[0] ? rv.pos[i].lines[0].pv : []; for (let k = 0; k < 2 && k < pv.length; k++) if (!c.move(uciMv(pv[k]))) break;
   return m0 - matOf(c, col);
+}
+/* ---------- Pip, the ballknowledge coach ----------
+   A pawn who has spent his whole life six squares from promotion. Funny on the surface, a little deeper underneath.
+   His spoken lines are a fixed bank (src/voice_lines.json "pip") turned into Kokoro clips by src/80_make_voice.py,
+   so he speaks instantly; the move explanation underneath stays written. */
+const PIP = {
+  brilliant: ["Brilliant! You gave something up and got more back. I think about that a lot. Sometimes you have to let go of something to move forward.", "Wow. A sacrifice that works. I'd sacrifice myself too, if it meant something.", "That is the kind of move people remember. Most of us just want to be remembered for one good move."],
+  great: ["Great move. The only one that worked. Funny how often there's only one right door, and we spend years knocking on the others.", "Only move, and you found it. Under pressure, too. Be proud of that one.", "Great find. Everything else lost something. You didn't."],
+  best: ["Best move. Even the engine nods. I'm just a pawn, but I know greatness when I see it. Usually from very far down the board.", "Top choice. Clean and correct. If life had an engine, I'd want it to say that about me.", "Best move. No notes. I wish someone said that to me once."],
+  excellent: ["Excellent. Not perfect, but honestly, who is?", "Very close to best. Close is good. Close is where most of us live.", "Excellent move. Tiny bit better existed, but you're doing great."],
+  good: ["Good move. Solid. Like me. Nobody notices solid until it's gone.", "A good, honest move. Not flashy. Flashy is overrated.", "Good. Not the best, but it keeps everything together."],
+  book: ["Book move. People have played this for a hundred years. Following the path is fine. Just don't forget you can leave it.", "Still in the book. Everyone starts by copying someone.", "Theory. Safe and known. The interesting part of your story starts later."],
+  inaccuracy: ["An inaccuracy. Small slips add up. Ask me how I know. I've been one square from promotion for six years.", "Hmm. Not quite. It's fine, nobody plays a whole game without a wobble.", "A little inaccurate. The better move was hiding. They usually are."],
+  mistake: ["A mistake. It's okay. Pawns can't move backwards, so I've learned to just keep going.", "Ouch, a mistake. The board doesn't hold grudges. Try not to either.", "That one hurt a bit. Mistakes are just the board's way of teaching. Rude teacher, though."],
+  miss: ["A miss! The chance was right there. Most chances don't knock twice. But some do. Stay ready.", "You missed it. Your opponent gave you a gift and you left it on the table. We all do that, more than we admit.", "Missed chance. Don't beat yourself up. Look at it, learn it, and next time you'll see it."],
+  blunder: ["Oof. A blunder. I've seen pawns cry over less. Breathe. It's only a game. Mostly.", "Blunder. One move, and everything changes. Strange how fragile things are.", "That's a blunder. Don't close the review. The players who get better are the ones who look at moments like this."],
+  start: ["Hi, I'm Pip. I'm a pawn. My dream is to reach the other side and become a queen. Let's look at your game while I keep walking.", "Pip here. Let's go through it together, one move at a time. That's how I do everything."],
+  mate: ["Checkmate. Somewhere a king is lying down very quietly.", "And that's mate. Games end. That's what makes them matter."],
+  great_game: ["What a game. If I played like that, I'd already be a queen.", "That was strong chess. Remember how this felt. You'll need it on the bad days."],
+  ok_game: ["A decent game, with some good and some not so good. Pretty much like everything else.", "Not bad at all. A few slips, but you kept walking. That's the whole trick."],
+  rough_game: ["Rough game. But every grandmaster lost hundreds of these. The only real loss is never looking back at it, and you're looking back right now.", "That one didn't go well. That's okay. I've been stuck on the same square for years, and I'm still here."],
+};
+const pipPick = (k, seed) => { const a = PIP[k] || PIP.good; return a[Math.abs(seed | 0) % a.length]; };
+const PIP_MOOD = { brilliant: "wow", great: "wow", best: "happy", excellent: "happy", good: "calm", book: "calm", inaccuracy: "hmm", mistake: "sad", miss: "hmm", blunder: "shock", start: "happy", mate: "wow", great_game: "wow", ok_game: "calm", rough_game: "sad" };
+function pipSVG(mood = "calm") {
+  const eyes = { happy: '<path d="M38 50q4-5 8 0M54 50q4-5 8 0" class="pe"/>', wow: '<circle cx="42" cy="49" r="4.5" class="pf"/><circle cx="58" cy="49" r="4.5" class="pf"/><circle cx="43.5" cy="47.5" r="1.5" fill="#fff"/><circle cx="59.5" cy="47.5" r="1.5" fill="#fff"/>', shock: '<circle cx="42" cy="49" r="5" fill="#fff" class="pe"/><circle cx="58" cy="49" r="5" fill="#fff" class="pe"/><circle cx="42" cy="50" r="2" class="pf"/><circle cx="58" cy="50" r="2" class="pf"/>', sad: '<path d="M38 48q4 3 8 1M54 49q4 2 8-1" class="pe"/>', hmm: '<circle cx="42" cy="49" r="3" class="pf"/><circle cx="58" cy="49" r="3" class="pf"/><path d="M54 42l9-2" class="pe"/>', calm: '<circle cx="42" cy="49" r="3" class="pf"/><circle cx="58" cy="49" r="3" class="pf"/>' }[mood] || "";
+  const mouth = { happy: '<path d="M42 60q8 8 16 0" class="pe"/>', wow: '<ellipse cx="50" cy="61" rx="5" ry="6" class="pf"/>', shock: '<ellipse cx="50" cy="62" rx="4" ry="5" class="pf"/>', sad: '<path d="M43 64q7-6 14 0" class="pe"/>', hmm: '<path d="M44 62h11" class="pe"/>', calm: '<path d="M44 60q6 4 12 0" class="pe"/>' }[mood] || "";
+  const cheeks = mood === "happy" || mood === "wow" ? '<circle cx="36" cy="57" r="4" fill="#ff9a8a" opacity=".55"/><circle cx="64" cy="57" r="4" fill="#ff9a8a" opacity=".55"/>' : "";
+  const tear = mood === "sad" ? '<path d="M61 53q2 4 0 6q-2-2 0-6z" fill="#7cc6ff"/>' : "";
+  const sweat = mood === "shock" ? '<path d="M70 38q3 5 0 7q-3-2 0-7z" fill="#7cc6ff"/>' : "";
+  return `<svg class="pip ${mood}" viewBox="0 0 100 120" aria-hidden="true"><defs><linearGradient id="pipg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff3cf"/><stop offset="1" stop-color="#e8c35a"/></linearGradient></defs>
+    <ellipse cx="50" cy="114" rx="30" ry="5" fill="#000" opacity=".18"/>
+    <path d="M22 108h56l-6-14H28z" fill="url(#pipg)" stroke="#6b4e10" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M30 94c2-12 8-18 8-18h24s6 6 8 18z" fill="url(#pipg)" stroke="#6b4e10" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="50" cy="52" r="26" fill="url(#pipg)" stroke="#6b4e10" stroke-width="2.5"/>
+    <path d="M28 40q22-22 44 0" fill="none" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/><path d="M68 39l10 10" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/>
+    ${cheeks}${eyes}${mouth}${tear}${sweat}</svg>`;
+}
+const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
+function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { volume: 0.95 }); }
+/* ---------- the game report: estimated rating, phases, key moments ---------- */
+const RV_ELO = [[0, 100], [40, 400], [50, 700], [60, 1000], [70, 1350], [75, 1550], [80, 1800], [85, 2050], [90, 2350], [93, 2550], [95, 2700], [97, 2850], [99, 3000]];
+function rvElo(acc) { for (let k = 1; k < RV_ELO.length; k++) if (acc <= RV_ELO[k][0]) { const [a0, e0] = RV_ELO[k - 1], [a1, e1] = RV_ELO[k]; return Math.round((e0 + (e1 - e0) * (acc - a0) / (a1 - a0)) / 50) * 50; } return 3000; }
+const rvNP = (fen) => { let s = 0; for (const ch of fen.split(" ")[0]) s += { q: 9, r: 5, b: 3, n: 3, Q: 9, R: 5, B: 3, N: 3 }[ch] || 0; return s; };
+function rvPhaseOf(i) { const lastBook = rv.book.lastIndexOf(true); if (rvNP(rv.fen[i - 1]) <= 26) return "end"; return i <= Math.min(30, Math.max(lastBook, 16)) ? "open" : "mid"; }
+const RV_PH = [["open", "Opening"], ["mid", "Middlegame"], ["end", "Endgame"]];
+const rvGrade = (a) => (a == null ? null : a >= 95 ? "best" : a >= 88 ? "excellent" : a >= 78 ? "good" : a >= 65 ? "inaccuracy" : a >= 50 ? "mistake" : "blunder");
+function rvReport() {
+  const el = rvEl("rvRep"); if (!el) return; if (!rv.done) { el.innerHTML = ""; return; }
+  const side = (w) => rv.data.filter((x) => x && x.white === w && x.cls !== "book"), accOf = (l) => (l.length ? l.reduce((s, x) => s + x.acc, 0) / l.length : null);
+  const P = [true, false].map((w) => { const l = side(w), a = accOf(l); return { w, n: l.length, acc: a, elo: a != null && l.length >= 8 ? rvElo(a) : null, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
+  const moments = rv.data.filter((x) => x && x.cls !== "book").sort((a, b) => b.loss - a.loss).slice(0, 3).filter((x) => x.loss >= 8);
+  const shine = rv.data.filter((x) => x && (x.cls === "brilliant" || x.cls === "great")).slice(0, 3);
+  const notes = [];
+  P.forEach((p) => { const nm = esc(rv.names[p.w ? 0 : 1]); const ph = RV_PH.map(([k, n], j) => [n, p.ph[j]]).filter((x) => x[1] != null); if (ph.length > 1) { const best = ph.reduce((a, b) => (b[1] > a[1] ? b : a)), worst = ph.reduce((a, b) => (b[1] < a[1] ? b : a)); if (best[0] !== worst[0]) notes.push(`${nm} was strongest in the ${best[0].toLowerCase()} (${Math.round(best[1])}%) and weakest in the ${worst[0].toLowerCase()} (${Math.round(worst[1])}%).`); } });
+  const swing = rv.data.find((x) => x && x.before >= 85 && x.after < 60); if (swing) notes.push(`${esc(rv.names[swing.white ? 0 : 1])} had a winning position and let it slip with ${Math.ceil(swing.i / 2)}${swing.white ? "." : "..."} ${esc(swing.san)}.`);
+  const cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
+  [true, false].forEach((w) => { const b = cnt(w, "blunder"); if (!b && P[w ? 0 : 1].n >= 10) notes.push(`${esc(rv.names[w ? 0 : 1])} made no blunders.`); });
+  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo}</b><span>game rating</span></div>`).join("")}</div>
+    <table class="rvph"><tr><th></th>${P.map((p) => `<th>${p.w ? "White" : "Black"}</th>`).join("")}</tr>${RV_PH.map(([k, n], j) => `<tr><td>${n}</td>${P.map((p) => { const g = rvGrade(p.ph[j]); return `<td>${g ? `<i class="cls ${g}" title="${Math.round(p.ph[j])}% accuracy">${RVC[g][1]}</i>` : '<span class="fine">—</span>'}</td>`; }).join("")}</tr>`).join("")}</table>
+    ${notes.length ? `<ul class="rvnotes">${notes.slice(0, 4).map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
+    ${moments.length || shine.length ? `<div class="rvkm"><span class="label">Key moments</span>${[...shine, ...moments].map((x) => `<button type="button" class="rvkmb" data-ply="${x.i}"><i class="cls ${x.cls}">${RVC[x.cls][1]}</i>${Math.ceil(x.i / 2)}${x.white ? "." : "..."} ${esc(x.san)}</button>`).join("")}</div>` : ""}
+    <p class="fine">Game rating is a rough estimate from accuracy alone; one game can swing it a lot. Phases: opening while in theory or the first moves, endgame once most pieces are off.</p></div>`;
 }
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w);
@@ -732,10 +862,10 @@ function rvShell() {
   const f = rv.flip, bar = (side) => `<div class="pbar rvp" id="rvP${side}"></div>`;
   $("#app").innerHTML = `<div class="card rvcard" data-rvcard><div class="row" style="justify-content:space-between"><h2>${ic("chart")}Game review</h2><button class="btn ghost" id="rvBack" type="button">Back</button></div>
   <div class="rvgrid"><div class="rvleft">${bar("T")}<div class="rvbd"><div class="evv ${f ? "flip" : ""}" id="rvEv" title="Stockfish evaluation"><i id="rvEvI"></i><b class="evl" id="rvEvL">0.0</b></div><div class="lvwrap" id="rvWrap"><div id="rvBoard">${boardHTML(rv.c, { flip: f })}</div><div class="rvov" id="rvOv"></div></div></div>${bar("B")}
-    <div class="rvbtns"><button class="btn ghost" data-rv="0" type="button" title="Start (Home)">⏮</button><button class="btn ghost" data-rv="-1" type="button" title="Back (←)">◀</button><button class="btn" data-rv="play" id="rvPlay" type="button" title="Play (Space)">▶ Play</button><button class="btn ghost" data-rv="1" type="button" title="Forward (→)">▶</button><button class="btn ghost" data-rv="9999" type="button" title="End">⏭</button><button class="btn ghost" data-rv="best" id="rvBestBtn" type="button" title="Show the best move (B)">${ic("bulb")}</button><button class="btn ghost" data-rv="flip" type="button" title="Flip the board (F)">⇅</button></div><p class="fine" style="text-align:center;margin:0">Arrow keys step through the game. Space plays it.</p></div>
-  <div class="rvright"><div id="rvProg" class="rvprog"></div><div class="rvacc" id="rvAcc"></div><svg class="rvgraph" id="rvGraph" viewBox="0 0 300 80" preserveAspectRatio="none"><rect width="300" height="80" fill="#262421"/><path id="rvArea" fill="#e9e6df" opacity=".92"/><line x1="0" y1="40" x2="300" y2="40" stroke="#6b6761" stroke-width=".5"/><g id="rvDots"></g><line id="rvCur" y1="0" y2="80" stroke="#e8c35a" stroke-width="1.2"/></svg>
+    <div class="rvbtns"><button class="btn ghost" data-rv="0" type="button" title="Start (Home)">⏮</button><button class="btn ghost" data-rv="-1" type="button" title="Back (←)">◀</button><button class="btn" data-rv="play" id="rvPlay" type="button" title="Play (Space)">▶ Play</button><button class="btn ghost" data-rv="1" type="button" title="Forward (→)">▶</button><button class="btn ghost" data-rv="9999" type="button" title="End">⏭</button><button class="btn ghost" data-rv="best" id="rvBestBtn" type="button" title="Show the best move (B)">${ic("bulb")}</button><button class="btn ghost" data-rv="flip" type="button" title="Flip the board (F)">⇅</button><button class="btn ghost ${PIPV.on ? "on" : ""}" data-rv="pipv" id="rvPipV" type="button" title="Pip's voice">🔊</button></div><p class="fine" style="text-align:center;margin:0">Arrow keys step through the game. Space plays it.</p></div>
+  <div class="rvright"><div id="rvProg" class="rvprog"></div><div class="rvacc" id="rvAcc"></div><div id="rvRep"></div><svg class="rvgraph" id="rvGraph" viewBox="0 0 300 80" preserveAspectRatio="none"><rect width="300" height="80" fill="#262421"/><path id="rvArea" fill="#e9e6df" opacity=".92"/><line x1="0" y1="40" x2="300" y2="40" stroke="#6b6761" stroke-width=".5"/><g id="rvDots"></g><line id="rvCur" y1="0" y2="80" stroke="#e8c35a" stroke-width="1.2"/></svg>
     <div class="rvcoach" id="rvCoach"></div><div class="rvlist" id="rvList">${Array.from({ length: Math.ceil(rv.N / 2) }, (_, k) => `<div class="rvrow"><span class="n">${k + 1}</span>${[0, 1].map((s) => { const p = k * 2 + s + 1; return p <= rv.N ? `<span class="m" data-ply="${p}" id="rvM${p}">${esc(rv.sans[p - 1])}</span>` : "<span></span>"; }).join("")}</div>`).join("")}</div>
-    <div id="rvCounts"></div><p class="fine">Engine: Stockfish 10 (a real chess engine, running in your browser), searching each position to about 12 moves deep, so it can miss very deep ideas. Grades come from how much each move changes your winning chances. Accuracy uses the same formula as Lichess.</p></div></div></div>`;
+    <div id="rvCounts"></div><p class="fine">Engine: ${SF_MODERN ? "Stockfish 17.1 (neural-network evaluation, running in your browser, about 16 moves deep)" : "Stockfish 10 (running in your browser, about 12 moves deep)"}. Stockfish is free software under the GPL; source at <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">github.com/official-stockfish</a>. Grades come from how much each move changes your winning chances. Accuracy uses the same formula as Lichess.</p></div></div></div>`;
   rv.L.lastKey = ""; rv.L.flipped = f; rvProg(); rvSummary(); rvGraph();
 }
 function rvProg() {
@@ -752,6 +882,7 @@ function rvSummary() {
   const A = acc(true), B = acc(false), nm = (s) => esc(rv.names[s]);
   a.innerHTML = `<div class="accb"><small>${nm(0)}</small><b>${A == null ? "…" : A}</b><span>accuracy</span></div><div class="accb dk"><small>${nm(1)}</small><b>${B == null ? "…" : B}</b><span>accuracy</span></div>`;
   c.innerHTML = `<table class="rvtab">${RVORDER.filter((k) => cnt(true, k) + cnt(false, k) > 0 || ["best", "inaccuracy", "mistake", "blunder"].includes(k)).map((k) => `<tr><td><i class="cls ${k}">${RVC[k][1]}</i> ${RVC[k][0]}</td><td>${cnt(true, k)}</td><td>${cnt(false, k)}</td></tr>`).join("")}</table>`;
+  rvReport();
 }
 function rvGraph() {
   const area = rvEl("rvArea"); if (!area) return; const N = Math.max(1, rv.N), pts = [];
@@ -765,6 +896,7 @@ function rvGo(i, o = {}) {
   rv.L.skipAnim = !(i === prev + 1); if (i !== prev) mkClear(document.getElementById("bd")); boardUpdate(rv.c, { play: false, last: i ? [rv.mv[i - 1].from, rv.mv[i - 1].to] : null }, rv.L);
   if (step && typeof Snd !== "undefined") Snd.move(rv.mv[i - 1], rv.c);
   rvPaint();
+  if (step && !rv.timer) { const d = rv.data[i - 1]; if (d) pipSay(pipPick(d.san.endsWith("#") ? "mate" : d.cls, i * 7 + rv.N)); }
 }
 function rvPaint() {
   if (!rv || !rvEl("rvCoach")) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;
@@ -776,6 +908,7 @@ function rvPaint() {
   rvEl("rvCur").setAttribute("x1", (i / Math.max(1, rv.N) * 300).toFixed(1)); rvEl("rvCur").setAttribute("x2", (i / Math.max(1, rv.N) * 300).toFixed(1));
   rvEl("rvBestBtn").classList.toggle("on", rv.showBest); rvEl("rvPlay").textContent = rv.timer ? "⏸ Pause" : "▶ Play";
   let coach, ov = "";
+  const pk = !i ? "start" : d ? (d.san.endsWith("#") ? "mate" : d.cls) : null, pipHTML = pk ? `<div class="pipbox">${pipSVG(PIP_MOOD[pk])}<div class="pipsay"><b>Pip</b>${esc(pipPick(pk, i * 7 + rv.N))}</div></div>` : "";
   if (!i) coach = `<div class="coachhd"><b>Start of the game</b>${rv.result ? `<span class="fine">Result ${esc(rv.result)}</span>` : ""}</div><p class="fine">Step through with the arrow keys or the buttons. Each move gets a grade and, when it is a mistake, an explanation and the better line.</p>`;
   else if (!d) coach = `<div class="coachhd"><b>${Math.ceil(i / 2)}${i % 2 ? "." : "..."} ${esc(rv.sans[i - 1])}</b></div><p class="fine"><span class="spin"></span> Stockfish is still looking at this move…</p>`;
   else {
@@ -788,7 +921,7 @@ function rvPaint() {
       ov = `<svg viewBox="0 0 8 8"><line x1="${ax + ux * .18}" y1="${ay + uy * .18}" x2="${sx}" y2="${sy}" stroke="#8fd14f" stroke-width=".2" stroke-linecap="round" opacity=".9"/><polygon points="${ex},${ey} ${sx - uy * hw},${sy + ux * hw} ${sx + uy * hw},${sy - ux * hw}" fill="#8fd14f" opacity=".9"/></svg>` + ov;
     }
   }
-  setPart("rvCoach", coach); setPart("rvOv", ov);
+  setPart("rvCoach", pipHTML + coach); setPart("rvOv", ov);
 }
 function rvFlip() { rv.flip = !rv.flip; rvEl("rvEv").classList.toggle("flip", rv.flip); mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
 function rvPlay() { if (rv.timer) { clearInterval(rv.timer); rv.timer = null; } else { if (rv.i >= rv.N) rvGo(0, { sound: false }); rv.timer = setInterval(() => { if (!rv || rv.i >= rv.N) { if (rv) { clearInterval(rv.timer); rv.timer = null; rvPaint(); } return; } rvGo(rv.i + 1); }, 1100); } rvPaint(); }
@@ -1146,10 +1279,20 @@ const dGet = (k) => store.get("daily_" + k, {});
 function dailyMark(id, val) { const k = todayK(), d = dGet(k); if (d[id] != null) return; d[id] = val; store.set("daily_" + k, d); Cloud.submit("daily_" + id, val); const left = DAILIES.filter((x) => d[x[0]] == null).length; Voice.say(left ? "Daily done. " + left + " to go" : "All three dailies done"); }
 function dStreak() { let s = 0; const now = Date.now(); for (let k = 0; k < 400; k++) { const key = new Date(now - k * 864e5).toISOString().slice(0, 10); if (Object.keys(dGet(key)).length) s++; else if (k > 0) break; } return s; }
 const DAILIES = [["p", "Daily puzzle", "bolt", "Today's puzzle, the same for everyone. Find the winning moves.", "dp", (v) => (v ? "Solved" : "Missed")], ["h", "Daily bar", "chart", "One position. Drag the bar to Stockfish's evaluation.", "dh", (v) => v + " / 100"], ["t", "Daily tactic", "target", "One position. Tap every piece you could win for free.", "dt", (v) => v + " points"]];
+function gamesPage() {
+  clearInterval(st.timer); live = null; rvStop(); st = { game: "games" }; const key = todayK(), d = dGet(key), done = DAILIES.filter((x) => d[x[0]] != null).length, streak = dStreak();
+  const card = (attr, icon, name, tag, meta, k) => `<button class="cpcard gpk" type="button" ${attr} style="animation-delay:${k * 70}ms"><span class="gpki">${ic(icon)}</span><b class="cpcname">${name}</b><span class="fine">${tag}</span>${meta ? `<span class="cpwinner">${meta}</span>` : ""}</button>`;
+  $("#app").className = "fresh";
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("puzzle")}Games</h2><p class="sub">Three places to play.</p><div class="cpgrid">
+    ${card('data-hub="bk"', "puzzle", "ballknowledge originals", "Puzzles, openings, the next move, blunders, a game against my AI and more.", `${CG.filter((x) => x.g === "bk").length} game${CG.filter((x) => x.g === "bk").length === 1 ? "" : "s"}`, 0)}
+    ${card('data-hub="model"', "target", "Beat the model", "Call real games against a model that never saw them, from everyday play to the biggest events.", `${CG.filter((x) => x.g === "model").length} game${CG.filter((x) => x.g === "model").length === 1 ? "" : "s"}`, 1)}
+    ${card('data-go="daily"', "clock", "Daily challenges", "A puzzle, a position to judge and a tactic to spot, new every day.", `${done} of ${DAILIES.length} today${streak ? ` · ${streak}-day streak` : ""}`, 2)}</div>`;
+  scrollTo({ top: 0, behavior: "instant" });
+}
 function dailyPage() {
   clearInterval(st.timer); live = null; rvStop(); st = { game: "daily" }; const key = todayK(), d = dGet(key), n = DAILIES.filter((x) => d[x[0]] != null).length, streak = dStreak();
   const dots = Array.from({ length: 14 }, (_, i) => { const k = new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10), c = Object.keys(dGet(k)).length; return `<i class="dd ${c >= 3 ? "full" : c ? "some" : ""} ${k === key ? "today" : ""}" title="${k}: ${c} of 3"></i>`; }).join("");
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("clock")}Daily challenges</h2><p class="sub">Three short challenges, the same for everyone, new every day. Do any one to keep your streak.</p>
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="games">← Games</button></div><h2 style="font-size:32px">${ic("clock")}Daily challenges</h2><p class="sub">Three short challenges, the same for everyone, new every day. Do any one to keep your streak.</p>
     <div class="card"><div class="row" style="justify-content:space-between"><div><div class="label">Streak</div><div class="bigstreak"><span class="flame">🔥</span> <b class="num">${streak}</b> day${streak === 1 ? "" : "s"}</div></div><div style="text-align:right"><div class="label">Today</div><b class="num" style="font-size:28px">${n} / 3</b></div></div><div class="dots">${dots}</div></div>
     <div class="hubgrid" style="margin-top:12px">${DAILIES.map(([id, name, icn, tag, go, fmt]) => `<button class="gcard ${d[id] != null ? "done" : ""}" data-go="${go}"><div class="gi"><div class="di">${ic(icn)}</div></div><div class="gname">${name}</div><div class="gtag">${tag}</div><div class="grec">${d[id] != null ? "Done · " + fmt(d[id]) : "Play"}</div></button>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn ghost" id="dShare" type="button">Copy today's result</button><span class="fine" id="dMsg"></span></div>`;
@@ -1327,7 +1470,7 @@ const cpFace = (p, cls = "") => `<span class="cpf ${cls}" data-i="${p ? cpInit(p
 function cpImgErr(im) { if (im.dataset.r) return im.remove(); im.dataset.r = 1; const u = im.src; setTimeout(() => { im.src = ""; im.src = u; }, 1500 + Math.random() * 1500); }   // one retry: Lichess sometimes throttles a burst of photos
 const cpFed = (p) => (p && p.fed ? cpFlag(p) + (CP_ISO[p.fed] ? p.fed : "") : "");
 const cpWho = (id, extra = "") => { const p = cpP(id); return `<span class="cpwho">${cpFace(p)}<span class="cpnm">${cpFlag(p)}${esc(cpName(p))}${extra}</span></span>`; };
-const cpStage = (sid) => CP.stages.find((x) => x.id === sid) || { games: [] };
+const cpStage = (sid) => { if (String(sid).startsWith("ev:")) { const e = evById(sid.slice(3)); return e ? { id: sid, name: e.name, games: e.games } : { games: [] }; } return CP.stages.find((x) => x.id === sid) || { games: [] }; };
 const cpRes = (g, id) => (g.r === "1/2-1/2" ? "D" : (g.r === "1-0") === (g.w === id) ? "W" : g.r === "*" ? "" : "L");
 const CP_KIND = { classical: ["Classical", "clock"], rapid: ["Rapid", "bolt"], blitz: ["Blitz", "bolt"], armageddon: ["Armageddon", "swords"] };
 
@@ -1375,9 +1518,10 @@ const cpBack = (to = "home", label = "Championships") => `<div class="crumbs"><b
 function champPage(v) {
   rvStop(); olClose(); clearInterval(st.timer); live = null; st = { game: "champ" }; if (typeof v === "string") CH.v = v; const app = $("#app"); app.className = "fresh";
   if (CH.v === "home") app.innerHTML = `${cpBack("menu", "Menu")}<h2 style="font-size:32px">${ic("crown")}Championships</h2>
-    <div class="cpsec"><h3>${ic("crown")}Open</h3><span class="fine">Open to everyone; nearly every player is a man.</span></div><div class="cpgrid">${CP_EVENTS.open.map(cpCard).join("")}</div>
-    <div class="cpsec"><h3>${ic("crown")}Women</h3><span class="fine">Titles only women can play for.</span></div><div class="cpgrid">${CP_EVENTS.women.map(cpCard).join("")}</div>`;
+    <div class="cpsec"><h3>${ic("crown")}Open</h3><span class="fine">Open to everyone; nearly every player is a man.</span></div><div class="cpgrid">${CP_EVENTS.open.map(cpCard).join("")}${evCards("open")}${rkCard("open")}</div>
+    <div class="cpsec"><h3>${ic("crown")}Women</h3><span class="fine">Titles only women can play for.</span></div><div class="cpgrid">${CP_EVENTS.women.map(cpCard).join("")}${evCards("women")}${rkCard("women")}</div>`;
   else if (CH.v === "tc") app.innerHTML = cpBack() + cpTC();
+  else if (CH.v.startsWith("ev:")) app.innerHTML = cpBack() + evPage(CH.v.slice(3));
   else if (CH.v === "wcc") { app.innerHTML = cpBack() + cpVs("gukesh", "sindarov", "FIDE World Championship", [["flag", "Geneva, Switzerland"], ["clock", "24 Nov – 11 Dec 2026"], ["swords", "14 classical games"], ["bolt", "120 min + 30 min, +30 s from move 41"]], `Gukesh defends the title against Sindarov, who won the 2026 Candidates. Tiebreaks if it is level. Dates follow the Lichess broadcast schedule; check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for changes.`, ["Defending champion", "Challenger"]) + `<div id="chLive" class="card" style="margin-top:12px"></div>`; chLoadTour("qfkdt8mn"); }
   else if (CH.v === "wwc") app.innerHTML = cpBack() + cpVs("ju", "vaishali", "Women's World Championship", [["flag", "Host to be announced"], ["clock", "Dates not confirmed"], ["swords", "12 games"], ["trophy", "Vaishali won the Candidates, 8.5/14"]], `Sources disagree on the dates and FIDE lists them as to be announced, so there are no games to show yet. ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")} · ${chLink("https://en.wikipedia.org/wiki/Women%27s_World_Chess_Championship_2026", "Wikipedia")}`, ["Champion", "Challenger"]);
   else if (CH.v === "cho") app.innerHTML = cpBack() + cpChamps("Open champions", [["gukesh", ["Classical"], "Defends against Sindarov from 24 November"], ["carlsen", ["Rapid", "Blitz", "Freestyle"], "2025 World Rapid and Blitz; first FIDE Freestyle title, Feb 2026"], ["firouzja", ["Total Chess pilot"], "Won the Budapest pilot on Armageddon, Nov 2026"]], `The World Rapid and Blitz are in December, so those can change. Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase")}, ${chLink("https://en.chessbase.com/post/freestyle-chess-wc-2026-3", "ChessBase on Freestyle")}, ${chLink("https://www.chess.com/news/view/geneva-gukesh-sindarov-2026-fide-world-championship", "chess.com")}, ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")}.`);
@@ -1407,7 +1551,7 @@ function cpStageHTML() {
 }
 function cpGameRow(sid, i, me) {
   const st = cpStage(sid), g = st.games[i], opp = g.w === me ? g.b : g.w, r = cpRes(g, me), k = CP_KIND[g.tc] || ["", "clock"];
-  return `<button class="cpgame" type="button" data-cpg="${sid}|${i}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : r === "L" ? "Loss" : "…"}</span><span class="cpcol2">${me ? cpWho(opp) : `${cpWho(g.w)}<span class="fine">v</span>${cpWho(g.b)}`}<span class="fine">${st.name}${g.rd ? " · round " + +g.rd : ""} · ${ic(k[1])}${k[0]} · ${me ? (g.w === me ? "White" : "Black") : g.r.replace("1/2-1/2", "½-½")}</span></span>${ic("arrow")}</button>`;
+  return `<button class="cpgame" type="button" data-cpg="${sid}|${i}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : r === "L" ? "Loss" : "…"}</span><span class="cpcol2">${me ? cpWho(opp) : `${cpWho(g.w)}<span class="fine">v</span>${cpWho(g.b)}`}<span class="fine">${st.name}${g.rd ? " · round " + +g.rd : ""} · ${ic(k[1])}${k[0]} · ${me ? (g.w === me ? "White" : "Black") : g.r.replace("1/2-1/2", "½-½")}</span></span>${me ? eloTag(eloDelta(g, me)) : ""}${ic("arrow")}</button>`;
 }
 function cpSheet(html) { cpClose(); const m = document.body.appendChild(document.createElement("div")); m.className = "cpov"; m.id = "cpov"; m.innerHTML = `<div class="cpsheet" role="dialog" aria-modal="true"><button class="cpx" type="button" data-cpclose aria-label="Close">×</button>${html}</div>`; requestAnimationFrame(() => m.classList.add("on")); }
 function cpClose() { const m = document.getElementById("cpov"); if (m) m.remove(); }
@@ -1419,14 +1563,14 @@ function cpPlayer(id) {
   cpSheet(`<div class="cphead">${cpFace(p, "big")}<div><h2>${esc(cpName(p))}</h2><div class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}${p.y ? " · born " + p.y : ""}</div><div class="cprat">${[["Classical", p.std], ["Rapid", p.rap], ["Blitz", p.blz]].filter((x) => x[1]).map(([k, v]) => `<span><b class="num">${v}</b><small>${k}</small></span>`).join("")}</div></div></div>
     ${n ? `<div class="cpstats"><span><b class="num">${n}</b><small>Games</small></span><span class="sW"><b class="num">${all.W}</b><small>Wins</small></span><span class="sD"><b class="num">${all.D}</b><small>Draws</small></span><span class="sL"><b class="num">${all.L}</b><small>Losses</small></span><span><b class="num">${Math.round((100 * (all.W + all.D / 2)) / n)}%</b><small>Score</small></span></div><div class="fine" style="margin-bottom:4px">Every game, first to last</div><div class="cpstrip">${mine.map(([, , g]) => `<i class="d${cpRes(g, id)}"></i>`).join("")}</div>
     ${byStage.map(([s, l]) => `<h4 class="cpsh">${s.name}<span class="fine">${l.filter((x) => cpRes(x[2], id) === "W").length}W ${l.filter((x) => cpRes(x[2], id) === "D").length}D ${l.filter((x) => cpRes(x[2], id) === "L").length}L</span></h4><div class="cpgames">${l.map(([sid, i]) => cpGameRow(sid, i, id)).join("")}</div>`).join("")}` : `<p class="fine">Did not play in the Total Chess pilot.</p>`}
-    ${p.cr ? `<p class="fine cpcredit">Photo: ${esc(p.cr.replace(/<[^>]*>/g, ""))}</p>` : ""}`);
+    ${RK.players[id] ? `<button class="btn cpprof" type="button" data-cpprof="${id}">${ic("user")}Full profile, ratings and history</button>` : ""}${p.cr ? `<p class="fine cpcredit">Photo: ${esc(p.cr.replace(/<[^>]*>/g, ""))}</p>` : ""}`);
 }
 function cpMatch(key) {
   const [sid, pair] = key.split(":"), ids = pair.split("|"), st = cpStage(sid), m = cpMatches(sid).find((x) => x.key === key); if (!m) return;
   cpSheet(`<div class="cpvsrow sm">${ids.map((id, k) => (k ? '<span class="cpvsbig">VS</span>' : "") + `<button class="cpside" type="button" data-cpp="${id}">${cpFace(cpP(id), "big")}<b>${esc(cpName(cpP(id)))}</b></button>`).join("")}</div><h4 class="cpsh">${st.name}<span class="fine">${m.games.length} games</span></h4><div class="cpgames">${m.games.map((i) => cpGameRow(sid, i, ids[0])).join("")}</div><p class="fine">Results are from ${esc(cpName(cpP(ids[0])))}'s side.</p>`);
 }
 document.addEventListener("click", (e) => {
-  if (st.game !== "champ") return;
+  if (st.game !== "champ" && st.game !== "rank") return;
   const t = e.target.closest && e.target.closest("[data-cpv],[data-cpstage],[data-cpp],[data-cpm],[data-cpg],[data-cpclose],.cpov"); if (!t) return;
   if (t.classList.contains("cpov") && e.target !== t) return;
   if (t.dataset.cpclose != null || t.classList.contains("cpov")) return cpClose();
@@ -1435,9 +1579,167 @@ document.addEventListener("click", (e) => {
   if (t.dataset.cpstage) { CH.stage = t.dataset.cpstage; document.querySelectorAll("[data-cpstage]").forEach((x) => { x.classList.toggle("on", x === t); x.setAttribute("aria-selected", x === t); }); $("#cpBody").innerHTML = cpStageHTML(); return; }
   if (t.dataset.cpp) return cpPlayer(t.dataset.cpp);
   if (t.dataset.cpm) return cpMatch(t.dataset.cpm);
-  if (t.dataset.cpg) { const [sid, i] = t.dataset.cpg.split("|"), g = cpStage(sid).games[+i], c = new Chess(); c.load_pgn(g.m, { sloppy: true }); const sans = c.history(); if (sans.length < 2) return; cpClose(); reviewStart(sans, "w", { from: "champ", names: [cpName(cpP(g.w)), cpName(cpP(g.b))], result: g.r }); }
+  if (t.dataset.cpg) { const [sid, i] = t.dataset.cpg.split("|"), g = cpStage(sid).games[+i], c = new Chess(); c.load_pgn(g.m, { sloppy: true }); const sans = c.history(); if (sans.length < 2) return; cpClose(); reviewStart(sans, "w", { from: st.game === "rank" ? "rank" : "champ", names: [cpName(cpP(g.w)), cpName(cpP(g.b))], result: g.r }); }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") cpClose(); if (e.key === "Enter" && st.game === "champ" && e.target.dataset && e.target.dataset.cpp) cpPlayer(e.target.dataset.cpp); });
+
+/* ---------- World rankings and player profiles ----------
+   The official FIDE top-100 lists (src/79_chess_ratings.py): open and women, classical, rapid and blitz, with each
+   player's monthly FIDE rating history. Photos from Lichess's FIDE API. Profiles add what this site knows: Total Chess
+   games (src/78) and the elite-games records behind the lookup. */
+const RK = DATA.ratings || { lists: {}, players: {} };
+Object.entries(RK.players).forEach(([k, p]) => { p.id = k; if (!CP.players[k]) CP.players[k] = p; });
+const RK_LIST = { open: ["open", "open_rapid", "open_blitz"], women: ["women", "women_rapid", "women_blitz"] };
+const RK_TC = [["Classical", "std", 1], ["Rapid", "rap", 2], ["Blitz", "blz", 3]];
+const RK_TITLES = {   // sourced world titles, as on the Championships page (November 2026)
+  "46616543": [["World Champion", "Classical"]], "1503014": [["World Champion", "Rapid"], ["World Champion", "Blitz"], ["World Champion", "Freestyle"]], "12573981": [["Total Chess", "Pilot winner, Budapest 2026"]],
+  "8603006": [["Women's World Champion", "Classical"]], "4147103": [["Women's World Champion", "Rapid"]], "13708694": [["Women's World Champion", "Blitz"]],
+};
+let RKS = { sec: "open", tc: 0, q: "", prof: null, per: 12 };
+const RK_PER = [[1, "1 month"], [3, "3 months"], [6, "6 months"], [12, "1 year"], [60, "5 years"]];
+const rkCard = (sec) => { const rows = (RK.lists[sec] || []).slice(0, 3); if (!rows.length) return ""; return `<button class="cpcard" type="button" data-rksec="${sec}"><span class="cpbadge info">FIDE top 100</span><span class="cpfaces">${rows.map((r) => cpFace(RK.players[r[1]], "md")).join("")}</span><b class="cpcname">${sec === "open" ? "Men's rankings" : "Women's rankings"}</b><span class="cpmeta">${ic("chart")}Classical, rapid and blitz</span><span class="cpmeta">${ic("clock")}${esc(RK.list || "")}</span><span class="cpwinner">${ic("trophy")}#1 ${esc(cpName(RK.players[rows[0][1]]))} · ${rows[0][2]}</span></button>`; };
+const rkAge = (p) => (p.y ? 2026 - p.y : null);
+const rkPlace = (fid) => { const out = []; Object.entries(RK.lists).forEach(([k, rows]) => { const r = rows.find((x) => x[1] === fid); if (r) out.push([k, r[0], r[2]]); }); return out; };
+const rkLabel = (k) => ({ open: "World", open_rapid: "World rapid", open_blitz: "World blitz", women: "Women", women_rapid: "Women rapid", women_blitz: "Women blitz" }[k] || k);
+function rkTrend(p, col = 1, months = 12) { const h = (p.h || []).filter((x) => x[col]); if (h.length < 2) return null; const last = h[h.length - 1], [y, m] = last[0].split("-").map(Number), t = (y * 12 + m - 1) - months, ts = `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, "0")}`, prev = [...h].reverse().find((x) => x[0] <= ts); return prev ? last[col] - prev[col] : null; }
+const rkDelta = (d, lab = "12 months") => (d == null ? `<span class="rkd" title="No rating ${lab} ago">new</span>` : `<span class="rkd ${d > 0 ? "up" : d < 0 ? "dn" : ""}" title="Change over ${lab}">${d > 0 ? "▲" : d < 0 ? "▼" : "•"}${Math.abs(d) || ""}</span>`);
+
+function rankPage(sec, tc) {
+  rvStop(); olClose(); clearInterval(st.timer); live = null; cpClose(); st = { game: "rank" }; RKS.prof = null; if (sec) RKS.sec = sec; if (tc != null) RKS.tc = tc;
+  const key = RK_LIST[RKS.sec][RKS.tc], rows = RK.lists[key] || [], [tcName, tcKey] = RK_TC[RKS.tc];
+  $("#app").className = "fresh";
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("chart")}World rankings</h2><p class="sub">The official FIDE top 100, ${esc(RK.list || "")}. Tap a player for their profile.</p>
+    <div class="rkbar"><div class="chips" role="tablist">${[["open", "Men"], ["women", "Women"]].map(([k, n]) => `<button class="chip ${k === RKS.sec ? "on" : ""}" type="button" data-rksec="${k}">${n}</button>`).join("")}</div><div class="chips">${RK_TC.map(([n], i) => `<button class="chip ${i === RKS.tc ? "on" : ""}" type="button" data-rktc="${i}">${n}</button>`).join("")}</div><div class="chips rkper"><span class="fine">Change over</span>${RK_PER.map(([m, n]) => `<button class="chip ${m === RKS.per ? "on" : ""}" type="button" data-rkper="${m}">${n}</button>`).join("")}</div><input class="t rkq" id="rkQ" placeholder="Find a player" value="${esc(RKS.q)}" autocomplete="off" aria-label="Find a player"></div>
+    ${rows.length ? `<div class="rkpod">${rows.slice(0, 3).map((r, i) => { const p = RK.players[r[1]] || {}; return `<button class="rkpc p${i + 1}" type="button" data-rkp="${r[1]}"><span class="rkn">#${r[0]}</span>${cpFace(p, "big")}<b>${esc(cpName(p))}</b><span class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}</span><span class="rkr num">${r[2]}</span><span class="fine">${tcName}</span></button>`; }).join("")}</div>
+    <div class="card rklist" id="rkRows">${rkRows(rows, tcKey)}</div>` : `<div class="card"><p class="fine">This list is not in the data yet.</p></div>`}
+    <p class="fine" style="margin-top:10px">Source: ${chLink("https://ratings.fide.com/top_lists.phtml", "FIDE ratings")}; photos via ${chLink("https://lichess.org/fide", "Lichess")} (credits on each profile). “Men” is FIDE's open list, which anyone can enter. ▲▼ is the FIDE rating change over the period you pick.</p>`;
+  scrollTo({ top: 0, behavior: "instant" });
+}
+function rkRows(rows, tcKey) {
+  const q = norm(RKS.q || ""), col = { std: 1, rap: 2, blz: 3 }[tcKey];
+  const list = rows.filter((r) => !q || norm(cpName(RK.players[r[1]] || {})).includes(q));
+  return list.length ? list.map((r) => { const p = RK.players[r[1]] || {}; return `<button class="rkrow ${r[0] <= 10 ? "top" : ""}" type="button" data-rkp="${r[1]}"><span class="rkn num">${r[0]}</span>${cpFace(p)}<span class="rknm"><b>${cpFlag(p)}${esc(cpName(p))}</b><small>${p.t || ""}${rkAge(p) ? " · " + rkAge(p) + " yrs" : ""}${p.fed ? " · " + p.fed : ""}</small></span>${rkDelta(rkTrend(p, col, RKS.per), (RK_PER.find((x) => x[0] === RKS.per) || [])[1])}<span class="rkr num">${r[2]}</span></button>`; }).join("") : `<p class="fine">No player matches “${esc(RKS.q)}”.</p>`;
+}
+
+/* the profile */
+const rkKey = (n) => norm(n || "").split(/\s+/).filter(Boolean).sort().join(" ");
+const LKIDX = (() => { const m = new Map(); LKP.forEach((n, i) => { const k = rkKey(nice(n).replace(/,/g, " ")); if (!m.has(k) || LKN[i] > LKN[m.get(k)]) m.set(k, i); }); return m; })();
+function rkChart(p, col) {
+  const h = (p.h || []).filter((x) => x[col]); if (h.length < 3) return `<p class="fine">Not enough rating history for a chart.</p>`;
+  const W = 640, Hh = 200, vals = h.map((x) => x[col]), lo = Math.floor((Math.min(...vals) - 20) / 50) * 50, hi = Math.ceil((Math.max(...vals) + 20) / 50) * 50;
+  const X = (i) => 34 + (i / (h.length - 1)) * (W - 44), Y = (v) => 12 + (1 - (v - lo) / (hi - lo)) * (Hh - 34);
+  const line = h.map((x, i) => `${X(i).toFixed(1)},${Y(x[col]).toFixed(1)}`).join(" "), pk = vals.indexOf(Math.max(...vals)), last = h.length - 1;
+  const years = [...new Set(h.map((x) => x[0].slice(0, 4)))], step = Math.ceil(years.length / 7), ticks = years.filter((_, i) => i % step === 0).map((y) => [y, h.findIndex((x) => x[0].startsWith(y))]);
+  const grid = []; for (let v = lo; v <= hi; v += (hi - lo) > 400 ? 100 : 50) grid.push(v);
+  return `<svg class="rkchart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Rating history"><defs><linearGradient id="rkg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--gold)" stop-opacity=".35"/><stop offset="1" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>
+    ${grid.map((v) => `<line x1="34" x2="${W - 10}" y1="${Y(v)}" y2="${Y(v)}" class="rkgl"/><text x="28" y="${Y(v) + 4}" class="rkax" text-anchor="end">${v}</text>`).join("")}
+    ${ticks.map(([y, i]) => `<text x="${X(i)}" y="${Hh - 6}" class="rkax" text-anchor="middle">${y}</text>`).join("")}
+    <polygon points="${X(0)},${Hh - 22} ${line} ${X(last)},${Hh - 22}" fill="url(#rkg)"/><polyline points="${line}" class="rkline"/>
+    <circle cx="${X(pk)}" cy="${Y(vals[pk])}" r="5" class="rkpk"/><text x="${Math.min(X(pk), W - 60)}" y="${Math.max(Y(vals[pk]) - 10, 12)}" class="rklab" text-anchor="middle">Peak ${vals[pk]}</text>
+    <circle cx="${X(last)}" cy="${Y(vals[last])}" r="4" class="rknow"/></svg>`;
+}
+function rkMilestones(p) {
+  const out = (RK_TITLES[p.id] || []).map(([a, b]) => ["crown", a, b, true]);
+  const bio = PBIO[norm(cpName(p))]; if (bio && bio.champ && !out.some((x) => x[1] === "World Champion" && x[2] === "Classical")) out.push(["crown", "World Champion", "Classical, past", true]);
+  rkPlace(p.id).forEach(([k, r]) => { if (r <= 10) out.push(["trophy", rkLabel(k) + " #" + r, "FIDE " + (RK.list || ""), r === 1]); });
+  const h = (p.h || []).filter((x) => x[1]); [2800, 2700].forEach((t) => { const f = h.find((x) => x[1] >= t); if (f && !out.some((x) => x[1].endsWith("club"))) out.push(["bolt", t + " club", "Since " + f[0].slice(0, 4), false]); });
+  if (p.peak) out.push(["chart", "Peak " + p.peak, "Classical, " + (p.peakAt || "").replace(/-(\d\d)$/, (m, mm) => " " + ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+mm]), false]);
+  const tc = CP.stages.length && rkTcFinish(p.id); if (tc) out.push(["swords", "Total Chess pilot", tc, tc.startsWith("1st")]);
+  if (p.t) out.push(["user", p.t === "GM" ? "Grandmaster" : p.t === "IM" ? "International Master" : p.t === "WGM" ? "Woman Grandmaster" : p.t, "FIDE title", false]);
+  return out;
+}
+function rkTcFinish(fid) { if (!CP.stages.some((s) => s.games.some((g) => g.w === fid || g.b === fid))) return null; const pod = { [CP_ID.firouzja]: "1st, champion", [CP_ID.giri]: "2nd", [CP_ID.caruana]: "3rd", [CP_ID.mvl]: "4th" }; return pod[fid] || "Played"; }
+function rkRecent(p) {
+  const rows = [];
+  CP.stages.forEach((s) => s.games.forEach((g, i) => { if (g.w === p.id || g.b === p.id) rows.push({ d: (g.d || "").replace(/\./g, "-"), ev: "Total Chess · " + s.name, opp: g.w === p.id ? g.b : g.w, r: cpRes(g, p.id), col: g.w === p.id ? "White" : "Black", tc: g.tc, ref: s.id + "|" + i }); }));
+  const li = LKIDX.get(rkKey(cpName(p))); if (li != null) LKG.forEach((g) => { if ((g[2] === li || g[3] === li) && g[1]) rows.push({ d: g[1], ev: LKE[g[0]].n, oppName: nice(LKP[g[2] === li ? g[3] : g[2]]), r: resFor(g, li), col: g[2] === li ? "White" : "Black" }); });
+  rows.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0)); return { rows: rows.slice(0, 12), li };
+}
+function profPage(fid) {
+  const p = RK.players[fid] || CP.players[fid]; if (!p) return; rvStop(); olClose(); clearInterval(st.timer); live = null; cpClose(); st = { game: "rank", prof: fid }; RKS.prof = fid;
+  const places = rkPlace(fid), ms = rkMilestones(p), rec = rkRecent(p), form = rec.rows.slice(0, 10);
+  const tiles = RK_TC.map(([n, k, col]) => { const d = rkTrend(p, col); return p[k] ? `<div class="rktile"><small>${n}</small><b class="num">${p[k]}</b>${rkDelta(d)}</div>` : ""; }).join("");
+  $("#app").className = "fresh";
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-rkback>← Rankings</button></div>
+    <div class="card rkhero">${cpFace(p, "big")}<div class="rkhi"><h2>${esc(cpName(p))}</h2><div class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}${rkAge(p) ? " · " + rkAge(p) + " years old" : ""}</div>
+      <div class="rkplaces">${places.length ? places.map(([k, r]) => `<span class="${r <= 3 ? "gold" : ""}">${rkLabel(k)} <b>#${r}</b></span>`).join("") : '<span>Outside the FIDE top 100</span>'}</div></div></div>
+    <div class="rktiles">${tiles}</div>
+    <div class="card rkchg"><h3>${ic("chart")}Rating change</h3><table class="rvph"><tr><th></th>${RK_PER.map(([, n]) => `<th>${n}</th>`).join("")}</tr>${RK_TC.filter(([, k]) => p[k]).map(([n, , col]) => `<tr><td>${n}</td>${RK_PER.map(([m]) => { const d = rkTrend(p, col, m); return `<td>${d == null ? '<span class="fine">—</span>' : rkDelta(d)}</td>`; }).join("")}</tr>`).join("")}</table></div>
+    <div class="card"><div class="rkch"><h3>${ic("chart")}Rating history</h3><div class="chips">${RK_TC.map(([n], i) => `<button class="chip ${i === 0 ? "on" : ""}" type="button" data-rkch="${i + 1}">${n}</button>`).join("")}</div></div><div id="rkChart">${rkChart(p, 1)}</div></div>
+    ${ms.length ? `<h3 class="rksh">${ic("trophy")}Titles and milestones</h3><div class="rkms">${ms.map(([i, a, b, gold]) => `<div class="rkm ${gold ? "gold" : ""}">${ic(i)}<b>${esc(a)}</b><small>${esc(b)}</small></div>`).join("")}</div>` : ""}
+    <h3 class="rksh">${ic("clock")}Recent results ${form.length ? `<span class="cpdots big">${form.slice().reverse().map((x) => `<i class="d${x.r}"></i>`).join("")}</span>` : ""}</h3>
+    ${rec.rows.length ? `<div class="cpgames">${rec.rows.map((x) => { const o = x.opp ? cpP(x.opp) : null; return `<${x.ref ? `button type="button" data-cpg="${x.ref}"` : "div"} class="cpgame ${x.ref ? "" : "static"}"><span class="cpres r${x.r}">${x.r === "W" ? "Win" : x.r === "D" ? "Draw" : "Loss"}</span><span class="cpcol2">${o ? cpWho(x.opp) : `<span class="cpwho"><span class="cpnm">${esc(x.oppName || "")}</span></span>`}<span class="fine">${esc(x.ev)} · ${x.d} · ${x.col}</span></span>${x.ref ? ic("arrow") : ""}</${x.ref ? "button" : "div"}>`; }).join("")}</div>` : `<p class="fine">No games for this player in the site's records yet.</p>`}
+    ${rec.li != null ? `<h3 class="rksh">${ic("eye")}At the biggest events</h3><div class="card" id="rkLk">${lkPlayer(rec.li)}</div>` : ""}
+    <p class="fine" style="margin-top:12px">Ratings and history: ${chLink("https://ratings.fide.com/profile/" + fid, "FIDE profile")}.${p.cr ? " Photo: " + esc(p.cr.replace(/<[^>]*>/g, "")) : ""}</p>`;
+  countUp($("#app")); scrollTo({ top: 0, behavior: "instant" });
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("[data-rksec],[data-rktc],[data-rkper],[data-rkp],[data-rkch],[data-rkback],[data-cpprof]"); if (!t) return;
+  try { Snd.tick && Snd.tick(); } catch (er) { /* quiet */ }
+  if (t.dataset.rksec) return rankPage(t.dataset.rksec);
+  if (t.dataset.rktc) return rankPage(null, +t.dataset.rktc);
+  if (t.dataset.rkper) { RKS.per = +t.dataset.rkper; return rankPage(); }
+  if (t.dataset.rkp) return profPage(t.dataset.rkp);
+  if (t.dataset.cpprof) return profPage(t.dataset.cpprof);
+  if (t.dataset.rkback != null) return rankPage();
+  if (t.dataset.rkch) { document.querySelectorAll("[data-rkch]").forEach((x) => x.classList.toggle("on", x === t)); const p = RK.players[st.prof] || CP.players[st.prof]; $("#rkChart").innerHTML = rkChart(p, +t.dataset.rkch); }
+});
+document.addEventListener("input", (e) => { if (e.target.id === "rkQ") { RKS.q = e.target.value; const key = RK_LIST[RKS.sec][RKS.tc]; $("#rkRows").innerHTML = rkRows(RK.lists[key] || [], RK_TC[RKS.tc][1]); } });
+
+/* ---------- 2026 tournaments (src/81_chess_events.py): standings, rounds, every game with its rating change ---------- */
+const EVD = DATA.events || { events: [], players: {} };
+Object.entries(EVD.players || {}).forEach(([k, p]) => { p.id = k; if (!CP.players[k]) CP.players[k] = p; });
+const EVS = EVD.events || [];
+const evById = (id) => EVS.find((e) => e.id === id);
+/* FIDE rating change for one game: K 10 at 2400+ in classical (20 below), 20 in rapid and blitz; Armageddon is not rated */
+function eloDelta(g, me) {
+  if (g.r === "*" || g.tc === "armageddon") return null; const white = g.w === me, R = +(white ? g.we : g.be), O = +(white ? g.be : g.we); if (!R || !O) return null;
+  const S = g.r === "1/2-1/2" ? 0.5 : (g.r === "1-0") === white ? 1 : 0, d = Math.max(-400, Math.min(400, O - R)), E = 1 / (1 + Math.pow(10, d / 400)), K = g.tc === "classical" ? (R >= 2400 ? 10 : 20) : 20;
+  return Math.round(K * (S - E) * 10) / 10;
+}
+const eloTag = (v) => (v == null ? "" : `<span class="rkd ${v > 0 ? "up" : v < 0 ? "dn" : ""}" title="FIDE rating change for this game">${v > 0 ? "+" : ""}${v.toFixed(1)}</span>`);
+const evDates = (e) => { const f = (d) => (d ? new Date(d + "T12:00:00Z").toLocaleDateString([], { day: "numeric", month: "short" }) : ""); return e.from ? `${f(e.from)} – ${f(e.to)} ${e.to ? e.to.slice(0, 4) : ""}` : ""; };
+const evTop = (e) => (e.scoring === "ko" ? [...new Set(e.games.filter((g) => /final/i.test(g.st) && !/semi/i.test(g.st)).flatMap((g) => [g.w, g.b]))] : e.table.map((r) => r[0]));
+function evWinner(e) { if (!e.done) return null; if (e.scoring === "ko") return null; const t = e.table; if (!t.length) return null; const top = t.filter((r) => r[1] === t[0][1]); return top.length === 1 ? cpName(cpP(top[0][0])) : "Shared: " + top.map((r) => cpName(cpP(r[0])).split(" ").pop()).join(", "); }
+const evCard = (e) => `<button class="cpcard" type="button" data-cpv="ev:${e.id}"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><span class="cpfaces">${evTop(e).slice(0, 3).map((id) => cpFace(cpP(id), "md")).join("")}</span><b class="cpcname">${esc(e.name)}</b><span class="cpmeta">${ic("flag")}${esc((e.site || "").replace(/,\s*\w\w$/, ""))}</span><span class="cpmeta">${ic("clock")}${evDates(e)}</span>${evWinner(e) ? `<span class="cpwinner">${ic("trophy")}${esc(evWinner(e))}</span>` : ""}</button>`;
+const evCards = (sec) => EVS.filter((e) => e.sec === sec).sort((a, b) => (a.to < b.to ? 1 : -1)).map(evCard).join("");
+function evPage(id) {
+  const e = evById(id); if (!e) return champPage("home"); CH.ev = id; CH.evTab = CH.evTab || "table";
+  const ko = e.scoring === "ko", top = evTop(e).slice(0, 3), pod = ko ? [] : [[top[1], "2"], [top[0], "1"], [top[2], "3"]].filter((x) => x[0]);
+  return `<div class="card cphero"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><h2>${esc(e.name)}</h2><div class="cpfacts"><span>${ic("flag")}${esc(e.site || "")}</span><span>${ic("clock")}${evDates(e)}</span><span>${ic("user")}${new Set(e.games.flatMap((g) => [g.w, g.b])).size} players</span><span>${ic("swords")}${e.games.length} games</span></div>
+    ${pod.length && e.done ? `<div class="cppodium">${pod.map(([pid, n]) => `<button class="cppod p${n}" type="button" data-evp="${pid}">${cpFace(cpP(pid), "big")}<span class="cpmedal">${n}</span><b>${esc(cpName(cpP(pid)))}</b><span class="fine">${(e.table.find((r) => r[0] === pid) || [])[1]} pts</span><span class="cpstep"></span></button>`).join("")}</div>` : ""}
+    <p class="fine" style="margin:10px 0 0">${esc(e.fmt)} Standings are by points; official tiebreaks are not applied. Games from the ${chLink("https://lichess.org/broadcast", "Lichess broadcast")}.</p></div>
+    <div class="cptabs">${(ko ? [["rounds", "Matches"]] : [["table", "Standings"], ["rounds", "Rounds"]]).map(([k, n]) => `<button class="chip ${(ko ? "rounds" : CH.evTab) === k ? "on" : ""}" type="button" data-evtab="${k}">${n}</button>`).join("")}</div><div id="evBody">${ko ? evRounds(e) : CH.evTab === "table" ? evTable(e) : evRounds(e)}</div>`;
+}
+function evTable(e) {
+  const first = {}, sum = {}; e.games.forEach((g) => { [g.w, g.b].forEach((p) => { if (!first[p]) first[p] = +(p === g.w ? g.we : g.be); const v = eloDelta(g, p); if (v != null) sum[p] = (sum[p] || 0) + v; }); });
+  return `<div class="card"><table class="cpt"><thead><tr><th>#</th><th>Player</th><th title="Rating at the start">Elo</th><th>W</th><th>D</th><th>L</th><th title="Rating change over the event">±</th><th>Pts</th></tr></thead><tbody>${e.table.map(([p, pts, W, D, L], i) => `<tr class="${i === 0 ? "q" : ""}" data-evp="${p}" tabindex="0"><td class="num">${i + 1}</td><td>${cpWho(p)}</td><td class="num">${first[p] || ""}</td><td class="num">${W}</td><td class="num">${D}</td><td class="num">${L}</td><td>${eloTag(sum[p] == null ? null : Math.round(sum[p] * 10) / 10)}</td><td class="num"><b>${pts % 1 ? pts.toFixed(1) : pts}</b></td></tr>`).join("")}</tbody></table></div>`;
+}
+function evRounds(e) {
+  const rounds = [...new Set(e.games.map((g) => (g.st ? g.st + " · " : "") + "Round " + g.rd))];
+  const cur = CH.evRound && rounds.includes(CH.evRound) ? CH.evRound : rounds[rounds.length - 1]; CH.evRound = cur;
+  const list = e.games.map((g, i) => [g, i]).filter(([g]) => (g.st ? g.st + " · " : "") + "Round " + g.rd === cur);
+  return `<div class="chips evrounds">${rounds.map((r) => `<button class="chip ${r === cur ? "on" : ""}" type="button" data-evround="${esc(r)}">${esc(r.replace("Round ", "R"))}</button>`).join("")}</div><div class="cpgames">${list.map(([g, i]) => evGameRow(e, g, i)).join("")}</div>`;
+}
+function evGameRow(e, g, i) {
+  const k = CP_KIND[g.tc] || ["", "clock"], res = g.r === "1/2-1/2" ? "½–½" : g.r === "*" ? "live" : g.r.replace("-", "–");
+  return `<button class="evg" type="button" data-cpg="ev:${e.id}|${i}"><span class="evside">${cpWho(g.w)}${eloTag(eloDelta(g, g.w))}</span><span class="evres">${res}<small>${ic(k[1])}${k[0]}</small></span><span class="evside r">${eloTag(eloDelta(g, g.b))}${cpWho(g.b)}</span></button>`;
+}
+function evPlayer(eid, pid) {
+  const e = evById(eid), p = cpP(pid); if (!e || !p) return; const mine = e.games.map((g, i) => [g, i]).filter(([g]) => g.w === pid || g.b === pid);
+  const rec = { W: 0, D: 0, L: 0 }; let tot = 0; mine.forEach(([g]) => { const r = cpRes(g, pid); if (r && g.tc !== "armageddon") rec[r]++; const v = eloDelta(g, pid); if (v != null) tot += v; });
+  const row = e.table.findIndex((r) => r[0] === pid);
+  cpSheet(`<div class="cphead">${cpFace(p, "big")}<div><h2>${esc(cpName(p))}</h2><div class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}</div><div class="cprat">${row >= 0 ? `<span><b class="num">${row + 1}</b><small>Place</small></span>` : ""}<span><b class="num">${rec.W}-${rec.D}-${rec.L}</b><small>W-D-L</small></span><span><b class="num">${tot > 0 ? "+" : ""}${tot.toFixed(1)}</b><small>Rating</small></span></div></div></div>
+    <h4 class="cpsh">${esc(e.name)}<span class="fine">${mine.length} games</span></h4><div class="cpgames">${mine.slice().reverse().map(([g, i]) => { const r = cpRes(g, pid), opp = g.w === pid ? g.b : g.w, kk = CP_KIND[g.tc] || ["", "clock"]; return `<button class="cpgame" type="button" data-cpg="ev:${e.id}|${i}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : r === "L" ? "Loss" : "…"}</span><span class="cpcol2">${cpWho(opp)}<span class="fine">${g.st ? esc(g.st) + " · " : ""}round ${esc(g.rd)} · ${ic(kk[1])}${kk[0]} · ${g.w === pid ? "White" : "Black"}</span></span>${eloTag(eloDelta(g, pid))}${ic("arrow")}</button>`; }).join("")}</div>
+    ${RK.players[pid] ? `<button class="btn cpprof" type="button" data-cpprof="${pid}">${ic("user")}Full profile, ratings and history</button>` : ""}${p.cr ? `<p class="fine cpcredit">Photo: ${esc(p.cr.replace(/<[^>]*>/g, ""))}</p>` : ""}`);
+}
+document.addEventListener("click", (ev) => {
+  if (st.game !== "champ") return; const t = ev.target.closest && ev.target.closest("[data-evtab],[data-evround],[data-evp]"); if (!t) return;
+  const e = evById(CH.ev); if (!e) return;
+  if (t.dataset.evtab) { CH.evTab = t.dataset.evtab; document.querySelectorAll("[data-evtab]").forEach((x) => x.classList.toggle("on", x === t)); $("#evBody").innerHTML = CH.evTab === "table" ? evTable(e) : evRounds(e); return; }
+  if (t.dataset.evround) { CH.evRound = t.dataset.evround; $("#evBody").innerHTML = evRounds(e); return; }
+  if (t.dataset.evp) return evPlayer(e.id, t.dataset.evp);
+});
 
 async function chLoadTour(id) {
   const el = document.getElementById("chLive"); if (!el) return; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;
@@ -1466,7 +1768,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.chg != null) { const g = CH.games[+t.dataset.chg]; if (g && g.sans.length >= 2) reviewStart(g.sans, "w", { from: "champ", names: [g.w, g.b], result: g.res }); }
 });
 
-const GO = { champ: () => champPage(), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+const GO = { games: gamesPage, champ: () => champPage(), rank: () => (RKS.prof ? profPage(RKS.prof) : rankPage()), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);
@@ -1481,7 +1783,7 @@ document.addEventListener("click", (e) => {
   if (t.id === "aiAgain" || t.id === "aiNew") return aiMenu();
   if (t.id === "aiReview") return reviewStart(live.c.history(), live.color, { from: "ai", names: live.color === "w" ? ["You", "My engine"] : ["My engine", "You"] });
   if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : was === "champ" ? champPage() : reviewIntro(); }
-  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
+  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "pipv") { PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* private */ } if (!PIPV.on) AIVoice.stop(); t.classList.toggle("on", PIPV.on); return; } if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }
   if (t.dataset.intro) { fresh(); Usage.play("ch", t.dataset.intro); return intro(t.dataset.intro); }
@@ -1537,7 +1839,7 @@ function runSplash() {
   if (kind === "secret") setTimeout(() => { try { Snd.ok(); } catch (e) { /* ok */ } }, 1600);
   const dur = kind === "secret" ? 10500 : kind === "common" ? 2300 : 3600; $("#csBar").animate([{ width: "0%" }, { width: "100%" }], { duration: dur, fill: "forwards", easing: "linear" });
   if (sp._pz) { const p = sp._pz, c = new Chess(p.fen), bd = $("#csBd"), draw = (last) => { bd.innerHTML = boardHTML(c, { last }); }, mv = (u) => { const m = c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] }); draw(m ? [m.from, m.to] : null); }; draw(null); let k = 0; const step = () => { if (!document.body.contains(bd) || k >= p.moves.length) return; mv(p.moves[k++]); setTimeout(step, 900); }; setTimeout(step, 700); }
-  let closed = false; const hide = () => { if (closed) return; closed = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700); }; sp.addEventListener("click", hide); setTimeout(hide, dur);
+  let closed = false; const hide = () => { if (closed) return; closed = true; sp.classList.add("out"); setTimeout(() => { sp.remove(); chessThemePick(); }, 700); }; sp.addEventListener("click", hide); setTimeout(hide, dur);
 }
 home();
 runSplash();

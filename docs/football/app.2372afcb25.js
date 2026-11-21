@@ -1293,7 +1293,7 @@ function finishSplash() {
   const n = cat.filter((c) => p.splashes[c.id]).length; if (fresh) { const el = $("#spNew"); if (el) el.textContent = `New! ${n} of ${cat.length}`; }
   if (cur.rar === "Secret" || (p.ach && p.ach.splash_secret)) { if (!ACH.some((a) => a[0] === "splash_secret")) { ACH.push(["splash_secret", "The Notebook", "Found the secret loading screen"]); ACH_TIER.splash_secret = 4; ACH_ICON.splash_secret = "star"; } if (cur.rar === "Secret") { unlock(p, "splash_secret"); setTimeout(() => { try { toast("<b>Secret found</b><br>The Notebook"); Snd.win(); confetti(); } catch (e) { /* ok */ } }, 1500); } }
   if (cur.rar === "Rare" || cur.rar === "Legendary") unlock(p, "splash_rare"); if (cur.rar === "Legendary") unlock(p, "splash_leg"); if (n >= 10) unlock(p, "splash_10"); if (n >= cat.length) unlock(p, "splash_all"); saveProf(p);
-  const hide = () => { sp.classList.add("out"); setTimeout(() => { sp.remove(); try { if (!localStorage.getItem("bk_tour") && !location.hash.replace("#", "")) offerTour(); else if (localStorage.getItem("bk_tour") && localStorage.getItem("bk_ver") !== CHANGELOG.v) showWhatsNew(); } catch (e) { /* blocked */ } }, 700); };
+  const hide = () => { sp.classList.add("out"); setTimeout(() => { sp.remove(); themePick(() => { try { if (!localStorage.getItem("bk_tour") && !location.hash.replace("#", "")) offerTour(); else if (localStorage.getItem("bk_tour") && localStorage.getItem("bk_ver") !== CHANGELOG.v) showWhatsNew(); } catch (e) { /* blocked */ } }); }, 700); };
   $("#spSkip").addEventListener("click", hide); sp.addEventListener("click", hide);
   setTimeout(hide, Math.max(300, (cur.rar === "Common" ? 2300 : cur.rar === "Secret" ? 10500 : 3600) - (performance.now() - (window.__spT0 || 0))));
 }
@@ -1321,6 +1321,22 @@ function modal(html) {
   let m = $("#modal"); if (!m) { m = document.createElement("div"); m.id = "modal"; m.className = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); document.body.appendChild(m); }
   m.innerHTML = `<div class="sheet">${html}</div>`; m.hidden = false; m.querySelector("button, input")?.focus(); Snd.tick();
 }
+/* ---------- first visit: pick a look (change it later in your profile, under Appearance) ---------- */
+const TP_PRE = DATA.sport === "nba" ? "bkn_" : "bk_";
+const TP_OPTS = DATA.sport === "nba"
+  ? [["classic", "dark", "Arena night", "Glow, effects and the arena after dark", ["#16110c", "#ff8a3d", "#2a1d14"]], ["classic", "light", "Daylight court", "Bright, warm and easy on the eyes", ["#f6efe6", "#b5521b", "#ffffff"]], ["minimal", "dark", "Minimal dark", "Calm and quiet, no effects", ["#121417", "#9aa4b2", "#1c2026"]], ["minimal", "light", "Minimal light", "Clean and simple", ["#fafafa", "#555555", "#ececec"]]]
+  : [["flood", "dark", "Floodlit", "A night match: light beams and a flying ball", ["#0b1033", "#f2c14e", "#1b2450"]], ["classic", "dark", "Stadium", "The glow and the stadium backdrop", ["#0a1a12", "#1fa463", "#12281c"]], ["classic", "light", "Matchday", "Bright, like an afternoon kickoff", ["#f4f1ea", "#7a5c12", "#ffffff"]], ["minimal", "dark", "Minimal dark", "Calm and quiet, no effects", ["#121417", "#9aa4b2", "#1c2026"]], ["minimal", "light", "Minimal light", "Clean and simple", ["#fafafa", "#555555", "#ececec"]]];
+function themePick(done) {
+  let picked = "1"; try { picked = localStorage.getItem(TP_PRE + "picked"); } catch (e) { /* storage blocked: skip */ }
+  if (picked || /^#(join|challenge)/.test(location.hash)) return done();
+  window.__tpDone = done;
+  modal(`<h2 style="font-size:26px">Pick your look</h2><p class="fine" style="margin-top:0">Tap one to preview it. You can change it any time in your profile, under Appearance.</p><div class="tpgrid">${TP_OPTS.map(([, md, n, d, c], i) => `<button type="button" class="tpopt" data-tp="${i}" aria-pressed="false"><span class="tpprev ${md}" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div><label class="tpauto"><input type="checkbox" id="tpAuto"> Switch between light and dark with my device</label><div class="row" style="margin-top:12px"><button class="btn" id="tpGo" type="button">Let's go</button></div>`);
+}
+function tpSet(k, v) { try { localStorage.setItem(TP_PRE + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } }
+document.addEventListener("click", (e) => {
+  const o = e.target.closest && e.target.closest("[data-tp]"); if (o) { const [st, md] = TP_OPTS[+o.dataset.tp]; tpSet("style", st); tpSet("theme", document.getElementById("tpAuto")?.checked ? "auto" : md); applyAppearance(); document.querySelectorAll("[data-tp]").forEach((x) => x.setAttribute("aria-pressed", x === o)); Snd.tick(); return; }
+  if (e.target.id === "tpGo") { if (document.getElementById("tpAuto")?.checked) { tpSet("theme", "auto"); applyAppearance(); } try { localStorage.setItem(TP_PRE + "picked", "1"); } catch (er) { /* blocked */ } closeModal(); const d = window.__tpDone; window.__tpDone = null; if (d) d(); }
+});
 const closeModal = () => { const m = $("#modal"); if (m) m.hidden = true; };
 addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
@@ -3411,10 +3427,7 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
   const nba = QUIZ_GAMES.some((g) => g.id === "dropped");
   const GROUPS = nba ? [
     { lead: "who", name: "Name it", tag: "Six ways to name a mystery: player clues, a career path, team stats, a real stat line, a blurred logo or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Team stats"], ["dropped", "Stat line"], ["blur", "Logo blur"], ["scramble", "Scramble"]] },
-  ] : [
-    { lead: "who", name: "Name it", tag: "Five ways to name a mystery: player clues, a career path, club stats, a blurred badge or scrambled letters.", vers: [["who", "Player clues"], ["career", "Career path"], ["club", "Club stats"], ["blur", "Badge blur"], ["scramble", "Scramble"]] },
-    { lead: "xi", name: "Match recall", tag: "Name the eleven who started a big final, or the scorers, assisters and red cards of a classic match.", vers: [["xi", "Starting XI"], ["iconic", "Who did it"]] },
-  ];
+  ] : [];   // football: every game has its own card again (owner's call, 21 Nov 2026); the merge into Name it / Match recall is undone
   window.QUIZ_HIDDEN = []; window.VERSNAME = {}; window.VERSOF = {};
   GROUPS.forEach((g) => {
     const lead = QUIZ_GAMES.find((x) => x.id === g.lead); if (!lead) return;
@@ -3494,7 +3507,7 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
   ] : [
     { n: "Daily 5", d: "Five real matches, the same for everyone today. Beat the model.", slug: "games-all-leagues-daily", ic: "#i-trophy", done: (k) => safe(() => dailyState("ALL", k).n === 5) },
     { n: "Question of the day", d: "The daily feed: an on this day fact and a question, the same for everyone.", slug: "discover", ic: "#i-bulb", done: (k) => !!dfDays(prof())[k] },
-    { n: "Play any game", d: "Any game counts. Name it, Match recall, Higher or lower, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
+    { n: "Play any game", d: "Any game counts. Who am I?, Badge blur, Starting XI, whatever you fancy.", slug: "games", ic: "#i-dice", done: (k) => ((prof().days || {})[k] || 0) > 0 },
   ];
   const count = (k) => ITEMS.filter((x) => x.done(k)).length, dayKey = (off) => new Date(Date.now() - off * 864e5).toISOString().slice(0, 10);
   const streak = () => { let s = 0; for (let k = 0; k < 400; k++) { if (count(dayKey(k))) s++; else if (k > 0) break; } return s; };

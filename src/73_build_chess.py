@@ -49,6 +49,8 @@ html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PI
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
 data["champ"] = json.load(open("02_processed_data/chess_champ.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_champ.json") else None   # src/78: Total Chess games + FIDE profiles
+data["ratings"] = json.load(open("02_processed_data/chess_ratings.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_ratings.json") else None   # src/79: FIDE top 100 lists + rating history
+data["events"] = json.load(open("02_processed_data/chess_events.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_events.json") else None   # src/81: 2026 tournaments
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))

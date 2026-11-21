@@ -525,6 +525,15 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 .fychip:hover { transform: translateY(-2px); border-color: var(--accent); } .fychip.fav { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
 .fychip small { font: 600 12px/1 system-ui, sans-serif; color: var(--muted); }
 
+/* ---- first-visit look picker ---- */
+.tpgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+.tpopt { display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 10px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: transform .2s cubic-bezier(.3, 1.5, .5, 1), border-color .2s; }
+.tpopt:hover { transform: translateY(-3px); } .tpopt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.tpopt small { color: var(--muted); font-size: 12px; line-height: 1.3; }
+.tpprev { position: relative; display: block; height: 74px; border-radius: 10px; background: var(--a); overflow: hidden; }
+.tpprev i { position: absolute; display: block; border-radius: 6px; } .tpprev i:nth-child(1) { left: 8px; top: 8px; width: 46%; height: 9px; background: var(--b); } .tpprev i:nth-child(2) { left: 8px; top: 24px; right: 8px; height: 40px; background: var(--c); box-shadow: 0 4px 10px #0003; } .tpprev i:nth-child(3) { right: 16px; top: 34px; width: 30%; height: 12px; background: var(--b); border-radius: 99px; }
+.tpauto { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; }
+
 /* ---- loading screens ---- */
 .splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(5vh, 20px) 20px max(4vh, 18px); text-align: center; overflow: hidden; transition: opacity .6s ease, visibility .6s; color: #fff; font-family: var(--sans, system-ui); background: #0b1033; }
 .splash.out { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -869,7 +878,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 08:14 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 08:50 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -877,7 +886,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.d3224060a5.js", size = 4208071, bar = document.querySelector("#splash .sp-bar i"), done = false;
+  var src = "app.a13cad56fd.js", size = 4210701, bar = document.querySelector("#splash .sp-bar i"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

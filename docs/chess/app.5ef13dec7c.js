@@ -640,7 +640,7 @@ async function rvAnalyse(tok) {
     rv.pos[i] = pos; if (i > 0) rv.data[i - 1] = rvDerive(i);
     rvProg(); rvList(i); rvGraph(); rvSummary(); if (i === rv.i || i === rv.i + 1) rvPaint();
   }
-  if (rv && rv.tok === tok) { rv.done = true; rvProg(); rvSummary(); const l = rv.data.filter((x) => x && x.cls !== "book"), a = l.length ? l.reduce((q, x) => q + x.acc, 0) / l.length : 0; pipSay(pipPick(a >= 85 ? "great_game" : a >= 70 ? "ok_game" : "rough_game", rv.N)); }
+  if (rv && rv.tok === tok) { rv.done = true; rvProg(); rvSummary(); rvTab("report"); const l = rv.data.filter((x) => x && x.cls !== "book"), a = l.length ? l.reduce((q, x) => q + x.acc, 0) / l.length : 0; pipSay(pipPick(a >= 85 ? "great_game" : a >= 70 ? "ok_game" : "rough_game", rv.N)); }
 }
 function rvSac(i) {
   const c = new Chess(rv.fen[i - 1]), col = i % 2 === 1 ? "w" : "b", m0 = matOf(c, col); c.move(rv.mv[i - 1]);
@@ -735,7 +735,7 @@ const rvGrade = (a) => (a == null ? null : a >= 95 ? "best" : a >= 88 ? "excelle
 function rvReport() {
   const el = rvEl("rvRep"); if (!el) return; if (!rv.done) { el.innerHTML = ""; return; }
   const side = (w) => rv.data.filter((x) => x && x.white === w && x.cls !== "book"), accOf = (l) => (l.length ? l.reduce((s, x) => s + x.acc, 0) / l.length : null);
-  const P = [true, false].map((w) => { const l = side(w), a = accOf(l); return { w, n: l.length, acc: a, elo: a != null && l.length >= 8 ? rvElo(a) : null, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
+  const P = [true, false].map((w) => { const l = side(w), a = accOf(l); return { w, n: l.length, acc: a, elo: a != null && l.length >= 5 ? rvElo(a) : null, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
   const moments = rv.data.filter((x) => x && x.cls !== "book").sort((a, b) => b.loss - a.loss).slice(0, 3).filter((x) => x.loss >= 8);
   const shine = rv.data.filter((x) => x && (x.cls === "brilliant" || x.cls === "great")).slice(0, 3);
   const notes = [];
@@ -864,6 +864,8 @@ function rvDerive(i) {
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
   return { i, white, san: mv.san, cls, loss, pawns, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
 }
+function rvTab(t) { const r = document.querySelector(".rvright"); if (!r) return; r.dataset.tab = t; document.querySelectorAll("[data-rvtab].chip").forEach((x) => x.classList.toggle("on", x.dataset.rvtab === t)); }
+document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-rvtab]"); if (!t || !rvActive()) return; rvTab(t.dataset.rvtab); if (t.classList.contains("rvstart") && rv.i === 0) rvGo(1); });
 function rvExplain(d) {
   if (d.why) return d.why;
   const i = d.i, a = rv.pos[i - 1], b = rv.pos[i], mv = rv.mv[i - 1], mover = d.white ? "w" : "b", fenA = rv.fen[i - 1], fenB = rv.fen[i];
@@ -899,9 +901,9 @@ function rvShell() {
   $("#app").innerHTML = `<div class="card rvcard" data-rvcard><div class="row" style="justify-content:space-between"><h2>${ic("chart")}Game review</h2><button class="btn ghost" id="rvBack" type="button">Back</button></div>
   <div class="rvgrid"><div class="rvleft">${bar("T")}<div class="rvbd"><div class="evv ${f ? "flip" : ""}" id="rvEv" title="Stockfish evaluation"><i id="rvEvI"></i><b class="evl" id="rvEvL">0.0</b></div><div class="lvwrap" id="rvWrap"><div id="rvBoard">${boardHTML(rv.c, { flip: f })}</div><div class="rvov" id="rvOv"></div></div></div>${bar("B")}
     <div class="rvbtns"><button class="btn ghost" data-rv="0" type="button" title="Start (Home)">⏮</button><button class="btn ghost" data-rv="-1" type="button" title="Back (←)">◀</button><button class="btn" data-rv="play" id="rvPlay" type="button" title="Play (Space)">▶ Play</button><button class="btn ghost" data-rv="1" type="button" title="Forward (→)">▶</button><button class="btn ghost" data-rv="9999" type="button" title="End">⏭</button><button class="btn ghost" data-rv="best" id="rvBestBtn" type="button" title="Show the best move (B)">${ic("bulb")}</button><button class="btn ghost" data-rv="flip" type="button" title="Flip the board (F)">⇅</button><button class="btn ghost ${PIPV.on ? "on" : ""}" data-rv="pipv" id="rvPipV" type="button" title="Pip's voice">🔊</button></div><p class="fine" style="text-align:center;margin:0">Arrow keys step through the game. Space plays it.</p></div>
-  <div class="rvright"><div id="rvProg" class="rvprog"></div><div class="rvacc" id="rvAcc"></div><div id="rvRep"></div><svg class="rvgraph" id="rvGraph" viewBox="0 0 300 80" preserveAspectRatio="none"><rect width="300" height="80" fill="#262421"/><path id="rvArea" fill="#e9e6df" opacity=".92"/><line x1="0" y1="40" x2="300" y2="40" stroke="#6b6761" stroke-width=".5"/><g id="rvDots"></g><line id="rvCur" y1="0" y2="80" stroke="#e8c35a" stroke-width="1.2"/></svg>
+  <div class="rvright" data-tab="moves"><div id="rvProg" class="rvprog"></div><div class="rvtabs"><button type="button" class="chip on" data-rvtab="moves">${ic("arrow")}Moves</button><button type="button" class="chip" data-rvtab="report">${ic("chart")}Game report</button></div><div class="rvt-report"><div class="rvacc" id="rvAcc"></div><div id="rvRep"></div><div id="rvCounts"></div><button class="btn rvstart" type="button" data-rvtab="moves">${ic("arrow")}Start the review</button></div><svg class="rvgraph" id="rvGraph" viewBox="0 0 300 80" preserveAspectRatio="none"><rect width="300" height="80" fill="#262421"/><path id="rvArea" fill="#e9e6df" opacity=".92"/><line x1="0" y1="40" x2="300" y2="40" stroke="#6b6761" stroke-width=".5"/><g id="rvDots"></g><line id="rvCur" y1="0" y2="80" stroke="#e8c35a" stroke-width="1.2"/></svg>
     <div class="rvcoach" id="rvCoach"></div><div class="rvlist" id="rvList">${Array.from({ length: Math.ceil(rv.N / 2) }, (_, k) => `<div class="rvrow"><span class="n">${k + 1}</span>${[0, 1].map((s) => { const p = k * 2 + s + 1; return p <= rv.N ? `<span class="m" data-ply="${p}" id="rvM${p}">${esc(rv.sans[p - 1])}</span>` : "<span></span>"; }).join("")}</div>`).join("")}</div>
-    <div id="rvCounts"></div><p class="fine">Engine: ${SF_MODERN ? "Stockfish 17.1 (neural-network evaluation, running in your browser, about 16 moves deep)" : "Stockfish 10 (running in your browser, about 12 moves deep)"}. Stockfish is free software under the GPL; source at <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">github.com/official-stockfish</a>. Grades come from how much each move changes your winning chances. Accuracy uses the same formula as Lichess.</p></div></div></div>`;
+    <p class="fine">Engine: ${SF_MODERN ? "Stockfish 17.1 (neural-network evaluation, running in your browser, about 16 moves deep)" : "Stockfish 10 (running in your browser, about 12 moves deep)"}. Stockfish is free software under the GPL; source at <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">github.com/official-stockfish</a>. Grades come from how much each move changes your winning chances. Accuracy uses the same formula as Lichess.</p></div></div></div>`;
   rv.L.lastKey = ""; rv.L.flipped = f; rvProg(); rvSummary(); rvGraph();
 }
 function rvProg() {

@@ -42,12 +42,12 @@ const Mascot = (() => {
   }
   function show(kind, text, opts = {}) {
     const el = dock(); if (!el) return; const m = MASCOTS[id()], mood = MOOD_OF[kind] || "calm";
-    el.querySelector(".mbody").className = "mbody " + mood; el.querySelector(".mbody").innerHTML = MASCOT_SVG[id()](mood);
+    el.querySelector(".mbody").className = "mbody " + mood; el.querySelector(".mbody").innerHTML = MASCOT_SVG[id()](mood); try { outfitPaint(); } catch (e) { /* outfits not loaded */ }
     el.querySelector(".mbubble").innerHTML = `<b>${m.name}</b>${opts.ctx ? `<i class="mctx">${esc(opts.ctx)}</i>` : ""}${esc(text)}`;
     el.className = "on talk k-" + kind; clearTimeout(hideT); hideT = setTimeout(hideBubble, opts.ms || Math.min(10000, 3200 + text.length * 50));
     if (mode() === "on" && !opts.silent) AIVoice.play(text, { voice: m.voice, volume: 0.95 });
   }
-  function hideBubble() { const el = document.getElementById("mascot"); if (!el) return; el.className = "on"; const b = el.querySelector(".mbody"); if (b) { b.className = "mbody calm"; b.innerHTML = MASCOT_SVG[id()]("calm"); } }
+  function hideBubble() { const el = document.getElementById("mascot"); if (!el) return; el.className = "on"; const b = el.querySelector(".mbody"); if (b) { b.className = "mbody calm"; b.innerHTML = MASCOT_SVG[id()]("calm"); try { outfitPaint(); } catch (e) { /* outfits not loaded */ } } }
   const api = {
     id, mode, show, sport, mine, dock,
     setCtx(x) { ctx = x || ""; },
@@ -60,3 +60,20 @@ const Mascot = (() => {
   setTimeout(() => { try { dock(); } catch (e) { /* page not ready */ } }, 1500);   // always there in the corner, like a coach
   return api;
 })();
+
+/* ---------- Outfits for the sidekick, unlocked by rank and by achievements ---------- */
+const OUTFITS = [
+  ["none", "Classic", () => true, "Always yours"],
+  ["silver", "Silver", (p) => levelOf(p.xp).i >= 3, "Reach rank 4"],
+  ["gold", "Gold", (p) => levelOf(p.xp).i >= 5, "Reach the Captain rank"],
+  ["fire", "Fire aura", (p) => !!p.ach.flame7, "Play seven days in a row"],
+  ["party", "Party hat", (p) => !!p.ach.rounds100, "Play 100 games"],
+  ["neon", "Neon", (p) => !!p.ach.squad, "Play every game"],
+  ["crown", "Crown", (p) => !!p.ach.wk_win, "Win a weekly tournament"],
+];
+const outfitOK = (k) => { try { const o = OUTFITS.find((x) => x[0] === k); return !!o && o[2](prof()); } catch (e) { return k === "none"; } };
+const outfitNow = () => { const pre = typeof DATA !== "undefined" && DATA.sport === "nba" ? "bkn_" : "bk_"; let k = "none"; try { k = localStorage.getItem(pre + "outfit") || "none"; } catch (e) { /* blocked */ } return outfitOK(k) ? k : "none"; };
+const OUTFIT_HAT = { party: `<svg viewBox="0 0 60 60" class="mhat"><path d="M30 2L48 52H12z" fill="#ff4d8d" stroke="#7a1238" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="4" r="6" fill="#ffd34e"/><path d="M20 32l20-6M16 44l28-8" stroke="#fff" stroke-width="4"/></svg>`, crown: `<svg viewBox="0 0 70 50" class="mhat"><path d="M6 44l4-30 14 14 11-24 11 24 14-14 4 30z" fill="#f2c14e" stroke="#7a5a10" stroke-width="3" stroke-linejoin="round"/>${[10, 35, 60].map((x) => `<circle cx="${x}" cy="${x === 35 ? 6 : 14}" r="4" fill="#e84a5f"/>`).join("")}</svg>` };
+function outfitPaint() { const el = document.getElementById("mascot"); if (!el) return; const k = outfitNow(); el.dataset.fit = k; const b = el.querySelector(".mbody"); if (!b) return; b.querySelectorAll(".mhat").forEach((x) => x.remove()); if (OUTFIT_HAT[k]) b.insertAdjacentHTML("afterbegin", OUTFIT_HAT[k]); }
+const outfitsHTML = (seg) => `<label class="pfl">Sidekick outfit</label><div class="scope" style="padding:2px 0">${OUTFITS.map(([k, n, , how]) => { const ok = outfitOK(k); return `<button type="button" class="chip" ${ok ? `data-ap="outfit|${k}"` : "disabled"} aria-pressed="${outfitNow() === k}" title="${ok ? n : "Locked: " + how}">${ok ? "" : "🔒 "}${n}</button>`; }).join("")}</div><div class="fine" style="margin-top:4px">Locked outfits unlock by rank or with achievements; hover one to see how.</div>`;
+setTimeout(() => { try { outfitPaint(); } catch (e) { /* not ready */ } }, 1800);

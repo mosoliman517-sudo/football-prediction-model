@@ -546,6 +546,14 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 #mascot .mbubble b { display: block; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #c9a227); margin-bottom: 4px; }
 #mascot .mctx { display: block; font-style: normal; font-weight: 800; margin-bottom: 2px; }
 @media (max-width: 560px) { #mascot .mbody { width: 92px; } #mascot:not(.talk) .mbody { width: 64px; } #mascot .mbubble { font-size: 14px; margin-bottom: 40px; } }
+/* sidekick outfits */
+#mascot .mbody { position: relative; }
+#mascot .mhat { position: absolute; left: 50%; top: -18%; width: 42%; transform: translateX(-50%) rotate(-8deg); filter: drop-shadow(0 3px 4px #0006); }
+#mascot[data-fit="silver"] .msvg { filter: grayscale(1) brightness(1.25) contrast(1.05); }
+#mascot[data-fit="gold"] .msvg { filter: sepia(1) saturate(4) hue-rotate(-12deg) brightness(1.05); }
+#mascot[data-fit="neon"] .msvg { filter: hue-rotate(150deg) saturate(2.2) drop-shadow(0 0 10px #3ef2ff); }
+#mascot[data-fit="fire"] .mbody::after { content: ""; position: absolute; inset: 10% 0 0; z-index: -1; border-radius: 50%; background: radial-gradient(circle, #ff8a3d99, #ff3b0000 70%); animation: mFire 1.2s ease-in-out infinite alternate; }
+@keyframes mFire { to { transform: scale(1.15); opacity: .7; } }
 @keyframes mBob { 50% { transform: translateY(-4px) rotate(-2deg); } } @keyframes mHop { 40% { transform: translateY(-18px) scale(1.06, .94); } 70% { transform: scale(.96, 1.04); } } @keyframes mJump { 40% { transform: translateY(-28px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } } @keyframes mSlump { 50% { transform: scale(1.04, .92) rotate(4deg); } 100% { transform: rotate(3deg); } } @keyframes mPop { from { transform: scale(.6); opacity: 0; } }
 .xmas { display: flex; align-items: center; gap: 8px; } .xmas svg { width: 46px; height: 46px; animation: mBob 2.4s ease-in-out infinite; } .xmas b { font-size: 13px; }
 .mscopt .tpprev { display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); } .mscopt .tpprev svg { height: 70px; width: auto; }
@@ -896,7 +904,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 12:44 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 12:58 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -904,7 +912,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.8a04aaff94.js", size = 4252866, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
+  var src = "app.3b37e78151.js", size = 4255555, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

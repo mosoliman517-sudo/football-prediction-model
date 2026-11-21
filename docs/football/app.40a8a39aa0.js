@@ -239,12 +239,12 @@ const Mascot = (() => {
   }
   function show(kind, text, opts = {}) {
     const el = dock(); if (!el) return; const m = MASCOTS[id()], mood = MOOD_OF[kind] || "calm";
-    el.querySelector(".mbody").className = "mbody " + mood; el.querySelector(".mbody").innerHTML = MASCOT_SVG[id()](mood);
+    el.querySelector(".mbody").className = "mbody " + mood; el.querySelector(".mbody").innerHTML = MASCOT_SVG[id()](mood); try { outfitPaint(); } catch (e) { /* outfits not loaded */ }
     el.querySelector(".mbubble").innerHTML = `<b>${m.name}</b>${opts.ctx ? `<i class="mctx">${esc(opts.ctx)}</i>` : ""}${esc(text)}`;
     el.className = "on talk k-" + kind; clearTimeout(hideT); hideT = setTimeout(hideBubble, opts.ms || Math.min(10000, 3200 + text.length * 50));
     if (mode() === "on" && !opts.silent) AIVoice.play(text, { voice: m.voice, volume: 0.95 });
   }
-  function hideBubble() { const el = document.getElementById("mascot"); if (!el) return; el.className = "on"; const b = el.querySelector(".mbody"); if (b) { b.className = "mbody calm"; b.innerHTML = MASCOT_SVG[id()]("calm"); } }
+  function hideBubble() { const el = document.getElementById("mascot"); if (!el) return; el.className = "on"; const b = el.querySelector(".mbody"); if (b) { b.className = "mbody calm"; b.innerHTML = MASCOT_SVG[id()]("calm"); try { outfitPaint(); } catch (e) { /* outfits not loaded */ } } }
   const api = {
     id, mode, show, sport, mine, dock,
     setCtx(x) { ctx = x || ""; },
@@ -257,6 +257,23 @@ const Mascot = (() => {
   setTimeout(() => { try { dock(); } catch (e) { /* page not ready */ } }, 1500);   // always there in the corner, like a coach
   return api;
 })();
+
+/* ---------- Outfits for the sidekick, unlocked by rank and by achievements ---------- */
+const OUTFITS = [
+  ["none", "Classic", () => true, "Always yours"],
+  ["silver", "Silver", (p) => levelOf(p.xp).i >= 3, "Reach rank 4"],
+  ["gold", "Gold", (p) => levelOf(p.xp).i >= 5, "Reach the Captain rank"],
+  ["fire", "Fire aura", (p) => !!p.ach.flame7, "Play seven days in a row"],
+  ["party", "Party hat", (p) => !!p.ach.rounds100, "Play 100 games"],
+  ["neon", "Neon", (p) => !!p.ach.squad, "Play every game"],
+  ["crown", "Crown", (p) => !!p.ach.wk_win, "Win a weekly tournament"],
+];
+const outfitOK = (k) => { try { const o = OUTFITS.find((x) => x[0] === k); return !!o && o[2](prof()); } catch (e) { return k === "none"; } };
+const outfitNow = () => { const pre = typeof DATA !== "undefined" && DATA.sport === "nba" ? "bkn_" : "bk_"; let k = "none"; try { k = localStorage.getItem(pre + "outfit") || "none"; } catch (e) { /* blocked */ } return outfitOK(k) ? k : "none"; };
+const OUTFIT_HAT = { party: `<svg viewBox="0 0 60 60" class="mhat"><path d="M30 2L48 52H12z" fill="#ff4d8d" stroke="#7a1238" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="4" r="6" fill="#ffd34e"/><path d="M20 32l20-6M16 44l28-8" stroke="#fff" stroke-width="4"/></svg>`, crown: `<svg viewBox="0 0 70 50" class="mhat"><path d="M6 44l4-30 14 14 11-24 11 24 14-14 4 30z" fill="#f2c14e" stroke="#7a5a10" stroke-width="3" stroke-linejoin="round"/>${[10, 35, 60].map((x) => `<circle cx="${x}" cy="${x === 35 ? 6 : 14}" r="4" fill="#e84a5f"/>`).join("")}</svg>` };
+function outfitPaint() { const el = document.getElementById("mascot"); if (!el) return; const k = outfitNow(); el.dataset.fit = k; const b = el.querySelector(".mbody"); if (!b) return; b.querySelectorAll(".mhat").forEach((x) => x.remove()); if (OUTFIT_HAT[k]) b.insertAdjacentHTML("afterbegin", OUTFIT_HAT[k]); }
+const outfitsHTML = (seg) => `<label class="pfl">Sidekick outfit</label><div class="scope" style="padding:2px 0">${OUTFITS.map(([k, n, , how]) => { const ok = outfitOK(k); return `<button type="button" class="chip" ${ok ? `data-ap="outfit|${k}"` : "disabled"} aria-pressed="${outfitNow() === k}" title="${ok ? n : "Locked: " + how}">${ok ? "" : "🔒 "}${n}</button>`; }).join("")}</div><div class="fine" style="margin-top:4px">Locked outfits unlock by rank or with achievements; hover one to see how.</div>`;
+setTimeout(() => { try { outfitPaint(); } catch (e) { /* not ready */ } }, 1800);
 
 paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
@@ -2251,7 +2268,7 @@ function avatarHTML(av, size = "md", nick = "") {
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); syncBadges(); }
 function appearanceHTML() {
   const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "auto"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
-  return `<label class="pfl">Style</label>${seg("style", [["flood", "Floodlit"], ["classic", "Classic"], ["minimal", "Minimal"]], g("bk_style", "flood") === "classic" ? "classic" : g("bk_style", "flood") === "minimal" ? "minimal" : "flood")}<div class="fine" style="margin:4px 0 0">Floodlit is a night match with light beams and a flying ball. Classic is the glow and stadium backdrop. Minimal is calm and quiet.</div><label class="pfl">Sidekick</label>${seg("mascot", Mascot.mine.map((k) => [k, MASCOTS[k].name]), Mascot.id())}${seg("mascot_mode", [["on", "On"], ["quiet", "No voice"], ["off", "Off"]], Mascot.mode())}<label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
+  return `<label class="pfl">Style</label>${seg("style", [["flood", "Floodlit"], ["classic", "Classic"], ["minimal", "Minimal"]], g("bk_style", "flood") === "classic" ? "classic" : g("bk_style", "flood") === "minimal" ? "minimal" : "flood")}<div class="fine" style="margin:4px 0 0">Floodlit is a night match with light beams and a flying ball. Classic is the glow and stadium backdrop. Minimal is calm and quiet.</div><label class="pfl">Sidekick</label>${seg("mascot", Mascot.mine.map((k) => [k, MASCOTS[k].name]), Mascot.id())}${seg("mascot_mode", [["on", "On"], ["quiet", "No voice"], ["off", "Off"]], Mascot.mode())}${outfitsHTML()}<label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
   <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bk_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
 }
 const signedIn0 = () => !!(Account.signedIn || Account.claude);
@@ -3401,7 +3418,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
   if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
-  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); if (k === "mascot" || (k === "mascot_mode" && v !== "off")) setTimeout(() => Mascot.hello(), 50); if (k === "mascot_mode" && v === "off") setTimeout(() => Mascot.dock(), 50); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
+  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); if (k === "mascot" || (k === "mascot_mode" && v !== "off")) setTimeout(() => Mascot.hello(), 50); if (k === "outfit") setTimeout(() => { outfitPaint(); Mascot.react("achieve", true); }, 50); if (k === "mascot_mode" && v === "off") setTimeout(() => Mascot.dock(), 50); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
   if (b.dataset.chal) { Snd.tick(); challengeModal(b.dataset.chal); return; }
   if (b.id === "chGo") { const g = $("#chGame").value, d = $("#chDiff").value, nick = b.dataset.nick; closeModal(); rankedStart(g, d, false); const link = inviteLink(Net.code, g), msg = `${nick}, join my ballknowledge room: ${link}`; try { navigator.clipboard.writeText(msg).then(() => toast("Invite link copied. Send it to " + esc(nick))); } catch (e) { toast("Copy the link from the room screen"); } try { if (navigator.share) navigator.share({ title: "ballknowledge", text: msg, url: link }).catch(() => {}); } catch (e) { /* not supported */ } return; }
   if (b.id === "pfShare") { const p = prof(), lv = levelOf(p.xp), signed = Account.signedIn && Board.mode === "rest", fav = QZ.players.find((x) => x.id === +p.favP); showCard("record", { lg: p.favT ? (QZ.clubs[p.favT] || {}).lg || "ALL" : "ALL", title: p.nick || "My profile", big: signed ? `${Ranked.elo} Elo` : lv.name, sub: `${signed ? rankOf(Ranked.elo).name + " · " : ""}${lv.name} · ${p.xp} XP`, tiles: [[`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"], [String(dayStreak(p)), "day streak"], [String(Object.keys(p.stickers || {}).length), "stickers"]], line: fav ? `Favourite player: ${fav.n}${p.favT ? " · " + p.favT : ""}` : p.favT ? `Favourite team: ${p.favT}` : "Think you know more football than me?", share: `My ballknowledge profile: ${signed ? Ranked.elo + " Elo, " : ""}${Object.keys(p.ach).length} achievements. Think you know more?` }); return; }

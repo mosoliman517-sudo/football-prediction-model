@@ -184,6 +184,10 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 .rvel2{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:13px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.rvel2:first-of-type{border-top:0}.rvel2.top .pvl{font-weight:600}
 .rvev{flex:none;min-width:48px;text-align:center;padding:3px 6px;border-radius:6px;font:800 12px ui-monospace,Menlo,monospace}.rvev.w{background:#f3f1ec;color:#1b1b1b}.rvev.b{background:#2b2926;color:#f3f1ec}
 .rvretry{margin:8px 0;width:100%}.pipmem{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--panel))}.pipmem b{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.pipspark{width:100%;max-width:300px;height:auto}
+.kocols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}.kocol{display:flex;flex-direction:column;gap:8px;justify-content:space-around}.kosc{font:800 15px Fraunces,serif;color:var(--gold);min-width:26px;text-align:right}
+@media(max-width:600px){.kocols{grid-auto-flow:row;grid-auto-columns:auto}}
+.h2hbtn{margin-top:10px}.h2hrec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:420px;margin:6px auto 8px}.h2hrec span{display:flex;flex-direction:column;align-items:center}.h2hrec b{font:900 34px/1 Fraunces,serif}.h2hrec .sW b{color:var(--gold)}.h2hrec .sL b{color:var(--ok)}.h2hrec small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.h2hbar{display:flex;height:10px;border-radius:99px;overflow:hidden;max-width:420px;margin:0 auto}.h2ht td.better{color:var(--gold);font-weight:800}.h2hleg{display:flex;gap:16px;justify-content:center;font-size:13px}.h2hleg i{display:inline-block;width:12px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -1753,7 +1757,7 @@ function profPage(fid) {
   $("#app").className = "fresh";
   $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-rkback>← Rankings</button></div>
     <div class="card rkhero">${cpFace(p, "big")}<div class="rkhi"><h2>${esc(cpName(p))}</h2><div class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}${rkAge(p) ? " · " + rkAge(p) + " years old" : ""}</div>
-      <div class="rkplaces">${places.length ? places.map(([k, r]) => `<span class="${r <= 3 ? "gold" : ""}">${rkLabel(k)} <b>#${r}</b></span>`).join("") : '<span>Outside the FIDE top 100</span>'}</div></div></div>
+      <div class="rkplaces">${places.length ? places.map(([k, r]) => `<span class="${r <= 3 ? "gold" : ""}">${rkLabel(k)} <b>#${r}</b></span>`).join("") : '<span>Outside the FIDE top 100</span>'}</div><button class="btn ghost h2hbtn" type="button" data-h2ha="${fid}">${ic("swords")}Head to head</button></div></div>
     <div class="rktiles">${tiles}</div>
     <div class="card rkchg"><h3>${ic("chart")}Rating change</h3><table class="rvph"><tr><th></th>${RK_PER.map(([, n]) => `<th>${n}</th>`).join("")}</tr>${RK_TC.filter(([, k]) => p[k]).map(([n, , col]) => `<tr><td>${n}</td>${RK_PER.map(([m]) => { const d = rkTrend(p, col, m); return `<td>${d == null ? '<span class="fine">—</span>' : rkDelta(d)}</td>`; }).join("")}</tr>`).join("")}</table></div>
     <div class="card"><div class="rkch"><h3>${ic("chart")}Rating history</h3><div class="chips">${RK_TC.map(([n], i) => `<button class="chip ${i === 0 ? "on" : ""}" type="button" data-rkch="${i + 1}">${n}</button>`).join("")}</div></div><div id="rkChart">${rkChart(p, 1)}</div></div>
@@ -1792,17 +1796,17 @@ const eloTag = (v) => (v == null ? "" : `<span class="rkd ${v > 0 ? "up" : v < 0
 const evDates = (e) => { const f = (d) => (d ? new Date(d + "T12:00:00Z").toLocaleDateString([], { day: "numeric", month: "short" }) : ""); return e.from ? `${f(e.from)} – ${f(e.to)} ${e.to ? e.to.slice(0, 4) : ""}` : ""; };
 /* a tie on points settled by a playoff: the winner of the last decisive playoff game (a drawn Armageddon goes to Black) */
 function evPlayoffWinner(e) { const po = e.games.filter((g) => g.st === "Playoff" && g.r !== "*"); for (let k = po.length - 1; k >= 0; k--) { const g = po[k]; if (g.r === "1-0") return g.w; if (g.r === "0-1") return g.b; if (g.tc === "armageddon") return g.b; } return null; }
-const evTop = (e) => { if (e.scoring === "ko") return [...new Set(e.games.filter((g) => /final/i.test(g.st) && !/semi/i.test(g.st)).flatMap((g) => [g.w, g.b]))]; const ids = e.table.map((r) => r[0]), pw = evPlayoffWinner(e); return pw && ids.includes(pw) ? [pw, ...ids.filter((x) => x !== pw)] : ids; };
-function evWinner(e) { if (!e.done) return null; if (e.scoring === "ko") return null; const t = e.table; if (!t.length) return null; const pw = evPlayoffWinner(e); if (pw) return cpName(cpP(pw)) + " (playoff)"; const top = t.filter((r) => r[1] === t[0][1]); return top.length === 1 ? cpName(cpP(top[0][0])) : "Shared: " + top.map((r) => cpName(cpP(r[0])).split(" ").pop()).join(", "); }
+const evTop = (e) => { if (e.scoring === "ko") { const st = evKO(e), f = st[st.length - 1], fm = f && f.list.find((m) => m.label === "Final"); if (e.koWin && fm) { const tp = f.list.find((m) => m.label === "Third place"); return [fm.win, fm.ids.find((p) => p !== fm.win), ...(tp ? [tp.win] : [])]; } return [...new Set((f ? f.list : []).flatMap((m) => m.ids))]; } const ids = e.table.map((r) => r[0]), pw = evPlayoffWinner(e); return pw && ids.includes(pw) ? [pw, ...ids.filter((x) => x !== pw)] : ids; };
+function evWinner(e) { if (!e.done) return null; if (e.scoring === "ko") { if (!e.koWin) return null; const id = evTop(e)[0]; return id ? cpName(cpP(id)) : null; } const t = e.table; if (!t.length) return null; const pw = evPlayoffWinner(e); if (pw) return cpName(cpP(pw)) + " (playoff)"; const top = t.filter((r) => r[1] === t[0][1]); return top.length === 1 ? cpName(cpP(top[0][0])) : "Shared: " + top.map((r) => cpName(cpP(r[0])).split(" ").pop()).join(", "); }
 const evCard = (e) => `<button class="cpcard" type="button" data-cpv="ev:${e.id}"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><span class="cpfaces">${evTop(e).slice(0, 3).map((id) => cpFace(cpP(id), "md")).join("")}</span><b class="cpcname">${esc(e.name)}</b><span class="cpmeta">${ic("flag")}${esc((e.site || "").replace(/,\s*\w\w$/, ""))}</span><span class="cpmeta">${ic("clock")}${evDates(e)}</span>${evWinner(e) ? `<span class="cpwinner">${ic("trophy")}${esc(evWinner(e))}</span>` : ""}</button>`;
 const evCards = (sec) => EVS.filter((e) => e.sec === sec).sort((a, b) => (a.to < b.to ? 1 : -1)).map(evCard).join("");
 function evPage(id) {
   const e = evById(id); if (!e) return champPage("home"); CH.ev = id; CH.evTab = CH.evTab || "table";
-  const ko = e.scoring === "ko", top = evTop(e).slice(0, 3), pod = ko ? [] : [[top[1], "2"], [top[0], "1"], [top[2], "3"]].filter((x) => x[0]);
+  const ko = e.scoring === "ko", top = evTop(e).slice(0, 3), pod = ko && !e.koWin ? [] : [[top[1], "2"], [top[0], "1"], [top[2], "3"]].filter((x) => x[0]);
   return `<div class="card cphero"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><h2>${esc(e.name)}</h2><div class="cpfacts"><span>${ic("flag")}${esc(e.site || "")}</span><span>${ic("clock")}${evDates(e)}</span><span>${ic("user")}${new Set(e.games.flatMap((g) => [g.w, g.b])).size} players</span><span>${ic("swords")}${e.games.length} games</span></div>
-    ${pod.length && e.done ? `<div class="cppodium">${pod.map(([pid, n]) => `<button class="cppod p${n}" type="button" data-evp="${pid}">${cpFace(cpP(pid), "big")}<span class="cpmedal">${n}</span><b>${esc(cpName(cpP(pid)))}</b><span class="fine">${(e.table.find((r) => r[0] === pid) || [])[1]} pts</span><span class="cpstep"></span></button>`).join("")}</div>` : ""}
+    ${pod.length && e.done ? `<div class="cppodium">${pod.map(([pid, n]) => `<button class="cppod p${n}" type="button" data-evp="${pid}">${cpFace(cpP(pid), "big")}<span class="cpmedal">${n}</span><b>${esc(cpName(cpP(pid)))}</b><span class="fine">${ko ? ["", "Champion", "Runner-up", "Third"][+n] : (e.table.find((r) => r[0] === pid) || [])[1] + " pts"}</span><span class="cpstep"></span></button>`).join("")}</div>` : ""}
     <p class="fine" style="margin:10px 0 0">${esc(e.fmt)} Standings are by points; official tiebreaks are not applied. Games from the ${chLink("https://lichess.org/broadcast", "Lichess broadcast")}.</p></div>
-    <div class="cptabs">${(ko ? [["rounds", "Matches"]] : [["table", "Standings"], ["rounds", "Rounds"]]).map(([k, n]) => `<button class="chip ${(ko ? "rounds" : CH.evTab) === k ? "on" : ""}" type="button" data-evtab="${k}">${n}</button>`).join("")}</div><div id="evBody">${ko ? evRounds(e) : CH.evTab === "table" ? evTable(e) : evRounds(e)}</div>`;
+    <div class="cptabs">${(ko ? [["rounds", "Matches"]] : [["table", "Standings"], ["rounds", "Rounds"]]).map(([k, n]) => `<button class="chip ${(ko ? "rounds" : CH.evTab) === k ? "on" : ""}" type="button" data-evtab="${k}">${n}</button>`).join("")}</div><div id="evBody">${ko ? evKOHTML(e) : CH.evTab === "table" ? evTable(e) : evRounds(e)}</div>`;
 }
 function evTable(e) {
   const first = {}, sum = {}; e.games.forEach((g) => { [g.w, g.b].forEach((p) => { if (!first[p]) first[p] = +(p === g.w ? g.we : g.be); const v = eloDelta(g, p); if (v != null) sum[p] = (sum[p] || 0) + v; }); });
@@ -1818,6 +1822,22 @@ function evGameRow(e, g, i) {
   const k = CP_KIND[g.tc] || ["", "clock"], res = g.r === "1/2-1/2" ? "½–½" : g.r === "*" ? "live" : g.r.replace("-", "–");
   return `<button class="evg" type="button" data-cpg="ev:${e.id}|${i}"><span class="evside">${cpWho(g.w)}${eloTag(eloDelta(g, g.w))}</span><span class="evres">${res}<small>${ic(k[1])}${k[0]}</small></span><span class="evside r">${eloTag(eloDelta(g, g.b))}${cpWho(g.b)}</span></button>`;
 }
+/* knockouts: matches per stage, the match score over every game (classical and tiebreaks), and the winner */
+function evKO(e) {
+  const stages = []; e.games.forEach((g, i) => { let st = stages.find((x) => x.name === g.st); if (!st) stages.push((st = { name: g.st, m: {} })); const k = [g.w, g.b].sort().join("|"), m = st.m[k] || (st.m[k] = { key: e.id + "§" + g.st + "§" + k, ids: k.split("|"), pts: {}, games: [] }); m.games.push(i); [g.w, g.b].forEach((p) => { m.pts[p] = (m.pts[p] || 0) + (g.r === "1/2-1/2" ? 0.5 : (g.r === "1-0") === (p === g.w) && g.r !== "*" ? 1 : 0); }); m.last = g; });
+  stages.forEach((st) => { st.list = Object.values(st.m); st.list.forEach((m) => { const [a, b] = m.ids; m.win = m.pts[a] !== m.pts[b] ? (m.pts[a] > m.pts[b] ? a : b) : null; if (!m.win) { for (let k = m.games.length - 1; k >= 0; k--) { const g = e.games[m.games[k]]; if (g.r === "1-0") { m.win = g.w; break; } if (g.r === "0-1") { m.win = g.b; break; } } } }); });
+  const fin = stages[stages.length - 1], semi = stages[stages.length - 2];
+  if (fin && semi && fin.list.length === 2) { const sw = new Set(semi.list.map((m) => m.win)); fin.list.sort((x, y) => (y.ids.every((p) => sw.has(p)) ? 1 : 0) - (x.ids.every((p) => sw.has(p)) ? 1 : 0)); fin.list[0].label = "Final"; fin.list[1].label = "Third place"; }
+  return stages;
+}
+function evKOHTML(e) {
+  const stages = evKO(e);
+  return `<div class="kocols">${stages.map((st) => `<div class="kocol"><span class="cplab2">${esc(st.name)}</span>${st.list.map((m) => `<button class="cpmatch" type="button" data-evm="${esc(m.key)}">${m.label ? `<span class="cplab">${m.label}</span>` : ""}${m.ids.map((p) => { const w = e.koWin && m.win === p; return `<span class="cpmrow ${w ? "win" : ""}">${cpFace(cpP(p))}<span class="cpnm">${cpFlag(cpP(p))}${esc(cpName(cpP(p)))}</span><span class="num kosc">${m.pts[p] % 1 ? m.pts[p].toFixed(1) : m.pts[p]}</span>${w && m.label === "Final" ? ic("trophy") : ""}</span>`; }).join("")}</button>`).join("")}</div>`).join("")}</div>${e.koWin ? "" : '<p class="fine">Match scores count every game equally; the event\'s own scoring weights classical, rapid and blitz differently, so no winner is marked here.</p>'}`;
+}
+function evMatchSheet(key) {
+  const [eid, stn, pair] = key.split("§"), e = evById(eid); if (!e) return; const m = evKO(e).find((x) => x.name === stn).m[pair], [a, b] = m.ids;
+  cpSheet(`<div class="cpvsrow sm">${[a, b].map((id, k) => (k ? '<span class="cpvsbig">VS</span>' : "") + `<button class="cpside" type="button" data-cpprof="${RK.players[id] ? id : ""}" ${RK.players[id] ? "" : "disabled"}>${cpFace(cpP(id), "big")}<b>${esc(cpName(cpP(id)))}</b><span class="rktile" style="padding:4px 12px"><b class="num">${m.pts[id] % 1 ? m.pts[id].toFixed(1) : m.pts[id]}</b></span></button>`).join("")}</div><h4 class="cpsh">${esc(e.name)} · ${esc(stn)}${m.label ? " · " + m.label : ""}<span class="fine">${m.games.length} games</span></h4><div class="cpgames">${m.games.map((i) => evGameRow(e, e.games[i], i)).join("")}</div>`);
+}
 function evPlayer(eid, pid) {
   const e = evById(eid), p = cpP(pid); if (!e || !p) return; const mine = e.games.map((g, i) => [g, i]).filter(([g]) => g.w === pid || g.b === pid);
   const rec = { W: 0, D: 0, L: 0 }; let tot = 0; mine.forEach(([g]) => { const r = cpRes(g, pid); if (r && g.tc !== "armageddon") rec[r]++; const v = eloDelta(g, pid); if (v != null) tot += v; });
@@ -1827,12 +1847,54 @@ function evPlayer(eid, pid) {
     ${RK.players[pid] ? `<button class="btn cpprof" type="button" data-cpprof="${pid}">${ic("user")}Full profile, ratings and history</button>` : ""}${p.cr ? `<p class="fine cpcredit">Photo: ${esc(p.cr.replace(/<[^>]*>/g, ""))}</p>` : ""}`);
 }
 document.addEventListener("click", (ev) => {
-  if (st.game !== "champ") return; const t = ev.target.closest && ev.target.closest("[data-evtab],[data-evround],[data-evp]"); if (!t) return;
+  if (st.game !== "champ") return; const t = ev.target.closest && ev.target.closest("[data-evtab],[data-evround],[data-evp],[data-evm]"); if (!t) return; if (t.dataset.evm) return evMatchSheet(t.dataset.evm);
   const e = evById(CH.ev); if (!e) return;
   if (t.dataset.evtab) { CH.evTab = t.dataset.evtab; document.querySelectorAll("[data-evtab]").forEach((x) => x.classList.toggle("on", x === t)); $("#evBody").innerHTML = CH.evTab === "table" ? evTable(e) : evRounds(e); return; }
   if (t.dataset.evround) { CH.evRound = t.dataset.evround; $("#evBody").innerHTML = evRounds(e); return; }
   if (t.dataset.evp) return evPlayer(e.id, t.dataset.evp);
 });
+
+/* ---------- head-to-head: any two players, every game between them that this site has ---------- */
+function h2hGames(a, b) {
+  const out = [], pa = cpP(a), pb = cpP(b);
+  EVS.forEach((e) => e.games.forEach((g, i) => { if ((g.w === a && g.b === b) || (g.w === b && g.b === a)) out.push({ d: g.d || e.from || "", ev: e.name + (g.st ? " · " + g.st : ""), w: g.w, r: g.r, tc: g.tc, ref: "ev:" + e.id + "|" + i }); }));
+  CP.stages.forEach((s) => s.games.forEach((g, i) => { if ((g.w === a && g.b === b) || (g.w === b && g.b === a)) out.push({ d: (g.d || "").replace(/\./g, "-"), ev: "Total Chess · " + s.name, w: g.w, r: g.r, tc: g.tc, ref: s.id + "|" + i }); }));
+  const ia = LKIDX.get(rkKey(cpName(pa))), ib = LKIDX.get(rkKey(cpName(pb)));
+  if (ia != null && ib != null) LKG.forEach((g) => { if ((g[2] === ia && g[3] === ib) || (g[2] === ib && g[3] === ia)) out.push({ d: g[1] || "", ev: LKE[g[0]].n, w: g[2] === ia ? a : b, r: g[4] === 2 ? "1/2-1/2" : g[4] === 1 ? "1-0" : "0-1", tc: /Blitz/i.test(LKE[g[0]].kind + LKE[g[0]].n) ? "blitz" : /Rapid/i.test(LKE[g[0]].kind + LKE[g[0]].n) ? "rapid" : "classical" }); });
+  return out.sort((x, y) => (x.d < y.d ? 1 : -1));
+}
+function h2hChart(pa, pb) {
+  const ha = (pa.h || []).filter((x) => x[1]), hb = (pb.h || []).filter((x) => x[1]); if (ha.length < 3 || hb.length < 3) return "";
+  const from = ha[0][0] > hb[0][0] ? ha[0][0] : hb[0][0], A = ha.filter((x) => x[0] >= from), B = hb.filter((x) => x[0] >= from); if (A.length < 3 || B.length < 3) return "";
+  const months = [...new Set([...A, ...B].map((x) => x[0]))].sort(), idx = new Map(months.map((m, k) => [m, k])), vals = [...A, ...B].map((x) => x[1]);
+  const W = 640, H = 190, lo = Math.floor((Math.min(...vals) - 20) / 50) * 50, hi = Math.ceil((Math.max(...vals) + 20) / 50) * 50, X = (m) => 34 + (idx.get(m) / Math.max(1, months.length - 1)) * (W - 44), Y = (v) => 10 + (1 - (v - lo) / (hi - lo)) * (H - 32);
+  const line = (L) => L.map((x) => `${X(x[0]).toFixed(1)},${Y(x[1]).toFixed(1)}`).join(" "), years = [...new Set(months.map((m) => m.slice(0, 4)))], step = Math.ceil(years.length / 7);
+  return `<svg class="rkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Rating histories">${[lo, (lo + hi) / 2, hi].map((v) => `<line x1="34" x2="${W - 10}" y1="${Y(v)}" y2="${Y(v)}" class="rkgl"/><text x="28" y="${Y(v) + 4}" class="rkax" text-anchor="end">${Math.round(v)}</text>`).join("")}${years.filter((_, k) => k % step === 0).map((y) => `<text x="${X(months.find((m) => m.startsWith(y)))}" y="${H - 6}" class="rkax" text-anchor="middle">${y}</text>`).join("")}<polyline points="${line(A)}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round"/><polyline points="${line(B)}" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linejoin="round"/></svg><div class="h2hleg"><span><i style="background:var(--gold)"></i>${esc(cpName(pa))}</span><span><i style="background:var(--ok)"></i>${esc(cpName(pb))}</span></div>`;
+}
+function h2hPage(a, b) {
+  const pa = RK.players[a] || cpP(a), pb = RK.players[b] || cpP(b);   // the rankings copy carries the rating history if (!pa || !pb) return; rvStop(); olClose(); clearInterval(st.timer); live = null; cpClose(); st = { game: "rank", h2h: [a, b] }; RKS.prof = a;
+  const G = h2hGames(a, b), rec = { W: 0, D: 0, L: 0 }; G.forEach((g) => { if (g.r === "*" || g.tc === "armageddon") return; const r = g.r === "1/2-1/2" ? "D" : (g.r === "1-0") === (g.w === a) ? "W" : "L"; rec[r]++; });
+  const n = rec.W + rec.D + rec.L, rows = [["Classical", "std"], ["Rapid", "rap"], ["Blitz", "blz"], ["Peak", "peak"]].filter(([, k]) => pa[k] || pb[k]).map(([lab, k]) => [lab, pa[k], pb[k]]);
+  const rankOf = (id) => { const r = (RK.lists.open || []).find((x) => x[1] === id) || (RK.lists.women || []).find((x) => x[1] === id); return r ? r[0] : null; };
+  rows.push(["World rank", rankOf(a), rankOf(b), true], ["Age", rkAge(pa), rkAge(pb), true]);
+  const cell = (v, o, low) => `<td class="${v != null && o != null && v !== o && (low ? v < o : v > o) ? "better" : ""}">${v == null ? "—" : v}</td>`;
+  $("#app").className = "fresh";
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-rkp="${a}">← ${esc(cpName(pa))}</button></div>
+    <div class="card cphero"><h2>Head to head</h2><div class="cpvsrow">${[a, b].map((id, k) => (k ? '<span class="cpvsbig">VS</span>' : "") + `<button class="cpside" type="button" data-rkp="${id}">${cpFace(cpP(id), "big")}<b>${esc(cpName(cpP(id)))}</b><span class="cpmeta">${cpFed(cpP(id))}</span></button>`).join("")}</div>
+    ${n ? `<div class="h2hrec"><span class="sW"><b class="num">${rec.W}</b><small>${esc(cpName(pa).split(" ").pop())} wins</small></span><span class="sD"><b class="num">${rec.D}</b><small>Draws</small></span><span class="sL"><b class="num">${rec.L}</b><small>${esc(cpName(pb).split(" ").pop())} wins</small></span></div><div class="h2hbar"><i style="flex:${rec.W || 0.001};background:var(--gold)"></i><i style="flex:${rec.D || 0.001};background:var(--muted)"></i><i style="flex:${rec.L || 0.001};background:var(--ok)"></i></div>` : `<p class="fine">No games between them in this site's records (the 2025 and 2026 events, Total Chess and the elite-games archive).</p>`}</div>
+    <div class="card"><table class="rvph h2ht"><tr><th></th><th>${esc(cpName(pa))}</th><th>${esc(cpName(pb))}</th></tr>${rows.map(([l, x, y, low]) => `<tr><td>${l}</td>${cell(x, y, low)}${cell(y, x, low)}</tr>`).join("")}</table></div>
+    ${h2hChart(pa, pb) ? `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">${ic("chart")}Classical rating, side by side</h3>${h2hChart(pa, pb)}</div>` : ""}
+    ${G.length ? `<h3 class="rksh">${ic("swords")}Their games</h3><div class="cpgames">${G.map((g) => { const r = g.r === "1/2-1/2" ? "D" : g.r === "*" ? "" : (g.r === "1-0") === (g.w === a) ? "W" : "L", k = CP_KIND[g.tc] || ["", "clock"]; return `<${g.ref ? `button type="button" data-cpg="${g.ref}"` : "div"} class="cpgame ${g.ref ? "" : "static"}"><span class="cpres r${r}">${r === "W" ? esc(cpName(pa).split(" ").pop()) : r === "L" ? esc(cpName(pb).split(" ").pop()) : r === "D" ? "Draw" : "…"}</span><span class="cpcol2"><b>${esc(g.ev)}</b><span class="fine">${esc(g.d)} · ${ic(k[1])}${k[0]} · ${esc(cpName(cpP(g.w)))} had White</span></span>${g.ref ? ic("arrow") : ""}</${g.ref ? "button" : "div"}>`; }).join("")}</div>` : ""}`;
+  scrollTo({ top: 0, behavior: "instant" });
+}
+function h2hPick(a) {
+  const all = Object.values(RK.players).filter((p) => p.id !== a).sort((x, y) => (y.std || 0) - (x.std || 0));
+  cpSheet(`<h3>${ic("swords")}Compare ${esc(cpName(cpP(a)))} with…</h3><input class="t" id="h2hQ" placeholder="Find a player" autocomplete="off" style="width:100%;margin:6px 0 10px"><div class="cpgames" id="h2hL" data-a="${a}">${h2hList(all, "")}</div>`);
+  setTimeout(() => { const q = document.getElementById("h2hQ"); if (q) q.focus(); }, 50);
+}
+const h2hList = (all, q) => all.filter((p) => !q || norm(cpName(p)).includes(norm(q))).slice(0, 40).map((p) => `<button class="cpgame" type="button" data-h2hb="${p.id}">${cpWho(p.id, `<small class="fine"> · ${p.std || ""}</small>`)}${ic("arrow")}</button>`).join("");
+document.addEventListener("input", (e) => { if (e.target.id === "h2hQ") { const L = document.getElementById("h2hL"), a = L.dataset.a; L.innerHTML = h2hList(Object.values(RK.players).filter((p) => p.id !== a).sort((x, y) => (y.std || 0) - (x.std || 0)), e.target.value); } });
+document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-h2ha],[data-h2hb]"); if (!t) return; if (t.dataset.h2ha) return h2hPick(t.dataset.h2ha); const a = document.getElementById("h2hL").dataset.a; return h2hPage(a, t.dataset.h2hb); });
 
 async function chLoadTour(id) {
   const el = document.getElementById("chLive"); if (!el) return; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;

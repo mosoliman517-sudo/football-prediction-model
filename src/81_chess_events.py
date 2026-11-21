@@ -23,6 +23,10 @@ EVENTS = [
     {"id": "sinq26", "rounds": 9, "sec": "open", "name": "Sinquefield Cup 2026", "short": "Sinquefield Cup", "tours": ["2sMqschv"], "scoring": "std", "fmt": "10-player round robin, Grand Chess Tour."},
     {"id": "stlr26", "rounds": 9, "sec": "open", "name": "Saint Louis Rapid 2026", "short": "Saint Louis Rapid", "tours": ["sM3C0X6U"], "scoring": "std", "tc": "rapid", "fmt": "10-player rapid round robin, Grand Chess Tour. Shown 1 point a win here; the official combined table counts rapid double."},
     {"id": "stlb26", "rounds": 18, "sec": "open", "name": "Saint Louis Blitz 2026", "short": "Saint Louis Blitz", "tours": ["d63PvEma"], "scoring": "std", "tc": "blitz", "fmt": "10-player blitz double round robin, Grand Chess Tour."},
+    {"id": "gs25", "sec": "open", "name": "Grand Swiss 2025", "short": "Grand Swiss", "tours": ["vSyxclHS"], "scoring": "std", "rounds": 11, "fmt": "11-round Swiss in Samarkand. The top two qualify for the Candidates."},
+    {"id": "gs25w", "sec": "women", "name": "Women's Grand Swiss 2025", "short": "Women's Grand Swiss", "tours": ["NPYDsod4"], "scoring": "std", "rounds": 11, "fmt": "11-round Swiss in Samarkand. The top two qualify for the Women's Candidates."},
+    {"id": "wc25", "sec": "open", "name": "World Cup 2025", "short": "World Cup", "tours": ["zb9ruNEJ", "4Zfj97D4", "25zoKzpI", "DqmmnYSq"], "scoring": "ko", "koWin": True, "fmt": "206-player knockout. Shown from the last 16: two classical games a round, then rapid and blitz tiebreaks if level."},
+    {"id": "wc25w", "sec": "women", "name": "Women's World Cup 2025", "short": "Women's World Cup", "tours": ["wC1tDyqU", "ckxYpvoV", "D8vMwkm8", "OX9co2G6"], "scoring": "ko", "koWin": True, "fmt": "107-player knockout. Shown from the last 16: two classical games a round, then rapid and blitz tiebreaks if level."},
     {"id": "gctf26", "sec": "open", "name": "Grand Chess Tour Finals 2026", "short": "GCT Finals", "tours": ["8gvkBl7u", "e5GlrSdz"], "scoring": "ko", "fmt": "The tour's top four in knockout matches: semifinals, then the final."},
 ]
 
@@ -117,7 +121,10 @@ for ev in EVENTS:
                     g["tc"] = "blitz" if "blitz" in low else "rapid" if "rapid" in low else "classical"
                 g["rd"] = num.group(1) if num else nm
                 if any(w in low for w in ("playoff", "tiebreak", "tie-break", "tie break")) or (ev.get("rounds") and num and int(num.group(1)) > ev["rounds"]):
-                    g["st"] = "Playoff"; g["rd"] = nm.split("|")[-1].strip()
+                    if ev["scoring"] == "ko":
+                        g["rd"] = nm.split("|")[-1].strip()   # a knockout's tiebreaks stay with their own stage
+                    else:
+                        g["st"] = "Playoff"; g["rd"] = nm.split("|")[-1].strip()
             games += gs
             time.sleep(0.5)
     played = [g for g in games if g["r"] != "*"]

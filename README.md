@@ -217,6 +217,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **21 November, late: chess gets the finale too.** The end of every chess mini-game (Blunder or fine?, Human bar, Endgame verdict and the rest that use the summary card) now shows a trophy that pops in (gold for 60% or more, silver from 35%, bronze below), rotating light rays on a strong run, the score and your best counting up, a "New best!" tag when you beat it, and your coach's reaction in a speech bubble. The overlays at the end of a game against the coaches, an online game and Predict who won get the same trophy, rays and coach line on top of the existing confetti.
 
+**21 November, late: a better result card to share.** The picture made by "Make a result card" (football and basketball) now has light rays behind the big number, the title and number shrink to fit instead of running off the edge, your profile picture (a player, a crest, an emoji or your initial) sits in a ring next to your name and rank, and your sidekick is drawn in the corner with one of their lines in a speech bubble.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

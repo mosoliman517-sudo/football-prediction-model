@@ -2356,8 +2356,10 @@ async function cardCanvas(kind, d) {
   const text = (s, x, y, font, color, align = "left") => { g.font = font; g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); };
   text("BALLKNOWLEDGE", 70, 100, '700 28px "JetBrains Mono"', p.accent);
   const logo = await loadImg(L.logo); if (logo) { g.save(); rrect(g, W - 190, 52, 120, 120, 28); g.fillStyle = "#ffffffee"; g.fill(); g.clip(); const k = Math.min(100 / logo.width, 100 / logo.height); g.drawImage(logo, W - 130 - (logo.width * k) / 2, 112 - (logo.height * k) / 2, logo.width * k, logo.height * k); g.restore(); } else text(L.name.toUpperCase(), W - 70, 100, '700 28px "JetBrains Mono"', p.muted, "right");
-  text(d.title, 70, 250, `800 96px "${dispFont}", sans-serif`, p.ink);
-  text(d.big, 70, 520, `800 270px "${dispFont}", sans-serif`, p.accent);
+  const fit = (str, size, max, weight = 800) => { let px = size; g.font = `${weight} ${px}px "${dispFont}", sans-serif`; while (px > 30 && g.measureText(str).width > max) { px -= 6; g.font = `${weight} ${px}px "${dispFont}", sans-serif`; } return `${weight} ${px}px "${dispFont}", sans-serif`; };
+  g.save(); g.translate(330, 440); g.globalAlpha = 0.13; g.fillStyle = p.accent; for (let k = 0; k < 18; k++) { g.rotate((Math.PI * 2) / 18); g.beginPath(); g.moveTo(0, 0); g.lineTo(-40, -720); g.lineTo(40, -720); g.closePath(); g.fill(); } g.restore();   /* light rays behind the big number */
+  text(d.title, 70, 250, fit(d.title, 96, W - 140), p.ink);
+  text(d.big, 70, 520, fit(String(d.big), 270, W - 140), p.accent);
   text(d.sub, 70, 600, '700 36px "DM Sans", sans-serif', p.muted);
   let y = 680;
   if (d.rows) {
@@ -2369,7 +2371,19 @@ async function cardCanvas(kind, d) {
   }
   if (d.tiles) { const tw = (W - 140 - 40) / 3; d.tiles.forEach(([v, l], k) => { const x = 70 + k * (tw + 20); rrect(g, x, y, tw, 190, 26); g.fillStyle = p.surface + "ee"; g.fill(); text(v, x + 28, y + 100, `800 64px "${dispFont}", sans-serif`, p.ink); text(l, x + 28, y + 150, '500 26px "DM Sans", sans-serif', p.muted); }); y += 220; }
   if (d.line) text(d.line, 70, Math.max(y + 40, 1180), '700 34px "DM Sans", sans-serif', p.ink);
-  const pr = prof(); text(`${pr.nick || "Player"} · ${levelOf(pr.xp).name}`, 70, 1290, '700 30px "DM Sans", sans-serif', p.ink);
+  const pr = prof(), av = pr.avatar || "";   /* your picture: a player, a crest, an emoji or your initial, in a ring */
+  g.save(); g.beginPath(); g.arc(120, 1272, 46, 0, 6.283); g.fillStyle = p.surface; g.fill(); g.lineWidth = 5; g.strokeStyle = p.accent; g.stroke(); g.clip();
+  let avImg = null; if (av.startsWith("h:")) { const h = (DATA.hero || []).find((x) => x.n === av.slice(2)); avImg = h ? await loadImg(h.img) : null; } else if (av.startsWith("c:")) avImg = await loadImg(CREST[av.slice(2)]);
+  if (avImg) { const k = Math.max(92 / avImg.width, 92 / avImg.height); g.drawImage(avImg, 120 - (avImg.width * k) / 2, 1272 - (avImg.height * k) / 2, avImg.width * k, avImg.height * k); }
+  else text(av.startsWith("e:") ? av.slice(2) : (pr.nick || "P")[0].toUpperCase(), 120, 1290, `800 48px "${dispFont}", sans-serif`, p.ink, "center");
+  g.restore();
+  text(`${pr.nick || "Player"} · ${levelOf(pr.xp).name}`, 186, 1290, '700 30px "DM Sans", sans-serif', p.ink);
+  try {   /* your sidekick, with a line, in the bottom corner */
+    if (Mascot.mode() !== "off") { const id = Mascot.id(), svg = MASCOT_SVG[id]("happy").replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" '), url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" })), mi = await loadImg(url);
+      if (mi) { g.drawImage(mi, W - 270, 960, 210, 210); URL.revokeObjectURL(url);
+        const L2 = (MASCOTS[id].lines || {}).best || [], ln = L2.length ? L2[hash(String(d.big)) % L2.length] : ""; if (ln && ln.length < 70) { g.font = '700 26px "DM Sans", sans-serif'; const words = ln.split(" "), lines = []; let cur = ""; words.forEach((w2) => { if (g.measureText(cur + " " + w2).width > 380 && cur) { lines.push(cur); cur = w2; } else cur = cur ? cur + " " + w2 : w2; }); lines.push(cur);
+          const bh = 30 + lines.length * 34, bx = W - 300 - 420, by = 990; rrect(g, bx, by, 420, bh, 22); g.fillStyle = p.surface + "f2"; g.fill(); g.strokeStyle = p.accent; g.lineWidth = 3; g.stroke(); lines.forEach((t2, k) => text(t2, bx + 22, by + 44 + k * 34, '700 26px "DM Sans", sans-serif', p.ink)); } } }
+  } catch (e) { /* no sidekick on this card */ }
   text(location.host ? location.host.replace(/^www\./, "") : "ballknowledge", W - 70, 1290, '500 26px "JetBrains Mono"', p.muted, "right");
   return cv;
 }

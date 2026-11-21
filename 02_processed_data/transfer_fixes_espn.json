@@ -1,0 +1,2562 @@
+{
+ "Edin Dzeko": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "comp": "L1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Pascal Groß": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "comp": "GB1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "Ricardo Rodríguez": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "Real Betis Balompié",
+  "source": "ESPN squad list"
+ },
+ "Christian Nørgaard": {
+  "club": "Everton FC",
+  "club_id": 29,
+  "comp": "GB1",
+  "since": null,
+  "was": "Arsenal FC",
+  "source": "ESPN squad list"
+ },
+ "Kevin Akpoguma": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "comp": "IT1",
+  "since": null,
+  "was": "TSG 1899 Hoffenheim",
+  "source": "ESPN squad list"
+ },
+ "Denis Suárez": {
+  "club": "Deportivo Alavés",
+  "club_id": 1108,
+  "comp": "ES1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Adrien Rabiot": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "comp": "IT1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Sheraldo Becker": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "CA Osasuna",
+  "source": "ESPN squad list"
+ },
+ "Nico Elvedi": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "comp": "GB1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Marvin Friedrich": {
+  "club": "1.FC Union Berlin",
+  "club_id": 89,
+  "comp": "L1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Michael Zetterer": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "comp": "GB1",
+  "since": null,
+  "was": "SV Werder Bremen",
+  "source": "ESPN squad list"
+ },
+ "Roberto Gagliardini": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Ivan Provedel": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "comp": "IT1",
+  "since": null,
+  "was": "Società Sportiva Lazio S.p.A.",
+  "source": "ESPN squad list"
+ },
+ "Adrien Thomasson": {
+  "club": "Stade Rennais FC",
+  "club_id": 273,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Lens",
+  "source": "ESPN squad list"
+ },
+ "Aleix Febas": {
+  "club": "Celta de Vigo",
+  "club_id": 940,
+  "comp": "ES1",
+  "since": null,
+  "was": "Elche CF",
+  "source": "ESPN squad list"
+ },
+ "Stefan Posch": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Xaver Schlager": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "comp": "GB1",
+  "since": null,
+  "was": "RB Leipzig",
+  "source": "ESPN squad list"
+ },
+ "Grischa Prömel": {
+  "club": "VfB Stuttgart",
+  "club_id": 79,
+  "comp": "L1",
+  "since": null,
+  "was": "TSG 1899 Hoffenheim",
+  "source": "ESPN squad list"
+ },
+ "Andrew Robertson": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "comp": "GB1",
+  "since": null,
+  "was": "Liverpool FC",
+  "source": "ESPN squad list"
+ },
+ "Laurent Abergel": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Lorient",
+  "source": "ESPN squad list"
+ },
+ "Lorenzo Montipò": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Diego Rico": {
+  "club": "CA Osasuna",
+  "club_id": 331,
+  "comp": "ES1",
+  "since": null,
+  "was": "Getafe CF",
+  "source": "ESPN squad list"
+ },
+ "Gautier Lloris": {
+  "club": "Stade Brestois 29",
+  "club_id": 3911,
+  "comp": "FR1",
+  "since": null,
+  "was": "Le Havre AC",
+  "source": "ESPN squad list"
+ },
+ "Pasquale Mazzocchi": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "SSC Napoli",
+  "source": "ESPN squad list"
+ },
+ "Pablo Maffeo": {
+  "club": "Valencia CF",
+  "club_id": 1049,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Mallorca",
+  "source": "ESPN squad list"
+ },
+ "Emil Audero": {
+  "club": "Rayo Vallecano",
+  "club_id": 367,
+  "comp": "ES1",
+  "since": null,
+  "was": "US Cremonese",
+  "source": "ESPN squad list"
+ },
+ "Marcus Rashford": {
+  "club": "Manchester United",
+  "club_id": 985,
+  "comp": "GB1",
+  "since": null,
+  "was": "FC Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Patrick Cutrone": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Como 1907",
+  "source": "ESPN squad list"
+ },
+ "Sandi Lovrić": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Kingsley Ehizibue": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "comp": "IT1",
+  "since": null,
+  "was": "Udinese Calcio",
+  "source": "ESPN squad list"
+ },
+ "Robin Gosens": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "comp": "L1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Luis Milla": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "Getafe CF",
+  "source": "ESPN squad list"
+ },
+ "Ainsley Maitland-Niles": {
+  "club": "Everton FC",
+  "club_id": 29,
+  "comp": "GB1",
+  "since": null,
+  "was": "Olympique Lyon",
+  "source": "ESPN squad list"
+ },
+ "Phillip Tietz": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "FC Augsburg",
+  "source": "ESPN squad list"
+ },
+ "Andoni Gorosabel": {
+  "club": "RCD Espanyol Barcelona",
+  "club_id": 714,
+  "comp": "ES1",
+  "since": null,
+  "was": "Athletic Bilbao",
+  "source": "ESPN squad list"
+ },
+ "Jon Guridi": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Deportivo Alavés",
+  "source": "ESPN squad list"
+ },
+ "Orel Mangala": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "comp": "ES1",
+  "since": null,
+  "was": "Olympique Lyon",
+  "source": "ESPN squad list"
+ },
+ "Borna Sosa": {
+  "club": "1.FC Köln",
+  "club_id": 3,
+  "comp": "L1",
+  "since": null,
+  "was": "Crystal Palace",
+  "source": "ESPN squad list"
+ },
+ "Michele Di Gregorio": {
+  "club": "AFC Bournemouth",
+  "club_id": 989,
+  "comp": "GB1",
+  "since": null,
+  "was": "Juventus FC",
+  "source": "ESPN squad list"
+ },
+ "Rolando Mandragora": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Isac Lidberg": {
+  "club": "Borussia Mönchengladbach",
+  "club_id": 18,
+  "comp": "L1",
+  "since": null,
+  "was": "SV Darmstadt 98",
+  "source": "ESPN squad list"
+ },
+ "Óscar Mingueza": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "comp": "GB1",
+  "since": null,
+  "was": "Celta de Vigo",
+  "source": "ESPN squad list"
+ },
+ "Toma Bašić": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Società Sportiva Lazio S.p.A.",
+  "source": "ESPN squad list"
+ },
+ "Idrissa Touré": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Pisa Sporting Club",
+  "source": "ESPN squad list"
+ },
+ "Nicolas Kühn": {
+  "club": "Borussia Mönchengladbach",
+  "club_id": 18,
+  "comp": "L1",
+  "since": null,
+  "was": "Como 1907",
+  "source": "ESPN squad list"
+ },
+ "Florent Muslija": {
+  "club": "SC Freiburg",
+  "club_id": 60,
+  "comp": "L1",
+  "since": null,
+  "was": "Fortuna Düsseldorf",
+  "source": "ESPN squad list"
+ },
+ "Konstantinos Tsimikas": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "comp": "GB1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Unai Núñez": {
+  "club": "RCD Espanyol Barcelona",
+  "club_id": 714,
+  "comp": "ES1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Sebastiaan Bornauw": {
+  "club": "Hamburger SV",
+  "club_id": 41,
+  "comp": "L1",
+  "since": null,
+  "was": "Leeds United",
+  "source": "ESPN squad list"
+ },
+ "Tete Morente": {
+  "club": "Elche CF",
+  "club_id": 1531,
+  "comp": "ES1",
+  "since": null,
+  "was": "US Lecce",
+  "source": "ESPN squad list"
+ },
+ "Sergio Lozano": {
+  "club": "Rayo Vallecano",
+  "club_id": 367,
+  "comp": "ES1",
+  "since": null,
+  "was": "Levante UD",
+  "source": "ESPN squad list"
+ },
+ "Iván Martín": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Girona FC",
+  "source": "ESPN squad list"
+ },
+ "Diego Conde": {
+  "club": "Real Betis Balompié",
+  "club_id": 150,
+  "comp": "ES1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Guido Rodríguez": {
+  "club": "Valencia CF",
+  "club_id": 1049,
+  "comp": "ES1",
+  "since": null,
+  "was": "West Ham United",
+  "source": "ESPN squad list"
+ },
+ "Enzo Ebosse": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Habib Diallo": {
+  "club": "Le Mans FC",
+  "club_id": null,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Gauthier Hein": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Luka Lochoshvili": {
+  "club": "1.FC Köln",
+  "club_id": 3,
+  "comp": "L1",
+  "since": null,
+  "was": "1.FC Nuremberg",
+  "source": "ESPN squad list"
+ },
+ "Trevoh Chalobah": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "Chelsea FC",
+  "source": "ESPN squad list"
+ },
+ "Romano Schmid": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "comp": "IT1",
+  "since": null,
+  "was": "SV Werder Bremen",
+  "source": "ESPN squad list"
+ },
+ "Lucas Perri": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "Leeds United",
+  "source": "ESPN squad list"
+ },
+ "Benjamin Pavard": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "comp": "IT1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "M'Bala Nzola": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Sassuolo",
+  "source": "ESPN squad list"
+ },
+ "Alfonso Pedraza": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "comp": "IT1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Ibrahima Konaté": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "comp": "ES1",
+  "since": null,
+  "was": "Liverpool FC",
+  "source": "ESPN squad list"
+ },
+ "Diogo Leite": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "comp": "IT1",
+  "since": null,
+  "was": "1.FC Union Berlin",
+  "source": "ESPN squad list"
+ },
+ "Florentino": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "comp": "GB1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Alfon González": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Fernando Calero": {
+  "club": "Málaga CF",
+  "club_id": 1084,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Gianluca Gaetano": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "comp": "IT1",
+  "since": null,
+  "was": "Cagliari Calcio",
+  "source": "ESPN squad list"
+ },
+ "Cyril Ngonge": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Gabriel Jesus": {
+  "club": "FC Barcelona",
+  "club_id": 131,
+  "comp": "ES1",
+  "since": null,
+  "was": "Arsenal FC",
+  "source": "ESPN squad list"
+ },
+ "Thierry Correia": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Valencia CF",
+  "source": "ESPN squad list"
+ },
+ "Marash Kumbulla": {
+  "club": "Rayo Vallecano",
+  "club_id": 367,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Mallorca",
+  "source": "ESPN squad list"
+ },
+ "André Almeida": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Valencia CF",
+  "source": "ESPN squad list"
+ },
+ "Michael Folorunsho": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Cagliari Calcio",
+  "source": "ESPN squad list"
+ },
+ "Pierre Lees-Melou": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "Stade Brestois 29",
+  "source": "ESPN squad list"
+ },
+ "Yangel Herrera": {
+  "club": "Real Sociedad",
+  "club_id": 681,
+  "comp": "ES1",
+  "since": null,
+  "was": "Girona FC",
+  "source": "ESPN squad list"
+ },
+ "Egil Selvik": {
+  "club": "Stade Brestois 29",
+  "club_id": 3911,
+  "comp": "FR1",
+  "since": null,
+  "was": "Watford FC",
+  "source": "ESPN squad list"
+ },
+ "Alberto Dossena": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "Cagliari Calcio",
+  "source": "ESPN squad list"
+ },
+ "Danilho Doekhi": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "comp": "IT1",
+  "since": null,
+  "was": "1.FC Union Berlin",
+  "source": "ESPN squad list"
+ },
+ "Juan Iglesias": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Getafe CF",
+  "source": "ESPN squad list"
+ },
+ "Hamed Traoré": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "comp": "IT1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Alessandro Zanoli": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "SSC Napoli",
+  "source": "ESPN squad list"
+ },
+ "Eljif Elmas": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "comp": "IT1",
+  "since": null,
+  "was": "SSC Napoli",
+  "source": "ESPN squad list"
+ },
+ "Amadou Haidara": {
+  "club": "RC Lens",
+  "club_id": 826,
+  "comp": "FR1",
+  "since": null,
+  "was": "RB Leipzig",
+  "source": "ESPN squad list"
+ },
+ "Yannik Engelhardt": {
+  "club": "SC Freiburg",
+  "club_id": 60,
+  "comp": "L1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Ademola Lookman": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "comp": "ES1",
+  "since": null,
+  "was": "Atalanta BC",
+  "source": "ESPN squad list"
+ },
+ "Matt O'Riley": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "comp": "GB1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Pascal Struijk": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "comp": "GB1",
+  "since": null,
+  "was": "Leeds United",
+  "source": "ESPN squad list"
+ },
+ "Zian Flemming": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "comp": "GB1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Giorgi Chakvetadze": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "Watford FC",
+  "source": "ESPN squad list"
+ },
+ "Jhon Lucumí": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Arnaud Bodart": {
+  "club": "Le Havre AC",
+  "club_id": 738,
+  "comp": "FR1",
+  "since": null,
+  "was": "LOSC Lille",
+  "source": "ESPN squad list"
+ },
+ "Giorgi Tsitaishvili": {
+  "club": "Rayo Vallecano",
+  "club_id": 367,
+  "comp": "ES1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Frank Onyeka": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "Brentford FC",
+  "source": "ESPN squad list"
+ },
+ "Nathan Patterson": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "Everton FC",
+  "source": "ESPN squad list"
+ },
+ "Jørgen Strand Larsen": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "comp": "GB1",
+  "since": null,
+  "was": "Wolverhampton Wanderers",
+  "source": "ESPN squad list"
+ },
+ "Hans Nicolussi Caviglia": {
+  "club": "Parma Calcio 1913",
+  "club_id": 130,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Roberto Piccoli": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Alessio Zerbin": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Cremonese",
+  "source": "ESPN squad list"
+ },
+ "Nikola Krstović": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Lecce",
+  "source": "ESPN squad list"
+ },
+ "Ethan Pinnock": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "Brentford FC",
+  "source": "ESPN squad list"
+ },
+ "Douglas Luiz": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "comp": "IT1",
+  "since": null,
+  "was": "Nottingham Forest",
+  "source": "ESPN squad list"
+ },
+ "Javi Galán": {
+  "club": "Celta de Vigo",
+  "club_id": 940,
+  "comp": "ES1",
+  "since": null,
+  "was": "CA Osasuna",
+  "source": "ESPN squad list"
+ },
+ "Junior Adamu": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "comp": "L1",
+  "since": null,
+  "was": "SC Freiburg",
+  "source": "ESPN squad list"
+ },
+ "Yann Gboho": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "FC Toulouse",
+  "source": "ESPN squad list"
+ },
+ "Willem Geubbels": {
+  "club": "US Lecce",
+  "club_id": 1005,
+  "comp": "IT1",
+  "since": null,
+  "was": "Paris FC",
+  "source": "ESPN squad list"
+ },
+ "Adrià Altimira": {
+  "club": "Deportivo de La Coruña",
+  "club_id": 897,
+  "comp": "ES1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Rocco Reitz": {
+  "club": "RB Leipzig",
+  "club_id": 23826,
+  "comp": "L1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Armel Bella-Kotchap": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Samuele Ricci": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "AC Milan",
+  "source": "ESPN squad list"
+ },
+ "Ransford Königsdörffer": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "Hamburger SV",
+  "source": "ESPN squad list"
+ },
+ "Brennan Johnson": {
+  "club": "Everton FC",
+  "club_id": 29,
+  "comp": "GB1",
+  "since": null,
+  "was": "Tottenham Hotspur",
+  "source": "ESPN squad list"
+ },
+ "Ivan Ilić": {
+  "club": "US Lecce",
+  "club_id": 1005,
+  "comp": "IT1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Marvin Pieringer": {
+  "club": "SC Paderborn 07",
+  "club_id": 127,
+  "comp": "L1",
+  "since": null,
+  "was": "1. Fußballclub Heidenheim 1846",
+  "source": "ESPN squad list"
+ },
+ "Facundo Medina": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "comp": "L1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Sorba Thomas": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "comp": "GB1",
+  "since": null,
+  "was": "Stoke City",
+  "source": "ESPN squad list"
+ },
+ "Félix Correia": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "LOSC Lille",
+  "source": "ESPN squad list"
+ },
+ "Nico González": {
+  "club": "Juventus FC",
+  "club_id": 506,
+  "comp": "IT1",
+  "since": null,
+  "was": "Newcastle United",
+  "source": "ESPN squad list"
+ },
+ "Thórir Jóhann Helgason": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Lecce",
+  "source": "ESPN squad list"
+ },
+ "Ignace Van der Brempt": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Como 1907",
+  "source": "ESPN squad list"
+ },
+ "Emil Holm": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "comp": "IT1",
+  "since": null,
+  "was": "Juventus FC",
+  "source": "ESPN squad list"
+ },
+ "Adrià Pedrosa": {
+  "club": "Rayo Vallecano",
+  "club_id": 367,
+  "comp": "ES1",
+  "since": null,
+  "was": "Elche CF",
+  "source": "ESPN squad list"
+ },
+ "Giovanni Reyna": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "comp": "FR1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "Fabian Rieder": {
+  "club": "FC Augsburg",
+  "club_id": 167,
+  "comp": "L1",
+  "since": null,
+  "was": "Stade Rennais FC",
+  "source": "ESPN squad list"
+ },
+ "Simon Sohm": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Quilindschy Hartman": {
+  "club": "RCD Espanyol Barcelona",
+  "club_id": 714,
+  "comp": "ES1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Luca Netz": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "comp": "GB1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Miguel Gutiérrez": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "comp": "L1",
+  "since": null,
+  "was": "SSC Napoli",
+  "source": "ESPN squad list"
+ },
+ "Noah Atubolu": {
+  "club": "Eintracht Frankfurt",
+  "club_id": 24,
+  "comp": "L1",
+  "since": null,
+  "was": "SC Freiburg",
+  "source": "ESPN squad list"
+ },
+ "Melvin Bard": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "comp": "GB1",
+  "since": null,
+  "was": "OGC Nice",
+  "source": "ESPN squad list"
+ },
+ "Patrick Wimmer": {
+  "club": "TSG 1899 Hoffenheim",
+  "club_id": 533,
+  "comp": "L1",
+  "since": null,
+  "was": "VfL Wolfsburg",
+  "source": "ESPN squad list"
+ },
+ "Junior Dina Ebimbe": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "comp": "L1",
+  "since": null,
+  "was": "Stade Brestois 29",
+  "source": "ESPN squad list"
+ },
+ "Sebastiano Esposito": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Cagliari Calcio",
+  "source": "ESPN squad list"
+ },
+ "Thijs Dallinga": {
+  "club": "1.FC Köln",
+  "club_id": 3,
+  "comp": "L1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Daniel Maldini": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "Società Sportiva Lazio S.p.A.",
+  "source": "ESPN squad list"
+ },
+ "Dilane Bakwa": {
+  "club": "LOSC Lille",
+  "club_id": 1082,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Illan Meslier": {
+  "club": "Arsenal FC",
+  "club_id": 11,
+  "comp": "GB1",
+  "since": null,
+  "was": "Leeds United",
+  "source": "ESPN squad list"
+ },
+ "Romain Faivre": {
+  "club": "AJ Auxerre",
+  "club_id": 290,
+  "comp": "FR1",
+  "since": null,
+  "was": "AFC Bournemouth",
+  "source": "ESPN squad list"
+ },
+ "Sékou Mara": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "comp": "FR1",
+  "since": null,
+  "was": "AJ Auxerre",
+  "source": "ESPN squad list"
+ },
+ "Emmanuel Emegha": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "comp": "GB1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "James Trafford": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "comp": "GB1",
+  "since": null,
+  "was": "Manchester City",
+  "source": "ESPN squad list"
+ },
+ "Xavi Simons": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "comp": "GB1",
+  "since": null,
+  "was": "RB Leipzig",
+  "source": "ESPN squad list"
+ },
+ "Elliot Anderson": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "comp": "GB1",
+  "since": null,
+  "was": "Nottingham Forest",
+  "source": "ESPN squad list"
+ },
+ "Yéremy Pino": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "comp": "GB1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Issa Soumaré": {
+  "club": "Stade Rennais FC",
+  "club_id": 273,
+  "comp": "FR1",
+  "since": null,
+  "was": "Le Havre AC",
+  "source": "ESPN squad list"
+ },
+ "Pablo Martínez": {
+  "club": "Málaga CF",
+  "club_id": 1084,
+  "comp": "ES1",
+  "since": null,
+  "was": "Levante UD",
+  "source": "ESPN squad list"
+ },
+ "Lassine Sinayoko": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "AJ Auxerre",
+  "source": "ESPN squad list"
+ },
+ "Jan Paul van Hecke": {
+  "club": "Tottenham Hotspur",
+  "club_id": 148,
+  "comp": "GB1",
+  "since": null,
+  "was": "Brighton & Hove Albion",
+  "source": "ESPN squad list"
+ },
+ "Jon Pacheco": {
+  "club": "Real Sociedad",
+  "club_id": 681,
+  "comp": "ES1",
+  "since": null,
+  "was": "Deportivo Alavés",
+  "source": "ESPN squad list"
+ },
+ "Dwight McNeil": {
+  "club": "Crystal Palace",
+  "club_id": 873,
+  "comp": "GB1",
+  "since": null,
+  "was": "Everton FC",
+  "source": "ESPN squad list"
+ },
+ "Filip Jørgensen": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "comp": "FR1",
+  "since": null,
+  "was": "Chelsea FC",
+  "source": "ESPN squad list"
+ },
+ "Arnaud Kalimuendo": {
+  "club": "Nottingham Forest",
+  "club_id": 703,
+  "comp": "GB1",
+  "since": null,
+  "was": "Eintracht Frankfurt",
+  "source": "ESPN squad list"
+ },
+ "Niels Nkounkou": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "comp": "FR1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Fabio Gruber": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "1.FC Nuremberg",
+  "source": "ESPN squad list"
+ },
+ "Pep Chavarría": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "comp": "GB1",
+  "since": null,
+  "was": "Rayo Vallecano",
+  "source": "ESPN squad list"
+ },
+ "Eric Martel": {
+  "club": "1.FSV Mainz 05",
+  "club_id": 39,
+  "comp": "L1",
+  "since": null,
+  "was": "1.FC Köln",
+  "source": "ESPN squad list"
+ },
+ "Charlie Cresswell": {
+  "club": "Stade Rennais FC",
+  "club_id": 273,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Toulouse",
+  "source": "ESPN squad list"
+ },
+ "Faris Moumbagna": {
+  "club": "Olympique Marseille",
+  "club_id": 244,
+  "comp": "FR1",
+  "since": null,
+  "was": "US Cremonese",
+  "source": "ESPN squad list"
+ },
+ "Akor Adams": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Sevilla FC",
+  "source": "ESPN squad list"
+ },
+ "Loum Tchaouna": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Gaetano Oristanio": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "Parma Calcio 1913",
+  "source": "ESPN squad list"
+ },
+ "Mio Backhaus": {
+  "club": "SC Freiburg",
+  "club_id": 60,
+  "comp": "L1",
+  "since": null,
+  "was": "SV Werder Bremen",
+  "source": "ESPN squad list"
+ },
+ "Lucas Gourna-Douath": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "comp": "GB1",
+  "since": null,
+  "was": "Le Havre AC",
+  "source": "ESPN squad list"
+ },
+ "Julen Agirrezabala": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Valencia CF",
+  "source": "ESPN squad list"
+ },
+ "Yan Couto": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "Wilfried Gnonto": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "comp": "IT1",
+  "since": null,
+  "was": "Leeds United",
+  "source": "ESPN squad list"
+ },
+ "Nathan Ngoumou": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "comp": "FR1",
+  "since": null,
+  "was": "Borussia Mönchengladbach",
+  "source": "ESPN squad list"
+ },
+ "Filippo Terracciano": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Cremonese",
+  "source": "ESPN squad list"
+ },
+ "Iker Losada": {
+  "club": "Real Betis Balompié",
+  "club_id": 150,
+  "comp": "ES1",
+  "since": null,
+  "was": "Levante UD",
+  "source": "ESPN squad list"
+ },
+ "Iván Azón": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "comp": "ES1",
+  "since": null,
+  "was": "Como 1907",
+  "source": "ESPN squad list"
+ },
+ "Giovanni Fabbian": {
+  "club": "Parma Calcio 1913",
+  "club_id": 130,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Aurèle Amenda": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "Eintracht Frankfurt",
+  "source": "ESPN squad list"
+ },
+ "Tommaso Baldanzi": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "comp": "IT1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Eren Dinkçi": {
+  "club": "SV Werder Bremen",
+  "club_id": 86,
+  "comp": "L1",
+  "since": null,
+  "was": "SC Freiburg",
+  "source": "ESPN squad list"
+ },
+ "Carl Rushworth": {
+  "club": "Coventry City",
+  "club_id": null,
+  "comp": "GB1",
+  "since": null,
+  "was": "Brighton & Hove Albion",
+  "source": "ESPN squad list"
+ },
+ "Rafa Obrador": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Manuel Ángel": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Real Madrid",
+  "source": "ESPN squad list"
+ },
+ "James Abankwah": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "Watford FC",
+  "source": "ESPN squad list"
+ },
+ "Evan Ferguson": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "comp": "GB1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Victor Boniface": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "comp": "L1",
+  "since": null,
+  "was": "SV Werder Bremen",
+  "source": "ESPN squad list"
+ },
+ "Bilal Nadir": {
+  "club": "Hamburger SV",
+  "club_id": 41,
+  "comp": "L1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Matthis Abline": {
+  "club": "AS Monaco",
+  "club_id": 162,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Nantes",
+  "source": "ESPN squad list"
+ },
+ "Oscar Bobb": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Manchester City",
+  "source": "ESPN squad list"
+ },
+ "David Møller Wolfe": {
+  "club": "Hamburger SV",
+  "club_id": 41,
+  "comp": "L1",
+  "since": null,
+  "was": "Wolverhampton Wanderers",
+  "source": "ESPN squad list"
+ },
+ "Rafa Marín": {
+  "club": "SSC Napoli",
+  "club_id": 6195,
+  "comp": "IT1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Satoshi Tanaka": {
+  "club": "FC Schalke 04",
+  "club_id": 33,
+  "comp": "L1",
+  "since": null,
+  "was": "Fortuna Düsseldorf",
+  "source": "ESPN squad list"
+ },
+ "Konstantinos Koulierakis": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "comp": "IT1",
+  "since": null,
+  "was": "VfL Wolfsburg",
+  "source": "ESPN squad list"
+ },
+ "Tarik Muharemović": {
+  "club": "Leeds United",
+  "club_id": 399,
+  "comp": "GB1",
+  "since": null,
+  "was": "US Sassuolo",
+  "source": "ESPN squad list"
+ },
+ "Jaidon Anthony": {
+  "club": "Brentford FC",
+  "club_id": 1148,
+  "comp": "GB1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Jacopo Fazzini": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Nathaniel Brown": {
+  "club": "Bayern Munich",
+  "club_id": 27,
+  "comp": "L1",
+  "since": null,
+  "was": "Eintracht Frankfurt",
+  "source": "ESPN squad list"
+ },
+ "Rayan Philippe": {
+  "club": "SC Paderborn 07",
+  "club_id": 127,
+  "comp": "L1",
+  "since": null,
+  "was": "Hamburger SV",
+  "source": "ESPN squad list"
+ },
+ "Thomas Kristensen": {
+  "club": "Atalanta BC",
+  "club_id": 800,
+  "comp": "IT1",
+  "since": null,
+  "was": "Udinese Calcio",
+  "source": "ESPN squad list"
+ },
+ "Rubén Sánchez": {
+  "club": "Elche CF",
+  "club_id": 1531,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Romano Floriani Mussolini": {
+  "club": "Società Sportiva Lazio S.p.A.",
+  "club_id": 398,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Cremonese",
+  "source": "ESPN squad list"
+ },
+ "Carlos Romero": {
+  "club": "Villarreal CF",
+  "club_id": 1050,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Andy Diouf": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "comp": "IT1",
+  "since": null,
+  "was": "RC Lens",
+  "source": "ESPN squad list"
+ },
+ "Ben Gannon-Doak": {
+  "club": "AFC Bournemouth",
+  "club_id": 989,
+  "comp": "GB1",
+  "since": null,
+  "was": "Liverpool FC",
+  "source": "ESPN squad list"
+ },
+ "Matias Fernandez-Pardo": {
+  "club": "Newcastle United",
+  "club_id": 762,
+  "comp": "GB1",
+  "since": null,
+  "was": "LOSC Lille",
+  "source": "ESPN squad list"
+ },
+ "Luis Hasa": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "comp": "IT1",
+  "since": null,
+  "was": "SSC Napoli",
+  "source": "ESPN squad list"
+ },
+ "Noel Törnqvist": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Como 1907",
+  "source": "ESPN squad list"
+ },
+ "João Gomes": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "comp": "GB1",
+  "since": null,
+  "was": "Wolverhampton Wanderers",
+  "source": "ESPN squad list"
+ },
+ "Álex Jiménez": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "comp": "IT1",
+  "since": null,
+  "was": "AC Milan",
+  "source": "ESPN squad list"
+ },
+ "Stanis Idumbo": {
+  "club": "AS Monaco",
+  "club_id": 162,
+  "comp": "FR1",
+  "since": null,
+  "was": "Sevilla FC",
+  "source": "ESPN squad list"
+ },
+ "Andrey Santos": {
+  "club": "Manchester United",
+  "club_id": 985,
+  "comp": "GB1",
+  "since": null,
+  "was": "Chelsea FC",
+  "source": "ESPN squad list"
+ },
+ "Arijon Ibrahimovic": {
+  "club": "FC Augsburg",
+  "club_id": 167,
+  "comp": "L1",
+  "since": null,
+  "was": "1. Fußballclub Heidenheim 1846",
+  "source": "ESPN squad list"
+ },
+ "Luca Koleosho": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Pietro Comuzzo": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Shea Charles": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Southampton FC",
+  "source": "ESPN squad list"
+ },
+ "Alieu Fadera": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Sassuolo",
+  "source": "ESPN squad list"
+ },
+ "Arouna Sangante": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Le Havre AC",
+  "source": "ESPN squad list"
+ },
+ "Willy Kambwala": {
+  "club": "Como 1907",
+  "club_id": 1047,
+  "comp": "IT1",
+  "since": null,
+  "was": "Villarreal CF",
+  "source": "ESPN squad list"
+ },
+ "Ramón Terrats": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Alidu Seidu": {
+  "club": "OGC Nice",
+  "club_id": 417,
+  "comp": "FR1",
+  "since": null,
+  "was": "Stade Rennais FC",
+  "source": "ESPN squad list"
+ },
+ "Bamo Meïté": {
+  "club": "Olympique Marseille",
+  "club_id": 244,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Lorient",
+  "source": "ESPN squad list"
+ },
+ "Mamadou Sangaré": {
+  "club": "Brentford FC",
+  "club_id": 1148,
+  "comp": "GB1",
+  "since": null,
+  "was": "RC Lens",
+  "source": "ESPN squad list"
+ },
+ "Pablo Pagis": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Lorient",
+  "source": "ESPN squad list"
+ },
+ "Otávio": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "Al-Rayyan",
+  "source": "ESPN squad list"
+ },
+ "Julien Duranville": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "comp": "FR1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "José Salinas": {
+  "club": "Málaga CF",
+  "club_id": 1084,
+  "comp": "ES1",
+  "since": null,
+  "was": "RCD Espanyol Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Dzenan Pejcinovic": {
+  "club": "VfB Stuttgart",
+  "club_id": 79,
+  "comp": "L1",
+  "since": null,
+  "was": "VfL Wolfsburg",
+  "source": "ESPN squad list"
+ },
+ "Arnau Martínez": {
+  "club": "Valencia CF",
+  "club_id": 1049,
+  "comp": "ES1",
+  "since": null,
+  "was": "Girona FC",
+  "source": "ESPN squad list"
+ },
+ "Hennes Behrens": {
+  "club": "FC Augsburg",
+  "club_id": 167,
+  "comp": "L1",
+  "since": null,
+  "was": "1. Fußballclub Heidenheim 1846",
+  "source": "ESPN squad list"
+ },
+ "Mike Penders": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "comp": "GB1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Hugo Rincón": {
+  "club": "Athletic Bilbao",
+  "club_id": 621,
+  "comp": "ES1",
+  "since": null,
+  "was": "Girona FC",
+  "source": "ESPN squad list"
+ },
+ "Unai Gómez": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "Athletic Bilbao",
+  "source": "ESPN squad list"
+ },
+ "Maxime Estève": {
+  "club": "RB Leipzig",
+  "club_id": 23826,
+  "comp": "L1",
+  "since": null,
+  "was": "Burnley FC",
+  "source": "ESPN squad list"
+ },
+ "Valentín Barco": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "comp": "GB1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Santiago Castro": {
+  "club": "Associazione Sportiva Roma",
+  "club_id": 12,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Arthur Atta": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "comp": "IT1",
+  "since": null,
+  "was": "Udinese Calcio",
+  "source": "ESPN squad list"
+ },
+ "Mateo Pellegrino": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "comp": "IT1",
+  "since": null,
+  "was": "Parma Calcio 1913",
+  "source": "ESPN squad list"
+ },
+ "Nicolás Valentini": {
+  "club": "Deportivo Alavés",
+  "club_id": 1108,
+  "comp": "ES1",
+  "since": null,
+  "was": "Hellas Verona",
+  "source": "ESPN squad list"
+ },
+ "Seydou Fini": {
+  "club": "Frosinone Calcio",
+  "club_id": 8970,
+  "comp": "IT1",
+  "since": null,
+  "was": "Genoa CFC",
+  "source": "ESPN squad list"
+ },
+ "Cole Campbell": {
+  "club": "SV Elversberg",
+  "club_id": null,
+  "comp": "L1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "Matteo Prati": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Hugo Sotelo": {
+  "club": "Levante UD",
+  "club_id": 3368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Celta de Vigo",
+  "source": "ESPN squad list"
+ },
+ "Amir Richardson": {
+  "club": "Le Havre AC",
+  "club_id": 738,
+  "comp": "FR1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "David Odogu": {
+  "club": "FC Toulouse",
+  "club_id": 415,
+  "comp": "FR1",
+  "since": null,
+  "was": "AC Milan",
+  "source": "ESPN squad list"
+ },
+ "Noah Darvich": {
+  "club": "SV Elversberg",
+  "club_id": null,
+  "comp": "L1",
+  "since": null,
+  "was": "VfB Stuttgart",
+  "source": "ESPN squad list"
+ },
+ "Lazar Jovanovic": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "VfB Stuttgart",
+  "source": "ESPN squad list"
+ },
+ "Saba Goglichidze": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Udinese Calcio",
+  "source": "ESPN squad list"
+ },
+ "Fábio Baldé": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "comp": "FR1",
+  "since": null,
+  "was": "Hamburger SV",
+  "source": "ESPN squad list"
+ },
+ "Rémy Labeau Lascary": {
+  "club": "AJ Auxerre",
+  "club_id": 290,
+  "comp": "FR1",
+  "since": null,
+  "was": "Stade Brestois 29",
+  "source": "ESPN squad list"
+ },
+ "Jeanuël Belocian": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Bayer 04 Leverkusen",
+  "source": "ESPN squad list"
+ },
+ "Lewis Koumas": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "comp": "GB1",
+  "since": null,
+  "was": "Hull City",
+  "source": "ESPN squad list"
+ },
+ "Johan Manzambi": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "comp": "GB1",
+  "since": null,
+  "was": "SC Freiburg",
+  "source": "ESPN squad list"
+ },
+ "Rahim Alhassane": {
+  "club": "Bologna Football Club 1909",
+  "club_id": 1025,
+  "comp": "IT1",
+  "since": null,
+  "was": "Real Oviedo",
+  "source": "ESPN squad list"
+ },
+ "Hugo Larsson": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Eintracht Frankfurt",
+  "source": "ESPN squad list"
+ },
+ "Alieu Njie": {
+  "club": "ACF Fiorentina",
+  "club_id": 430,
+  "comp": "IT1",
+  "since": null,
+  "was": "Torino FC",
+  "source": "ESPN squad list"
+ },
+ "Gonzalo García": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Real Madrid",
+  "source": "ESPN squad list"
+ },
+ "Víctor Muñoz": {
+  "club": "Liverpool FC",
+  "club_id": 31,
+  "comp": "GB1",
+  "since": null,
+  "was": "CA Osasuna",
+  "source": "ESPN squad list"
+ },
+ "Tyrique George": {
+  "club": "Everton FC",
+  "club_id": 29,
+  "comp": "GB1",
+  "since": null,
+  "was": "Chelsea FC",
+  "source": "ESPN squad list"
+ },
+ "Adam Aznou": {
+  "club": "Málaga CF",
+  "club_id": 1084,
+  "comp": "ES1",
+  "since": null,
+  "was": "Everton FC",
+  "source": "ESPN squad list"
+ },
+ "Vasilije Adžić": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Juventus FC",
+  "source": "ESPN squad list"
+ },
+ "César Palacios": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "Real Madrid",
+  "source": "ESPN squad list"
+ },
+ "Pape Demba Diop": {
+  "club": "RC Strasbourg Alsace",
+  "club_id": 667,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Toulouse",
+  "source": "ESPN squad list"
+ },
+ "Afonso Moreira": {
+  "club": "Bayer 04 Leverkusen",
+  "club_id": 15,
+  "comp": "L1",
+  "since": null,
+  "was": "Olympique Lyon",
+  "source": "ESPN squad list"
+ },
+ "Eddy Kouadio": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Benja Domínguez": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Pablo García": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Real Betis Balompié",
+  "source": "ESPN squad list"
+ },
+ "Rodrigo Mendoza": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "comp": "ES1",
+  "since": null,
+  "was": "Elche CF",
+  "source": "ESPN squad list"
+ },
+ "Buba Sangaré": {
+  "club": "Elche CF",
+  "club_id": 1531,
+  "comp": "ES1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Eliezer Mayenda": {
+  "club": "Stade Rennais FC",
+  "club_id": 273,
+  "comp": "FR1",
+  "since": null,
+  "was": "Sunderland AFC",
+  "source": "ESPN squad list"
+ },
+ "Ebenezer Akinsanmiro": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Pisa Sporting Club",
+  "source": "ESPN squad list"
+ },
+ "Dermane Karim": {
+  "club": "ESTAC Troyes",
+  "club_id": 1095,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Lorient",
+  "source": "ESPN squad list"
+ },
+ "David Mokwa": {
+  "club": "SV Elversberg",
+  "club_id": null,
+  "comp": "L1",
+  "since": null,
+  "was": "TSG 1899 Hoffenheim",
+  "source": "ESPN squad list"
+ },
+ "Arthur": {
+  "club": "SV Werder Bremen",
+  "club_id": 86,
+  "comp": "L1",
+  "since": null,
+  "was": "Bayer 04 Leverkusen",
+  "source": "ESPN squad list"
+ },
+ "Ibrahim Sulemana": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Bologna Football Club 1909",
+  "source": "ESPN squad list"
+ },
+ "Facundo Buonanotte": {
+  "club": "Elche CF",
+  "club_id": 1531,
+  "comp": "ES1",
+  "since": null,
+  "was": "Chelsea FC",
+  "source": "ESPN squad list"
+ },
+ "Niccolò Fortini": {
+  "club": "Torino FC",
+  "club_id": 416,
+  "comp": "IT1",
+  "since": null,
+  "was": "ACF Fiorentina",
+  "source": "ESPN squad list"
+ },
+ "Zachary Athekame": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "comp": "FR1",
+  "since": null,
+  "was": "AC Milan",
+  "source": "ESPN squad list"
+ },
+ "Abdoul Ouattara": {
+  "club": "Ipswich Town",
+  "club_id": 677,
+  "comp": "GB1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Vitor Reis": {
+  "club": "Manchester City",
+  "club_id": 281,
+  "comp": "GB1",
+  "since": null,
+  "was": "Girona FC",
+  "source": "ESPN squad list"
+ },
+ "Junior Diaz": {
+  "club": "ESTAC Troyes",
+  "club_id": 1095,
+  "comp": "FR1",
+  "since": null,
+  "was": "Stade Brestois 29",
+  "source": "ESPN squad list"
+ },
+ "Mathis Amougou": {
+  "club": "FC Toulouse",
+  "club_id": 415,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Junior Mwanga": {
+  "club": "Le Havre AC",
+  "club_id": 738,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Strasbourg Alsace",
+  "source": "ESPN squad list"
+ },
+ "Jan Ziolkowski": {
+  "club": "AC Monza",
+  "club_id": 2919,
+  "comp": "IT1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Fran González": {
+  "club": "Sevilla FC",
+  "club_id": 368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Real Madrid",
+  "source": "ESPN squad list"
+ },
+ "Francesco Camarda": {
+  "club": "AC Milan",
+  "club_id": 5,
+  "comp": "IT1",
+  "since": null,
+  "was": "US Lecce",
+  "source": "ESPN squad list"
+ },
+ "Lorenzo Venturino": {
+  "club": "Genoa CFC",
+  "club_id": 252,
+  "comp": "IT1",
+  "since": null,
+  "was": "Associazione Sportiva Roma",
+  "source": "ESPN squad list"
+ },
+ "Andrés García": {
+  "club": "Getafe CF",
+  "club_id": 3709,
+  "comp": "ES1",
+  "since": null,
+  "was": "Aston Villa",
+  "source": "ESPN squad list"
+ },
+ "Carlos Espí": {
+  "club": "Real Madrid",
+  "club_id": 418,
+  "comp": "ES1",
+  "since": null,
+  "was": "Levante UD",
+  "source": "ESPN squad list"
+ },
+ "Bazoumana Touré": {
+  "club": "Newcastle United",
+  "club_id": 762,
+  "comp": "GB1",
+  "since": null,
+  "was": "TSG 1899 Hoffenheim",
+  "source": "ESPN squad list"
+ },
+ "Dro Fernández": {
+  "club": "Paris Saint-Germain",
+  "club_id": 583,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Barcelona",
+  "source": "ESPN squad list"
+ },
+ "Axel Tape": {
+  "club": "Levante UD",
+  "club_id": 3368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Bayer 04 Leverkusen",
+  "source": "ESPN squad list"
+ },
+ "Noah Edjouma": {
+  "club": "Stade Brestois 29",
+  "club_id": 3911,
+  "comp": "FR1",
+  "since": null,
+  "was": "LOSC Lille",
+  "source": "ESPN squad list"
+ },
+ "Pedro Felipe": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Juventus FC",
+  "source": "ESPN squad list"
+ },
+ "Anthony Bermont": {
+  "club": "Angers SCO",
+  "club_id": 1420,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Lens",
+  "source": "ESPN squad list"
+ },
+ "Kaïl Boudache": {
+  "club": "Olympique Lyon",
+  "club_id": 1041,
+  "comp": "FR1",
+  "since": null,
+  "was": "OGC Nice",
+  "source": "ESPN squad list"
+ },
+ "Deniz Zeitler": {
+  "club": "SC Paderborn 07",
+  "club_id": 127,
+  "comp": "L1",
+  "since": null,
+  "was": "TSG 1899 Hoffenheim",
+  "source": "ESPN squad list"
+ },
+ "Ibrahim Osman": {
+  "club": "Brighton & Hove Albion",
+  "club_id": 1237,
+  "comp": "GB1",
+  "since": null,
+  "was": "AJ Auxerre",
+  "source": "ESPN squad list"
+ },
+ "Sadibou Sané": {
+  "club": "AS Monaco",
+  "club_id": 162,
+  "comp": "FR1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Juma Bah": {
+  "club": "FC Augsburg",
+  "club_id": 167,
+  "comp": "L1",
+  "since": null,
+  "was": "OGC Nice",
+  "source": "ESPN squad list"
+ },
+ "Thiago Fernández": {
+  "club": "Levante UD",
+  "club_id": 3368,
+  "comp": "ES1",
+  "since": null,
+  "was": "Real Oviedo",
+  "source": "ESPN squad list"
+ },
+ "Robinio Vaz": {
+  "club": "Hull City",
+  "club_id": 3008,
+  "comp": "GB1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Matías Moreno": {
+  "club": "Venezia FC",
+  "club_id": 607,
+  "comp": "IT1",
+  "since": null,
+  "was": "Levante UD",
+  "source": "ESPN squad list"
+ },
+ "Aarón Anselmino": {
+  "club": "Chelsea FC",
+  "club_id": 631,
+  "comp": "GB1",
+  "since": null,
+  "was": "Borussia Dortmund",
+  "source": "ESPN squad list"
+ },
+ "Yassir Zabiri": {
+  "club": "Racing Santander",
+  "club_id": null,
+  "comp": "ES1",
+  "since": null,
+  "was": "Stade Rennais FC",
+  "source": "ESPN squad list"
+ },
+ "Rayan Fofana": {
+  "club": "Le Havre AC",
+  "club_id": 738,
+  "comp": "FR1",
+  "since": null,
+  "was": "RC Lens",
+  "source": "ESPN squad list"
+ },
+ "Darryl Bakola": {
+  "club": "US Sassuolo",
+  "club_id": 6574,
+  "comp": "IT1",
+  "since": null,
+  "was": "Olympique Marseille",
+  "source": "ESPN squad list"
+ },
+ "Idrissa Gueye": {
+  "club": "Udinese Calcio",
+  "club_id": 410,
+  "comp": "IT1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Kenny Quetant": {
+  "club": "SV Werder Bremen",
+  "club_id": 86,
+  "comp": "L1",
+  "since": null,
+  "was": "Le Havre AC",
+  "source": "ESPN squad list"
+ },
+ "Abdoulaye Faye": {
+  "club": "Celta de Vigo",
+  "club_id": 940,
+  "comp": "ES1",
+  "since": null,
+  "was": "FC Lorient",
+  "source": "ESPN squad list"
+ },
+ "Dayann Methalie": {
+  "club": "Sunderland AFC",
+  "club_id": 289,
+  "comp": "GB1",
+  "since": null,
+  "was": "FC Toulouse",
+  "source": "ESPN squad list"
+ },
+ "Brian Madjo": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "comp": "GB1",
+  "since": null,
+  "was": "FC Metz",
+  "source": "ESPN squad list"
+ },
+ "Rudy Matondo": {
+  "club": "Paris FC",
+  "club_id": 10004,
+  "comp": "FR1",
+  "since": null,
+  "was": "AJ Auxerre",
+  "source": "ESPN squad list"
+ },
+ "Gabin Bernardeau": {
+  "club": "FC Lorient",
+  "club_id": 1158,
+  "comp": "FR1",
+  "since": null,
+  "was": "OGC Nice",
+  "source": "ESPN squad list"
+ },
+ "Thorgan Hazard": {
+  "club": "RC Lens",
+  "club_id": 826,
+  "comp": "FR1",
+  "since": null,
+  "was": "RSC Anderlecht",
+  "source": "ESPN squad list"
+ },
+ "Harry Winks": {
+  "club": "Cagliari Calcio",
+  "club_id": 1390,
+  "comp": "IT1",
+  "since": null,
+  "was": "Leicester City",
+  "source": "ESPN squad list"
+ },
+ "Tammy Abraham": {
+  "club": "Aston Villa",
+  "club_id": 405,
+  "comp": "GB1",
+  "since": null,
+  "was": "Beşiktaş Jimnastik Kulübü",
+  "source": "ESPN squad list"
+ },
+ "Christos Tzolis": {
+  "club": "Arsenal FC",
+  "club_id": 11,
+  "comp": "GB1",
+  "since": null,
+  "was": "Club Brugge KV",
+  "source": "ESPN squad list"
+ },
+ "Morten Hjulmand": {
+  "club": "Atlético de Madrid",
+  "club_id": 13,
+  "comp": "ES1",
+  "since": null,
+  "was": "Sporting CP",
+  "source": "ESPN squad list"
+ },
+ "Senne Lammens": {
+  "club": "Manchester United",
+  "club_id": 985,
+  "comp": "GB1",
+  "since": null,
+  "was": "Royal Antwerp FC",
+  "source": "ESPN squad list"
+ },
+ "António Silva": {
+  "club": "AFC Bournemouth",
+  "club_id": 989,
+  "comp": "GB1",
+  "since": null,
+  "was": "SL Benfica",
+  "source": "ESPN squad list"
+ },
+ "Ismael Saibari": {
+  "club": "Bayern Munich",
+  "club_id": 27,
+  "comp": "L1",
+  "since": null,
+  "was": "PSV Eindhoven",
+  "source": "ESPN squad list"
+ },
+ "Aleksandar Stanković": {
+  "club": "Inter Milan",
+  "club_id": 46,
+  "comp": "IT1",
+  "since": null,
+  "was": "Club Brugge KV",
+  "source": "ESPN squad list"
+ },
+ "Kevin": {
+  "club": "Fulham FC",
+  "club_id": 931,
+  "comp": "GB1",
+  "since": null,
+  "was": "FC Shakhtar Donetsk",
+  "source": "ESPN squad list"
+ },
+ "Konstantinos Karetsas": {
+  "club": "Borussia Dortmund",
+  "club_id": 16,
+  "comp": "L1",
+  "since": null,
+  "was": "KRC Genk",
+  "source": "ESPN squad list"
+ }
+}

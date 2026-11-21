@@ -180,6 +180,144 @@ def gname(n):
 if os.path.exists("02_processed_data/real_goals.json"):
     for lg_, dt_, h_, a_, gl_ in json.load(open("02_processed_data/real_goals.json", encoding="utf-8")):
         REAL[(lg_, dt_, h_, a_)] = gl_
+# Real matchdays from the Transfermarkt games file ("1. Matchday" ...), Big 5 leagues 2012-13 to 2025-26: matched to each
+# game by league, date (or a day either side) and score, with club-name similarity as the tie-break.
+import difflib
+_TMC = {"E0": "GB1", "D1": "L1", "SP1": "ES1", "I1": "IT1", "F1": "FR1"}
+TMR = {}
+if os.path.exists("01_data_market_value/games.csv"):
+    _g = pd.read_csv("01_data_market_value/games.csv", usecols=["competition_id", "round", "date", "home_club_name", "away_club_name", "home_club_goals", "away_club_goals"])
+    _g = _g[_g["competition_id"].isin(list(_TMC.values())) & _g["round"].astype(str).str.contains("Matchday")]
+    for r in _g.itertuples():
+        TMR.setdefault((r.competition_id, r.date, int(r.home_club_goals), int(r.away_club_goals)), []).append((int(str(r.round).split(".")[0]), str(r.home_club_name), str(r.away_club_name)))
+
+
+def real_round(lg, m):
+    code = _TMC.get(lg)
+    if not code or not TMR:
+        return None
+    day = pd.Timestamp(m[0])
+    cands = [c for dd in (0, -1, 1) for c in TMR.get((code, (day + pd.Timedelta(days=dd)).strftime("%Y-%m-%d"), m[3], m[4]), [])]
+    if not cands:
+        return None
+    sim = lambda x, y: difflib.SequenceMatcher(None, x.lower(), y.lower()).ratio()
+    best = max(cands, key=lambda c: sim(m[1], c[1]) + sim(m[2], c[2]))
+    return best[0] if sim(m[1], best[1]) + sim(m[2], best[2]) > 0.6 else None
+
+
+def by_real_rounds(lg, ms):
+    """Group a season by its real matchdays when (nearly) every game is matched and no club plays twice in a round."""
+    rr = [real_round(lg, m) for m in ms]
+    if sum(r is not None for r in rr) < 0.97 * len(ms):
+        return None
+    clubs = {x for m in ms for x in (m[1], m[2])}
+    rounds = {}
+    for i, r in enumerate(rr):
+        if r is not None:
+            rounds.setdefault(r, []).append(i)
+    for r, ix in rounds.items():
+        if len({x for i in ix for x in (ms[i][1], ms[i][2])}) != 2 * len(ix):
+            return None
+    for i, r in enumerate(rr):   # the odd unmatched game goes into the round that is missing both clubs
+        if r is None:
+            k = next((k for k in sorted(rounds) if len(rounds[k]) < len(clubs) // 2 and not {ms[i][1], ms[i][2]} & {x for j in rounds[k] for x in (ms[j][1], ms[j][2])}), None)
+            if k is None:
+                return None
+            rounds[k].append(i)
+    groups = [sorted(rounds[k], key=lambda j: (ms[j][0], ms[j][1])) for k in sorted(rounds)]
+    ends, n = [], 0
+    for g in groups:
+        n += len(g); ends.append(n)
+    return [ms[i] for g in groups for i in g], ends
+
+
+def fold_postponed(ms, rb):
+    """Date gaps alone split a season into more matchdays than it has (a postponed game played midweek became its own
+    "matchday": 43 in a 38-round Premier League season). Each small group's games go back into the nearest incomplete round
+    that is missing both clubs, earlier rounds first, which is where a postponed game belongs. Groups stay in date order."""
+    clubs = {x for m in ms for x in (m[1], m[2])}
+    full, rounds = len(clubs) // 2, 2 * (len(clubs) - 1)
+    groups = [list(range(a, b)) for a, b in zip([0] + rb[:-1], rb)]
+    teams = lambda gi: {x for i in groups[gi] for x in (ms[i][1], ms[i][2])}
+    changed = True
+    while changed and len(groups) > rounds:
+        changed = False
+        for gi in sorted(range(len(groups)), key=lambda k: len(groups[k])):
+            if len(groups[gi]) >= full:
+                break
+            moves = {}
+            for i in groups[gi]:
+                a, b = ms[i][1], ms[i][2]
+                cand = [k for k in range(len(groups)) if k != gi and len(groups[k]) + sum(1 for v in moves.values() if v == k) < full
+                        and a not in teams(k) and b not in teams(k) and not any(ms[j][1] in (a, b) or ms[j][2] in (a, b) for j, v in moves.items() if v == k)]
+                if not cand:
+                    moves = None; break
+                moves[i] = min(cand, key=lambda k: (k > gi, abs(k - gi)))
+            if moves:
+                for i, k in moves.items():
+                    groups[k].append(i)
+                groups.pop(gi); changed = True
+                break
+    if len(groups) != rounds:   # second method: each game, in date order, into the earliest round that is missing both clubs
+        g2, seen2 = [], []
+        for i in range(len(ms)):
+            a, b = ms[i][1], ms[i][2]
+            k = next((k for k in range(len(g2)) if len(g2[k]) < full and a not in seen2[k] and b not in seen2[k]), None)
+            if k is None:
+                g2.append([]); seen2.append(set()); k = len(g2) - 1
+            g2[k].append(i); seen2[k].update((a, b))
+        if abs(len(g2) - rounds) < abs(len(groups) - rounds):
+            groups = g2
+    def fits(i, k, skip=()):
+        a, b = ms[i][1], ms[i][2]
+        return len(groups[k]) < full and not any(j not in skip and (ms[j][1] in (a, b) or ms[j][2] in (a, b)) for j in groups[k])
+    def rehome(i, avoid):   # a free round for game i, or one game moved out of the way (one step)
+        for k in range(len(groups)):
+            if k not in avoid and fits(i, k):
+                return [(i, k)]
+        for k in range(len(groups)):
+            if k in avoid or len(groups[k]) >= full:
+                continue
+            c = [j for j in groups[k] if {ms[j][1], ms[j][2]} & {ms[i][1], ms[i][2]}]
+            if len(c) == 1:
+                for k2 in range(len(groups)):
+                    if k2 not in avoid and k2 != k and fits(c[0], k2):
+                        return [(c[0], k2), (i, k)]
+            if len(c) == 2:   # both clubs already play in round k: move both of those games, each to its own free round
+                for k2 in range(len(groups)):
+                    if k2 in avoid or k2 == k or not fits(c[0], k2):
+                        continue
+                    for k3 in range(len(groups)):
+                        if k3 not in avoid and k3 != k and k3 != k2 and fits(c[1], k3):
+                            return [(c[0], k2), (c[1], k3), (i, k)]
+        return None
+    progress = True
+    while progress and len(groups) > rounds:
+        progress = False
+        for gi in sorted(range(len(groups)), key=lambda k: len(groups[k])):
+            if len(groups[gi]) >= full:
+                break
+            plan, ok = [], True
+            saved = [list(g) for g in groups]
+            for i in list(groups[gi]):
+                mv = rehome(i, {gi})
+                if not mv:
+                    ok = False; break
+                for j, k in mv:
+                    for g in groups:
+                        if j in g: g.remove(j)
+                    groups[k].append(j)
+            if ok and not groups[gi]:
+                groups.pop(gi); progress = True; break
+            groups[:] = saved
+    if os.environ.get("MDDEBUG"): print("matchdays", len(groups), "of", rounds, "groups", len(rb), ms[0][0][:4], sorted(clubs)[:2], sorted(len(g) for g in groups)[:4], {x: sum(1 for m in ms if x in (m[1], m[2])) for x in list(clubs)[:1]})
+    order = [i for g in groups for i in sorted(g, key=lambda j: (ms[j][0], ms[j][1]))]
+    ends, n = [], 0
+    for g in groups:
+        n += len(g); ends.append(n)
+    return [ms[i] for i in order], ends
+
+
 for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
     seasons = {}
     for lab, s in g.groupby("season_lab"):
@@ -199,6 +337,9 @@ for lg, g in d[d["season"] >= KEEP_FROM].groupby("league"):
                 rb.append(i); seen = set()
             seen.update((mm[1], mm[2])); last = dd
         rb.append(len(ms))
+        real = by_real_rounds(lg, ms)
+        ms, rb = real if real else fold_postponed(ms, rb)
+        if os.environ.get("MDDEBUG"): print("source", "real" if real else "dates", lab, lg, len(rb))
         seasons[lab] = {"live": bool(s["season"].iloc[0] == 2026), "matches": ms, "rb": rb}
     name, country, tag = META[lg]
     star = dict(zip(("name", "club", "role"), STARS[lg]))

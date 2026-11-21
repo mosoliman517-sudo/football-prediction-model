@@ -173,7 +173,11 @@ def main():
         auto = json.load(open("02_processed_data/transfer_fixes.json", encoding="utf-8"))
     except FileNotFoundError:
         auto = {}
-    ov = {**auto, **ov}
+    try:                                                # current squads from ESPN (src/49), newer than Wikidata
+        espn = json.load(open("02_processed_data/transfer_fixes_espn.json", encoding="utf-8"))
+    except FileNotFoundError:
+        espn = {}
+    ov = {**auto, **espn, **ov}
     cl = pd.read_csv("01_data_market_value/clubs.csv").set_index("club_id")
     for q in players:
         o = ov.get(q["n"])
@@ -181,7 +185,7 @@ def main():
             if o.get("club_id") is not None:
                 q["club"] = cl.loc[o["club_id"], "name"]; q["comp"] = cl.loc[o["club_id"], "domestic_competition_id"] if cl.loc[o["club_id"], "domestic_competition_id"] in BIG else "OTH"
             else:
-                q["club"] = o["club"]; q["comp"] = "OTH"
+                q["club"] = o["club"]; q["comp"] = o.get("comp") or "OTH"   # a promoted club that clubs.csv files elsewhere keeps its league
             if not q["hist"] or q["hist"][-1] != q["club"]:
                 q["hist"].append(q["club"])
             if o.get("since"):

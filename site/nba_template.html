@@ -1934,7 +1934,12 @@ function dayStreak(p) { let s = 0; const now = Date.now(); for (let k = 0; k < 4
 function bestDayStreak(p) { const keys = Object.keys(p.days).filter((k) => p.days[k] > 0).sort(); let best = 0, cur = 0, prev = null; keys.forEach((k) => { const d = new Date(k + "T00:00:00Z").getTime(); cur = prev !== null && d - prev === 864e5 ? cur + 1 : 1; best = Math.max(best, cur); prev = d; }); return best; }
 function toast(html, kind = "") {
   let box = $("#toasts"); if (!box) { box = document.createElement("div"); box.id = "toasts"; box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
-  const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t); setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3700);
+  TOASTQ.push([html, kind]); if (TOASTQ.length === 1) toastNext(box);   // one at a time, so achievements and stickers do not pile up
+}
+const TOASTQ = [];
+function toastNext(box) {
+  if (!TOASTQ.length) return; const [html, kind] = TOASTQ[0], short = TOASTQ.length > 3, t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t);
+  const life = short ? 1800 : 2800; setTimeout(() => t.classList.add("out"), life); setTimeout(() => { t.remove(); TOASTQ.shift(); toastNext(box); }, life + 450);
 }
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
 const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join("");

@@ -891,7 +891,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 09:25 UTC · private · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 09:51 UTC · private · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -2034,7 +2034,12 @@ function dayStreak(p) { let s = 0; const now = Date.now(); for (let k = 0; k < 4
 function bestDayStreak(p) { const keys = Object.keys(p.days).filter((k) => p.days[k] > 0).sort(); let best = 0, cur = 0, prev = null; keys.forEach((k) => { const d = new Date(k + "T00:00:00Z").getTime(); cur = prev !== null && d - prev === 864e5 ? cur + 1 : 1; best = Math.max(best, cur); prev = d; }); return best; }
 function toast(html, kind = "") {
   let box = $("#toasts"); if (!box) { box = document.createElement("div"); box.id = "toasts"; box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
-  const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t); setTimeout(() => t.classList.add("out"), 3200); setTimeout(() => t.remove(), 3700);
+  TOASTQ.push([html, kind]); if (TOASTQ.length === 1) toastNext(box);   // one at a time, so achievements and stickers do not pile up
+}
+const TOASTQ = [];
+function toastNext(box) {
+  if (!TOASTQ.length) return; const [html, kind] = TOASTQ[0], short = TOASTQ.length > 3, t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = html; box.appendChild(t);
+  const life = short ? 1800 : 2800; setTimeout(() => t.classList.add("out"), life); setTimeout(() => { t.remove(); TOASTQ.shift(); toastNext(box); }, life + 450);
 }
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); }
 const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join("");

@@ -192,6 +192,13 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 .lvgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}.lvp{display:flex;align-items:center;gap:8px;padding:6px 2px}.lvp .cpf{width:28px;height:28px}.lvclk{margin-left:auto;font:800 15px ui-monospace,Menlo,monospace;padding:3px 8px;border-radius:6px;background:var(--panel2)}.lvmoves{max-height:280px;overflow:auto}
 .lvsoon{display:flex;align-items:center;gap:14px}.lvsoon .pip{width:70px;height:84px;flex:none}.lvcount{font:900 34px/1.1 Fraunces,serif;color:var(--gold)}
 @media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
+.fx-burst{position:fixed;z-index:9399;pointer-events:none;width:0;height:0}.fx-burst i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);animation:fxRay .75s cubic-bezier(.1,.8,.3,1) forwards}.fx-burst b{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;border:3px solid var(--ok);animation:fxRing .6s ease-out forwards}
+@keyframes fxRay{to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}@keyframes fxRing{from{transform:scale(.3);opacity:.9}to{transform:scale(2.6);opacity:0}}
+.fx-shake{animation:fxShake .5s cubic-bezier(.36,.07,.19,.97) both}@keyframes fxShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-9px)}40%,60%{transform:translateX(9px)}}
+.fx-banner{position:fixed;left:50%;top:24%;z-index:9450;pointer-events:none;transform:translate(-50%,-50%);text-align:center;font:900 clamp(36px,8vw,64px)/1 Fraunces,serif;color:var(--gold);text-shadow:0 0 30px color-mix(in srgb,var(--gold) 60%,transparent),0 4px 0 #0006;animation:fxBanner 1.9s cubic-bezier(.2,1.3,.4,1) forwards;white-space:nowrap}.fx-banner small{display:block;font:800 13px Inter,system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--ink);margin-top:10px}
+@keyframes fxBanner{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-7deg)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotate(2deg)}28%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-75%) scale(.96)}}
+.fx-conf{position:fixed;inset:0;z-index:9440;pointer-events:none;overflow:hidden}.fx-conf i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;background:var(--c);animation:fxFall 2.2s cubic-bezier(.2,.7,.4,1) forwards}@keyframes fxFall{to{transform:translate(var(--x),105vh) rotate(var(--r));opacity:.9}}
+@media(prefers-reduced-motion:reduce){.fx-burst,.fx-banner,.fx-conf{display:none}.fx-shake{animation:none}}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -816,6 +823,26 @@ function pipPop(text, mood = "happy") {
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
   el.innerHTML = `${pipSVG(mood)}<div class="pipsay"><b>Pip</b>${esc(text)}</div>`; el.classList.add("on"); clearTimeout(pipT); pipT = setTimeout(() => el.classList.remove("on"), Math.min(9000, 2600 + text.length * 45));
 }
+/* ---------- moments: a burst on right answers, a shake on wrong ones, streak banners and the end of a game ---------- */
+const CFX = (() => {
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches; let px = innerWidth / 2, py = innerHeight / 2, lastStreak = 0;
+  addEventListener("pointerdown", (e) => { px = e.clientX; py = e.clientY; }, { capture: true, passive: true });
+  const add = (cls, html, at, ms) => { const e = document.createElement("div"); e.className = cls; e.innerHTML = html; e.setAttribute("aria-hidden", "true"); if (at) { e.style.left = at[0] + "px"; e.style.top = at[1] + "px"; } document.body.appendChild(e); setTimeout(() => e.remove(), ms); };
+  const cols = ["--ok", "--gold", "--light", "--ok"];
+  const burst = () => { let h = "<b></b>"; for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2, d = 60 + Math.random() * 70; h += `<i style="--c:var(${cols[k % 4]});--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d).toFixed(0)}px"></i>`; } add("fx-burst", h, [px, py], 900); };
+  const confetti = () => { let h = ""; for (let k = 0; k < 44; k++) h += `<i style="left:${(Math.random() * 100).toFixed(1)}%;--c:var(${cols[k % 4]});--x:${((Math.random() - 0.5) * 240).toFixed(0)}px;--r:${(Math.random() * 720 - 360).toFixed(0)}deg;animation-delay:${(Math.random() * 0.4).toFixed(2)}s"></i>`; add("fx-conf", h, null, 2800); };
+  const shake = () => { const el = document.querySelector("#app > .card") || document.querySelector("#app .card"); if (!el) return; el.classList.remove("fx-shake"); void el.offsetWidth; el.classList.add("fx-shake"); setTimeout(() => el.classList.remove("fx-shake"), 520); };
+  const banner = (a, b) => { document.querySelectorAll(".fx-banner").forEach((e) => e.remove()); add("fx-banner", `${a}<small>${b}</small>`, null, 2000); confetti(); };
+  const M = { 3: ["3 in a row", "Heating up"], 5: ["5 in a row", "On fire"], 10: ["10 in a row", "Unstoppable"], 15: ["15 in a row", "Grandmaster vibes"], 20: ["20 in a row", "Legendary"] };
+  const api = {
+    right() { if (RM) return; burst(); setTimeout(() => { const n = st && st.streak; if (n && n !== lastStreak && (M[n] || (n > 20 && n % 5 === 0))) { lastStreak = n; const m = M[n] || [n + " in a row", "Legendary"]; banner(m[0], m[1]); pipPop(pipPick("great", n), "wow"); } else if (!n) lastStreak = 0; }, 30); },
+    wrong() { lastStreak = 0; shake(); },
+    end(win) { if (win) { if (!RM) confetti(); } else shake(); },
+  };
+  const ok0 = Snd.ok.bind(Snd), bad0 = Snd.bad.bind(Snd), end0 = Snd.end.bind(Snd);
+  Snd.ok = function () { api.right(); return ok0(); }; Snd.bad = function () { api.wrong(); return bad0(); }; Snd.end = function (w) { api.end(w); return end0(w); };
+  return api;
+})();
 const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */

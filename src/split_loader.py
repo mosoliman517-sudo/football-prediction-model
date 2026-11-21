@@ -12,7 +12,7 @@ import os
 
 LOADER = """<script>
 (function () {
-  var src = "%(name)s", size = %(size)d, bar = document.querySelector("#splash .sp-bar i"), done = false;
+  var src = "%(name)s", size = %(size)d, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%%"; }

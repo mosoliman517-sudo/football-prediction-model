@@ -25,5 +25,5 @@ jobs:
         run: |
           git config user.name "ballknowledge bot"
           git config user.email "bot@users.noreply.github.com"
-          git add 02_processed_data/chess_ratings.json 02_processed_data/chess_events.json docs/chess/index.html
+          git add -A 02_processed_data/chess_ratings.json 02_processed_data/chess_events.json docs/chess/
           git diff --cached --quiet || (git commit -m "Monthly chess refresh: FIDE lists and tournaments" && git push)

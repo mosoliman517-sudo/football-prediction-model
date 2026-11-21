@@ -55,4 +55,8 @@ _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnec
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC: html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + html + "</html>"
-os.makedirs(os.path.dirname(OUT), exist_ok=True); open(OUT, "w", encoding="utf-8").write(html); print("wrote", OUT, f"{len(html)/1e6:.2f} MB")
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+if PUBLIC:
+    sys.path.insert(0, "src"); from split_loader import split_main_script     # splash first, game code in app.<hash>.js
+    html = split_main_script(html, os.path.dirname(OUT))
+open(OUT, "w", encoding="utf-8").write(html); print("wrote", OUT, f"{len(html)/1e6:.2f} MB")

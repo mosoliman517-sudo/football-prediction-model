@@ -1822,5 +1822,11 @@
   "club_id": 631,
   "since": "2026-07-01",
   "was": "Sporting CP"
+ },
+ "Wissam Ben Yedder": {
+  "club": "Paris 13 Atletico",
+  "club_id": null,
+  "since": "2026-11-01",
+  "was": "AS Monaco"
  }
 }

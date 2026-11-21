@@ -61,6 +61,20 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
 '''
 PAGE = PAGE.replace("<script>\n(function () {", "<script>\n" + open("site/usage.js", encoding="utf-8").read() + "\n(function () {", 1)   # favourites: site/usage.js
 PAGE = PAGE.replace("</style>", ".last.fav{color:var(--c);border-color:var(--c);font-weight:700}\n@media(min-width:560px) and (max-width:860px){.cards>a:last-child:nth-child(odd){grid-column:1/-1}}\n</style>", 1)   # no lonely third card
+INSTALL = """<div class="inst" id="inst" hidden><button type="button" id="instBtn">Install the app</button><span id="instIos">On iPhone or iPad: tap Share, then Add to Home Screen.</span></div>
+<script>
+(function () {
+  if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  var box = document.getElementById("inst"), btn = document.getElementById("instBtn"), ios = document.getElementById("instIos"), dp = null, standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone) return;
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) { box.hidden = false; btn.hidden = true; return; }
+  ios.hidden = true;
+  addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); dp = e; box.hidden = false; });
+  btn.addEventListener("click", function () { if (!dp) return; dp.prompt(); dp.userChoice.then(function () { box.hidden = true; dp = null; }); });
+})();
+</script>"""
+PAGE = PAGE.replace("</body></html>", INSTALL + "</body></html>", 1)
+PAGE = PAGE.replace("</style>", ".inst{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:-10px}.inst[hidden]{display:none}.inst button{font:700 15px/1 'DM Sans',system-ui,sans-serif;padding:12px 20px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}.inst button:hover{border-color:var(--fb)}.inst span{color:var(--muted);font-size:13px}\n</style>", 1)
 os.makedirs("docs", exist_ok=True)
 open("docs/index.html", "w", encoding="utf-8").write(PAGE)
 open("site/index.html", "w", encoding="utf-8").write(PAGE.replace('href="football/"', 'href="arena.html"').replace('href="basketball/"', 'href="nba.html"').replace('href="chess/"', 'href="chess.html"'))

@@ -26,6 +26,7 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
 @media(prefers-reduced-motion:reduce){a.card{transition:none}}
 .last.fav{color:var(--c);border-color:var(--c);font-weight:700}
 @media(min-width:560px) and (max-width:860px){.cards>a:last-child:nth-child(odd){grid-column:1/-1}}
+.inst{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:-10px}.inst[hidden]{display:none}.inst button{font:700 15px/1 'DM Sans',system-ui,sans-serif;padding:12px 20px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}.inst button:hover{border-color:var(--fb)}.inst span{color:var(--muted);font-size:13px}
 </style></head><body>
 <header><h1>ball<b>knowledge</b></h1><p class="sub">Pick your game.</p></header>
 <main class="cards">
@@ -82,5 +83,16 @@ const Usage = (() => {
   try { var us = Usage.sports(), main = document.querySelector(".cards"); if (us[0].n >= 3) { us.forEach(function (x) { main.appendChild(document.getElementById(x.s)); }); var t = document.createElement("span"); t.className = "last fav"; t.textContent = "Your favourite"; document.getElementById(us[0].s).appendChild(t); }
     else { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } } catch (e) {}
   ["fb", "bb", "ch"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
+})();
+</script><div class="inst" id="inst" hidden><button type="button" id="instBtn">Install the app</button><span id="instIos">On iPhone or iPad: tap Share, then Add to Home Screen.</span></div>
+<script>
+(function () {
+  if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  var box = document.getElementById("inst"), btn = document.getElementById("instBtn"), ios = document.getElementById("instIos"), dp = null, standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone) return;
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) { box.hidden = false; btn.hidden = true; return; }
+  ios.hidden = true;
+  addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); dp = e; box.hidden = false; });
+  btn.addEventListener("click", function () { if (!dp) return; dp.prompt(); dp.userChoice.then(function () { box.hidden = true; dp = null; }); });
 })();
 </script></body></html>

@@ -647,12 +647,37 @@ function puzzleMove(mv, pz) {
   else { live.c.undo(); pz.fail = true; pz.done = true; pz.ok = false; live.lock = true; live.last = null; st.msg = `Not that one. The answer was ${solSAN(pz)}.`; puzzleEnd(pz); }
 }
 function solSAN(pz) { const c = new Chess(pz.p.fen), m0 = pz.p.moves[0]; c.move({ from: m0.slice(0, 2), to: m0.slice(2, 4), promotion: m0[4] }); const m = pz.p.moves[1], r = c.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] }); return r ? r.san : m; }
-function puzzlePaint() { const pz = st.pz, g = st.game; const top = st.daily ? backRow("Daily puzzle", "bolt", "Same for everyone today") : g === "mate" ? backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<div class="row" style="margin-bottom:6px">${[1, 2, 3].map((n) => `<button class="btn ${st.n === n ? "" : "ghost"}" data-mn="${n}">Mate in ${n}</button>`).join("")}</div>` : backRow("Estimate my Elo", "brain", `Puzzle ${st.k + 1} of ${st.total}`); liveRender(top + `<p class="sub">${sideName(live.c)} to move${g === "mate" && !st.daily ? ` and mate in ${st.n}` : ""}. Click a piece, then a square.${g === "elo" ? "" : ""}</p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span></div>`, null, { moves: false }); }
+function puzzlePaint() { const pz = st.pz, g = st.game; const top = g === "wk" ? backRow("Weekly cup", "trophy", `Puzzle ${st.k + 1} of 5 · ${st.score} points`) : st.daily ? backRow("Daily puzzle", "bolt", "Same for everyone today") : g === "mate" ? backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<div class="row" style="margin-bottom:6px">${[1, 2, 3].map((n) => `<button class="btn ${st.n === n ? "" : "ghost"}" data-mn="${n}">Mate in ${n}</button>`).join("")}</div>` : backRow("Estimate my Elo", "brain", `Puzzle ${st.k + 1} of ${st.total}`); liveRender(top + `<p class="sub">${sideName(live.c)} to move${g === "mate" && !st.daily ? ` and mate in ${st.n}` : ""}. Click a piece, then a square.${g === "elo" ? "" : ""}</p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span></div>`, null, { moves: false }); }
 function mateStart(n) { st = { game: "mate", streak: st.streak || 0, n: n || 2 }; mateNext(); }
 const pzBand = (p) => (DIFF === "easy" ? p.rating < 1300 : DIFF === "medium" ? p.rating >= 1200 && p.rating < 1800 : DIFF === "hard" ? p.rating >= 1700 && p.rating < 2200 : p.rating >= 2100);
 function mateNext() { let pool = PZ.filter((p) => p.themes.includes("mateIn" + st.n) && pzBand(p)); if (pool.length < 5) pool = PZ.filter((p) => p.themes.includes("mateIn" + st.n)); puzzleLoad(rnd(pool)); st.msg = ""; puzzlePaint(); }
+/* ---------- Weekly cup: five puzzles, the same for everyone this week, one attempt; faster solves score more ---------- */
+const WK_T = [1300, 1600, 1900, 2200, 2500];
+function wkSet() {
+  let h = 2166136261; for (const ch of "wk" + weekK()) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  const r = () => { h = (Math.imul(h ^ (h >>> 15), 2246822519) >>> 0) ^ 0x9e3779b9; return (h >>> 0) / 4294967296; }, used = new Set();
+  return WK_T.map((t) => { const pool = PZ.filter((p) => !used.has(p.fen)).sort((a, b) => Math.abs(a.rating - t) - Math.abs(b.rating - t)).slice(0, 25), p = pool[Math.floor(r() * pool.length)]; used.add(p.fen); return p; });
+}
+const wkMine = () => store.get("wk_" + weekK(), null);
+function wkStart() { if (wkMine()) return wkResult(); st = { game: "wk", set: wkSet(), k: 0, score: 0, log: [] }; wkNext(); }
+function wkNext() { puzzleLoad(st.set[st.k]); st.t0 = performance.now(); st.msg = ""; puzzlePaint(); }
+function wkAfter(pz) {
+  const secs = (performance.now() - st.t0) / 1000, pts = pz.ok ? 100 + Math.max(0, Math.round(100 - secs * 2)) : 0; st.score += pts; st.log.push([pz.p.rating, pz.ok, Math.round(secs), pts]); st.k++;
+  if (st.k >= WK_T.length) { store.set("wk_" + weekK(), { score: st.score, log: st.log }); if (Cloud.signedIn) Cloud.submit("wk", st.score); if (st.score >= 700) Snd.end(true); return wkResult(); }
+  liveRender(backRow("Weekly cup", "trophy", `Puzzle ${st.k} of 5 · ${st.score} points`) + `<p class="sub"><b>${pz.ok ? `Solved in ${Math.round(secs)} s: +${pts}` : "Missed it."}</b> ${esc(st.msg || "")}</p>`, `<div class="row"><button class="btn" id="wknext" type="button">Next puzzle</button></div>`);
+}
+function wkResult() {
+  const me = wkMine() || { score: 0, log: [] }; clearInterval(st.timer); live = null; st = { game: "wkres" };
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="games">← Games</button></div><div class="card"><h2>${ic("trophy")}Weekly cup</h2><p class="sub">Five puzzles, the same for everyone this week, from about 1300 to 2500. One attempt; a solve scores 100 plus up to 100 for speed.</p>
+    <div class="tiles"><div class="tile"><small>Your score</small><b>${me.score}</b><span class="fine">of 1000</span></div><div class="tile"><small>Solved</small><b>${me.log.filter((x) => x[1]).length}</b><span class="fine">of 5</span></div></div>
+    <div class="cpgames" style="margin-top:10px">${me.log.map(([r, ok, sec, pts], k) => `<div class="cpgame static"><span class="cpres r${ok ? "W" : "L"}">${ok ? "+" + pts : "Miss"}</span><span class="cpcol2"><b>Puzzle ${k + 1}</b><span class="fine">rated ${r}${ok ? ` · ${sec} s` : ""}</span></span></div>`).join("")}</div>
+    <h3 style="margin:16px 0 6px">${ic("chart")}This week's table</h3><div id="wkRows"><p class="fine"><span class="spin"></span> Loading…</p></div><p class="fine">A new cup starts every Monday.${Cloud.signedIn ? "" : " Sign in to put your score on the table."}</p></div>`;
+  Cloud.top("wk", "week").then((rows) => { const el = document.getElementById("wkRows"); if (!el) return; el.innerHTML = rows == null ? `<p class="fine">The online table is not switched on yet; your score is saved on this device.</p>` : !rows.length ? `<p class="fine">Nobody is on the table yet this week.</p>` : `<table class="tb"><tr><th>#</th><th>Player</th><th>Points</th></tr>${rows.slice(0, 20).map((r, i) => `<tr class="${r.nick === Cloud.nick ? "me" : ""}"><td>${i + 1}</td><td>${esc(r.nick)}</td><td>${Math.round(+r.value)}</td></tr>`).join("")}</table>`; });
+}
+document.addEventListener("click", (e) => { if (e.target.id === "wknext" && st.game === "wk") wkNext(); });
 function puzzleEnd(pz) {
   setTimeout(() => { const b = document.getElementById("bd"); if (b) { b.classList.remove("flashok", "flashbad"); void b.offsetWidth; b.classList.add(pz.ok ? "flashok" : "flashbad"); } }, 30);
+  if (st.game === "wk") return wkAfter(pz);
   if (st.daily) { dailyMark("p", pz.ok ? 1 : 0); liveRender(backRow("Daily puzzle", "bolt", "") + `<p class="sub"><b>${pz.ok ? "Solved!" : "Missed it."}</b> A new puzzle arrives tomorrow.</p>`, `<div class="row"><button class="btn" data-go="daily">Back to daily</button></div>`); return; }
   if (st.game === "mate") { st.streak = pz.ok ? st.streak + 1 : 0; bump("mate", st.streak); st.msg = pz.ok ? "Checkmate!" : st.msg; liveRender(backRow("Mate puzzles", "bolt", `Streak ${st.streak} · best ${bestOf("mate")}`) + `<p class="sub"><b>${pz.ok ? "Solved!" : "Missed it."}</b></p>`, `<div class="row"><span class="fine">${esc(st.msg || "")}</span><button class="btn" id="mnext">Next puzzle</button></div>`); }
   else eloAfter(pz);
@@ -1457,10 +1482,11 @@ function gamesPage() {
   clearInterval(st.timer); live = null; rvStop(); st = { game: "games" }; const key = todayK(), d = dGet(key), done = DAILIES.filter((x) => d[x[0]] != null).length, streak = dStreak();
   const card = (attr, icon, name, tag, meta, k) => `<button class="cpcard gpk" type="button" ${attr} style="animation-delay:${k * 70}ms"><span class="gpki">${ic(icon)}</span><b class="cpcname">${name}</b><span class="fine">${tag}</span>${meta ? `<span class="cpwinner">${meta}</span>` : ""}</button>`;
   $("#app").className = "fresh";
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("puzzle")}Games</h2><p class="sub">Three places to play.</p><div class="cpgrid">
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("puzzle")}Games</h2><p class="sub">Four places to play.</p><div class="cpgrid">
     ${card('data-hub="bk"', "puzzle", "ballknowledge originals", "Puzzles, openings, the next move, blunders, a game against my AI and more.", `${CG.filter((x) => x.g === "bk").length} game${CG.filter((x) => x.g === "bk").length === 1 ? "" : "s"}`, 0)}
     ${card('data-hub="model"', "target", "Beat the model", "Call real games against a model that never saw them, from everyday play to the biggest events.", `${CG.filter((x) => x.g === "model").length} game${CG.filter((x) => x.g === "model").length === 1 ? "" : "s"}`, 1)}
-    ${card('data-go="daily"', "clock", "Daily challenges", "A puzzle, a position to judge and a tactic to spot, new every day.", `${done} of ${DAILIES.length} today${streak ? ` · ${streak}-day streak` : ""}`, 2)}</div>`;
+    ${card('data-go="daily"', "clock", "Daily challenges", "A puzzle, a position to judge and a tactic to spot, new every day.", `${done} of ${DAILIES.length} today${streak ? ` · ${streak}-day streak` : ""}`, 2)}
+    ${card('data-go="wk"', "trophy", "Weekly cup", "Five puzzles, the same for everyone this week. One attempt, faster solves score more.", wkMine() ? `Your score: ${wkMine().score}` : "Not played yet this week", 3)}</div>`;
   scrollTo({ top: 0, behavior: "instant" });
 }
 function dailyPage() {
@@ -2089,7 +2115,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.chg != null) { const g = CH.games[+t.dataset.chg]; if (g && g.sans.length >= 2) reviewStart(g.sans, "w", { from: "champ", names: [g.w, g.b], result: g.res }); }
 });
 
-const GO = { games: gamesPage, champ: () => champPage(), rank: () => (RKS.prof ? profPage(RKS.prof) : rankPage()), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+const GO = { games: gamesPage, wk: wkStart, champ: () => champPage(), rank: () => (RKS.prof ? profPage(RKS.prof) : rankPage()), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);

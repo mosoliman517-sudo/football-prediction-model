@@ -188,6 +188,10 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 @media(max-width:600px){.kocols{grid-auto-flow:row;grid-auto-columns:auto}}
 .h2hbtn{margin-top:10px}.h2hrec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:420px;margin:6px auto 8px}.h2hrec span{display:flex;flex-direction:column;align-items:center}.h2hrec b{font:900 34px/1 Fraunces,serif}.h2hrec .sW b{color:var(--gold)}.h2hrec .sL b{color:var(--ok)}.h2hrec small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .h2hbar{display:flex;height:10px;border-radius:99px;overflow:hidden;max-width:420px;margin:0 auto}.h2ht td.better{color:var(--gold);font-weight:800}.h2hleg{display:flex;gap:16px;justify-content:center;font-size:13px}.h2hleg i{display:inline-block;width:12px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.lvcard{padding:14px}.lvhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.lvbadge{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;padding:4px 8px;border-radius:99px;border:1px solid var(--line)}.lvbadge.on{color:#fff;background:#e5484d;border-color:#e5484d;animation:lvPulse 1.6s ease-in-out infinite}@keyframes lvPulse{50%{opacity:.6}}
+.lvgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}.lvp{display:flex;align-items:center;gap:8px;padding:6px 2px}.lvp .cpf{width:28px;height:28px}.lvclk{margin-left:auto;font:800 15px ui-monospace,Menlo,monospace;padding:3px 8px;border-radius:6px;background:var(--panel2)}.lvmoves{max-height:280px;overflow:auto}
+.lvsoon{display:flex;align-items:center;gap:14px}.lvsoon .pip{width:70px;height:84px;flex:none}.lvcount{font:900 34px/1.1 Fraunces,serif;color:var(--gold)}
+@media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -1697,7 +1701,7 @@ function champPage(v) {
     <div class="cpsec"><h3>${ic("crown")}Women</h3><span class="fine">Titles only women can play for.</span></div><div class="cpgrid">${CP_EVENTS.women.map(cpCard).join("")}${evCards("women")}${rkCard("women")}</div>`;
   else if (CH.v === "tc") app.innerHTML = cpBack() + cpTC();
   else if (CH.v.startsWith("ev:")) app.innerHTML = cpBack() + evPage(CH.v.slice(3));
-  else if (CH.v === "wcc") { app.innerHTML = cpBack() + cpVs("gukesh", "sindarov", "FIDE World Championship", [["flag", "Geneva, Switzerland"], ["clock", "24 Nov – 11 Dec 2026"], ["swords", "14 classical games"], ["bolt", "120 min + 30 min, +30 s from move 41"]], `Gukesh defends the title against Sindarov, who won the 2026 Candidates. Tiebreaks if it is level. Dates follow the Lichess broadcast schedule; check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for changes.`, ["Defending champion", "Challenger"]) + `<div id="chLive" class="card" style="margin-top:12px"></div>`; chLoadTour("qfkdt8mn"); }
+  else if (CH.v === "wcc") { app.innerHTML = cpBack() + cpVs("gukesh", "sindarov", "FIDE World Championship", [["flag", "Geneva, Switzerland"], ["clock", "24 Nov – 11 Dec 2026"], ["swords", "14 classical games"], ["bolt", "120 min + 30 min, +30 s from move 41"]], `Gukesh defends the title against Sindarov, who won the 2026 Candidates. Tiebreaks if it is level. Dates follow the Lichess broadcast schedule; check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for changes.`, ["Defending champion", "Challenger"]) + `<div id="wccLive" class="card lvcard" style="margin-top:12px"></div><div id="chLive" class="card" style="margin-top:12px"></div>`; wccLive("qfkdt8mn", document.getElementById("wccLive")); chLoadTour("qfkdt8mn"); }
   else if (CH.v === "wwc") app.innerHTML = cpBack() + cpVs("ju", "vaishali", "Women's World Championship", [["flag", "Host to be announced"], ["clock", "Dates not confirmed"], ["swords", "12 games"], ["trophy", "Vaishali won the Candidates, 8.5/14"]], `Sources disagree on the dates and FIDE lists them as to be announced, so there are no games to show yet. ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")} · ${chLink("https://en.wikipedia.org/wiki/Women%27s_World_Chess_Championship_2026", "Wikipedia")}`, ["Champion", "Challenger"]);
   else if (CH.v === "cho") app.innerHTML = cpBack() + cpChamps("Open champions", [["gukesh", ["Classical"], "Defends against Sindarov from 24 November"], ["carlsen", ["Rapid", "Blitz", "Freestyle"], "2025 World Rapid and Blitz; first FIDE Freestyle title, Feb 2026"], ["firouzja", ["Total Chess pilot"], "Won the Budapest pilot on Armageddon, Nov 2026"]], `The World Rapid and Blitz are in December, so those can change. Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase")}, ${chLink("https://en.chessbase.com/post/freestyle-chess-wc-2026-3", "ChessBase on Freestyle")}, ${chLink("https://www.chess.com/news/view/geneva-gukesh-sindarov-2026-fide-world-championship", "chess.com")}, ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")}.`);
   else if (CH.v === "chw") app.innerHTML = cpBack() + cpChamps("Women's champions", [["ju", ["Classical"], "Challenger: Vaishali Rameshbabu, dates not confirmed"], ["gory", ["Rapid"], "Won the 2025 Women's World Rapid"], ["bibi", ["Blitz"], "Won the 2025 Women's World Blitz, her third"]], `The World Rapid and Blitz are in December, so those can change. Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase")}, ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")}.`);
@@ -1975,6 +1979,61 @@ function h2hPick(a) {
 const h2hList = (all, q) => all.filter((p) => !q || norm(cpName(p)).includes(norm(q))).slice(0, 40).map((p) => `<button class="cpgame" type="button" data-h2hb="${p.id}">${cpWho(p.id, `<small class="fine"> · ${p.std || ""}</small>`)}${ic("arrow")}</button>`).join("");
 document.addEventListener("input", (e) => { if (e.target.id === "h2hQ") { const L = document.getElementById("h2hL"), a = L.dataset.a; L.innerHTML = h2hList(Object.values(RK.players).filter((p) => p.id !== a).sort((x, y) => (y.std || 0) - (x.std || 0)), e.target.value); } });
 document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-h2ha],[data-h2hb]"); if (!t) return; if (t.dataset.h2ha) return h2hPick(t.dataset.h2ha); const a = document.getElementById("h2hL").dataset.a; return h2hPage(a, t.dataset.h2hb); });
+
+/* ---------- live board for a broadcast (the World Championship): board, eval bar, clocks, moves, Pip ----------
+   Lichess puts Stockfish's evaluation and both clocks in every broadcast move ([%eval] [%clk]); the page polls the
+   round's PGN every 15 seconds while it is being played. */
+function liParse(pgn) {
+  const h = Object.fromEntries([...pgn.matchAll(/^\[(\w+) "(.*)"\]$/gm)].map((m) => [m[1], m[2]])), body = pgn.replace(/^\[.*\]$/gm, " "), mv = [];
+  for (const m of body.matchAll(/(\{[^}]*\})|(\d+\.(?:\.\.)?)|([^\s{}]+)/g)) {
+    if (m[1]) { const L = mv[mv.length - 1]; if (!L) continue; const e = m[1].match(/%eval ([#\-\d.]+)/), c = m[1].match(/%clk ([\d:]+)/); if (e) L.ev = e[1]; if (c) L.clk = c[1]; }
+    else if (m[3] && !/^(1-0|0-1|1\/2-1\/2|\*)$/.test(m[3])) mv.push({ san: m[3] });
+  }
+  return { h, mv };
+}
+const liCp = (e) => (e == null ? null : e[0] === "#" ? (e[1] === "-" ? -MATE_CP : MATE_CP) : Math.round(parseFloat(e) * 100));
+let WL = null;
+async function wccLive(tourId, el) {
+  if (!el) return; el.innerHTML = `<p class="fine"><span class="spin"></span> Checking the live board…</p>`;
+  try {
+    const d = await liJson(`${LI}/${tourId}`), rounds = d.rounds || [], now = Date.now();
+    const on = rounds.find((r) => r.ongoing), done = rounds.filter((r) => r.finished), next = rounds.find((r) => !r.finished && !r.ongoing && r.startsAt > now);
+    const pick = on || done[done.length - 1];
+    if (!pick) { const t = next ? next.startsAt - now : 0, dd = Math.floor(t / 864e5), hh = Math.floor((t % 864e5) / 36e5), mm = Math.floor((t % 36e5) / 6e4); el.innerHTML = `<div class="lvsoon">${pipSVG("happy")}<div><b>${next ? esc(next.name) + " starts in" : "No game yet"}</b>${next ? `<div class="lvcount num">${dd}d ${hh}h ${mm}m</div><span class="fine">${new Date(next.startsAt).toLocaleString([], { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}</span>` : ""}<p class="fine">When it starts, this board goes live: moves, clocks, Stockfish's evaluation and Pip's take, every 15 seconds.</p></div></div>`; return; }
+    await wccShow(pick.id, pick.name, !!pick.ongoing, el);
+  } catch (e) { el.innerHTML = `<p class="fine">Could not reach Lichess for the live board.</p>`; }
+}
+async function wccShow(roundId, name, ongoing, el, board = 0) {
+  clearInterval(WL && WL.timer); const keep = WL && WL.round === roundId && WL.ply != null && WL.ply < WL.g.mv.length ? WL.ply : null;
+  const txt = await (await fetch(`${LI}/round/${roundId}.pgn`)).text(), games = txt.split(/\n\n(?=\[Event )/).map((x) => x.trim()).filter(Boolean).map(liParse);
+  if (!games.length) { el.innerHTML = `<p class="fine">${esc(name)}: no moves yet.</p>`; return; }
+  WL = { round: roundId, name, ongoing, games, board: Math.min(board, games.length - 1), el, timer: null }; WL.g = WL.games[WL.board]; WL.ply = keep != null ? keep : null;
+  wccPaint();
+  if (ongoing) WL.timer = setInterval(() => { if (!document.body.contains(el)) return clearInterval(WL.timer); wccShow(roundId, name, true, el, WL.board).catch(() => {}); }, 15000);
+}
+function wccPaint() {
+  const { g, el } = WL, N = g.mv.length, ply = WL.ply == null ? N : WL.ply, c = new Chess(), fens = [c.fen()], moves = [];
+  for (const m of g.mv) { const r = c.move(m.san, { sloppy: true }); if (!r) break; moves.push(r); fens.push(c.fen()); }
+  const show = new Chess(fens[Math.min(ply, fens.length - 1)]), cur = g.mv[ply - 1], cp = cur ? liCp(cur.ev) : 20, W = cp == null ? 50 : wpct(cp);
+  const prev = ply > 1 ? liCp(g.mv[ply - 2].ev) : 20, white = ply % 2 === 1, pov = (x) => (white ? x : 100 - x), loss = cur && cp != null && prev != null ? Math.max(0, pov(wpct(prev)) - pov(wpct(cp))) : 0;
+  const cls = !cur ? "start" : cur.san.endsWith("#") ? "mate" : loss < 2 ? "good" : loss < 6 ? "excellent" : loss < 11 ? "inaccuracy" : loss < 21 ? "mistake" : "blunder";
+  const clkOf = (side) => { for (let k = ply - 1; k >= 0; k--) if ((k % 2 === 0) === (side === "White") && g.mv[k].clk) return g.mv[k].clk; return ""; };
+  const who = (k) => { const id = g.h[k + "FideId"], p = id ? cpP(id) : null; return `<div class="lvp">${p ? cpFace(p) : ""}<b>${esc(p ? cpName(p) : (g.h[k] || k))}</b>${g.h[k + "Elo"] ? `<small class="fine">${g.h[k + "Elo"]}</small>` : ""}<span class="lvclk num">${esc(clkOf(k))}</span></div>`; };
+  const res = g.h.Result && g.h.Result !== "*" ? g.h.Result.replace("1/2-1/2", "½–½") : WL.ongoing ? "LIVE" : "";
+  el.innerHTML = `<div class="lvhead"><b>${esc(WL.name)}</b>${res ? `<span class="lvbadge ${res === "LIVE" ? "on" : ""}">${res === "LIVE" ? "● LIVE" : res}</span>` : ""}${WL.games.length > 1 ? `<div class="chips">${WL.games.map((x, k) => `<button class="chip ${k === WL.board ? "on" : ""}" type="button" data-lvb="${k}">${esc((x.h.White || "").split(",")[0])}–${esc((x.h.Black || "").split(",")[0])}</button>`).join("")}</div>` : ""}</div>
+    <div class="lvgrid"><div>${who("Black")}<div class="rvbd"><div class="evv" title="Stockfish's evaluation, from the broadcast"><i style="height:${W}%"></i><b class="evl ${W >= 50 ? "bot onw" : "top onb"}">${cur && cur.ev ? (cur.ev[0] === "#" ? "M" + cur.ev.replace("#", "").replace("-", "") : (cp > 0 ? "+" : "") + (cp / 100).toFixed(1)) : "0.0"}</b></div><div class="lvwrap">${boardHTML(show, { last: ply ? [moves[ply - 1].from, moves[ply - 1].to] : null })}</div></div>${who("White")}
+    <div class="rvbtns"><button class="btn ghost" data-lvp="0" type="button">⏮</button><button class="btn ghost" data-lvp="${ply - 1}" type="button">◀</button><button class="btn ghost" data-lvp="${ply + 1}" type="button">▶</button><button class="btn" data-lvp="${N}" type="button">${WL.ongoing ? "Latest" : "⏭"}</button></div></div>
+    <div><div class="pipbox">${pipSVG(PIP_MOOD[cls] || "calm")}<div class="pipsay"><b>Pip</b>${esc(cur ? `${Math.ceil(ply / 2)}${white ? "." : "..."} ${cur.san}. ` + pipPick(cls, ply) : PIP.start[1])}</div></div>
+    <div class="rvlist lvmoves">${Array.from({ length: Math.ceil(N / 2) }, (_, k) => `<div class="rvrow"><span class="n">${k + 1}</span>${[0, 1].map((s) => { const p = k * 2 + s + 1; return p <= N ? `<span class="m ${p === ply ? "cur" : ""}" data-lvp="${p}">${esc(g.mv[p - 1].san)}</span>` : "<span></span>"; }).join("")}</div>`).join("")}</div>
+    ${N > 1 ? `<button class="btn" data-lvrev type="button" style="margin-top:10px">${ic("chart")}Full review with Pip</button>` : ""}</div></div>`;
+  const ml = el.querySelector(".lvmoves .cur"); if (ml) ml.scrollIntoView({ block: "nearest" });
+}
+document.addEventListener("click", (e) => {
+  if (!WL || !WL.el || !document.body.contains(WL.el)) return; const t = e.target.closest && e.target.closest("[data-lvp],[data-lvb],[data-lvrev]"); if (!t || !WL.el.contains(t)) return;
+  if (t.dataset.lvp != null) { WL.ply = Math.max(0, Math.min(WL.g.mv.length, +t.dataset.lvp)); if (WL.ply === WL.g.mv.length) WL.ply = null; return wccPaint(); }
+  if (t.dataset.lvb != null) { WL.board = +t.dataset.lvb; WL.g = WL.games[WL.board]; WL.ply = null; return wccPaint(); }
+  if (t.dataset.lvrev != null) { clearInterval(WL.timer); const g = WL.g, c = new Chess(); const sans = []; for (const m of g.mv) { if (!c.move(m.san, { sloppy: true })) break; sans.push(m.san); } reviewStart(sans, "w", { from: "champ", names: [g.h.White || "White", g.h.Black || "Black"], result: g.h.Result }); }
+});
 
 async function chLoadTour(id) {
   const el = document.getElementById("chLive"); if (!el) return; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;

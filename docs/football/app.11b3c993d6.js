@@ -636,7 +636,7 @@ function route(ev) {
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   if (mode === "lab" && lg === "ALL") lg = ORDER[0];          // the model section has no all-leagues view
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" ? tail : null; S.rk = tail === "ranked"; } }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" || tail === "weekly" ? tail : null; S.rk = tail === "ranked"; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
@@ -1124,28 +1124,104 @@ function renderHub() {
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div>${favPill(g.id)}<div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
   if (g === "ranked") { renderRanked(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("ranked")); return; }
+  if (g === "weekly") { renderWeekly(); return; }
   if (g === "live") { renderLive(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("live")); return; }
   if (g === "model") { $("#room").innerHTML = weeklyCardHTML() + `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${hubList(GAMES).map(card).join("")}</div>`; weeklyBoard(); weeklyChampionCheck(); return; }
   if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${hubList(QUIZ_GAMES).map((x, k) => card(x, k)).join("")}</div>`; return; }
   $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Four places to play, ${where}.</p>${forYouHTML()}<div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
-    <button type="button" class="gpick" data-group="model" style="--d:120ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="gname">Weekly tournament</div><div class="gtag">The same five matches for everyone this week. Best score takes the week and the Weekly champion badge.</div><span class="dgo">${store.items["xpc_wk" + weekId()] ? "Played this week" : "Week " + (weekId() % 100)}</span></button>
+    <button type="button" class="gpick" data-group="weekly" style="--d:120ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="gname">Weekly tournament</div><div class="gtag">Predict the exact score of this week's real Big 5 matches. 3 points for the exact score, 2 for the winner, 1 for the goals. The model plays too.</div><span class="dgo">${store.items["xpc_wk" + weekId()] ? "Played this week" : "Week " + (weekId() % 100)}</span></button>
     <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Play online</div><div class="gtag">Ranked matches against real players for Elo and the leaderboard, plus live predictions on the next real fixtures.</div><span class="dgo">Play online</span></button></div>`;
 }
-const onlineTabs = (cur) => `<div class="scope" style="padding:2px 0;margin-bottom:10px"><button type="button" class="chip" data-group="ranked" aria-pressed="${cur === "ranked"}">Ranked</button><button type="button" class="chip" data-group="live" aria-pressed="${cur === "live"}">Live predictions</button></div>`;
+const onlineTabs = (cur) => `<div class="scope" style="padding:2px 0;margin-bottom:10px"><button type="button" class="chip" data-group="ranked" aria-pressed="${cur === "ranked"}">Ranked</button><button type="button" class="chip" data-group="live" aria-pressed="${cur === "live"}">Live scores</button></div>`;
+/* ================= Weekly tournament: predict the exact score of this week's real matches =================
+   Fixtures and the model's forecasts come from docs/football/weekly.json (src/40, refreshed twice a day); kickoffs, live scores
+   and results from ESPN's public scoreboard; predictions from the database (schema_v12.sql), stamped with the server's clock.
+   A prediction only scores if it was made before the real kickoff. Points: 3 exact score, else 2 right winner or draw, else 1 right number of goals. */
+const WK = { fx: null, res: {}, mine: {}, all: null, saving: {}, lg: "all" };
+const wkPts = (p, r) => (p == null || r == null || p.hg == null ? null : p.hg === r.hg && p.ag === r.ag ? 3 : Math.sign(p.hg - p.ag) === Math.sign(r.hg - r.ag) ? 2 : p.hg + p.ag === r.hg + r.ag ? 1 : 0);
+const wkMonday = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() - day + 1); return t; };
+const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
+/* ESPN's scoreboard takes one day at a time: ask for each day of the week in every league; returns [league code, event] pairs */
+async function wkEspn(mon) {
+  const jobs = []; for (let k = 0; k < 7; k++) { const day = ymd(new Date(mon.getTime() + k * 864e5)); ORDER.forEach((c) => jobs.push(fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${ESPN_LG[c]}/scoreboard?dates=${day}`).then((r) => (r.ok ? r.json() : null)).then((d) => (d && d.events || []).map((e) => [c, e])).catch(() => []))); }
+  return (await Promise.all(jobs)).flat();
+}
 function weeklyCardHTML() {
-  const wk = "wk" + weekId(), done = store.items[`xpc_${wk}`];
-  return `<div class="card wkcard" style="margin-bottom:14px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h3 style="margin:2px 0 4px">Five matches, the same for everyone this week</h3><div class="fine">All five leagues. Best score takes the week, and the winner earns the Weekly champion badge.</div></div><button class="btn" id="wkPlay" type="button">${done ? "See your result" : "Play"}</button></div><div id="wkBoard" class="lb" style="margin-top:10px"></div></div>`;
+  return `<div class="card wkcard" style="margin-bottom:14px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h3 style="margin:2px 0 4px">Predict this week's real matches</h3><div class="fine">Exact scores for every Big 5 match this week. 3 points for the exact score, 2 for the right winner or draw, 1 for the right number of goals. The model plays too.</div></div><button class="btn" id="wkPlay" type="button">Make your predictions</button></div><div id="wkBoard" class="lb" style="margin-top:10px"></div></div>`;
 }
-async function weeklyBoard() {
-  const rows = await Board.top("challenge", "all", "all", "wk" + weekId()), el = $("#wkBoard"); if (!el) return;
-  el.innerHTML = rows && rows.length ? rows.slice(0, 5).map((r, i) => `<div class="lbrow"><b class="num">${i + 1}</b><span>${esc(r.nick)}</span><span class="num">${Math.round(Number(r.value))}/5</span></div>`).join("") : '<div class="fine">Nobody has finished yet. Be first.</div>';
+async function wkLoad() {
+  if (!WK.fx) { try { const r = await fetch("weekly.json?t=" + Math.floor(Date.now() / 6e5)); WK.fx = r.ok ? (await r.json()).fixtures : []; } catch (e) { WK.fx = []; } }
+  const mon = wkMonday(), wk = weekId();
+  const list = WK.fx.filter((f) => weekId(new Date(f.kickoff)) === wk);
+  (await wkEspn(mon)).forEach(([lg, e]) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"), at = new Date(e.date);
+    const near = (x, hrs) => x.league === lg && Math.abs(new Date(x.kickoff) - at) < hrs * 3600e3, nm = (x, t) => lsSame(x, t.displayName) || lsSame(x, t.shortDisplayName) || lsSame(x, t.name);
+    /* both names agree within a day and a half, or one of them agrees within six hours (a club plays once around a kickoff; names are spelled differently: Nott'm Forest, Paris SG) */
+    const f = list.find((x) => near(x, 36) && nm(x.home, h.team) && nm(x.away, a.team)) || list.find((x) => near(x, 6) && (nm(x.home, h.team) || nm(x.away, a.team))); if (!f) return;
+    WK.res[f.id] = { at, state: e.status.type.state, clock: c.status.displayClock, hg: +h.score, ag: +a.score, hlogo: h.team.logo, alogo: a.team.logo }; });
+  list.forEach((f) => { const r = WK.res[f.id]; f.at = r ? r.at : new Date(f.kickoff); });   /* ESPN's kickoff wins: fixtures move */
+  return list.sort((x, y) => x.at - y.at || x.home.localeCompare(y.home));
 }
+async function renderWeekly() {
+  const room = $("#room"), signed = Account.signedIn && Board.mode === "rest";
+  room.innerHTML = `<div class="crumbs" style="margin-bottom:8px"><button class="btn ghost" data-group="model" type="button">← Beat the Model</button></div><div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h2 style="margin:2px 0">Predict this week's matches</h2><p class="fine" style="margin:0">Exact scores. <b>3</b> for the exact score, <b>2</b> for the right winner or draw, <b>1</b> for the right number of goals. Predictions lock at kickoff and only count if made before it.</p></div><span id="wkNext" class="fine"></span></div>
+    ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to save predictions and join the table.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
+    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-wklg="${c}" aria-pressed="${WK.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="wkList" class="fxlist">${skelRows(4)}</div></div>
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-trophy></use></svg> This week's table</h3><span class="fine">The model is pinned to the top so you can compare</span></div><div id="wkTable" class="lb">${skelRows(3)}</div></div>`;
+  const list = await wkLoad(); if (!$("#wkList")) return; WK.list = list;
+  if (signed) { const mine = await Ranked.rpc("wk_mine", { p_week: weekId() }); WK.mine = {}; (mine || []).forEach((m) => { WK.mine[m.fixture_id] = m; }); WK.noDb = mine == null; }
+  wkPaintList(); wkTable(); clearInterval(WK.tick); WK.tick = setInterval(() => { if (!$("#wkList")) return clearInterval(WK.tick); wkCountdown(); }, 1000); wkCountdown();
+  clearInterval(WK.poll); WK.poll = setInterval(async () => { if (!$("#wkList")) return clearInterval(WK.poll); WK.list = await wkLoad(); wkPaintList(); wkTable(); }, 60000);
+}
+function wkCountdown() { const nx = (WK.list || []).find((f) => f.at > Date.now()), el = $("#wkNext"); if (el) el.textContent = nx ? `Next kickoff in ${countdown(nx.at - Date.now())}` : ""; document.querySelectorAll("[data-wkk]").forEach((e) => { const ms = new Date(+e.dataset.wkk) - Date.now(); if (ms <= 0 && !e.dataset.done) { e.dataset.done = 1; wkPaintList(); } }); }
+function wkPaintList() {
+  const el = $("#wkList"); if (!el) return; const now = Date.now(), list = (WK.list || []).filter((f) => WK.lg === "all" || f.league === WK.lg);
+  if (!list.length) { el.innerHTML = `<div class="fxempty"><span><svg class=ic><use href=#i-calendar></use></svg></span><b>No fixtures for this week yet</b><div class="fine">${WK.fx && WK.fx.length ? "This week's matches appear as soon as they are published." : "The forecast file could not be loaded. Try again in a moment."}</div></div>`; return; }
+  let lastDay = "";
+  el.innerHTML = list.map((f) => {
+    const r = WK.res[f.id], open = f.at > now && !(r && r.state !== "pre"), my = WK.mine[f.id], fin = r && r.state === "post", live = r && r.state === "in";
+    const day = f.at.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }), head = day !== lastDay ? `<div class="fxday">${esc(day)}</div>` : ""; lastDay = day;
+    const showModel = !open || my, mOk = new Date(f.made || 0) < f.at, pts = fin && my && new Date(my.made_at) < f.at ? wkPts(my, r) : null, mpts = fin && mOk ? wkPts({ hg: f.model_hg, ag: f.model_ag }, r) : null;
+    const box = (side) => { const v = my ? my[side] : null; return open ? `<span class="wkstep"><button type="button" class="wkb" data-wkadj="${esc(f.id)}|${side}|-1" aria-label="One fewer">−</button><b class="wkv num" id="wk-${esc(f.id)}-${side}">${v == null ? "–" : v}</b><button type="button" class="wkb" data-wkadj="${esc(f.id)}|${side}|1" aria-label="One more">+</button></span>` : `<b class="wkv num locked">${v == null ? "–" : v}</b>`; };
+    const score = r && r.state !== "pre" ? `<span class="wkreal num ${live ? "live" : ""}">${live ? '<span class="livedot"></span>' : ""}${r.hg}–${r.ag}${live ? ` <small>${esc(r.clock || "")}</small>` : ' <small>FT</small>'}</span>` : `<span class="fine" data-wkk="${f.at.getTime()}">${f.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>`;
+    return `${head}<div class="wkfx ${live ? "islive" : ""} ${pts === 3 ? "exact" : ""}"><div class="wkteams"><span class="wkh">${esc(f.home)}${badge(f.home, "sm")}</span>${box("hg")}<span class="wkdash">:</span>${box("ag")}<span class="wka">${badge(f.away, "sm")}${esc(f.away)}</span></div>
+      <div class="wkmeta"><span class="fine">${esc(lgOf(f.league).name)}</span>${score}${showModel ? `<span class="wkmodel"><svg class=ic><use href=#i-chip></use></svg> Model <b class="num">${f.model_hg}–${f.model_ag}</b>${mpts != null ? `<i class="wkpt p${mpts}">+${mpts}</i>` : !mOk && !open ? '<i class="fine">late, not scored</i>' : ""}</span>` : `<span class="fine">Predict to see the model's score</span>`}${pts != null ? `<i class="wkpt p${pts} you">You +${pts}</i>` : fin && my ? '<i class="fine">made after kickoff</i>' : ""}<span class="wksaved fine" id="wks-${esc(f.id)}">${WK.saving[f.id] || ""}</span></div></div>`;
+  }).join("");
+}
+async function wkAdj(id, side, d) {
+  const f = (WK.list || []).find((x) => x.id === id); if (!f || f.at <= Date.now()) return wkPaintList();
+  if (!(Account.signedIn && Board.mode === "rest")) { toast("Sign in to save your predictions."); return; }
+  const my = WK.mine[id] || (WK.mine[id] = { fixture_id: id, hg: 0, ag: 0, made_at: null, fresh: true }); if (my.fresh) { my.fresh = false; my.hg = my.hg ?? 0; my.ag = my.ag ?? 0; }
+  my[side] = Math.max(0, Math.min(20, (my[side] || 0) + d)); Snd.tick(); const v = $(`#wk-${CSS.escape(id)}-${side}`); if (v) { v.textContent = my[side]; v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop"); }
+  WK.saving[id] = "saving…"; const s = $(`#wks-${CSS.escape(id)}`); if (s) s.textContent = "saving…";
+  clearTimeout(WK.t && WK.t[id]); WK.t = WK.t || {}; WK.t[id] = setTimeout(async () => {
+    const r = await Ranked.rpc("wk_predict", { p_fixture: id, p_week: weekId(), p_hg: my.hg, p_ag: my.ag, p_kick: f.at.toISOString() });
+    WK.saving[id] = r === "ok" ? "✓ saved" : r === "nick" ? "pick a nickname first" : r == null ? "not saved: database update needed (schema_v12.sql)" : "not saved"; if (r === "ok") { my.made_at = new Date().toISOString(); lockIn(`xpc_wk${weekId()}`, 1); if (!prof().ach || !prof().ach.wk_play) award("wk_play"); }
+    wkPaintList();
+  }, 600);
+}
+async function wkTable(prev) {
+  const box = $(prev ? "#wkBoard" : "#wkTable"); if (!box) return; const wk = prev ? weekId(new Date(Date.now() - 7 * 864e5)) : weekId();
+  if (!WK.list) WK.list = await wkLoad();
+  const rows = (await Ranked.rpc("wk_all", { p_week: wk })) || [], byFx = {}; (WK.list || []).forEach((f) => { byFx[f.id] = f; });
+  const tally = {}; rows.forEach((x) => { const t = tally[x.nick] || (tally[x.nick] = { nick: x.nick, avatar: x.avatar, badges: x.badges, pts: 0, exact: 0, n: 0 }); const f = byFx[x.fixture_id], r = f && WK.res[f.id]; if (!f || !r || r.state !== "post" || x.hg == null || new Date(x.made_at) >= f.at) return; const p = wkPts(x, r); t.pts += p; t.exact += p === 3; t.n++; });
+  const model = { pts: 0, exact: 0, n: 0 }; (WK.list || []).forEach((f) => { const r = WK.res[f.id]; if (!r || r.state !== "post" || new Date(f.made || 0) >= f.at) return; const p = wkPts({ hg: f.model_hg, ag: f.model_ag }, r); model.pts += p; model.exact += p === 3; model.n++; });
+  const list = Object.values(tally).sort((a, b) => b.pts - a.pts || b.exact - a.exact || a.nick.localeCompare(b.nick)), me = prof().nick, mrank = list.filter((t) => t.pts > model.pts).length + 1;
+  const row = (t, i, cls = "") => `<div class="lbrow wkrow ${cls} ${t.nick === me ? "me" : ""}"><b class="wkrank num">${i}</b><span class="wkwho">${avatarHTML(t.avatar, "xs", t.nick)}<span>${esc(t.nick)}</span>${badgesHTML(t.badges)}</span><span class="fine num">${t.exact} exact · ${t.n} played</span><b class="num wkpts">${t.pts}</b></div>`;
+  const mrow = `<div class="lbrow wkrow modelrow"><b class="wkrank num" title="Where the model would rank">${mrank}</b><span class="wkwho"><span class="av xs wkmav"><svg class=ic><use href=#i-chip></use></svg></span><span>The Model</span><small class="fine">plays along</small></span><span class="fine num">${model.exact} exact · ${model.n} played</span><b class="num wkpts">${model.pts}</b></div>`;
+  box.innerHTML = `<div class="lbrow wkrow lbhead fine"><b>#</b><span>Player</span><span></span><b>Pts</b></div>` + mrow + (list.length ? (prev ? list.slice(0, 5) : list).map((t, i) => row(t, i + 1)).join("") : `<div class="fine" style="padding:8px 4px">${rows == null ? "The table needs the latest database update (schema_v12.sql)." : "Nobody has scored yet this week. Points appear as matches finish."}</div>`);
+}
+async function weeklyBoard() { wkTable(true); }
 async function weeklyChampionCheck() {
-  const last = "wk" + weekId(new Date(Date.now() - 7 * 864e5)), key = `wkchk_${last}`; if (store.items[key] || !Account.signedIn || Board.mode !== "rest") return;
-  const rows = await Board.top("challenge", "all", "all", last); if (!rows) return; lockIn(key, 1);
-  if (rows.length >= 3 && prof().nick && rows[0].nick === prof().nick) award("wk_win");
+  const last = weekId(new Date(Date.now() - 7 * 864e5)), key = `wkchk_${last}`; if (store.items[key] || !Account.signedIn || Board.mode !== "rest") return;
+  if (new Date().getUTCDay() === 0) return;   /* the week is still being played until Sunday night */
+  const rows = await Ranked.rpc("wk_all", { p_week: last }); if (!rows) return; lockIn(key, 1); const nicks = new Set(rows.map((x) => x.nick)); if (nicks.size < 3) return;
+  /* last week's points need last week's results: score from the forecast file's fixtures and ESPN, same rules */
+  const mon = wkMonday(new Date(Date.now() - 7 * 864e5)), fx = (WK.fx || []).filter((f) => weekId(new Date(f.kickoff)) === last); if (!fx.length) return;
+  const res = {}; (await wkEspn(mon)).forEach(([lg, e]) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"); const at = new Date(e.date), near = (x, hrs) => x.league === lg && Math.abs(new Date(x.kickoff) - at) < hrs * 3600e3, nm = (x, t) => lsSame(x, t.displayName) || lsSame(x, t.shortDisplayName) || lsSame(x, t.name); const f = fx.find((x) => near(x, 36) && nm(x.home, h.team) && nm(x.away, a.team)) || fx.find((x) => near(x, 6) && (nm(x.home, h.team) || nm(x.away, a.team))); if (f && e.status.type.state === "post") res[f.id] = { hg: +h.score, ag: +a.score, at: new Date(e.date) }; });
+  const tot = {}; rows.forEach((x) => { const r = res[x.fixture_id]; if (r && x.hg != null && new Date(x.made_at) < r.at) tot[x.nick] = (tot[x.nick] || 0) + wkPts(x, r); });
+  const top = Object.entries(tot).sort((a, b) => b[1] - a[1]); if (top.length && prof().nick && top[0][0] === prof().nick && (!top[1] || top[1][1] < top[0][1])) award("wk_win");
 }
 function renderCrumbs() {
   paintHowto();
@@ -1901,12 +1977,8 @@ const fmtKick = (iso) => new Date(iso).toLocaleString(undefined, { weekday: "sho
 function countdown(ms) { if (ms <= 0) return "kicking off"; const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m % 60}m` : `${m}m`; }
 async function renderLive() {
   clearInterval(Live.timer); clearInterval(Live.tick); const signed = Account.signedIn && Board.mode === "rest";
-  $("#room").innerHTML = `<div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live scores</h2><span class="fine">Updates every 30 seconds</span></div><div id="lsList" class="lslist">${skelRows(2)}</div><p class="fine" style="margin:6px 0 0">Scores from ESPN's public scoreboard. Your locked picks show next to their matches.</p></div><div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
-    <p class="sub">Predict the next real matches before kickoff. The model plays too, and its score is pinned to the top of the board.</p>
-    ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to lock your picks and join the board.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
-    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist">${skelRows(3)}</div></div>
-    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-trophy></use></svg> Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx">${skelRows(3)}</div></div>`;
-  await loadLive(); liveScores(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  $("#room").innerHTML = `<div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live scores</h2><span class="fine">Updates every 30 seconds</span></div><div id="lsList" class="lslist">${skelRows(2)}</div><p class="fine" style="margin:6px 0 0">Scores from ESPN's public scoreboard.</p></div><div class="card wkpromo"><div class="row" style="justify-content:space-between;align-items:center"><div><div class="label">Predictions moved</div><h3 style="margin:2px 0">Predict exact scores in the weekly tournament</h3><p class="fine" style="margin:0">This week's real Big 5 matches, 3 points for the exact score, 2 for the winner, 1 for the goals, with the model pinned to the top of the table.</p></div><button class="btn" type="button" data-group="weekly">Open the weekly</button></div></div>`;
+  liveScores(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
   clearInterval(Live.ls); Live.ls = setInterval(() => { if (!$("#lsList")) return clearInterval(Live.ls); liveScores(); }, 30000);
   Live.tick = setInterval(paintCountdown, 1000);
 }
@@ -3593,7 +3665,9 @@ document.addEventListener("click", (e) => {
   if (b.dataset.vote) { Ranked.rpcx("vote_idea", { p_id: +b.dataset.vote }).then((r) => { if (!r.ok) toast("Vote not saved. " + r.why); else if (r.data === "auth") toast("Sign in to vote"); else loadIdeas(); }); return; }
   if (b.dataset.ideast) { const [id, st] = b.dataset.ideast.split("|"); Ranked.rpcx("admin_set_idea", { p_id: +id, p_status: st }).then(() => loadIdeas()); return; }
   if (b.id === "vtag") { showWhatsNew(); return; }
-  if (b.id === "wkPlay") { Snd.tick(); resetGames(); S.game = "challenge"; S.hubGroup = "model"; S.cur = null; S.chal = { code: "wk" + weekId(), c: "ALL", weekly: true }; renderRoom(); return; }
+  if (b.id === "wkPlay") { Snd.tick(); S.hubGroup = "weekly"; S.game = null; go("games-" + SLUG[S.code] + "-weekly"); return; }
+  if (b.dataset.wkadj) { const [id, side, d] = b.dataset.wkadj.split("|"); return wkAdj(id, side, +d); }
+  if (b.dataset.wklg) { WK.lg = b.dataset.wklg; document.querySelectorAll("[data-wklg]").forEach((x) => x.setAttribute("aria-pressed", x === b)); return wkPaintList(); }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
   if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }
   if (b.dataset.cfix) { const [lg, sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(lg, sn, +i, "chal", `x_${S.chal.code}_${lg}_${sn}_${i}`); return; }

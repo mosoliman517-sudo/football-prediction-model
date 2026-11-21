@@ -30,7 +30,7 @@ spec = importlib.util.spec_from_file_location("wf", "src/29_multi_league_walkfor
 wf = importlib.util.module_from_spec(spec); spec.loader.exec_module(wf)
 import core_features  # noqa: E402
 
-DRY = "--dry" in sys.argv
+DRY = "--dry" in sys.argv or bool(os.environ.get("DRY"))
 SIM = int(sys.argv[sys.argv.index("--simulate") + 1]) if "--simulate" in sys.argv else 0
 BASE = "https://football-data.co.uk"
 HEAD = {"User-Agent": "ballknowledge-student-project/1.0 (educational)"}
@@ -116,11 +116,16 @@ def main():
     rows = []
     for j, i in enumerate(te):
         r = d.iloc[i]; pa, pdr, ph = [float(round(v, 4)) for v in P[j]]
+        pick = "HDA"[int(np.argmax([ph, pdr, pa]))]; mh, ma = exact_score(float(lh[j]), float(la[j]), pick)
         rows.append({"id": f"{r['League']}-{r['Date']:%Y%m%d}-{slug(r['HomeTeam'])}-{slug(r['AwayTeam'])}", "league": r["League"], "kickoff": r["kick"].isoformat(), "home": r["HomeTeam"], "away": r["AwayTeam"],
-                     "p_h": ph, "p_d": pdr, "p_a": pa, "model_pick": "HDA"[int(np.argmax([ph, pdr, pa]))]})
+                     "p_h": ph, "p_d": pdr, "p_a": pa, "model_pick": pick, "xg_h": round(float(lh[j]), 2), "xg_a": round(float(la[j]), 2), "model_hg": mh, "model_ag": ma})
+    write_weekly(rows)
     print(f"forecast {len(rows)} fixtures; first rows:"); [print("  ", x["league"], x["home"], "v", x["away"], x["p_h"], x["p_d"], x["p_a"], x["model_pick"]) for x in rows[:6]]
     if DRY or SIM:
-        print("dry run: nothing written"); return
+        print("dry run: nothing written to the database"); return
+    if not os.environ.get("SUPABASE_URL") or not os.environ.get("SUPABASE_SERVICE_KEY"):
+        print("SUPABASE_URL / SUPABASE_SERVICE_KEY not set: the weekly forecast file is written, the database is skipped"); return
+    rows = [{k: v for k, v in x.items() if k not in ("xg_h", "xg_a", "model_hg", "model_ag")} for x in rows]   # the database table keeps its original columns
     sb_post("fixtures", rows, "resolution=ignore-duplicates,return=minimal")     # forecasts are frozen the first time a fixture is published
     results_only(d)
 
@@ -140,9 +145,34 @@ def sb_post(table, rows, prefer):
     print(f"wrote {len(rows)} rows to {table}: {r.status_code}" + ("" if r.ok else " " + r.text[:200]))
 
 
+def exact_score(lh, la, pick):
+    """The model's exact score: the most likely scoreline (independent Poisson goals from its expected goals) that agrees with its pick."""
+    from math import exp, factorial
+    pg = lambda lam, k: exp(-lam) * lam ** k / factorial(k)
+    best = max(((h, a) for h in range(7) for a in range(7) if ("H" if h > a else "A" if a > h else "D") == pick), key=lambda x: pg(lh, x[0]) * pg(la, x[1]))
+    return int(best[0]), int(best[1])
+
+
+def write_weekly(rows, path="docs/football/weekly.json"):
+    """The weekly tournament's model card, published with the site: every forecast is frozen the first time a fixture appears
+    (later runs never change it), and fixtures more than two weeks old drop out. Results come from ESPN in the page."""
+    import json
+    try:
+        old = {f["id"]: f for f in json.load(open(path, encoding="utf-8"))["fixtures"]}
+    except (FileNotFoundError, ValueError, KeyError):
+        old = {}
+    now = pd.Timestamp.now(tz="UTC").isoformat(timespec="minutes")
+    for x in rows:
+        old.setdefault(x["id"], {**x, "made": now})   # when the forecast was made: it only scores if that was before kickoff
+    cut = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=14)
+    keep = sorted((f for f in old.values() if pd.Timestamp(f["kickoff"]) >= cut), key=lambda f: (f["kickoff"], f["home"]))
+    json.dump({"updated": pd.Timestamp.now(tz="UTC").isoformat(timespec="minutes"), "fixtures": keep}, open(path, "w", encoding="utf-8"), separators=(",", ":"))
+    print(f"wrote {path}: {len(keep)} fixtures")
+
+
 def results_only(d):
     """Fill in the result of every published fixture that has now been played."""
-    if DRY or SIM:
+    if DRY or SIM or not os.environ.get("SUPABASE_URL") or not os.environ.get("SUPABASE_SERVICE_KEY"):
         return
     url = os.environ["SUPABASE_URL"]
     r = requests.get(f"{url}/rest/v1/fixtures?select=id,league,home,away,kickoff&res=is.null&kickoff=lt.{pd.Timestamp.now(tz='UTC').isoformat()}", headers=sb_headers(), timeout=60)

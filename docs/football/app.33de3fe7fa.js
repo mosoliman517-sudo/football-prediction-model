@@ -530,6 +530,8 @@ function route(ev) {
   stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; const ad = $("#adminPage"); if (ad) ad.hidden = true; const ab = $("#aboutPage"); if (ab) ab.hidden = true; const sp_ = $("#setPage"); if (sp_) sp_.hidden = true; const dp_ = $("#discPage"); if (dp_) dp_.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
+  const bm = /^beat-([a-z]+)-([A-Z0-9]+)-([a-z]+)-(\d+)-([A-Za-z0-9_.]{1,16})$/.exec(h);
+  if (bm && GAME_IDS.includes(bm[1])) { BEAT = { game: bm[1], score: +bm[4], nick: bm[5] }; S.diff = bm[3]; S.mode = "games"; S.room = "play"; S.hubGroup = "bk"; S.game = bm[1]; openLeague(LG[bm[2]] ? bm[2] : "ALL", ev); setTimeout(() => toast(`<b>${esc(BEAT.nick)} challenged you</b><br>Beat ${BEAT.score} in ${esc(gameName(BEAT.game))}. Play Solo.`), 600); return; }
   const jm = /^join-([A-Za-z]{4})-([a-z]+)$/.exec(h);
   if (jm) { const gm = jm[2] === "number" ? "value" : jm[2]; S.mode = "games"; S.room = "play"; S.game = GAME_IDS.includes(gm) ? gm : null; openLeague("ALL", ev); if (S.game) setTimeout(() => { openOnline(jm[2]); joinRoomCode(jm[1].toUpperCase()); }, 150); return; }
   if (h === "") return showHome(ev);
@@ -1814,13 +1816,27 @@ const fmtKick = (iso) => new Date(iso).toLocaleString(undefined, { weekday: "sho
 function countdown(ms) { if (ms <= 0) return "kicking off"; const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m % 60}m` : `${m}m`; }
 async function renderLive() {
   clearInterval(Live.timer); clearInterval(Live.tick); const signed = Account.signedIn && Board.mode === "rest";
-  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
+  $("#room").innerHTML = `<div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live scores</h2><span class="fine">Updates every 30 seconds</span></div><div id="lsList" class="lslist">${skelRows(2)}</div><p class="fine" style="margin:6px 0 0">Scores from ESPN's public scoreboard. Your locked picks show next to their matches.</p></div><div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
     <p class="sub">Predict the next real matches before kickoff. The model plays too, and its score is pinned to the top of the board.</p>
     ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to lock your picks and join the board.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
     <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist">${skelRows(3)}</div></div>
     <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-trophy></use></svg> Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx">${skelRows(3)}</div></div>`;
-  await loadLive(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  await loadLive(); liveScores(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  clearInterval(Live.ls); Live.ls = setInterval(() => { if (!$("#lsList")) return clearInterval(Live.ls); liveScores(); }, 30000);
   Live.tick = setInterval(paintCountdown, 1000);
+}
+/* ---------- Live scores (ESPN's public scoreboard feed, no key) next to your locked predictions ---------- */
+const ESPN_LG = { E0: "eng.1", D1: "ger.1", SP1: "esp.1", I1: "ita.1", F1: "fra.1" };
+const lsKey = (n) => String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\b(fc|afc|cf|ac|as|sc|ssc|club|de|the|united|city)\b/g, " ").replace(/[^a-z]/g, "");
+const lsSame = (a, b) => { const x = lsKey(a), y = lsKey(b); return !!x && !!y && (x === y || x.includes(y) || y.includes(x)); };
+async function liveScores() {
+  const el = $("#lsList"); if (!el) return; const lgs = Live.lg === "all" ? ORDER : [Live.lg];
+  const res = await Promise.all(lgs.map((c) => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${ESPN_LG[c]}/scoreboard`).then((r) => (r.ok ? r.json() : null)).catch(() => null))); if (!$("#lsList")) return;
+  const rows = []; res.forEach((d, k) => (d && d.events || []).forEach((e) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"), stt = e.status.type; rows.push({ lg: lgs[k], at: new Date(e.date), state: stt.state, detail: stt.shortDetail || stt.description, clock: c.status.displayClock, h: h.team.shortDisplayName || h.team.displayName, a: a.team.shortDisplayName || a.team.displayName, hl: h.team.displayName, al: a.team.displayName, hs: +h.score || 0, as: +a.score || 0, hlogo: h.team.logo, alogo: a.team.logo }); }));
+  const today = new Date().toDateString(), show = rows.filter((r) => r.state === "in" || r.at.toDateString() === today).sort((x, y) => (x.state === "in" ? -1 : 0) - (y.state === "in" ? -1 : 0) || x.at - y.at);
+  if (!show.length) { el.innerHTML = `<div class="fine">No matches today in ${Live.lg === "all" ? "the five leagues" : esc(lgOf(Live.lg).name)}.</div>`; return; }
+  el.innerHTML = show.map((r) => { const f = (Live.fx || []).find((x) => lsSame(x.home, r.hl) && lsSame(x.away, r.al)), pick = f && f.my_pick, now = r.hs > r.as ? "H" : r.hs < r.as ? "A" : "D", st = r.state === "in" ? `<span class="lsmin"><span class="livedot"></span>${esc(r.clock || r.detail)}</span>` : r.state === "post" ? `<span class="fine">FT</span>` : `<span class="fine">${r.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>`;
+    return `<div class="lsrow ${r.state}"><span class="lsl">${r.hlogo ? `<img src="${esc(r.hlogo)}" alt="" loading="lazy">` : ""}${esc(r.h)}</span><b class="lssc num">${r.state === "pre" ? "–" : `${r.hs}–${r.as}`}</b><span class="lsr">${esc(r.a)}${r.alogo ? `<img src="${esc(r.alogo)}" alt="" loading="lazy">` : ""}</span>${st}${pick ? `<span class="lspick ${r.state === "pre" ? "" : pick === now ? "ok" : "no"}">Your pick: ${OUTNAME[pick]}${r.state === "in" ? (pick === now ? " ✓ right now" : " ✗ right now") : r.state === "post" ? (pick === now ? " ✓" : " ✗") : ""}</span>` : ""}</div>`; }).join("");
 }
 function paintCountdown() {
   const nx = Live.fx.find((f) => new Date(f.kickoff) > Date.now()), el = $("#lvNext"); if (el) el.textContent = nx ? `Next kickoff in ${countdown(new Date(nx.kickoff) - Date.now())}` : "";
@@ -2303,7 +2319,7 @@ async function renderProfilePage() {
     <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : p.favT ? `<div class="fine" style="margin-top:6px">We do not have theme colours for ${esc(p.favT)} yet, so the site keeps its normal colours.</div>` : ""}</div>
   <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
   <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx">${skelRows(2)}</div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
-  <div class="card"><h3>Appearance</h3>${appearanceHTML()}</div>
+  <div class="card"><h3>This month</h3><p class="fine">A card with your month: games, days played, streak, favourite game, your club and a word from your sidekick.</p><button class="btn" id="recapBtn" type="button">Make my monthly recap</button></div><div class="card"><h3>Appearance</h3>${appearanceHTML()}</div>
   <div class="card"><h3>Your strengths</h3>${statsRadarHTML()}</div>
   <div class="card"><h3>Loading screens <span class="fine">${nSeen} of ${cat.length} collected</span></h3>${spl}</div>
   ${bpick}
@@ -2665,6 +2681,17 @@ const RESUME_KEY = "bk_resume";
 const getResume = (game, scope) => { try { const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null"); return r && r.game === game && r.scope === scope && r.diff === S.diff && Date.now() - r.at < 3 * 864e5 ? r : null; } catch (e) { return null; } };
 const saveResume = (game, scope, score, streak, round) => { try { localStorage.setItem(RESUME_KEY, JSON.stringify({ game, scope, diff: S.diff, score, streak, round, at: Date.now() })); } catch (e) { /* blocked */ } };
 const clearResume = () => { try { localStorage.removeItem(RESUME_KEY); } catch (e) { /* blocked */ } };
+/* ---------- Challenge a friend from a quiz result, and the monthly recap card ---------- */
+let BEAT = null;
+function beatLink(game, score) { const p = prof(), nick = (p.nick || "a friend").replace(/[^A-Za-z0-9_.]/g, "").slice(0, 16) || "friend"; return `${location.origin}${location.pathname}#beat-${game}-${S.code || "ALL"}-${S.diff || "medium"}-${Math.max(0, score | 0)}-${nick}`; }
+async function beatShare(game, score) { const url = beatLink(game, score), text = `I scored ${score} in ${gameName(game)} on ballknowledge. Beat it:`; try { if (navigator.share) { await navigator.share({ title: "ballknowledge challenge", text, url }); return; } } catch (e) { /* cancelled */ } try { await navigator.clipboard.writeText(`${text} ${url}`); toast("Challenge link copied. Send it to a friend."); } catch (e) { prompt("Copy this link and send it:", url); } }
+function monthRecap() {
+  const p = prof(), now = new Date(), ym = now.toISOString().slice(0, 7), month = now.toLocaleDateString(undefined, { month: "long" });
+  const days = Object.entries(p.days || {}).filter(([k]) => k.startsWith(ym)), games = days.reduce((a, [, v]) => a + v, 0);
+  let fav = null; try { const u = JSON.parse(localStorage.getItem("bk_usage") || "{}"), pre = (typeof USPORT !== "undefined" ? USPORT : "fb") + ":"; fav = Object.entries(u).filter(([k]) => k.startsWith(pre)).sort((a, b) => (b[1].n || 0) - (a[1].n || 0))[0]; } catch (e) { /* none */ }
+  const favName = fav ? gameName(fav[0].split(":")[1]) : "-", m = MASCOTS[Mascot.id()], pool = m.lines.over || m.lines.hit, quote = pool[Math.floor(Math.random() * pool.length)];
+  showCard("quiz", { lg: S.code || "E0", title: `${month} recap`, big: `${games} game${games === 1 ? "" : "s"}`, sub: `${days.length} day${days.length === 1 ? "" : "s"} played · ${levelOf(p.xp).name}`, tiles: [[String(dayStreak(p)), "day streak"], [favName.length > 14 ? favName.slice(0, 13) + "…" : favName, "favourite game"], [p.favT || "-", "your club"]], line: `${m.name}: "${quote.length > 70 ? quote.slice(0, 68) + "…" : quote}"`, share: `My ${month} on ballknowledge: ${games} games.` });
+}
 function finishQuiz() { clearResume();
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") { rankedEnd(S_, S_.scores); setTimeout(() => duoResult(S_.scores.slice(), QDEF[S_.game].name), 700); }
   let newBest = false; if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) { lockIn(k, { best: S_.scores[0] }); newBest = S_.scores[0] > 0; } }
@@ -2710,7 +2737,7 @@ function renderQuiz() {
   }
   if (S_.phase === "done") {
     const best = Math.max(...S_.scores), winner = duo ? (S_.scores[0] === S_.scores[1] ? -1 : S_.scores[0] > S_.scores[1] ? 0 : 1) : 0;
-    $("#room").innerHTML = `<div class="card">${head}<div class="rcard on"><div class="label">${duo ? "Final score" : `Streak of ${S_.streak}`}</div><div class="verdicts" style="margin-top:8px">${S_.scores.map((s, i) => `<div class="vd ${winner === i ? "ok" : duo ? "no" : "ok"}"><span class="label">${duo ? who[i] : "Points"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (winner < 0 ? "A draw." : who[winner] + " wins!") : best >= 3500 ? "Serious ball knowledge." : best >= 2000 ? "Solid." : "Keep practising."}</b><button class="btn" id="qAgain" type="button">Play again</button><button class="btn ghost" id="qCard" type="button">Make a result card</button></div></div></div>`; return;
+    $("#room").innerHTML = `<div class="card">${head}<div class="rcard on"><div class="label">${duo ? "Final score" : `Streak of ${S_.streak}`}</div><div class="verdicts" style="margin-top:8px">${S_.scores.map((s, i) => `<div class="vd ${winner === i ? "ok" : duo ? "no" : "ok"}"><span class="label">${duo ? who[i] : "Points"}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${duo ? (winner < 0 ? "A draw." : who[winner] + " wins!") : best >= 3500 ? "Serious ball knowledge." : best >= 2000 ? "Solid." : "Keep practising."}</b><button class="btn" id="qAgain" type="button">Play again</button><button class="btn ghost" id="qCard" type="button">Make a result card</button>${duo ? "" : `<button class="btn ghost" id="qChal" type="button">Challenge a friend</button>`}${!duo && BEAT && BEAT.game === S_.game ? `<div class="rcard on" style="margin-top:10px;width:100%"><b>${S_.scores[0] > BEAT.score ? `You beat ${esc(BEAT.nick)}&#39;s ${BEAT.score}!` : S_.scores[0] === BEAT.score ? `Level with ${esc(BEAT.nick)} on ${BEAT.score}.` : `${esc(BEAT.nick)} wins this one: ${BEAT.score} to ${S_.scores[0]}.`}</b></div>` : ""}</div></div></div>`; return;
   }
   const rounds = duo ? (S_.rounds || d.rounds) : Infinity, last = duo ? S_.round >= rounds : S_.over, hud = `<div class="qhud"><span class="label">${duo ? `Round ${S_.round} of ${rounds}` : `Streak ${S_.streak}`}</span>${S_.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Score"}</small> <b>${s}</b></span>`).join("")}</div>`;
   if (S_.phase === "reveal") {
@@ -3513,6 +3540,8 @@ document.addEventListener("click", (e) => {
   if (b.id === "qNext") { Snd.tick(); nextRound(); return; }
   if (b.id === "qFinish") { finishQuiz(); return; }
   if (b.id === "qAgain") { const m = Q.s.mode, g = Q.s.game; newQuiz(g, m, S.code); if (m === "duo") { Q.s.scores = [0, 0]; nextRound(); } return; }
+  if (b.id === "recapBtn") { monthRecap(); return; }
+  if (b.id === "qChal") { const g = Q.s; beatShare(g.game, g.scores[0]); return; }
   if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `ballknowledge, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
   if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }

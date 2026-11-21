@@ -558,6 +558,14 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 .mscopt .tpprev { display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); } .mscopt .tpprev svg { height: 70px; width: auto; }
 @media (prefers-reduced-motion: reduce) { #mascot, #mascot .mbody, #mascot .mbubble, .xmas svg { animation: none !important; transition: opacity .2s; } }
 
+.lslist { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.lsrow { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); }
+.lsrow.in { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.lsl, .lsr { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; } .lsr { justify-content: flex-end; } .lsl img, .lsr img { width: 22px; height: 22px; object-fit: contain; }
+.lssc { font: 900 20px/1 var(--display); min-width: 54px; text-align: center; } .lsmin { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--accent); }
+.lspick { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--muted); } .lspick.ok { color: var(--ok, #3ddc84); } .lspick.no { color: #ff6b6b; }
+@media (max-width: 560px) { .lsrow { grid-template-columns: 1fr auto 1fr; } .lsrow > span:nth-child(4) { grid-column: 1 / -1; text-align: center; } }
+
 /* ---- loading screens ---- */
 .splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(5vh, 20px) 20px max(4vh, 18px); text-align: center; overflow: hidden; transition: opacity .6s ease, visibility .6s; color: #fff; font-family: var(--sans, system-ui); background: #0b1033; }
 .splash.out { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -916,7 +924,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 12:58 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 13:23 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -924,7 +932,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.40a8a39aa0.js", size = 15070342, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
+  var src = "app.33de3fe7fa.js", size = 15077195, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

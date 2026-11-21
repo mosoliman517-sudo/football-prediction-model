@@ -657,7 +657,13 @@ function setTheme(code, ev) {
 function inMatch() { return !!((Net.role && Net.started) || (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") || (S.ttt && S.ttt.mode === "duo" && S.ttt.phase !== "over") || (S.rou && S.rou.phase === "play") || (S.fin && S.fin.mode === "duo" && S.fin.phase !== "done") || (S.num && S.num.mode === "duo" && S.num.phase !== "done")); }
 function leaveModal(cb) { window.__leaveCb = cb; modal(`<h2 style="font-size:24px">Leave this match?</h2><p class="fine">${Net.role && Net.ranked ? "Leaving a ranked match ends it, and your opponent may be awarded the win." : "Your match will end."}</p><div class="row" style="margin-top:14px"><button class="btn" id="lvStay" type="button">Stay</button><button class="btn ghost" id="lvLeave" type="button">Leave</button></div>`); }
 function go(slug) { if (inMatch() && location.hash.replace("#", "") !== slug) { leaveModal(() => { Q.s = null; S.ttt = S.rou = S.fin = S.num = null; Net.close(); go0(slug); }); return; } go0(slug); }
-function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } route(); }
+/* page transitions: the browser's own view transitions where it has them, a short fade-in otherwise; never during a match or with Reduce motion */
+function pageTo(fn, box) {
+  const calm = (typeof REDUCED !== "undefined" && REDUCED) || document.hidden || (typeof inMatch === "function" && inMatch());
+  if (!calm && document.startViewTransition) { try { document.startViewTransition(() => { fn(); }); return; } catch (e) { /* fall through */ } }
+  fn(); if (calm) return; const els = box ? [box] : [...document.querySelectorAll("#home:not([hidden]), #lobby:not([hidden]), #league:not([hidden]), #profilePage:not([hidden]), #setPage:not([hidden]), #aboutPage:not([hidden]), #discPage:not([hidden])")].slice(0, 2); els.forEach((x) => { if (!x) return; x.classList.remove("pgin"); void x.offsetWidth; x.classList.add("pgin"); });
+}
+function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } pageTo(() => route()); }
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette", "xi", "rapid", "bracket", "scramble", "iconic"];
 function route(ev) {
   const h = location.hash.slice(1);
@@ -3831,7 +3837,7 @@ document.addEventListener("mouseover", (e) => {
 });
 document.addEventListener("mouseout", (e) => { if (!e.relatedTarget || !lastHov || !lastHov.contains(e.relatedTarget)) lastHov = null; });
 addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e.returnValue = ""; } });
-addEventListener("hashchange", () => route());
+addEventListener("hashchange", () => pageTo(() => route()));
 
 /* =====================================================================================================================
    ballknowledge BASKETBALL overlay. Injected by src/63_build_nba_arena.py into site/nba_template.html just before the site boots.

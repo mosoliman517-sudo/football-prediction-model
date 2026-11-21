@@ -1400,6 +1400,12 @@ function modelPage() { setTimeout(() => countUp($("#app")), 60);
   <h3>${ic("warn")}Honest limits</h3><ul><li>Everyday games: one month (January 2024), a 250 MB slice of the standard rated games. Lichess players, not tournament chess.</li><li>Elite games: Lichess's official broadcast feeds for 14 chosen months from 2023 to 2026. The World Championship has only the 2024 match (14 games) and the Candidates only 2024 and 2026, so those results are too few to say much; the page shows the counts.</li><li>Blunder or fine?: Stockfish's own evaluations stored in about 70,000 Lichess games. A move is a blunder if the evaluation fell by 3 pawns or more. <b>"Brilliant" moves are not included</b>: they need multi-line engine analysis I do not have.</li><li>Estimate my Elo uses Lichess puzzle ratings, not game ratings, and ten puzzles only.</li><li>Play my AI is a small home-made engine, not Stockfish.</li><li>Player facts come from Wikidata and only cover players with a peak rating of 2600 or more.</li></ul></div>`;
 }
 /* ---------- events ---------- */
+/* page transitions: the browser's own view transitions where it has them, a short fade-in otherwise; never during a match or with Reduce motion */
+function pageTo(fn, box) {
+  const calm = (typeof REDUCED !== "undefined" && REDUCED) || document.hidden || (typeof live !== "undefined" && live && !live.watch && st && st.game === "ai" && !st.over);
+  if (!calm && document.startViewTransition) { try { document.startViewTransition(() => { fn(); }); return; } catch (e) { /* fall through */ } }
+  fn(); if (calm) return; const els = box ? [box] : [...document.querySelectorAll("#home:not([hidden]), #lobby:not([hidden]), #league:not([hidden]), #profilePage:not([hidden]), #setPage:not([hidden]), #aboutPage:not([hidden]), #discPage:not([hidden])")].slice(0, 2); els.forEach((x) => { if (!x) return; x.classList.remove("pgin"); void x.offsetWidth; x.classList.add("pgin"); });
+}
 function fresh() { if (typeof rvStop === "function") rvStop(); if (typeof olClose === "function") olClose(); const a = $("#app"); a.className = "fresh"; clearTimeout(fresh.t); fresh.t = setTimeout(() => { a.className = ""; }, 500); }
 function reviewIntro() {
   rvStop(); clearInterval(st.timer); live = null; st = { game: "reviewIntro" };
@@ -2546,7 +2552,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.mus) { Snd.mus = !Snd.mus; store.set("mus", Snd.mus); Snd.mus ? Snd.musicStart() : Snd.musicStop(); t.classList.toggle("on", Snd.mus); t.textContent = "Music " + (Snd.mus ? "on" : "off"); return; }
   if (t.dataset.say) { Mix.say = !Mix.say; Snd.remix(); t.classList.toggle("on", Mix.say); t.textContent = "Voice " + (Mix.say ? "on" : "off"); if (Mix.say) Voice.say("Let's play"); return; }
   if (t.id === "home") { live = null; clearInterval(st.timer); fresh(); return home(); }
-  if (t.dataset.go) { live = null; clearInterval(st.timer); fresh(); return GO[t.dataset.go](); }
+  if (t.dataset.go) { live = null; clearInterval(st.timer); return pageTo(() => { fresh(); GO[t.dataset.go](); }, $("#app")); }
   const g = st.game;
   if (g === "call") { if (t.dataset.r != null) { st.pick = +t.dataset.r; return callRender(); } if (t.dataset.l != null) { st.len = +t.dataset.l; return callRender(); } if (t.id === "lock") return callLock(); if (t.id === "next") return callNext(); }
   if (g === "elite") { if (t.dataset.ep != null) { const k = st.stage; st.picks[k] = +t.dataset.ep; Snd.tick && 0; return eliteRun(); } if (t.id === "eskip") { const g2 = st.g, tg = st.stage < 2 ? CHK[st.stage + 1] : g2.moves.length; while (st.ply < tg) { const m = live.c.move(g2.moves[st.ply]); live.last = [m.from, m.to]; st.ply++; } st.skipAnim = true; clearInterval(st.timer); if (st.stage < 2) { st.stage++; return eliteAsk(); } return eliteReveal(); } if (t.id === "enextg") { if (st.i >= 2) return finish("Predict who won", st.you, st.mod, 18, "elite", "elite"); st.i++; return eliteGame(); } }

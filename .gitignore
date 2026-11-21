@@ -46,3 +46,5 @@ site/logos/
 # Kokoro voice generation (src/80_make_voice.py): local venv and model files
 .venv-tts/
 01_data_tts/
+.venv-cb/
+voice_samples/

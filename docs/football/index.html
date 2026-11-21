@@ -533,14 +533,18 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 .tpprev i { position: absolute; display: block; border-radius: 6px; } .tpprev i:nth-child(1) { left: 8px; top: 8px; width: 46%; height: 9px; background: var(--b); } .tpprev i:nth-child(2) { left: 8px; top: 24px; right: 8px; height: 40px; background: var(--c); box-shadow: 0 4px 10px #0003; } .tpprev i:nth-child(3) { right: 16px; top: 34px; width: 30%; height: 12px; background: var(--b); border-radius: 99px; }
 .tpauto { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; }
 
-/* ---- sidekick mascots ---- */
-#mascot { position: fixed; left: max(12px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9500; display: flex; align-items: flex-end; gap: 8px; max-width: min(420px, calc(100vw - 24px)); pointer-events: none; transform: translateY(160%) scale(.6); opacity: 0; transition: transform .5s cubic-bezier(.2, 1.4, .4, 1), opacity .3s; cursor: pointer; }
-#mascot.on { transform: none; opacity: 1; pointer-events: auto; }
-#mascot .mbody { width: 92px; flex: none; filter: drop-shadow(0 10px 18px #0007); transform-origin: 50% 100%; animation: mBob 2.4s ease-in-out infinite; }
-#mascot.on .mbody.wow { animation: mJump .7s cubic-bezier(.3, 1.6, .5, 1) 2, mBob 2.4s ease-in-out 1.4s infinite; } #mascot.on .mbody.sad { animation: mSlump 1s ease both, mBob 3.4s ease-in-out 1s infinite; } #mascot.on .mbody.happy { animation: mHop .6s cubic-bezier(.3, 1.6, .5, 1) 1, mBob 2.4s ease-in-out .6s infinite; }
+/* ---- sidekick mascots: always in the corner, the bubble opens when they talk ---- */
+#mascot { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: max(10px, env(safe-area-inset-bottom)); z-index: 9500; display: flex; align-items: flex-end; gap: 8px; max-width: min(440px, calc(100vw - 20px)); pointer-events: none; transform: translateY(140%); opacity: 0; transition: transform .5s cubic-bezier(.2, 1.4, .4, 1), opacity .3s; }
+#mascot.on { transform: none; opacity: 1; }
+#mascot .mbody { width: 112px; flex: none; filter: drop-shadow(0 10px 18px #0007); transform-origin: 50% 100%; animation: mBob 2.6s ease-in-out infinite; pointer-events: auto; cursor: pointer; transition: width .3s; }
+#mascot:not(.talk) .mbody { width: 84px; opacity: .92; }
+#mascot.talk .mbody.wow { animation: mJump .7s cubic-bezier(.3, 1.6, .5, 1) 2, mBob 2.6s ease-in-out 1.4s infinite; } #mascot.talk .mbody.sad { animation: mSlump 1s ease both, mBob 3.4s ease-in-out 1s infinite; } #mascot.talk .mbody.happy { animation: mHop .6s cubic-bezier(.3, 1.6, .5, 1) 1, mBob 2.6s ease-in-out .6s infinite; }
 #mascot .msvg { width: 100%; height: auto; display: block; }
-#mascot .mbubble { position: relative; margin-bottom: 44px; padding: 10px 13px; border-radius: 16px 16px 16px 4px; background: var(--surface, #fff); color: var(--ink, #111); border: 2px solid var(--accent, #f2c14e); font-size: 14px; line-height: 1.4; box-shadow: 0 14px 34px -14px #000a; animation: mPop .4s cubic-bezier(.2, 1.4, .4, 1) .15s both; }
-#mascot .mbubble b { display: block; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #c9a227); margin-bottom: 3px; }
+#mascot .mbubble { display: none; position: relative; margin-bottom: 52px; padding: 11px 14px; border-radius: 18px 18px 18px 4px; background: var(--surface, #fff); color: var(--ink, #111); border: 2px solid var(--accent, #f2c14e); font-size: 15px; line-height: 1.4; box-shadow: 0 16px 36px -14px #000b; pointer-events: auto; cursor: pointer; }
+#mascot.talk .mbubble { display: block; animation: mPop .4s cubic-bezier(.2, 1.4, .4, 1) both; }
+#mascot .mbubble b { display: block; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #c9a227); margin-bottom: 4px; }
+#mascot .mctx { display: block; font-style: normal; font-weight: 800; margin-bottom: 2px; }
+@media (max-width: 560px) { #mascot .mbody { width: 92px; } #mascot:not(.talk) .mbody { width: 64px; } #mascot .mbubble { font-size: 14px; margin-bottom: 40px; } }
 @keyframes mBob { 50% { transform: translateY(-4px) rotate(-2deg); } } @keyframes mHop { 40% { transform: translateY(-18px) scale(1.06, .94); } 70% { transform: scale(.96, 1.04); } } @keyframes mJump { 40% { transform: translateY(-28px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } } @keyframes mSlump { 50% { transform: scale(1.04, .92) rotate(4deg); } 100% { transform: rotate(3deg); } } @keyframes mPop { from { transform: scale(.6); opacity: 0; } }
 .xmas { display: flex; align-items: center; gap: 8px; } .xmas svg { width: 46px; height: 46px; animation: mBob 2.4s ease-in-out infinite; } .xmas b { font-size: 13px; }
 .mscopt .tpprev { display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); } .mscopt .tpprev svg { height: 70px; width: auto; }
@@ -564,6 +568,7 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 @keyframes fadein { from { opacity: 0; } } @keyframes rise2 { from { transform: translateY(40px) scale(.9); opacity: 0; } } @keyframes float { 50% { transform: translateY(-10px) scale(1.015); } }
 .sp-pname { position: relative; z-index: 1; font: 800 clamp(22px, 4vw, 40px) var(--display, system-ui); text-shadow: 0 4px 20px #000; opacity: .95; }
 .sp-moment { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 120px 16px 160px; background: radial-gradient(circle at 50% 30%, #12361f, #04110a 75%); } .sp-moment.legendary { background: radial-gradient(circle at 50% 30%, #4a3500, #120b00 75%); }
+@media (max-width: 1100px) { .sp-moment .sp-mcut, .sp-moment .sp-mcut.photo { position: relative; left: auto; bottom: auto; order: -1; height: min(17vh, 140px); width: auto; margin-bottom: -4px; opacity: 1; } }   /* medium screens: the player sits above the pitch instead of on top of it */
 .sp-mscene { position: relative; width: min(560px, 88vw); filter: drop-shadow(0 18px 40px #000b); } .mom { width: 100%; height: auto; display: block; } .sp-big { position: absolute; right: 4%; top: 6%; font: 800 clamp(28px, 7vw, 56px) var(--display, system-ui); color: #ffd34e; text-shadow: 0 4px 18px #000; }
 .sp-mcut { position: absolute; left: max(2vw, 8px); bottom: 150px; height: min(46vh, 380px); object-fit: contain; filter: drop-shadow(0 14px 28px #000c); z-index: 1; } .sp-mcap { display: flex; flex-direction: column; gap: 4px; max-width: 560px; z-index: 2; } .sp-mcap b { font: 800 clamp(22px, 4vw, 34px) var(--display, system-ui); } .sp-mcap span { color: #ffd34e; font-weight: 700; } .sp-mcap em { font-style: normal; opacity: .9; } .sp-mcap small { opacity: .6; font-size: 11px; margin-top: 4px; }
 @media (max-width: 700px) { .sp-mcut { height: 26vh; left: -6px; bottom: 170px; opacity: .9; } .sp-moment { padding-top: 72px; } }
@@ -903,7 +908,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 09:53 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 12:44 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -911,7 +916,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.81b5da9e5b.js", size = 15040239, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
+  var src = "app.b7a8f697b7.js", size = 15067653, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

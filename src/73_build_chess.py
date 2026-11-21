@@ -45,12 +45,13 @@ print("lookup:", len(evs), "events,", len(names), "players,", len(lookup["games"
 data = {"lookup": lookup, "model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
 import base64, glob
 pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(data:image/svg+xml;base64,{base64.b64encode(open(f,'rb').read()).decode()})}}" for f in sorted(glob.glob("01_data_chess/pieces/*.svg")))
-html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read())
+html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/coach_lines.js", encoding="utf-8").read())
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
 data["champ"] = json.load(open("02_processed_data/chess_champ.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_champ.json") else None   # src/78: Total Chess games + FIDE profiles
 data["ratings"] = json.load(open("02_processed_data/chess_ratings.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_ratings.json") else None   # src/79: FIDE top 100 lists + rating history
 data["events"] = json.load(open("02_processed_data/chess_events.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_events.json") else None   # src/81: 2026 tournaments
+data["sim"] = json.load(open("02_processed_data/chess_sim.json")) if os.path.exists("02_processed_data/chess_sim.json") else None   # src/84: draw rates by level, speed and gap
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))

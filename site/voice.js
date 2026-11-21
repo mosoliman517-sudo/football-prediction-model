@@ -11,7 +11,7 @@ const AIVoice = (() => {
   function stop() { if (cur) { try { cur.pause(); } catch (e) { /* gone */ } cur = null; } }
   /* resolves to the Audio element, or null when there is no clip for this text */
   async function play(text, o = {}) {
-    const m = await load(), f = m[norm(text)] || m[generic(text)]; if (!f) return null;
+    const m = await load(), v = o.voice ? o.voice + "|" : "", f = (v && (m[v + norm(text)] || m[v + generic(text)])) || (!o.voice || o.voice === "af_heart" ? m[norm(text)] || m[generic(text)] : null); if (!f) return null;   // each character has its own voice
     stop(); const a = new Audio(BASE + f); a.volume = o.volume == null ? 1 : o.volume; cur = a;
     const end = () => { if (cur === a) cur = null; if (o.onend) o.onend(); };
     a.onended = end; a.onerror = end;

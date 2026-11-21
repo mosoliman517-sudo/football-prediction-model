@@ -533,6 +533,19 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 .tpprev i { position: absolute; display: block; border-radius: 6px; } .tpprev i:nth-child(1) { left: 8px; top: 8px; width: 46%; height: 9px; background: var(--b); } .tpprev i:nth-child(2) { left: 8px; top: 24px; right: 8px; height: 40px; background: var(--c); box-shadow: 0 4px 10px #0003; } .tpprev i:nth-child(3) { right: 16px; top: 34px; width: 30%; height: 12px; background: var(--b); border-radius: 99px; }
 .tpauto { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; }
 
+/* ---- sidekick mascots ---- */
+#mascot { position: fixed; left: max(12px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9500; display: flex; align-items: flex-end; gap: 8px; max-width: min(420px, calc(100vw - 24px)); pointer-events: none; transform: translateY(160%) scale(.6); opacity: 0; transition: transform .5s cubic-bezier(.2, 1.4, .4, 1), opacity .3s; cursor: pointer; }
+#mascot.on { transform: none; opacity: 1; pointer-events: auto; }
+#mascot .mbody { width: 92px; flex: none; filter: drop-shadow(0 10px 18px #0007); transform-origin: 50% 100%; animation: mBob 2.4s ease-in-out infinite; }
+#mascot.on .mbody.wow { animation: mJump .7s cubic-bezier(.3, 1.6, .5, 1) 2, mBob 2.4s ease-in-out 1.4s infinite; } #mascot.on .mbody.sad { animation: mSlump 1s ease both, mBob 3.4s ease-in-out 1s infinite; } #mascot.on .mbody.happy { animation: mHop .6s cubic-bezier(.3, 1.6, .5, 1) 1, mBob 2.4s ease-in-out .6s infinite; }
+#mascot .msvg { width: 100%; height: auto; display: block; }
+#mascot .mbubble { position: relative; margin-bottom: 44px; padding: 10px 13px; border-radius: 16px 16px 16px 4px; background: var(--surface, #fff); color: var(--ink, #111); border: 2px solid var(--accent, #f2c14e); font-size: 14px; line-height: 1.4; box-shadow: 0 14px 34px -14px #000a; animation: mPop .4s cubic-bezier(.2, 1.4, .4, 1) .15s both; }
+#mascot .mbubble b { display: block; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #c9a227); margin-bottom: 3px; }
+@keyframes mBob { 50% { transform: translateY(-4px) rotate(-2deg); } } @keyframes mHop { 40% { transform: translateY(-18px) scale(1.06, .94); } 70% { transform: scale(.96, 1.04); } } @keyframes mJump { 40% { transform: translateY(-28px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } } @keyframes mSlump { 50% { transform: scale(1.04, .92) rotate(4deg); } 100% { transform: rotate(3deg); } } @keyframes mPop { from { transform: scale(.6); opacity: 0; } }
+.xmas { display: flex; align-items: center; gap: 8px; } .xmas svg { width: 46px; height: 46px; animation: mBob 2.4s ease-in-out infinite; } .xmas b { font-size: 13px; }
+.mscopt .tpprev { display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); } .mscopt .tpprev svg { height: 70px; width: auto; }
+@media (prefers-reduced-motion: reduce) { #mascot, #mascot .mbody, #mascot .mbubble, .xmas svg { animation: none !important; transition: opacity .2s; } }
+
 /* ---- loading screens ---- */
 .splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(5vh, 20px) 20px max(4vh, 18px); text-align: center; overflow: hidden; transition: opacity .6s ease, visibility .6s; color: #fff; font-family: var(--sans, system-ui); background: #0b1033; }
 .splash.out { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -890,7 +903,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 08:50 UTC · public · results through 2026-11-08</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 09:23 UTC · public · results through 2026-11-08</span>
     <span>Predictions come from a model that only ever saw earlier seasons (walk-forward), so every match you play was unseen. Bookmaker comparison uses average closing odds with the margin removed.</span>
     <span>League logos, club badges and player photographs are the property of their respective owners and appear here only to identify the leagues, clubs and players. This is an independent, non-commercial student project, not affiliated with or endorsed by any league, club or player. If you are a rights holder and would like something removed, please open an issue on the project's GitHub page and it will be taken down promptly. Artwork via TheSportsDB; the Paris SG, Monaco, Montpellier and Saint-Etienne badges via football-data.org; the Nott'm Forest badge from the Premier League. Results and odds come from football-data.co.uk.</span>
   </div>
@@ -898,7 +911,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.2372afcb25.js", size = 15025460, bar = document.querySelector("#splash .sp-bar i"), done = false;
+  var src = "app.a28e35de86.js", size = 15039407, bar = document.querySelector("#splash .sp-bar i"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

@@ -18,17 +18,25 @@ from kokoro_onnx import Kokoro
 VOICE, SPEED = "af_heart", 1.05
 OUT = "docs/voice"
 lines = json.load(open("src/voice_lines.json", encoding="utf-8"))
-texts = sorted({" ".join(t.split()) for group in lines.values() for t in group})
+# each character speaks in their own voice; the tours are also made in each sidekick's voice
+GROUP_VOICE = {"pip": "af_heart", "boot": "bm_george", "rita": "bf_emma", "bench": "am_puck", "rim": "am_michael"}
+TOUR_VOICES = {"football_tour": ["af_heart", "bm_george", "bf_emma", "am_puck"], "basketball_tour": ["af_heart", "am_michael"]}
+jobs = {}
+for group, items in lines.items():
+    for voice in TOUR_VOICES.get(group, [GROUP_VOICE.get(group, VOICE)]):
+        for t in items:
+            jobs.setdefault((voice, " ".join(t.split())), True)
+texts = sorted(jobs)
 os.makedirs(OUT, exist_ok=True)
 k = Kokoro("01_data_tts/kokoro-v1.0.int8.onnx", "01_data_tts/voices-v1.0.bin")
 index, made = {}, 0
-for t in texts:
-    name = hashlib.sha1(f"{VOICE}|{SPEED}|{t}".encode()).hexdigest()[:12] + ".mp3"
-    index[t] = name
+for voice, t in texts:
+    name = hashlib.sha1(f"{voice}|{SPEED}|{t}".encode()).hexdigest()[:12] + ".mp3"
+    index[t if voice == VOICE else f"{voice}|{t}"] = name
     path = os.path.join(OUT, name)
     if os.path.exists(path):
         continue
-    samples, sr = k.create(t, voice=VOICE, speed=SPEED, lang="en-us")
+    samples, sr = k.create(t, voice=voice, speed=SPEED, lang="en-gb" if voice.startswith("b") else "en-us")
     sf.write(path, samples, sr, format="MP3")
     made += 1
     print(f"{name}  {len(samples) / sr:5.1f}s  {t[:70]}")

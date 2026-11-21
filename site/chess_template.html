@@ -67,6 +67,65 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 .doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:18px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:99px;padding:7px 14px;font:600 14px Inter;cursor:pointer}.chip.on{background:var(--gold);color:#241c00;border-color:var(--gold)}
 .gfav{align-self:flex-start;font:800 11px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:99px;background:var(--gold);color:#241c00;box-shadow:0 0 18px -4px var(--gold)}.gfav.try{background:transparent;color:var(--gold);border:1px solid var(--gold);box-shadow:none}
+/* ---- Championships ---- */
+.cpf{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--panel2),var(--line));border:2px solid var(--line);font:800 12px Inter,system-ui,sans-serif;color:var(--muted)}
+.cpf::before{content:attr(data-i)}.cpf img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.cpf.md{width:58px;height:58px;font-size:16px}.cpf.big{width:96px;height:96px;font-size:26px;border-width:3px;border-color:var(--gold);box-shadow:0 10px 30px -12px #000}
+.cpflag{font-size:15px;line-height:1;margin-right:6px}.cpfid{font:800 9px/1 Inter,system-ui,sans-serif;letter-spacing:.06em;padding:3px 5px;border-radius:5px;background:var(--line);color:var(--muted);margin-right:6px;vertical-align:2px}
+.cpwho{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%}.cpt td:nth-child(2){overflow:hidden}.cpnm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.cpsec{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 0 10px}.cpsec h3{margin:0;font-size:22px;display:flex;align-items:center;gap:8px}
+.cpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.cpcard{position:relative;text-align:left;display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 10%,var(--panel2)),var(--panel));color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s,box-shadow .25s;animation:fadein .4s both}
+.cpcard:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 22px 44px -26px var(--gold)}.cpcard:active{transform:scale(.98)}
+.cpfaces{display:flex;align-items:center;margin-bottom:8px}.cpfaces .cpf+.cpf{margin-left:-14px}.cpfaces.vs .cpf+.cpf{margin-left:0}.cpvs{font:900 13px Inter,system-ui,sans-serif;color:var(--gold);margin:0 6px}
+.cpcname{font-size:20px;line-height:1.15}.cpmeta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}.cpmeta .ic{width:14px;height:14px}
+.cpwinner{display:inline-flex;align-items:center;gap:6px;margin-top:6px;align-self:flex-start;font-weight:700;font-size:13px;padding:5px 10px;border-radius:99px;background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--gold)}.cpwinner .ic{width:14px;height:14px}
+.cpbadge{position:absolute;top:14px;right:14px;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.cpbadge.done{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}.cpbadge.soon{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
+.cphero{position:relative;text-align:center}.cphero h2{margin:4px 0 12px;justify-content:center;text-align:center}.cphero .cpbadge{position:static;display:inline-block}
+.cpfacts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.cpfacts span{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:99px;background:var(--panel);border:1px solid var(--line);font-size:13px}.cpfacts .ic{width:15px;height:15px;color:var(--gold)}
+.cppodium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:10px;max-width:560px;margin:22px auto 4px}
+.cppod{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;color:inherit;font:inherit;cursor:pointer;position:relative}
+.cppod b{font-size:15px;text-align:center}.cppod .cpstep{width:100%;border-radius:12px 12px 0 0;margin-top:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 30%,var(--panel2)),var(--panel2))}
+.cppod.p1 .cpstep{height:74px}.cppod.p2 .cpstep{height:48px;opacity:.85}.cppod.p3 .cpstep{height:32px;opacity:.7}.cppod.p1 .cpf.big{width:116px;height:116px}
+.cppod:hover .cpf{transform:scale(1.05)}.cppod .cpf{transition:transform .25s}
+.cpmedal{position:absolute;top:0;right:calc(50% - 56px);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:900 13px Inter,system-ui,sans-serif;color:#241c00;background:#c9ced6;box-shadow:0 4px 10px #0006}.cppod.p1 .cpmedal{background:var(--gold);right:calc(50% - 64px)}.cppod.p3 .cpmedal{background:#cd8b52}
+.cptabs{display:flex;gap:8px;margin:18px 0 6px;flex-wrap:wrap}.cphint{display:flex;align-items:center;gap:6px}.cphint .ic{width:14px;height:14px;color:var(--gold)}
+.cpgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:14px}.cpgroup h3{margin:0 0 8px}
+.cpt{width:100%;border-collapse:collapse;font-size:14px}.cpt th{font:700 11px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;padding:6px 4px;border-bottom:1px solid var(--line)}.cpt th:nth-child(2){text-align:left}
+.cpt td{padding:7px 4px;text-align:center;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent)}.cpt td:nth-child(2){text-align:left;max-width:0;width:55%}
+.cpt tbody tr{cursor:pointer;transition:background .15s}.cpt tbody tr:hover,.cpt tbody tr:focus-visible{background:color-mix(in srgb,var(--gold) 9%,transparent);outline:none}
+.cpt tr.q td:first-child{box-shadow:inset 3px 0 0 var(--gold)}.cpt tr.q .cpf{border-color:var(--gold)}.cpt td b{color:var(--gold);font-size:15px}
+.cpdots{display:inline-flex;gap:3px}.cpdots i,.cpstrip i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dW{background:var(--ok)!important}.dD{background:var(--muted)!important;opacity:.6}.dL{background:var(--bad)!important}
+.cpbrackets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(470px,100%),1fr));gap:14px}.cpbracket h3{margin:0 0 10px;display:flex;align-items:center;gap:6px;font-size:17px}.cpbracket.title{border-color:var(--gold)}
+.cpbr{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cpcol{display:flex;flex-direction:column;gap:8px;justify-content:center}.cplab2{font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cpmatch{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:inherit;font:inherit;cursor:pointer;text-align:left;transition:border-color .2s,transform .2s}.cpmatch:hover{border-color:var(--gold);transform:translateY(-2px)}
+.cpmrow{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;opacity:.75}.cpmrow .cpf{width:28px;height:28px}.cpmrow .cpnm{flex:1;min-width:0}.cpmrow.win{opacity:1}.cpmrow.win .cpnm{color:var(--gold);font-weight:800}.cpmrow .ic{width:14px;height:14px;color:var(--gold)}
+.cpwdl{font-size:12px;color:var(--muted);white-space:nowrap}.cpwdl small{font-size:9px;margin:0 3px 0 1px}
+.cpov{position:fixed;inset:0;z-index:99990;background:rgba(2,6,10,.6);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}.cpov.on{opacity:1}
+.cpsheet{position:relative;width:min(620px,100%);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:22px 18px 18px;transform:translateY(30px);transition:transform .3s cubic-bezier(.2,1.2,.4,1)}.cpov.on .cpsheet{transform:none}
+@media(min-width:700px){.cpov{align-items:center}.cpsheet{border-radius:22px}}
+.cpx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.cphead{display:flex;align-items:center;gap:16px}.cphead h2{margin:0 0 4px;font-size:24px}
+.cprat{display:flex;gap:14px;margin-top:8px}.cprat span,.cpstats span{display:flex;flex-direction:column;align-items:center}.cprat b{font-size:17px}.cprat small,.cpstats small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cpstats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:16px 0 8px;padding:10px;border-radius:14px;background:var(--panel2)}.cpstats b{font-size:20px}.cpstats .sW b{color:var(--ok)}.cpstats .sL b{color:var(--bad)}
+.cpstrip{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.cpsh{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;font-size:15px}
+.cpgames{display:flex;flex-direction:column;gap:6px}
+.cpgame{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:border-color .2s}.cpgame:hover{border-color:var(--gold)}.cpgame>.ic{width:16px;height:16px;color:var(--muted);margin-left:auto}
+.cpcol2{display:flex;flex-direction:column;gap:3px;min-width:0}.cpcol2 .fine{display:flex;align-items:center;gap:4px}.cpcol2 .ic{width:12px;height:12px}.cpcol2 .cpf{width:26px;height:26px}
+.cpres{flex:none;width:52px;text-align:center;font:800 11px/1 Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-radius:8px;background:var(--line)}.cpres.rW{background:color-mix(in srgb,var(--ok) 22%,transparent);color:var(--ok)}.cpres.rL{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.cpcredit{margin-top:14px;opacity:.75;font-size:11px}
+.cpvsrow{display:flex;align-items:center;justify-content:center;gap:clamp(10px,4vw,40px);margin:8px 0 16px}.cpvsrow.sm .cpf.big{width:72px;height:72px}
+.cpside{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:inherit;font:inherit;cursor:pointer;max-width:200px}.cpside b{font-size:18px;text-align:center}.cpside .cpmeta{justify-content:center}.cpside .cprat{margin-top:2px}.cpside:hover .cpf{transform:scale(1.05)}.cpside .cpf{transition:transform .25s}
+.cprole{font:800 10px Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.cpvsbig{font:900 clamp(26px,6vw,44px)/1 Fraunces,serif;color:var(--gold);text-shadow:0 0 24px color-mix(in srgb,var(--gold) 50%,transparent)}
+.cpchamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.cpchamp{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:20px 14px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 12%,var(--panel2)),var(--panel));color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;animation:fadein .4s both}.cpchamp:hover{transform:translateY(-5px);border-color:var(--gold)}.cpchamp b{font-size:18px}
+.cptitles{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:4px}.cptitles span{display:inline-flex;align-items:center;gap:4px;font:800 10px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:99px;background:var(--gold);color:#241c00}.cptitles .ic{width:11px;height:11px}
+@media(max-width:600px){.cpform-h{display:none}.cpt{font-size:13px}.cpt .cpf{width:28px;height:28px}.cpt .cpwho{gap:7px}.cpt td:nth-child(2){width:62%}.cpbr{grid-template-columns:1fr}.cpstats{grid-template-columns:repeat(5,1fr);padding:8px 4px}.cpstats b{font-size:17px}.cpf.big{width:78px;height:78px}.cppod.p1 .cpf.big{width:92px;height:92px}.cppod b{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.cpcard,.cpchamp,.cpsheet,.cpov{animation:none;transition:none}}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -275,6 +334,7 @@ function cuRun(root) {
 }
 let sy = false; addEventListener("scroll", () => { if (sy) return; sy = true; requestAnimationFrame(() => { document.documentElement.style.setProperty("--sy", Math.min(scrollY, 800)); sy = false; }); }, { passive: true });
 function home() {
+  try { CH.v = "home"; cpClose(); } catch (e) { /* not set up yet */ }
   rvStop(); olClose(); clearInterval(st.timer); live = null; st = {}; $("#app").innerHTML = `<div class="hero"><div class="wall" aria-hidden="true">${wallHTML()}</div><div class="sec" style="margin-top:0">${ic("crown")}Chess, predicted and played</div><h1>ball<em>knowledge</em></h1><p class="sub" style="font-size:17px;max-width:600px">Out-call a model on real games, guess a grandmaster's next move, solve puzzles and test your level. Everything comes from real data; nothing is made up.</p>
     <div class="statstrip" id="statstrip"><div><b class="cu" data-to="${PZ.length}">${PZ.length}</b><span>real puzzles</span></div><div><b class="cu" data-to="${EM.length}">${EM.length}</b><span>top-level games</span></div><div><b class="cu" data-to="${PLAYERS.length}">${PLAYERS.length}</b><span>players profiled</span></div><div><b class="cu" data-to="${Math.round(S.acc * 1000) / 10}" data-dec="1" data-suf="%">${pct(S.acc, 1)}</b><span>model accuracy</span></div></div>
     <div class="doors"><button class="door" data-hub="bk"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">Puzzles, openings, the next move, blunders, a game against my AI and more.</div></button><button class="door" data-hub="model"><div class="di">${ic("target")}</div><div class="dname">Beat the model</div><div class="dtag">Call real games against a model that never saw them, from everyday play to the biggest events.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button><button class="door" data-go="champ"><div class="di">${ic("crown")}</div><div class="dname">Championships</div><div class="dtag">Firouzja's Total Chess title, the World Championship match from 24 November, women's titles and the reigning champions.</div></button><button class="door" data-go="daily"><div class="di">${ic("clock")}</div><div class="dname">Daily challenges</div><div class="dtag">A puzzle, a position to judge and a tactic to spot, new every day, with a streak.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div></div>`;
@@ -1251,30 +1311,136 @@ const LI = "https://lichess.org/api/broadcast";
 const liJson = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json" } }); if (!r.ok) throw new Error("http " + r.status); return r.json(); };
 const TC_TOURS = [["6PTzCQFL", "Finals"], ["qEXour3L", "Semifinals"], ["9lqCcStZ", "Group A"], ["h7DnvIHQ", "Group B"], ["UPwHJSZj", "Group C"], ["OW6wzikj", "Group D"], ["WbAxpbqH", "Blitz tiebreak"]];
 const TC_GROUPS = { "Group A": [["Firouzja", 15], ["Duda", 14], ["van Foreest", 14], ["Aronian", 11], ["Hong", 11], ["Abdusattorov", 9]], "Group B": [["Caruana", 17], ["Le Quang Liem", 14], ["Rapport", 11], ["Keymer", 10], ["Artemiev", 10], ["Praggnanandhaa", 7]], "Group C": [["Giri", 15], ["Nepomniachtchi", 13], ["Martirosyan", 13], ["Mamedyarov", 11], ["Carlsen", 9], ["Mishra", 8]], "Group D": [["Vachier-Lagrave", 17], ["Niemann", 16], ["Erigaisi", 16], ["So", 13], ["Assaubayeva", 10], ["Vaishali Rameshbabu", 7]] };
-const CH_TABS = [["total", "Total Chess"], ["wcc", "World Championship"], ["women", "Women"], ["champs", "Reigning champions"]];
-let CH = { tab: "total", tour: "6PTzCQFL", round: null, games: [] };
-const chLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
-function champPage(tab) {
-  rvStop(); olClose(); clearInterval(st.timer); live = null; st = { game: "champ" }; if (typeof tab === "string" && tab !== CH.tab) { CH.tab = tab; CH.round = null; } const t = CH.tab;
-  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("crown")}Championships</h2><div class="chips">${CH_TABS.map(([k, n]) => `<button class="chip ${k === t ? "on" : ""}" data-chtab="${k}" type="button">${n}</button>`).join("")}</div><div id="chBody"></div>`;
-  const b = $("#chBody");
-  if (t === "total") b.innerHTML = chTotal(); else if (t === "wcc") b.innerHTML = chWcc(); else if (t === "women") b.innerHTML = chWomen(); else b.innerHTML = chChamps();
-  if (t === "total") chLoadTour(CH.tour); else if (t === "wcc") chLoadTour("qfkdt8mn");
+/* ---------- Championships, laid out by section: Open and Women, each with its tournaments and its champions ----------
+   Total Chess data is a snapshot of the Lichess broadcast (src/78_champ_data.py); photos, federations and ratings come
+   from Lichess's FIDE player API, with the photo credit shown on each player. */
+const CP = DATA.champ || { players: {}, stages: [] };
+const CP_ID = { firouzja: "12573981", giri: "24116068", caruana: "2020009", mvl: "623539", carlsen: "1503014", gukesh: "46616543", sindarov: "14205483", ju: "8603006", vaishali: "5091756", gory: "4147103", bibi: "13708694" };
+const CP_ISO = { FRA: "FR", POL: "PL", NED: "NL", USA: "US", UZB: "UZ", VIE: "VN", HUN: "HU", GER: "DE", IND: "IN", ARM: "AM", AZE: "AZ", NOR: "NO", KAZ: "KZ", CHN: "CN" };
+const CP_NAME = { "12401137": "Le Quang Liem", "5091756": "Vaishali Rameshbabu", "35009192": "Arjun Erigaisi", "25059530": "Praggnanandhaa R", "46616543": "Gukesh D", "2093596": "Hans Niemann", "13306553": "Haik Martirosyan", "8603006": "Ju Wenjun", "1039784": "Jorden van Foreest", "14205483": "Javokhir Sindarov" };   // how these players are usually written
+Object.entries(CP.players).forEach(([k, p]) => { p.id = k; });
+const cpP = (id) => CP.players[id] || null;
+const cpName = (p) => (!p ? "?" : CP_NAME[p.id] || (p.n.includes(", ") ? p.n.split(", ").reverse().join(" ") : p.n));
+const cpInit = (p) => cpName(p).split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+const cpFlag = (p) => { if (!p || !p.fed) return ""; const iso = CP_ISO[p.fed]; return iso ? `<span class="cpflag" title="${p.fed}">${String.fromCodePoint(...[...iso].map((c) => 127397 + c.charCodeAt(0)))}</span>` : `<span class="cpfid" title="Plays under the FIDE flag">FIDE</span>`; };
+const cpFace = (p, cls = "") => `<span class="cpf ${cls}" data-i="${p ? cpInit(p) : "?"}">${p && p.sm ? `<img src="${esc(cls.includes("big") ? p.img || p.sm : p.sm)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="cpImgErr(this)">` : ""}</span>`;
+function cpImgErr(im) { if (im.dataset.r) return im.remove(); im.dataset.r = 1; const u = im.src; setTimeout(() => { im.src = ""; im.src = u; }, 1500 + Math.random() * 1500); }   // one retry: Lichess sometimes throttles a burst of photos
+const cpFed = (p) => (p && p.fed ? cpFlag(p) + (CP_ISO[p.fed] ? p.fed : "") : "");
+const cpWho = (id, extra = "") => { const p = cpP(id); return `<span class="cpwho">${cpFace(p)}<span class="cpnm">${cpFlag(p)}${esc(cpName(p))}${extra}</span></span>`; };
+const cpStage = (sid) => CP.stages.find((x) => x.id === sid) || { games: [] };
+const cpRes = (g, id) => (g.r === "1/2-1/2" ? "D" : (g.r === "1-0") === (g.w === id) ? "W" : g.r === "*" ? "" : "L");
+const CP_KIND = { classical: ["Classical", "clock"], rapid: ["Rapid", "bolt"], blitz: ["Blitz", "bolt"], armageddon: ["Armageddon", "swords"] };
+
+function cpTable(games, scoring, order) {
+  const t = {};
+  games.forEach((g) => [g.w, g.b].forEach((id) => { const r = cpRes(g, id); if (!r) return; const x = t[id] || (t[id] = { id, W: 0, D: 0, L: 0, pts: 0, form: [] }); x[r]++; x.pts += scoring[r]; x.form.push(r); }));
+  const qn = (x) => x.toLowerCase().replace(/[^a-z]/g, ""), oi = (id) => (order ? order.findIndex((n) => qn(cpName(cpP(id))).includes(qn(n))) : 0);
+  return Object.values(t).sort((a, b) => b.pts - a.pts || oi(a.id) - oi(b.id) || b.W - a.W);
 }
-const chTotal = () => `<div class="card"><h3>${ic("trophy")}Total Chess World Championship Tour Pilot</h3><p class="sub">Budapest, 10 to 20 November 2026. 24 players, a combined test event from Norway Chess approved by FIDE: Fast Classical (45 min + 30 s a move), rapid and blitz. $650,000 in prizes. The tour proper starts in 2027, and the winner of the tour becomes FIDE World Combined Champion.</p>
-  <p class="fine"><b>How it ran.</b> A 9-round blitz Swiss (Carlsen won it), then four groups of six playing a double round robin (3 points a win, 1 a draw), then six knockout brackets by group place. The winners of the groups play for the title. Each knockout match lasts two days: four blitz games, two rapid and one Fast Classical a day, with a tie decided by Armageddon.</p>
-  <div class="tiles" style="margin:10px 0">${Object.entries(TC_GROUPS).map(([g, rows]) => `<div class="tile" style="text-align:left"><small>${g}</small>${rows.map(([n, p]) => `<div class="fine" style="display:flex;justify-content:space-between;gap:8px"><span>${esc(n)}</span><b>${p}</b></div>`).join("")}</div>`).join("")}</div>
-  <p class="fine"><b>Title match (Knockout 1).</b> Final: Anish Giri v Alireza Firouzja. Third place: Maxime Vachier-Lagrave v Fabiano Caruana. <b>Alireza Firouzja won the title.</b> Giri took day one 11 to 9 and Firouzja took day two, so the final went to Armageddon, where Firouzja held Giri to a draw with Black and won on draw odds. Caruana came back from a bad start to beat Vachier-Lagrave for third (11 to 9, then 10.5 to 9.5). The games below are from the Lichess broadcast.</p>
-  <p class="fine">Sources: ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")}, ${chLink("https://en.chessbase.com/post/total-chess-budapest-2026-live", "ChessBase")}, ${chLink("https://www.totalchess.com/tournaments/budapest-2026", "totalchess.com")}, ${chLink("https://www.etvbharat.com/en/sports/total-chess-world-championship-tour-pilot-alireza-firouzja-triumphs-in-budapest-enn26112101045", "ETV Bharat")}.</p></div>
-  <div class="chips" style="margin-top:10px">${TC_TOURS.map(([id, n]) => `<button class="chip ${id === CH.tour ? "on" : ""}" data-chtour="${id}" type="button">${n}</button>`).join("")}</div><div id="chLive" class="card" style="margin-top:8px"></div>`;
-const chWcc = () => `<div class="card"><h3>${ic("crown")}FIDE World Chess Championship 2026</h3><p class="sub">Gukesh Dommaraju (defending champion, India) against Javokhir Sindarov (Uzbekistan, winner of the 2026 Candidates). 14 classical games in Geneva, Switzerland, from 24 November to 11 December 2026, with tiebreaks if it is level.</p><p class="fine">Time control: 120 minutes for 40 moves, then 30 minutes, plus 30 seconds a move from move 41. Game dates below are the Lichess broadcast schedule (UTC). Some news sources gave slightly different dates earlier, so check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for any change. Games appear here as they are played.</p></div><div id="chLive" class="card" style="margin-top:8px"></div>`;
-const chWomen = () => `<div class="card"><h3>${ic("crown")}Women's World Championship</h3><p class="sub">Ju Wenjun (China) holds the title. Vaishali Rameshbabu (India) won the 2026 Women's Candidates with 8.5 out of 14 in Cyprus and is the challenger. The match is 12 games.</p><p class="fine"><b>Dates are not confirmed.</b> Sources disagree (one says November 2026, FIDE's own page says dates and host city are to be announced), and Lichess has no 2026 women's match broadcast yet, so there are no games to show. Check ${chLink("https://www.fide.com/", "FIDE")} for the schedule.</p><p class="fine">Women in the Total Chess pilot: Bibisara Assaubayeva and Vaishali Rameshbabu (both in Group D, finishing 5th and 6th). Sources: ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")}, ${chLink("https://en.wikipedia.org/wiki/Women%27s_World_Chess_Championship_2026", "Wikipedia")}.</p></div>`;
-const chChamps = () => { const rows = (list) => list.map(([t, n, c, note]) => `<tr><td><b>${t}</b></td><td>${esc(n)}</td><td class="fine">${esc(c)}</td><td class="fine">${note}</td></tr>`).join(""); return `<div class="card"><h3>${ic("trophy")}Reigning champions</h3><p class="fine">As of 20 November 2026, from the sources below. The 2026 World Rapid and Blitz Championships are in December, so those two can change.</p>
-  <h4 style="margin:12px 0 4px">Open</h4><table class="tb"><tr><th>Title</th><th>Champion</th><th>Country</th><th>Note</th></tr>${rows([["Classical", "Gukesh Dommaraju", "India", "Defends against Sindarov from 24 November"], ["Rapid", "Magnus Carlsen", "Norway", "Won the 2025 World Rapid"], ["Blitz", "Magnus Carlsen", "Norway", "Won the 2025 World Blitz"], ["Freestyle", "Magnus Carlsen", "Norway", "First official FIDE Freestyle title, February 2026"], ["Combined (Total Chess pilot)", "Not decided yet", "", "Final day is 20 November: Giri v Firouzja"]])}</table>
-  <h4 style="margin:12px 0 4px">Women</h4><table class="tb"><tr><th>Title</th><th>Champion</th><th>Country</th><th>Note</th></tr>${rows([["Classical", "Ju Wenjun", "China", "Challenger Vaishali Rameshbabu; dates not confirmed"], ["Rapid", "Aleksandra Goryachkina", "FIDE", "Won the 2025 Women's World Rapid"], ["Blitz", "Bibisara Assaubayeva", "Kazakhstan", "Won the 2025 Women's World Blitz, her third"]])}</table>
-  <p class="fine" style="margin-top:8px">Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase on the 2025 Rapid and Blitz", "")}, ${chLink("https://en.chessbase.com/post/freestyle-chess-wc-2026-3", "ChessBase on Freestyle", "")}, ${chLink("https://www.chess.com/news/view/geneva-gukesh-sindarov-2026-fide-world-championship", "chess.com on the 2026 match", "")}, ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE on the women's title", "")}. A few classical-title details come from news reports, not from a single official list, so treat them as reported.</p></div>`; };
+const cpDots = (form) => `<span class="cpdots">${form.slice(-5).map((r) => `<i class="d${r}"></i>`).join("")}</span>`;
+const cpTableHTML = (rows, opts = {}) => `<table class="cpt"><thead><tr><th>#</th><th>Player</th><th title="Wins">W</th><th title="Draws">D</th><th title="Losses">L</th><th class="cpform-h">Form</th><th>Pts</th></tr></thead><tbody>${rows.map((x, i) => `<tr class="${i < (opts.q || 0) ? "q" : ""}" data-cpp="${x.id}" tabindex="0"><td class="num">${i + 1}</td><td>${cpWho(x.id)}</td><td class="num">${x.W}</td><td class="num">${x.D}</td><td class="num">${x.L}</td><td class="cpform-h">${cpDots(x.form)}</td><td class="num"><b>${x.pts % 1 ? x.pts.toFixed(1) : x.pts}</b></td></tr>`).join("")}</tbody></table>`;
+
+/* the six knockout brackets: semifinal pairs come from the Semifinals broadcast, the final and third-place pairs from the Finals one */
+function cpMatches(sid) { const m = {}; cpStage(sid).games.forEach((g, i) => { const k = [g.w, g.b].sort().join("|"), x = m[k] || (m[k] = { key: sid + ":" + k, ids: k.split("|"), games: [], bd: 99 }); x.games.push(i); x.bd = Math.min(x.bd, g.bd || 99); }); return Object.values(m); }
+function cpBrackets() {
+  const semis = cpMatches("semi"), fins = cpMatches("final"), out = [];
+  for (let k = 1; k <= 6; k++) {
+    const sm = semis.filter((m) => m.bd === 2 * k - 1 || m.bd === 2 * k), fin = fins.find((m) => m.bd === 2 * k - 1), third = fins.find((m) => m.bd === 2 * k);
+    out.push({ k, sm, fin, third, inFinal: new Set(fin ? fin.ids : []) });
+  }
+  return out;
+}
+function cpMatchTile(m, label, win) {
+  if (!m) return "";
+  const st = cpStage(m.key.split(":")[0]), gs = m.games.map((i) => st.games[i]), rec = (id) => { const r = { W: 0, D: 0, L: 0 }; gs.forEach((g) => { const x = cpRes(g, id); if (x) r[x]++; }); return r; };
+  return `<button class="cpmatch" type="button" data-cpm="${m.key}"><span class="cplab">${label}</span>${m.ids.map((id) => { const r = rec(id); return `<span class="cpmrow ${win === id ? "win" : ""}">${cpFace(cpP(id))}<span class="cpnm">${cpFlag(cpP(id))}${esc(cpName(cpP(id)))}</span><span class="num cpwdl">${r.W}<small>W</small> ${r.D}<small>D</small></span>${win === id ? ic("trophy") : ""}</span>`; }).join("")}</button>`;
+}
+
+const CP_EVENTS = {
+  open: [
+    { v: "tc", name: "Total Chess Tour Pilot", where: "Budapest", when: "10–20 Nov 2026", badge: ["done", "Finished"], faces: ["firouzja", "giri", "caruana"], win: "firouzja" },
+    { v: "wcc", name: "World Championship", where: "Geneva", when: "24 Nov – 11 Dec 2026", badge: ["soon", "Starts 24 Nov"], faces: ["gukesh", "sindarov"], vs: true },
+    { v: "cho", name: "Reigning champions", where: "Classical, rapid, blitz, freestyle", when: "As of Nov 2026", badge: ["info", "Titles"], faces: ["gukesh", "carlsen", "firouzja"] },
+  ],
+  women: [
+    { v: "wwc", name: "Women's World Championship", where: "Host to be announced", when: "Dates not confirmed", badge: ["soon", "Upcoming"], faces: ["ju", "vaishali"], vs: true },
+    { v: "chw", name: "Reigning champions", where: "Classical, rapid, blitz", when: "As of Nov 2026", badge: ["info", "Titles"], faces: ["ju", "gory", "bibi"] },
+  ],
+};
+const cpCard = (e) => `<button class="cpcard" type="button" data-cpv="${e.v}"><span class="cpbadge ${e.badge[0]}">${e.badge[1]}</span><span class="cpfaces ${e.vs ? "vs" : ""}">${e.faces.map((f, i) => (e.vs && i ? '<b class="cpvs">vs</b>' : "") + cpFace(cpP(CP_ID[f]), "md")).join("")}</span><b class="cpcname">${e.name}</b><span class="cpmeta">${ic("flag")}${e.where}</span><span class="cpmeta">${ic("clock")}${e.when}</span>${e.win ? `<span class="cpwinner">${ic("trophy")}${esc(cpName(cpP(CP_ID[e.win])))}</span>` : ""}</button>`;
+
+let CH = { v: "home", stage: "groups", tour: "6PTzCQFL", round: null, games: [] };
+const chLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
+const cpBack = (to = "home", label = "Championships") => `<div class="crumbs"><button class="btn ghost" ${to === "menu" ? 'data-go="home"' : `data-cpv="${to}"`}>← ${label}</button></div>`;
+function champPage(v) {
+  rvStop(); olClose(); clearInterval(st.timer); live = null; st = { game: "champ" }; if (typeof v === "string") CH.v = v; const app = $("#app"); app.className = "fresh";
+  if (CH.v === "home") app.innerHTML = `${cpBack("menu", "Menu")}<h2 style="font-size:32px">${ic("crown")}Championships</h2>
+    <div class="cpsec"><h3>${ic("crown")}Open</h3><span class="fine">Open to everyone; nearly every player is a man.</span></div><div class="cpgrid">${CP_EVENTS.open.map(cpCard).join("")}</div>
+    <div class="cpsec"><h3>${ic("crown")}Women</h3><span class="fine">Titles only women can play for.</span></div><div class="cpgrid">${CP_EVENTS.women.map(cpCard).join("")}</div>`;
+  else if (CH.v === "tc") app.innerHTML = cpBack() + cpTC();
+  else if (CH.v === "wcc") { app.innerHTML = cpBack() + cpVs("gukesh", "sindarov", "FIDE World Championship", [["flag", "Geneva, Switzerland"], ["clock", "24 Nov – 11 Dec 2026"], ["swords", "14 classical games"], ["bolt", "120 min + 30 min, +30 s from move 41"]], `Gukesh defends the title against Sindarov, who won the 2026 Candidates. Tiebreaks if it is level. Dates follow the Lichess broadcast schedule; check ${chLink("https://worldchampionship.fide.com/", "FIDE")} for changes.`, ["Defending champion", "Challenger"]) + `<div id="chLive" class="card" style="margin-top:12px"></div>`; chLoadTour("qfkdt8mn"); }
+  else if (CH.v === "wwc") app.innerHTML = cpBack() + cpVs("ju", "vaishali", "Women's World Championship", [["flag", "Host to be announced"], ["clock", "Dates not confirmed"], ["swords", "12 games"], ["trophy", "Vaishali won the Candidates, 8.5/14"]], `Sources disagree on the dates and FIDE lists them as to be announced, so there are no games to show yet. ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")} · ${chLink("https://en.wikipedia.org/wiki/Women%27s_World_Chess_Championship_2026", "Wikipedia")}`, ["Champion", "Challenger"]);
+  else if (CH.v === "cho") app.innerHTML = cpBack() + cpChamps("Open champions", [["gukesh", ["Classical"], "Defends against Sindarov from 24 November"], ["carlsen", ["Rapid", "Blitz", "Freestyle"], "2025 World Rapid and Blitz; first FIDE Freestyle title, Feb 2026"], ["firouzja", ["Total Chess pilot"], "Won the Budapest pilot on Armageddon, Nov 2026"]], `The World Rapid and Blitz are in December, so those can change. Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase")}, ${chLink("https://en.chessbase.com/post/freestyle-chess-wc-2026-3", "ChessBase on Freestyle")}, ${chLink("https://www.chess.com/news/view/geneva-gukesh-sindarov-2026-fide-world-championship", "chess.com")}, ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")}.`);
+  else if (CH.v === "chw") app.innerHTML = cpBack() + cpChamps("Women's champions", [["ju", ["Classical"], "Challenger: Vaishali Rameshbabu, dates not confirmed"], ["gory", ["Rapid"], "Won the 2025 Women's World Rapid"], ["bibi", ["Blitz"], "Won the 2025 Women's World Blitz, her third"]], `The World Rapid and Blitz are in December, so those can change. Sources: ${chLink("https://en.chessbase.com/post/world-rapid-blitz-2025-5", "ChessBase")}, ${chLink("https://www.fide.com/vaishali-conquers-womens-candidates-to-set-up-world-title-showdown-against-ju-wenjun/", "FIDE")}.`);
+  scrollTo({ top: 0, behavior: "instant" });
+}
+function cpVs(a, b, title, facts, note, roles) {
+  const side = (k, role) => { const p = cpP(CP_ID[k]); return `<button class="cpside" type="button" data-cpp="${CP_ID[k]}">${cpFace(p, "big")}<span class="cprole">${role}</span><b>${esc(cpName(p))}</b><span class="cpmeta">${cpFed(p)}</span>${p && p.std ? `<span class="cprat"><span><b class="num">${p.std}</b><small>Classical</small></span></span>` : ""}</button>`; };
+  return `<div class="card cphero"><h2>${title}</h2><div class="cpvsrow">${side(a, roles[0])}<span class="cpvsbig">VS</span>${side(b, roles[1])}</div><div class="cpfacts">${facts.map(([i, t]) => `<span>${ic(i)}${t}</span>`).join("")}</div><p class="fine" style="margin:12px 0 0">${note}</p></div>`;
+}
+function cpChamps(title, rows, note) {
+  return `<h2 style="font-size:30px">${ic("trophy")}${title}</h2><div class="cpchamps">${rows.map(([k, titles, line]) => { const p = cpP(CP_ID[k]); return `<button class="cpchamp" type="button" data-cpp="${CP_ID[k]}">${cpFace(p, "big")}<span class="cptitles">${titles.map((t) => `<span>${ic("crown")}${t}</span>`).join("")}</span><b>${esc(cpName(p))}</b><span class="cpmeta">${cpFed(p)}</span><span class="fine">${line}</span></button>`; }).join("")}</div><p class="fine" style="margin-top:12px">${note}</p>`;
+}
+function cpTC() {
+  const pod = [["giri", "2", "Runner-up"], ["firouzja", "1", "Champion"], ["caruana", "3", "Third"]];
+  const tabs = [["groups", "Groups"], ["ko", "Knockouts"], ["blitz", "Opening blitz"]];
+  return `<div class="card cphero"><span class="cpbadge done">Finished</span><h2>Total Chess Tour Pilot</h2><div class="cpfacts"><span>${ic("flag")}Budapest</span><span>${ic("clock")}10–20 Nov 2026</span><span>${ic("user")}24 players</span><span>${ic("trophy")}$650,000</span><span>${ic("bolt")}Classical, rapid, blitz</span></div>
+    <div class="cppodium">${pod.map(([k, n, l]) => `<button class="cppod p${n}" type="button" data-cpp="${CP_ID[k]}">${cpFace(cpP(CP_ID[k]), "big")}<span class="cpmedal">${n}</span><b>${esc(cpName(cpP(CP_ID[k])))}</b><span class="fine">${l}</span><span class="cpstep"></span></button>`).join("")}</div>
+    <p class="fine" style="margin:10px 0 0">Firouzja and Giri won a day each in the final, so it went to Armageddon: Firouzja held a draw with Black and won on draw odds. Caruana beat Vachier-Lagrave for third. ${chLink("https://en.wikipedia.org/wiki/Total_Chess_World_Championship_2026", "Wikipedia")} · ${chLink("https://www.etvbharat.com/en/sports/total-chess-world-championship-tour-pilot-alireza-firouzja-triumphs-in-budapest-enn26112101045", "ETV Bharat")}</p></div>
+    <div class="cptabs" role="tablist">${tabs.map(([k, n]) => `<button class="chip ${CH.stage === k ? "on" : ""}" type="button" role="tab" aria-selected="${CH.stage === k}" data-cpstage="${k}">${n}</button>`).join("")}</div><div id="cpBody">${cpStageHTML()}</div>`;
+}
+function cpStageHTML() {
+  if (CH.stage === "groups") return `<p class="fine cphint">${ic("arrow")}Four groups of six, each player meeting the others twice in Fast Classical (3 points a win, 1 a draw). Group winners went to the title bracket. Tap a player for their games.</p><div class="cpgroups">${["A", "B", "C", "D"].map((g) => `<div class="card cpgroup"><h3>Group ${g}</h3>${cpTableHTML(cpTable(cpStage(g).games, { W: 3, D: 1, L: 0 }, TC_GROUPS["Group " + g].map((r) => r[0])), { q: 1 })}</div>`).join("")}</div>`;
+  if (CH.stage === "blitz") return `<p class="fine cphint">${ic("arrow")}The opening 9-round blitz Swiss (1 point a win, ½ a draw). Tap a player for their games.</p><div class="card">${cpTableHTML(cpTable(cpStage("blitz").games, { W: 1, D: 0.5, L: 0 }), { q: 1 })}</div>`;
+  const names = ["Title bracket (group winners)", "Second places", "Third places", "Fourth places", "Fifth places", "Sixth places"];
+  return `<p class="fine cphint">${ic("arrow")}Each group place had its own bracket. A match is two days of 4 blitz, 2 rapid and 1 Fast Classical game, with Armageddon if level. Tap a match for its games.</p><div class="cpbrackets">${cpBrackets().map((b) => `<div class="card cpbracket ${b.k === 1 ? "title" : ""}"><h3>${b.k === 1 ? ic("crown") : ""}${names[b.k - 1]}</h3><div class="cpbr"><div class="cpcol"><span class="cplab2">Semifinals</span>${b.sm.map((m) => cpMatchTile(m, "", m.ids.find((id) => b.inFinal.has(id)))).join("")}</div><div class="cpcol"><span class="cplab2">Final</span>${cpMatchTile(b.fin, "", b.k === 1 ? CP_ID.firouzja : null)}<span class="cplab2">Third place</span>${cpMatchTile(b.third, "", b.k === 1 ? CP_ID.caruana : null)}</div></div></div>`).join("")}</div>`;
+}
+function cpGameRow(sid, i, me) {
+  const st = cpStage(sid), g = st.games[i], opp = g.w === me ? g.b : g.w, r = cpRes(g, me), k = CP_KIND[g.tc] || ["", "clock"];
+  return `<button class="cpgame" type="button" data-cpg="${sid}|${i}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : r === "L" ? "Loss" : "…"}</span><span class="cpcol2">${me ? cpWho(opp) : `${cpWho(g.w)}<span class="fine">v</span>${cpWho(g.b)}`}<span class="fine">${st.name}${g.rd ? " · round " + +g.rd : ""} · ${ic(k[1])}${k[0]} · ${me ? (g.w === me ? "White" : "Black") : g.r.replace("1/2-1/2", "½-½")}</span></span>${ic("arrow")}</button>`;
+}
+function cpSheet(html) { cpClose(); const m = document.body.appendChild(document.createElement("div")); m.className = "cpov"; m.id = "cpov"; m.innerHTML = `<div class="cpsheet" role="dialog" aria-modal="true"><button class="cpx" type="button" data-cpclose aria-label="Close">×</button>${html}</div>`; requestAnimationFrame(() => m.classList.add("on")); }
+function cpClose() { const m = document.getElementById("cpov"); if (m) m.remove(); }
+function cpPlayer(id) {
+  const p = cpP(id); if (!p) return; const mine = [];
+  CP.stages.forEach((s) => s.games.forEach((g, i) => { if (g.w === id || g.b === id) mine.push([s.id, i, g]); }));
+  const all = { W: 0, D: 0, L: 0 }; mine.forEach(([, , g]) => { const r = cpRes(g, id); if (r) all[r]++; }); const n = all.W + all.D + all.L;
+  const byStage = CP.stages.map((s) => [s, mine.filter((x) => x[0] === s.id).reverse()]).filter(([, l]) => l.length).reverse();   // newest first
+  cpSheet(`<div class="cphead">${cpFace(p, "big")}<div><h2>${esc(cpName(p))}</h2><div class="cpmeta">${cpFed(p)}${p.t ? " · " + p.t : ""}${p.y ? " · born " + p.y : ""}</div><div class="cprat">${[["Classical", p.std], ["Rapid", p.rap], ["Blitz", p.blz]].filter((x) => x[1]).map(([k, v]) => `<span><b class="num">${v}</b><small>${k}</small></span>`).join("")}</div></div></div>
+    ${n ? `<div class="cpstats"><span><b class="num">${n}</b><small>Games</small></span><span class="sW"><b class="num">${all.W}</b><small>Wins</small></span><span class="sD"><b class="num">${all.D}</b><small>Draws</small></span><span class="sL"><b class="num">${all.L}</b><small>Losses</small></span><span><b class="num">${Math.round((100 * (all.W + all.D / 2)) / n)}%</b><small>Score</small></span></div><div class="fine" style="margin-bottom:4px">Every game, first to last</div><div class="cpstrip">${mine.map(([, , g]) => `<i class="d${cpRes(g, id)}"></i>`).join("")}</div>
+    ${byStage.map(([s, l]) => `<h4 class="cpsh">${s.name}<span class="fine">${l.filter((x) => cpRes(x[2], id) === "W").length}W ${l.filter((x) => cpRes(x[2], id) === "D").length}D ${l.filter((x) => cpRes(x[2], id) === "L").length}L</span></h4><div class="cpgames">${l.map(([sid, i]) => cpGameRow(sid, i, id)).join("")}</div>`).join("")}` : `<p class="fine">Did not play in the Total Chess pilot.</p>`}
+    ${p.cr ? `<p class="fine cpcredit">Photo: ${esc(p.cr.replace(/<[^>]*>/g, ""))}</p>` : ""}`);
+}
+function cpMatch(key) {
+  const [sid, pair] = key.split(":"), ids = pair.split("|"), st = cpStage(sid), m = cpMatches(sid).find((x) => x.key === key); if (!m) return;
+  cpSheet(`<div class="cpvsrow sm">${ids.map((id, k) => (k ? '<span class="cpvsbig">VS</span>' : "") + `<button class="cpside" type="button" data-cpp="${id}">${cpFace(cpP(id), "big")}<b>${esc(cpName(cpP(id)))}</b></button>`).join("")}</div><h4 class="cpsh">${st.name}<span class="fine">${m.games.length} games</span></h4><div class="cpgames">${m.games.map((i) => cpGameRow(sid, i, ids[0])).join("")}</div><p class="fine">Results are from ${esc(cpName(cpP(ids[0])))}'s side.</p>`);
+}
+document.addEventListener("click", (e) => {
+  if (st.game !== "champ") return;
+  const t = e.target.closest && e.target.closest("[data-cpv],[data-cpstage],[data-cpp],[data-cpm],[data-cpg],[data-cpclose],.cpov"); if (!t) return;
+  if (t.classList.contains("cpov") && e.target !== t) return;
+  if (t.dataset.cpclose != null || t.classList.contains("cpov")) return cpClose();
+  try { Snd.tick && Snd.tick(); } catch (er) { /* quiet */ }
+  if (t.dataset.cpv) { cpClose(); return champPage(t.dataset.cpv); }
+  if (t.dataset.cpstage) { CH.stage = t.dataset.cpstage; document.querySelectorAll("[data-cpstage]").forEach((x) => { x.classList.toggle("on", x === t); x.setAttribute("aria-selected", x === t); }); $("#cpBody").innerHTML = cpStageHTML(); return; }
+  if (t.dataset.cpp) return cpPlayer(t.dataset.cpp);
+  if (t.dataset.cpm) return cpMatch(t.dataset.cpm);
+  if (t.dataset.cpg) { const [sid, i] = t.dataset.cpg.split("|"), g = cpStage(sid).games[+i], c = new Chess(); c.load_pgn(g.m, { sloppy: true }); const sans = c.history(); if (sans.length < 2) return; cpClose(); reviewStart(sans, "w", { from: "champ", names: [cpName(cpP(g.w)), cpName(cpP(g.b))], result: g.r }); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") cpClose(); if (e.key === "Enter" && st.game === "champ" && e.target.dataset && e.target.dataset.cpp) cpPlayer(e.target.dataset.cpp); });
+
 async function chLoadTour(id) {
-  const el = document.getElementById("chLive"); if (!el) return; if (CH.tab === "total") CH.tour = id; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;
+  const el = document.getElementById("chLive"); if (!el) return; el.innerHTML = `<p class="fine"><span class="spin"></span> Loading from Lichess…</p>`;
   try {
     const d = await liJson(`${LI}/${id}`); if (document.getElementById("chLive") !== el) return; const rounds = d.rounds || [], now = Date.now();
     const state = (r) => (r.finished ? "done" : r.ongoing ? "live" : r.startsAt && r.startsAt < now ? "played" : "soon"), fmt = (ms) => (ms ? new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -1295,9 +1461,7 @@ async function chLoadRound(id, r) {
   } catch (e) { el.innerHTML = `<p class="sub"><b>Could not load the games.</b> <button class="btn" data-chround="${id}" type="button">Try again</button></p>`; }
 }
 document.addEventListener("click", (e) => {
-  const t = e.target.closest && e.target.closest("[data-chtab],[data-chtour],[data-chround],[data-chg]"); if (!t || st.game !== "champ") return;
-  if (t.dataset.chtab) return champPage(t.dataset.chtab);
-  if (t.dataset.chtour) { document.querySelectorAll("[data-chtour]").forEach((x) => x.classList.toggle("on", x.dataset.chtour === t.dataset.chtour)); CH.round = null; return chLoadTour(t.dataset.chtour); }
+  const t = e.target.closest && e.target.closest("[data-chround],[data-chg]"); if (!t || st.game !== "champ") return;
   if (t.dataset.chround) return chLoadRound(t.dataset.chround, null);
   if (t.dataset.chg != null) { const g = CH.games[+t.dataset.chg]; if (g && g.sans.length >= 2) reviewStart(g.sans, "w", { from: "champ", names: [g.w, g.b], result: g.res }); }
 });

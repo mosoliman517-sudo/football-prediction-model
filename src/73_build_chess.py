@@ -48,6 +48,7 @@ pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(dat
 html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read())
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
+data["champ"] = json.load(open("02_processed_data/chess_champ.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_champ.json") else None   # src/78: Total Chess games + FIDE profiles
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))

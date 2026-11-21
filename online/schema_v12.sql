@@ -1,4 +1,4 @@
--- ballknowledge, part 12: the weekly tournament predicts real matches. Run in the Supabase SQL editor after the earlier parts.
+-- ballknowledge, part 12: the weekly tournament predicts real matches, and friends show who is online. Run in the Supabase SQL editor after the earlier parts.
 -- Safe to run twice.
 --
 -- Each player predicts the exact score of this week's real fixtures. The server stamps every prediction with its own clock
@@ -54,3 +54,28 @@ $$;
 grant execute on function public.wk_predict(text, int, int, int, timestamptz) to authenticated;
 grant execute on function public.wk_mine(int) to authenticated;
 grant execute on function public.wk_all(int) to anon, authenticated;
+
+-- Friends, live: who is online (seen in the last few minutes, from a heartbeat the page sends while open) and whether
+-- they have a lobby open right now, so you can join it in one tap. Also whether they added you back.
+alter table public.profiles add column if not exists last_seen timestamptz;
+
+create or replace function public.touch_seen() returns void
+language sql security definer set search_path = public as $$
+  update profiles set last_seen = now() where user_id = auth.uid() and (last_seen is null or last_seen < now() - interval '45 seconds');
+$$;
+
+create or replace function public.my_friends_live() returns table (nick text, elo int, games int, avatar text, fav_player text, fav_team text, badges text[],
+  last_seen timestamptz, lobby_code text, lobby_game text, mutual boolean)
+language sql stable security definer set search_path = public as $$
+  select p.nick, coalesce(r.elo, 1000), coalesce(r.games, 0), p.avatar, p.fav_player, p.fav_team, public.clean_badges(p.user_id, p.badges),
+         p.last_seen,
+         (select l.code from lobbies l where l.host = f.friend_id and l.seen_at > now() - interval '45 seconds' order by l.seen_at desc limit 1),
+         (select l.game from lobbies l where l.host = f.friend_id and l.seen_at > now() - interval '45 seconds' order by l.seen_at desc limit 1),
+         exists (select 1 from friends b where b.user_id = f.friend_id and b.friend_id = auth.uid())
+  from friends f join profiles p on p.user_id = f.friend_id left join ratings r on r.user_id = f.friend_id
+  where f.user_id = auth.uid()
+  order by (p.last_seen > now() - interval '3 minutes') desc nulls last, coalesce(r.elo, 1000) desc, p.nick;
+$$;
+
+grant execute on function public.touch_seen() to authenticated;
+grant execute on function public.my_friends_live() to authenticated;

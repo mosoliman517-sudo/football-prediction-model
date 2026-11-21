@@ -3425,11 +3425,13 @@ const Net = {
     if (this.role === "host") {
       if (m.k === "hello") { this.guest = { uid: m.uid, nick: m.nick }; this.send({ k: "welcome", ranked: !!this.ranked, card: Vs.me(), gcard: m.card || { nick: m.nick } }); if (!Net.started) { if (!Vs.matched) { Net.started = true; Vs.match(Vs.me(), m.card || { nick: m.nick || "Player 2" }, () => { Net.started = false; if (Net.role === "host") startOnline(); }); } } else if (!Vs.matched) this.push(true); }
       else if (m.k === "react") floatReact(m.e);
+      else if (m.k === "sk") skPop(m.id, m.nick, m.line, false);
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
       if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
       if (m.k === "react") floatReact(m.e);
+      if (m.k === "sk") skPop(m.id, m.nick, m.line, false);
       if (m.k === "duo") duoResultShow(m.names, m.scores, m.sub);
       if (m.k === "welcome" && m.ranked) this.ranked = true;
       if (m.k === "welcome" && !Vs.matched && !Vs.seen) { Vs.seen = true; Vs.match(Vs.me(), m.card || { nick: "Host" }); }
@@ -3451,6 +3453,14 @@ const Net = {
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
 function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.rou && S.rou.phase === "play") return S.rou.turn === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
+/* sidekick talk in online matches: your sidekick (or theirs) pops up with a line, on both screens, in its own voice */
+function skPop(id, nick, line, mine) {
+  if (!MASCOT_SVG[id] || typeof line !== "string") return; document.querySelectorAll(".skpop." + (mine ? "me" : "them")).forEach((x) => x.remove());
+  const e = document.createElement("div"); e.className = "skpop " + (mine ? "me" : "them"); e.setAttribute("role", "status");
+  e.innerHTML = `<span class="skpf">${MASCOT_SVG[id](mine ? "happy" : "wow")}</span><span class="skpb"><b>${esc((MASCOTS[id] || {}).name || "Sidekick")} <small>${mine ? "yours" : "· " + esc(String(nick).slice(0, 16))}</small></b>${esc(line)}</span>`;
+  document.body.appendChild(e); setTimeout(() => e.classList.add("out"), 4200); setTimeout(() => e.remove(), 4700);
+  try { if (Mascot.mode() === "on") AIVoice.play(line, { voice: MASCOTS[id].voice, volume: 0.9 }); } catch (x) { /* no voice */ }
+}
 function floatReact(e) { const s = document.createElement("span"); s.className = "floater"; s.textContent = e; s.style.left = 12 + Math.random() * 76 + "%"; document.body.appendChild(s); setTimeout(() => s.remove(), 1900); }
 function startOnline() {
   Ranked.stopLobby(); Net.started = true; const g = Net.game;
@@ -3612,6 +3622,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "pfNickSave") { const v = ($("#pfNick").value || "").trim(), msg = $("#pfNickMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } Account.setNick(v).then((r) => { if (r && r.ok) { const p = prof(); p.nick = v; p.board = true; store.items.profile = p; saveProf(p); try { Account.push(); } catch (e) { /* offline */ } renderProfilePage(); paintProfileBtn(); toast("Name saved: " + esc(v)); } else $("#pfNickMsg").textContent = (r && r.error) || "That name is taken."; }); return; }
   if (b.id === "pfFriendAdd") { const v = ($("#pfFriend").value || "").trim(), msg = $("#pfFriendMsg"); if (!v) return; Ranked.rpc("add_friend", { p_nick: v }).then((r) => { const m = { ok: "Added!", notfound: "Nobody has that display name.", self: "That is you.", already: "Already on your list.", full: "Your list is full (100).", auth: "Please sign in." }; msg.textContent = r === null ? "Could not reach the server (is schema_v3.sql installed?)." : m[r] || "Done."; if (r === "ok") { award("social"); $("#pfFriend").value = ""; paintFriends(); } }); return; }
   if (b.dataset.unfriend) { Ranked.rpc("remove_friend", { p_nick: b.dataset.unfriend }).then(paintFriends); return; }
+  if (b.dataset.sk) { const now = Date.now(); if (now - (window.__skT || 0) < 3000) return; window.__skT = now; const id = Mascot.id(), L = (MASCOTS[id] && MASCOTS[id].lines) || {}, pool = { cheer: [...(L.hit || []), ...(L.bighit || [])], tease: [...(L.miss || []), ...(L.model_wrong || [])], gg: [...(L.over || []), ...(L.best || [])] }[b.dataset.sk] || [], line = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "Good game."; skPop(id, prof().nick || "You", line, true); Net.send({ k: "sk", id, nick: prof().nick || "Opponent", line: String(line).slice(0, 180) }); return; }
   if (b.dataset.react) { Snd.tick(); floatReact(b.dataset.react); Net.send({ k: "react", e: b.dataset.react }); return; }
   if (b.id === "tourBtn") { startTour(); return; }
   if (b.dataset.go) { Snd.tick(); go(b.dataset.go); return; }

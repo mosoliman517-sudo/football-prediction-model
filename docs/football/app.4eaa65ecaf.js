@@ -1975,8 +1975,9 @@ function renderRanked() {
     <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn ghost" id="rkCreate" type="button">Create lobby</button><button class="btn qmbtn" id="rkQuick" type="button"><span class="qmpulse"></span>Quick match</button></div>
     <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
     ${dualCard()}
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-handshake></use></svg> Friends</h3><button class="btn ghost" data-go="profile" type="button">Add friends</button></div><div id="rkFriends" class="lbx">${skelRows(2)}</div></div>
     <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx">${skelRows(3)}</div></div>`;
-  paintLobbies(); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); }, 4000);
+  paintLobbies(); paintFriends("#rkFriends"); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); if ((Ranked.ft = (Ranked.ft || 0) + 1) % 5 === 0) paintFriends("#rkFriends"); }, 4000);
   Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>${rankOf(Ranked.elo).icon} ${rankOf(Ranked.elo).name} · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
 }
 async function paintLobbies() {
@@ -2640,11 +2641,17 @@ function historyList(rows) {
   if (!rows || !rows.length) return ""; const ago = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? `${Math.max(1, m)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
   return `<div class="label" style="margin-top:12px">Recent matches</div><div class="lbx">${rows.slice(-8).reverse().map((r) => `<div class="lbrow hrow"><b>${r.delta > 0 ? "<svg class=ic><use href=#i-check></use></svg>" : r.delta < 0 ? "<svg class=ic><use href=#i-cross></use></svg>" : "<svg class=ic><use href=#i-minus></use></svg>"}</b><span>${r.opp_nick ? "vs " + esc(r.opp_nick) : "Ranked match"}<small class="fine"> ${r.game ? esc(rkName(r.game)) : ""}</small></span><span class="num ${r.delta >= 0 ? "up" : "down"}">${r.delta > 0 ? "+" : ""}${r.delta}</span><span class="fine">${ago(r.at)}</span></div>`).join("")}</div>`;
 }
-async function paintFriends() {
-  const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
+async function paintFriends(sel = "#pfFriends") {
+  const box = $(sel); if (!box) return; let rows = await Ranked.rpc("my_friends_live"), live = !!rows; if (!rows) rows = await Ranked.rpc("my_friends"); if (!$(sel)) return;
   if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
-  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.");
+  const on = (r) => r.last_seen && Date.now() - new Date(r.last_seen) < 3 * 60e3, ago = (t) => { const m = Math.floor((Date.now() - new Date(t)) / 60e3); return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ago` : `${Math.floor(m / 1440)}d ago`; };
+  const n = rows.filter(on).length; const head = live && rows.length ? `<div class="fine frhead"><span class="frdot on"></span> ${n} online now</div>` : "";
+  box.innerHTML = rows.length ? head + rows.map((r, k) => `<div class="lbrow frow ${on(r) ? "isonline" : ""}" style="--d:${k * 50}ms"><span class="frav">${avatarHTML(r.avatar, "sm", r.nick)}${live ? `<i class="frdot ${on(r) ? "on" : ""}" title="${on(r) ? "Online" : r.last_seen ? "Seen " + ago(r.last_seen) : "Not seen yet"}"></i>` : ""}</span><div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span>${r.mutual ? ' <span class="frmut" title="You added each other">friends</span>' : ""}<div class="fine">${r.lobby_code ? `<b class="frlob"><span class="livedot"></span> In a lobby: ${esc(rkName(r.lobby_game))}</b>` : on(r) ? "Online now" : r.last_seen ? "Seen " + ago(r.last_seen) : ""}${r.fav_team ? " · " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px">${r.lobby_code ? `<button class="btn" data-rkjoin="${esc(r.lobby_code)}|${esc(r.lobby_game)}" type="button">Join</button>` : ""}<button class="btn ${r.lobby_code ? "ghost" : ""}" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button>${sel === "#pfFriends" ? `<button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button>` : ""}</div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name in your profile.");
 }
+/* a heartbeat while the page is open and visible, so friends can see you are online */
+setInterval(() => { try { if (Account.signedIn && Board.mode === "rest" && document.visibilityState === "visible") Ranked.rpc("touch_seen"); } catch (e) { /* offline */ } }, 60000);
+setTimeout(() => { try { if (Account.signedIn && Board.mode === "rest") Ranked.rpc("touch_seen"); } catch (e) { /* offline */ } }, 4000);
+
 
 /* ================= Challenge a friend ================= */
 const SHORT = { E0: "pl", D1: "bl", SP1: "ll", I1: "sa", F1: "l1", ALL: "al" }, FROMSHORT = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
@@ -3556,11 +3563,13 @@ const Net = {
     if (this.role === "host") {
       if (m.k === "hello") { this.guest = { uid: m.uid, nick: m.nick }; this.send({ k: "welcome", ranked: !!this.ranked, card: Vs.me(), gcard: m.card || { nick: m.nick } }); if (!Net.started) { if (!Vs.matched) { Net.started = true; Vs.match(Vs.me(), m.card || { nick: m.nick || "Player 2" }, () => { Net.started = false; if (Net.role === "host") startOnline(); }); } } else if (!Vs.matched) this.push(true); }
       else if (m.k === "react") floatReact(m.e);
+      else if (m.k === "sk") skPop(m.id, m.nick, m.line, false);
       else if (m.k === "click") applyRemote(m);
       else if (m.k === "input") { const el = document.getElementById(m.id); if (el && guestTurn()) { el.value = m.v; el.dispatchEvent(new Event("input", { bubbles: true })); } }
     } else if (this.role === "guest") {
       if (m.k === "welcome" || m.k === "html") { this.welcomed = true; clearInterval(this.hi); }
       if (m.k === "react") floatReact(m.e);
+      if (m.k === "sk") skPop(m.id, m.nick, m.line, false);
       if (m.k === "duo") duoResultShow(m.names, m.scores, m.sub);
       if (m.k === "welcome" && m.ranked) this.ranked = true;
       if (m.k === "welcome" && !Vs.matched && !Vs.seen) { Vs.seen = true; Vs.match(Vs.me(), m.card || { nick: "Host" }); }
@@ -3582,6 +3591,14 @@ const Net = {
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newRoomCode = () => Array.from({ length: 4 }, () => codeChars[Math.floor(Math.random() * codeChars.length)]).join("");
 function guestTurn() { if (Q.s && Q.s.mode === "duo" && Q.s.phase === "run") return Q.s.buzzed === 1; if (S.rou && S.rou.phase === "play") return S.rou.turn === 1; if (S.fin && S.fin.mode === "duo") return S.fin.turn === 1 && S.fin.phase === "ask"; if (S.num && S.num.mode === "duo") return S.num.turn === 1; if (S.ttt && S.ttt.mode === "duo") return S.ttt.turn === 1; return false; }
+/* sidekick talk in online matches: your sidekick (or theirs) pops up with a line, on both screens, in its own voice */
+function skPop(id, nick, line, mine) {
+  if (!MASCOT_SVG[id] || typeof line !== "string") return; document.querySelectorAll(".skpop." + (mine ? "me" : "them")).forEach((x) => x.remove());
+  const e = document.createElement("div"); e.className = "skpop " + (mine ? "me" : "them"); e.setAttribute("role", "status");
+  e.innerHTML = `<span class="skpf">${MASCOT_SVG[id](mine ? "happy" : "wow")}</span><span class="skpb"><b>${esc((MASCOTS[id] || {}).name || "Sidekick")} <small>${mine ? "yours" : "· " + esc(String(nick).slice(0, 16))}</small></b>${esc(line)}</span>`;
+  document.body.appendChild(e); setTimeout(() => e.classList.add("out"), 4200); setTimeout(() => e.remove(), 4700);
+  try { if (Mascot.mode() === "on") AIVoice.play(line, { voice: MASCOTS[id].voice, volume: 0.9 }); } catch (x) { /* no voice */ }
+}
 function floatReact(e) { const s = document.createElement("span"); s.className = "floater"; s.textContent = e; s.style.left = 12 + Math.random() * 76 + "%"; document.body.appendChild(s); setTimeout(() => s.remove(), 1900); }
 function startOnline() {
   Ranked.stopLobby(); Net.started = true; const g = Net.game;
@@ -3745,6 +3762,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "pfNickSave") { const v = ($("#pfNick").value || "").trim(), msg = $("#pfNickMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } Account.setNick(v).then((r) => { if (r && r.ok) { const p = prof(); p.nick = v; p.board = true; store.items.profile = p; saveProf(p); try { Account.push(); } catch (e) { /* offline */ } renderProfilePage(); paintProfileBtn(); toast("Name saved: " + esc(v)); } else $("#pfNickMsg").textContent = (r && r.error) || "That name is taken."; }); return; }
   if (b.id === "pfFriendAdd") { const v = ($("#pfFriend").value || "").trim(), msg = $("#pfFriendMsg"); if (!v) return; Ranked.rpc("add_friend", { p_nick: v }).then((r) => { const m = { ok: "Added!", notfound: "Nobody has that display name.", self: "That is you.", already: "Already on your list.", full: "Your list is full (100).", auth: "Please sign in." }; msg.textContent = r === null ? "Could not reach the server (is schema_v3.sql installed?)." : m[r] || "Done."; if (r === "ok") { award("social"); $("#pfFriend").value = ""; paintFriends(); } }); return; }
   if (b.dataset.unfriend) { Ranked.rpc("remove_friend", { p_nick: b.dataset.unfriend }).then(paintFriends); return; }
+  if (b.dataset.sk) { const now = Date.now(); if (now - (window.__skT || 0) < 3000) return; window.__skT = now; const id = Mascot.id(), L = (MASCOTS[id] && MASCOTS[id].lines) || {}, pool = { cheer: [...(L.hit || []), ...(L.bighit || [])], tease: [...(L.miss || []), ...(L.model_wrong || [])], gg: [...(L.over || []), ...(L.best || [])] }[b.dataset.sk] || [], line = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "Good game."; skPop(id, prof().nick || "You", line, true); Net.send({ k: "sk", id, nick: prof().nick || "Opponent", line: String(line).slice(0, 180) }); return; }
   if (b.dataset.react) { Snd.tick(); floatReact(b.dataset.react); Net.send({ k: "react", e: b.dataset.react }); return; }
   if (b.id === "tourBtn") { startTour(); return; }
   if (b.dataset.go) { Snd.tick(); go(b.dataset.go); return; }

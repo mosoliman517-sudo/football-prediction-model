@@ -47,6 +47,12 @@ def jobs():
     for t in STR.findall(src[i:j]):
         if len(t) > 20:
             J.append(("am_liam", t, "pip", "pop"))
+    k0 = src.index("const LESSON_HELLO = {"); hello = dict(re.findall(r'(\w+): "((?:[^"\\]|\\.)*)"', src[k0:src.index("};", k0)]))
+    k1 = src.index("const LESSONS = ["); intros = re.findall(r'intro: "((?:[^"\\]|\\.)*)"', src[k1:src.index("];", k1)])
+    for c in SPORT_CHARS["ch"]:
+        if c in hello:
+            J.append((CHAR_VOICE[c], hello[c], c, "lesson"))
+        J += [(CHAR_VOICE[c], t, c, "lesson") for t in intros + ["Next one. Same idea, a little harder."]]
     facts = [t for t in STR.findall(open("site/coach_lines.js", encoding="utf-8").read()) if t.startswith("Fun fact:")]
     lines = json.load(open("src/voice_lines.json", encoding="utf-8"))
     for c in SPORT_CHARS["ch"]:

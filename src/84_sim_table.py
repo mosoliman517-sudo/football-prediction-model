@@ -56,3 +56,17 @@ json.dump({"bands": BANDS, "gaps": GAPS, "table": table}, open("02_processed_dat
 for sp in ("Classical", "Rapid", "Blitz"):
     t = table.get(sp, {})
     print(sp, {bd: t[bd].get("0", [0, 0, 0])[2] for bd in sorted(t, key=int)})
+
+# Club results by opening family for the opening explorer (same Lichess games)
+fam = defaultdict(lambda: [0, 0, 0, 0, 0.0])
+for r in csv.DictReader(gzip.open("02_processed_data/chess_games.csv.gz", "rt", encoding="utf-8")):
+    f = (r["opening"] or "").split(":")[0].strip()
+    try:
+        w, b = int(r["welo"]), int(r["belo"])
+    except ValueError:
+        continue
+    if not f:
+        continue
+    x = fam[f]; x[0] += 1; x[1] += r["res"] == "1"; x[2] += r["res"] == "0.5"; x[3] += r["res"] == "0"; x[4] += (w + b) / 2
+json.dump({k: [v[0], round(v[1] / v[0], 3), round(v[2] / v[0], 3), round(v[3] / v[0], 3), round(v[4] / v[0])] for k, v in fam.items() if v[0] >= 200},
+          open("02_processed_data/chess_openstats.json", "w"), separators=(",", ":"))

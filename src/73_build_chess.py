@@ -53,6 +53,8 @@ data["ratings"] = json.load(open("02_processed_data/chess_ratings.json", encodin
 data["events"] = json.load(open("02_processed_data/chess_events.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_events.json") else None   # src/81: 2026 tournaments
 data["sim"] = json.load(open("02_processed_data/chess_sim.json")) if os.path.exists("02_processed_data/chess_sim.json") else None   # src/84: draw rates by level, speed and gap
 data["openstats"] = json.load(open("02_processed_data/chess_openstats.json")) if os.path.exists("02_processed_data/chess_openstats.json") else None   # club results by opening family
+_rc = json.load(open("02_processed_data/chess_ratecal.json")) if os.path.exists("02_processed_data/chess_ratecal.json") else None
+data["ratecal"] = {k: _rc[k] for k in ("book", "coef", "speeds", "maps", "curve", "spread") if k in _rc} if _rc else None   # src/85: game-rating calibration
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))

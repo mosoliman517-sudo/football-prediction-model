@@ -724,6 +724,9 @@ const CFX = (() => {
   Snd.ok = function () { api.right(); return ok0(); }; Snd.bad = function () { api.wrong(); return bad0(); }; Snd.end = function (w) { api.end(w); return end0(w); };
   return api;
 })();
+/* the coach waits in the corner from the start, like the sidekicks in the other sports; the review shows it in its panel instead */
+setInterval(() => { let el = document.getElementById("pipc"); if (!el) { if (!document.getElementById("app") || document.getElementById("splash") || document.getElementById("ctp")) return; el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("talk")); el.innerHTML = pipSVG("calm"); el.classList.add("on"); }
+  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim")); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
 const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { voice: COACHES[coachId()].voice, volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */
@@ -2048,7 +2051,7 @@ function lessonAfter(pz) {
 async function explorerPage() {
   rvStop(); clearInterval(st.timer); live = null; st = { game: "explorer" }; const c = new Chess(); EX.sans.forEach((m) => c.move(m)); const fen = c.fen();
   $("#app").className = "fresh";
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="learn">← Learn</button></div><div class="card"><h2>${ic("compass")}Opening explorer</h2><div class="exgrid"><div><div class="lvwrap">${boardHTML(c, { last: EX.sans.length ? (() => { const h = c.history({ verbose: true }); const m = h[h.length - 1]; return [m.from, m.to]; })() : null })}</div><div class="rvbtns"><button class="btn ghost" data-ex="reset" type="button">⏮ Start</button><button class="btn ghost" data-ex="back" type="button" ${EX.sans.length ? "" : "disabled"}>◀ Back</button></div><p class="fine exline">${EX.sans.length ? esc(pvLineSans(EX.sans)) : "The starting position. Pick a move."}</p></div>
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="learn">← Learn</button></div><div class="card"><h2>${ic("compass")}Opening explorer</h2><div class="exgrid"><div><div class="lvwrap exboard">${boardHTML(c, { sel: EX.sel, targets: EX.sel ? c.moves({ square: EX.sel, verbose: true }).map((m) => m.to) : [], last: EX.sans.length ? (() => { const h = c.history({ verbose: true }); const m = h[h.length - 1]; return [m.from, m.to]; })() : null })}</div><div class="rvbtns"><button class="btn ghost" data-ex="reset" type="button">⏮ Start</button><button class="btn ghost" data-ex="back" type="button" ${EX.sans.length ? "" : "disabled"}>◀ Back</button></div><p class="fine exline">${EX.sans.length ? esc(pvLineSans(EX.sans)) : "The starting position. Pick a move."}</p></div>
     <div><div id="exName"></div><div id="exMoves"><p class="fine"><span class="spin"></span> Asking the masters database…</p></div></div></div><p class="fine">Master games from the ${chLink("https://lichess.org/analysis#explorer", "Lichess opening explorer")} (over-the-board games, 2200+). Club results are from 810,453 rated Lichess games in this site's data.</p></div>`;
   let d = EX.cache[fen]; if (!d) { try { const r = await fetch(`https://explorer.lichess.org/masters?fen=${encodeURIComponent(fen)}&moves=12&topGames=0`); d = r.ok ? await r.json() : null; if (d) EX.cache[fen] = d; } catch (e) { d = null; } }
   if (st.game !== "explorer") return; const el = $("#exMoves"); if (!el) return;
@@ -2057,15 +2060,20 @@ async function explorerPage() {
   $("#exName").innerHTML = name ? `<h3 style="margin:0 0 4px">${esc(name)}${d.opening && d.opening.eco ? ` <span class="fine">${d.opening.eco}</span>` : ""}</h3>${cs ? `<div class="exclub fine">Club level (${cs[0].toLocaleString()} games, average ${cs[4]}): White ${Math.round(cs[1] * 100)}% · draw ${Math.round(cs[2] * 100)}% · Black ${Math.round(cs[3] * 100)}%</div>` : ""}${fact ? `<div class="pipbox" style="margin-top:8px">${pipSVG("happy")}<div class="pipsay"><b>${esc(coachName())}</b>${esc(fact)}</div></div>` : ""}` : "";
   if (fact && EX.saidFact !== fact) { EX.saidFact = fact; pipSay(fact); }
   const tot = (m) => m.white + m.draws + m.black;
-  el.innerHTML = d.moves.length ? `<div class="extable">${d.moves.map((m) => { const n = tot(m), w = (100 * m.white) / n, dr = (100 * m.draws) / n, b = 100 - w - dr; return `<button class="exrow" type="button" data-exm="${esc(m.san)}"><b>${esc(m.san)}</b><span class="fine num">${n.toLocaleString()}</span><span class="exbar"><i class="w" style="width:${w}%">${w >= 12 ? Math.round(w) + "%" : ""}</i><i class="d" style="width:${dr}%">${dr >= 12 ? Math.round(dr) + "%" : ""}</i><i class="b" style="width:${b}%">${b >= 12 ? Math.round(b) + "%" : ""}</i></span><span class="fine num">${m.averageRating || ""}</span></button>`; }).join("")}</div>` : `<p class="fine">No master games reach this position. You've left the book.</p>`;
+  el.innerHTML = d.moves.length ? `<div class="extable">${d.moves.map((m) => { const n = tot(m), w = (100 * m.white) / n, dr = (100 * m.draws) / n, b = 100 - w - dr; return `<button class="exrow" type="button" data-exm="${esc(m.san)}"><b>${esc(m.san)}</b><span class="fine num">${n.toLocaleString()}</span><span class="exbar"><i class="w" style="width:${w}%">${w >= 22 ? Math.round(w) + "%" : ""}</i><i class="d" style="width:${dr}%">${dr >= 22 ? Math.round(dr) + "%" : ""}</i><i class="b" style="width:${b}%">${b >= 22 ? Math.round(b) + "%" : ""}</i></span><span class="fine num">${m.averageRating || ""}</span></button>`; }).join("")}</div>` : `<p class="fine">No master games reach this position. You've left the book.</p>`;
 }
+document.addEventListener("click", (e) => {   /* tap a piece, then a square: any legal move works, in or out of the book */
+  if (st.game !== "explorer") return; const sq = e.target.closest && e.target.closest(".exboard [data-sq]"); if (!sq) return; const c = new Chess(); EX.sans.forEach((m) => c.move(m)); const to = sq.dataset.sq, p = c.get(to);
+  if (EX.sel) { const m = c.move({ from: EX.sel, to, promotion: "q" }); EX.sel = null; if (m) { EX.sans.push(m.san); try { Snd.tick(); } catch (er) { /* quiet */ } return explorerPage(); } }
+  EX.sel = p && p.color === c.turn() ? to : null; explorerPage();
+});
 const pvLineSans = (sans) => sans.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}. ` : "") + m).join(" ");
 document.addEventListener("click", (e) => {
   const t = e.target.closest && e.target.closest("[data-lesson],[data-exm],[data-ex],#lsnNext"); if (!t) return;
   if (t.dataset.lesson != null) return lessonStart(+t.dataset.lesson);
   if (t.id === "lsnNext" && st.game === "lesson") return lessonNext();
   if (t.dataset.exm) { EX.sans.push(t.dataset.exm); try { Snd.tick(); } catch (er) { /* quiet */ } return explorerPage(); }
-  if (t.dataset.ex === "back") { EX.sans.pop(); return explorerPage(); } if (t.dataset.ex === "reset") { EX.sans = []; EX.saidFact = null; return explorerPage(); }
+  if (t.dataset.ex === "back") { EX.sel = null; EX.sans.pop(); return explorerPage(); } if (t.dataset.ex === "reset") { EX.sans = []; EX.saidFact = null; return explorerPage(); }
 });
 
 async function chLoadTour(id) {

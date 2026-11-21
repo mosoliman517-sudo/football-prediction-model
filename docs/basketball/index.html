@@ -538,7 +538,7 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 #mascot { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: max(10px, env(safe-area-inset-bottom)); z-index: 9500; display: flex; align-items: flex-end; gap: 8px; max-width: min(440px, calc(100vw - 20px)); pointer-events: none; transform: translateY(140%); opacity: 0; transition: transform .5s cubic-bezier(.2, 1.4, .4, 1), opacity .3s; }
 #mascot.on { transform: none; opacity: 1; }
 #mascot .mbody { width: 112px; flex: none; filter: drop-shadow(0 10px 18px #0007); transform-origin: 50% 100%; animation: mBob 2.6s ease-in-out infinite; pointer-events: auto; cursor: pointer; transition: width .3s; }
-#mascot:not(.talk) .mbody { width: 84px; opacity: .92; }
+#mascot:not(.talk) .mbody { width: 84px; opacity: .92; pointer-events: none; }   /* idle: taps go through to the page */
 #mascot.talk .mbody.wow { animation: mJump .7s cubic-bezier(.3, 1.6, .5, 1) 2, mBob 2.6s ease-in-out 1.4s infinite; } #mascot.talk .mbody.sad { animation: mSlump 1s ease both, mBob 3.4s ease-in-out 1s infinite; } #mascot.talk .mbody.happy { animation: mHop .6s cubic-bezier(.3, 1.6, .5, 1) 1, mBob 2.6s ease-in-out .6s infinite; }
 #mascot .msvg { width: 100%; height: auto; display: block; }
 #mascot .mbubble { display: none; position: relative; margin-bottom: 52px; padding: 11px 14px; border-radius: 18px 18px 18px 4px; background: var(--surface, #fff); color: var(--ink, #111); border: 2px solid var(--accent, #f2c14e); font-size: 15px; line-height: 1.4; box-shadow: 0 16px 36px -14px #000b; pointer-events: auto; cursor: pointer; }
@@ -904,7 +904,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 13:24 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 21 Nov 2026 13:33 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -912,7 +912,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var src = "app.70f8c4c890.js", size = 4258954, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
+  var src = "app.b2ef016170.js", size = 4259648, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
   function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }

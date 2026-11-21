@@ -275,6 +275,14 @@ function outfitPaint() { const el = document.getElementById("mascot"); if (!el) 
 const outfitsHTML = (seg) => `<label class="pfl">Sidekick outfit</label><div class="scope" style="padding:2px 0">${OUTFITS.map(([k, n, , how]) => { const ok = outfitOK(k); return `<button type="button" class="chip" ${ok ? `data-ap="outfit|${k}"` : "disabled"} aria-pressed="${outfitNow() === k}" title="${ok ? n : "Locked: " + how}">${ok ? "" : "🔒 "}${n}</button>`; }).join("")}</div><div class="fine" style="margin-top:4px">Locked outfits unlock by rank or with achievements; hover one to see how.</div>`;
 setTimeout(() => { try { outfitPaint(); } catch (e) { /* not ready */ } }, 1800);
 
+/* Keep the sidekick off the game's own controls: when Buzz or the answer box is pinned to the bottom of the screen,
+   the dock sits just above them (on a phone they share the same corner). */
+setInterval(() => {
+  const el = document.getElementById("mascot"); if (!el) return;
+  let top = innerHeight; document.querySelectorAll(".buzzers, .answerbox, .lvbar, .modal:not([hidden]) .sheet").forEach((x) => { const r = x.getBoundingClientRect(); if (r.height && r.top < innerHeight && r.bottom > innerHeight - 260) top = Math.min(top, r.top); });
+  const want = top < innerHeight ? `${Math.max(10, innerHeight - top + 8)}px` : ""; if (el.style.bottom !== want) el.style.bottom = want;
+}, 700);
+
 paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

@@ -180,6 +180,10 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 #pipc .pip{width:84px;height:101px;filter:drop-shadow(0 10px 18px #0007)}#pipc .pipsay{margin-bottom:40px;border:2px solid var(--gold);box-shadow:0 14px 34px -14px #000a}
 .pipbox .pip{width:84px;height:101px}.pipbox .pip{animation:pipIn .5s cubic-bezier(.2,1.5,.4,1) both,pipBob 2.6s ease-in-out .5s infinite}@keyframes pipIn{from{transform:translateY(20px) scale(.6);opacity:0}}
 .ctpip{display:flex;align-items:flex-end;gap:10px;margin:6px 0 2px}.ctpip .pip{width:70px;height:84px}
+.rveng{margin-top:10px;padding:10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}.rvengh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rvel2{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:13px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.rvel2:first-of-type{border-top:0}.rvel2.top .pvl{font-weight:600}
+.rvev{flex:none;min-width:48px;text-align:center;padding:3px 6px;border-radius:6px;font:800 12px ui-monospace,Menlo,monospace}.rvev.w{background:#f3f1ec;color:#1b1b1b}.rvev.b{background:#2b2926;color:#f3f1ec}
+.rvretry{margin:8px 0;width:100%}.pipmem{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--panel))}.pipmem b{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.pipspark{width:100%;max-width:300px;height:auto}
 .hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .gcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.3,1.5,.5,1),border-color .2s;display:flex;flex-direction:column;gap:6px;animation:fadein .35s both}.gcard:hover{transform:translateY(-5px);border-color:var(--gold)}.gcard:active{transform:scale(.98)}
 .gcard .gi{display:flex;gap:6px;align-items:center;margin-bottom:4px}.gcard .gi .di{width:46px;height:46px;border-radius:14px;background:rgba(232,195,90,.12);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}.gcard .gi .pf{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--gold);margin-left:-14px;background:var(--panel2)}.gcard .gi .pf:first-of-type{margin-left:0}
@@ -787,7 +791,7 @@ function reviewStart(sans, color, o = {}) {
   $("#app").className = "fresh"; rvShell(); rvGo(0, { sound: false }); rvAnalyse(rv.tok);
 }
 async function rvAnalyse(tok) {
-  const jobs = rv.fen.map((fen) => (new Chess(fen).game_over() ? null : Sf.analyse(fen, SF_MODERN ? { multipv: 2, depth: 16, ms: 2600 } : { multipv: 2, depth: 12, ms: 2200 }).catch(() => "fail")));
+  const jobs = rv.fen.map((fen) => (new Chess(fen).game_over() ? null : Sf.analyse(fen, SF_MODERN ? { multipv: 3, depth: 16, ms: 2600 } : { multipv: 2, depth: 12, ms: 2200 }).catch(() => "fail")));
   for (let i = 0; i <= rv.N; i++) {
     if (!rv || rv.tok !== tok) return;
     const c = new Chess(rv.fen[i]); let pos;
@@ -876,8 +880,83 @@ function rvReport() {
     <table class="rvph"><tr><th></th>${P.map((p) => `<th>${p.w ? "White" : "Black"}</th>`).join("")}</tr>${RV_PH.map(([k, n], j) => `<tr><td>${n}</td>${P.map((p) => { const g = rvGrade(p.ph[j]); return `<td>${g ? `<i class="cls ${g}" title="${Math.round(p.ph[j])}% accuracy">${RVC[g][1]}</i>` : '<span class="fine">—</span>'}</td>`; }).join("")}</tr>`).join("")}</table>
     ${notes.length ? `<ul class="rvnotes">${notes.slice(0, 4).map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
     ${moments.length || shine.length ? `<div class="rvkm"><span class="label">Key moments</span>${[...shine, ...moments].map((x) => `<button type="button" class="rvkmb" data-ply="${x.i}"><i class="cls ${x.cls}">${RVC[x.cls][1]}</i>${Math.ceil(x.i / 2)}${x.white ? "." : "..."} ${esc(x.san)}</button>`).join("")}</div>` : ""}
+    ${(() => { const me = P[rv.color === "b" ? 1 : 0]; pipRemember(me.acc, me.elo); return pipMemoryHTML(me.acc); })()}
     <p class="fine">Game rating is a rough estimate from accuracy alone; one game can swing it a lot. Phases: opening while in theory or the first moves, endgame once most pieces are off.</p></div>`;
 }
+/* ---------- review, part two: engine lines, retry a mistake, your own games, and Pip's memory ---------- */
+function rvEngineHTML(i) {
+  const pos = rv.pos[i]; if (!pos || !pos.lines || !pos.lines.length) return "";
+  const fen = rv.fen[i], c = new Chess(fen); if (c.game_over()) return "";
+  return `<div class="rveng"><div class="rvengh"><span class="label">Engine</span><span class="fine">depth ${pos.lines[0].depth || "?"}</span></div>${pos.lines.slice(0, 3).map((l, k) => `<div class="rvel2 ${k ? "" : "top"}"><b class="rvev ${l.cp >= 0 ? "w" : "b"}">${fmtEv(l)}</b><span class="pvl">${esc(pvLine(fen, l.pv, 8))}</span></div>`).join("")}</div>`;
+}
+/* retry: put the position back before the mistake and let the player look for something better */
+function rvRetry() {
+  const i = rv.i, d = rv.data[i - 1]; if (!d) return; if (rv.timer) rvPlay();
+  rv.retry = { i, tries: 0, sel: null, c: new Chess(rv.fen[i - 1]), best: d.best };
+  const L = rv.pos[i - 1].lines, w = (x) => (d.white ? x.w : 100 - x.w); rv.retry.ok = new Set(L.filter((x) => w(L[0]) - w(x) <= 3).map((x) => x.pv[0]));
+  rvRetryPaint(`Your turn. ${d.san} was ${RVC[d.cls][2]}. Find a better move for ${d.white ? "White" : "Black"}.`, "hmm");
+}
+function rvRetryPaint(msg, mood, extra = "") {
+  const R = rv.retry, targets = R.sel ? R.c.moves({ square: R.sel, verbose: true }).map((m) => m.to) : [];
+  mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(R.c, { flip: rv.flip, sel: R.sel, targets }); rv.L.lastKey = "";
+  setPart("rvOv", ""); setPart("rvCoach", `<div class="pipbox">${pipSVG(mood)}<div class="pipsay"><b>Pip</b>${esc(msg)}</div></div>${extra}<div class="row"><button class="btn ghost" data-rv="retryshow" type="button">${ic("bulb")}Show me</button><button class="btn ghost" data-rv="retryend" type="button">Back to the game</button></div>`);
+}
+function rvRetryClick(sq) {
+  const R = rv.retry, p = R.c.get(sq);
+  if (R.sel && R.c.moves({ square: R.sel, verbose: true }).some((m) => m.to === sq)) {
+    const m = R.c.move({ from: R.sel, to: sq, promotion: "q" }), uci = m.from + m.to + (m.promotion || ""); R.sel = null;
+    if (R.ok.has(uci) || uci === R.best) { try { Snd.move && Snd.move(m, R.c); } catch (e) { /* quiet */ } const L = rv.pos[R.i - 1].lines.find((x) => x.pv[0] === uci) || rv.pos[R.i - 1].lines[0]; rvRetryPaint(`That's it! ${m.san} keeps everything together.`, "wow", `<p class="fine">The line: <span class="pvl">${esc(pvLine(rv.fen[R.i - 1], L.pv, 8))}</span></p>`); pipSay(pipPick("best", R.i)); return; }
+    R.tries++; R.c.undo(); try { Snd.wrong && Snd.wrong(); } catch (e) { /* quiet */ }
+    if (R.tries >= 3) return rvRetryShow(`Three tries. Here it is: `);
+    return rvRetryPaint(`${m.san}? Not quite. ${["Look again. What is the opponent threatening?", "Closer. Checks, captures, threats, in that order.", "One more try."][R.tries - 1]}`, "hmm");
+  }
+  R.sel = p && p.color === R.c.turn() ? sq : null; rvRetryPaint(`Your turn. Find a better move for ${R.c.turn() === "w" ? "White" : "Black"}.`, "calm");
+}
+function rvRetryShow(pre = "") { const R = rv.retry, L = rv.pos[R.i - 1].lines[0], san = uciSan(rv.fen[R.i - 1], L.pv[0]); R.sel = null; const c = new Chess(rv.fen[R.i - 1]); c.move(uciMv(L.pv[0])); R.c = c; rvRetryPaint(`${pre}${san} was the move.`, "calm", `<p class="fine">The line: <span class="pvl">${esc(pvLine(rv.fen[R.i - 1], L.pv, 8))}</span></p>`); }
+function rvRetryEnd() { rv.retry = null; mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
+document.addEventListener("click", (e) => { if (!rv || !rv.retry) return; const sq = e.target.closest && e.target.closest("#rvBoard [data-sq]"); if (sq) { e.stopPropagation(); rvRetryClick(sq.dataset.sq); } }, true);
+
+/* Pip remembers: your own reviewed games, kept in this browser */
+const PIPH_KEY = "bkc_pip_hist";
+const pipHist = () => { try { return JSON.parse(localStorage.getItem(PIPH_KEY) || "[]"); } catch (e) { return []; } };
+const rvOwn = () => rv && ["import", "pgn", "ai", "online", "friend"].includes(rv.from);
+function pipRemember(acc, elo) { if (!rvOwn() || acc == null || rv.saved) return; rv.saved = true; const h = pipHist(); h.push({ at: Date.now(), acc: Math.round(acc), elo, res: rv.result || "", vs: rv.names[rv.color === "w" ? 1 : 0] }); try { localStorage.setItem(PIPH_KEY, JSON.stringify(h.slice(-60))); } catch (e) { /* storage full */ } }
+function pipMemoryHTML(acc) {
+  if (!rvOwn()) return ""; const h = pipHist(); if (h.length < 2) return `<div class="pipmem"><b>Pip remembers</b><span class="fine">This is the first game I've seen from you. Review a few more and I'll start spotting patterns.</span></div>`;
+  const prev = h.slice(0, -1), avg = prev.reduce((s, x) => s + x.acc, 0) / prev.length, diff = Math.round(acc - avg), best = Math.max(...prev.map((x) => x.acc));
+  const pts = h.slice(-20), W = 240, H = 46, X = (k) => (pts.length < 2 ? W / 2 : (k / (pts.length - 1)) * (W - 8) + 4), Y = (a) => H - 4 - (a / 100) * (H - 8);
+  const say = acc > best ? `Your most accurate game yet: ${Math.round(acc)}%. I'm writing this one on my square.` : diff >= 5 ? `${diff} points above your average of ${Math.round(avg)}%. You're improving, and I can see it.` : diff <= -5 ? `${-diff} points below your average. Off days happen. What matters is the next game.` : `Right around your average of ${Math.round(avg)}%. Steady. Steady is how pawns get to the other side.`;
+  return `<div class="pipmem"><b>Pip remembers · ${h.length} games</b><svg viewBox="0 0 ${W} ${H}" class="pipspark"><polyline points="${pts.map((x, k) => `${X(k).toFixed(1)},${Y(x.acc).toFixed(1)}`).join(" ")}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round"/>${pts.map((x, k) => `<circle cx="${X(k).toFixed(1)}" cy="${Y(x.acc).toFixed(1)}" r="${k === pts.length - 1 ? 4 : 2}" fill="${k === pts.length - 1 ? "var(--ok)" : "var(--gold)"}"/>`).join("")}</svg><span>${esc(say)}</span></div>`;
+}
+
+/* your own games from Lichess or chess.com (both public APIs, no sign-in) */
+let IMP = [];
+const impUser = () => { try { return JSON.parse(localStorage.getItem("bkc_imp") || "{}"); } catch (e) { return {}; } };
+async function impLoad(site, user) {
+  const el = $("#impList"); if (!el) return; user = user.trim(); if (!/^[\w-]{2,30}$/.test(user)) { el.innerHTML = `<p class="fine">That doesn't look like a username.</p>`; return; }
+  try { localStorage.setItem("bkc_imp", JSON.stringify({ site, user })); } catch (e) { /* blocked */ }
+  el.innerHTML = `<p class="fine"><span class="spin"></span> Loading ${esc(user)}'s recent games from ${site === "li" ? "Lichess" : "chess.com"}…</p>`;
+  try {
+    if (site === "li") {
+      const r = await fetch(`https://lichess.org/api/games/user/${encodeURIComponent(user)}?max=20&pgnInJson=true&opening=true&clocks=false&evals=false`, { headers: { Accept: "application/x-ndjson" } }); if (!r.ok) throw new Error(r.status);
+      IMP = (await r.text()).trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((g) => g.variant === "standard" && g.pgn).map((g) => { const w = g.players.white, b = g.players.black, wn = (w.user && w.user.name) || (w.aiLevel ? "Stockfish " + w.aiLevel : "White"), bn = (b.user && b.user.name) || (b.aiLevel ? "Stockfish " + b.aiLevel : "Black"); return { pgn: g.pgn, w: wn, b: bn, wr: w.rating, br: b.rating, res: g.winner === "white" ? "1-0" : g.winner === "black" ? "0-1" : "1/2-1/2", at: g.createdAt, tc: g.speed, op: g.opening && g.opening.name, me: wn.toLowerCase() === user.toLowerCase() ? "w" : "b" }; });
+    } else {
+      const a = await fetch(`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`); if (!a.ok) throw new Error(a.status); const arch = (await a.json()).archives || [];
+      let games = []; for (const u of arch.slice(-2).reverse()) { const r = await fetch(u); if (r.ok) games = games.concat(((await r.json()).games || []).reverse()); if (games.length >= 20) break; }
+      IMP = games.filter((g) => g.rules === "chess" && g.pgn).slice(0, 20).map((g) => { const wr = g.white.result, res = wr === "win" ? "1-0" : g.black.result === "win" ? "0-1" : "1/2-1/2"; return { pgn: g.pgn, w: g.white.username, b: g.black.username, wr: g.white.rating, br: g.black.rating, res, at: g.end_time * 1000, tc: g.time_class, op: ((g.pgn.match(/\[ECOUrl "[^"]*\/([^"]*)"/) || [])[1] || "").replace(/-/g, " "), me: g.white.username.toLowerCase() === user.toLowerCase() ? "w" : "b" }; });
+    }
+    if (!IMP.length) { el.innerHTML = `<p class="fine">No standard games found for ${esc(user)}.</p>`; return; }
+    el.innerHTML = `<div class="cpgames">${IMP.map((g, k) => { const mine = g.me === "w", r = g.res === "1/2-1/2" ? "D" : (g.res === "1-0") === mine ? "W" : "L"; return `<button class="cpgame" type="button" data-imp="${k}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : "Loss"}</span><span class="cpcol2"><b>vs ${esc(mine ? g.b : g.w)} ${(mine ? g.br : g.wr) ? `<small class="fine">(${mine ? g.br : g.wr})</small>` : ""}</b><span class="fine">${new Date(g.at).toLocaleDateString()} · ${esc(g.tc || "")} · ${mine ? "White" : "Black"}${g.op ? " · " + esc(g.op.slice(0, 40)) : ""}</span></span>${ic("arrow")}</button>`; }).join("")}</div>`;
+  } catch (e) { el.innerHTML = `<p class="fine"><b>Could not load games.</b> Check the username, or try again in a minute.</p>`; }
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest && e.target.closest("[data-impsite],[data-imp]"); if (!t) return;
+  if (t.dataset.impsite) { document.querySelectorAll("[data-impsite]").forEach((x) => x.classList.toggle("on", x === t)); return impLoad(t.dataset.impsite, ($("#impUser") || {}).value || ""); }
+  const g = IMP[+t.dataset.imp]; if (!g) return; const c = new Chess(); c.load_pgn(g.pgn, { sloppy: true }); const sans = c.history(); if (sans.length < 2) return;
+  reviewStart(sans, g.me, { from: "import", names: [g.w, g.b], result: g.res });
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "impUser") { const s = (document.querySelector("[data-impsite].on") || {}).dataset; impLoad((s && s.impsite) || "li", e.target.value); } });
+
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w);
   const before = pov(a.ev.w), after = pov(b.ev.w), loss = Math.max(0, before - after);
@@ -958,7 +1037,7 @@ function rvGo(i, o = {}) {
   if (step && !rv.timer) { const d = rv.data[i - 1]; if (d) pipSay(pipPick(d.san.endsWith("#") ? "mate" : d.cls, i * 7 + rv.N)); }
 }
 function rvPaint() {
-  if (!rv || !rvEl("rvCoach")) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;
+  if (!rv || !rvEl("rvCoach") || rv.retry) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;
   const W = pos ? pos.ev.w : 50, evl = rvEl("rvEvL"); rvEl("rvEvI").style.height = W + "%"; evl.textContent = fmtEv(pos && pos.ev); evl.className = "evl " + ((W >= 50) === f ? "top" : "bot") + (W >= 50 ? " onw" : " onb");
   const bar = (side, sd) => setPart("rvP" + side, `<div class="av">${ic(sd === "w" ? "crown" : "user")}</div><div class="nm"><span><b>${esc(rv.names[sd === "w" ? 0 : 1])}</b><small>${sd === "w" ? "White" : "Black"}</small></span><span>${matHTML(c, sd)}</span></div>`);
   bar("T", f ? "w" : "b"); bar("B", f ? "b" : "w");
@@ -972,7 +1051,7 @@ function rvPaint() {
   else if (!d) coach = `<div class="coachhd"><b>${Math.ceil(i / 2)}${i % 2 ? "." : "..."} ${esc(rv.sans[i - 1])}</b></div><p class="fine"><span class="spin"></span> Stockfish is still looking at this move…</p>`;
   else {
     const r = RVC[d.cls], bad = ["inaccuracy", "mistake", "miss", "blunder"].includes(d.cls), a = rv.pos[i - 1], b = pos;
-    coach = `<div class="coachhd"><i class="cls big ${d.cls}">${r[1]}</i><div><b>${Math.ceil(i / 2)}${d.white ? "." : "..."} ${esc(d.san)}</b> <span class="cname ${d.cls}">is ${r[2]}</span></div><span class="evtxt">${fmtEv(a.ev)} → ${fmtEv(b.ev)}</span></div><p>${esc(rvExplain(d))}</p>${bad && !d.isBest ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>${a.lines[0] ? `: <span class="pvl">${esc(pvLine(rv.fen[i - 1], a.lines[0].pv, 6))}</span>` : ""}</p>` : ""}${d.cls !== "book" ? `<div class="wc"><span>Your winning chance</span><b>${Math.round(d.before)}% → ${Math.round(d.after)}%</b></div>` : ""}`;
+    coach = `<div class="coachhd"><i class="cls big ${d.cls}">${r[1]}</i><div><b>${Math.ceil(i / 2)}${d.white ? "." : "..."} ${esc(d.san)}</b> <span class="cname ${d.cls}">is ${r[2]}</span></div><span class="evtxt">${fmtEv(a.ev)} → ${fmtEv(b.ev)}</span></div><p>${esc(rvExplain(d))}</p>${bad && !d.isBest ? `<button class="btn rvretry" data-rv="retry1" type="button">${ic("target")}Retry: find a better move</button>` : ""}${bad && !d.isBest ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>${a.lines[0] ? `: <span class="pvl">${esc(pvLine(rv.fen[i - 1], a.lines[0].pv, 6))}</span>` : ""}</p>` : ""}${d.cls !== "book" ? `<div class="wc"><span>Your winning chance</span><b>${Math.round(d.before)}% → ${Math.round(d.after)}%</b></div>` : ""}`;
     const [tc, tr] = rvSq(rv.mv[i - 1].to, f);
     ov += `<span class="sqb cls ${d.cls}" style="left:${(tc + 1) * 12.5}%;top:${tr * 12.5}%">${r[1]}</span>`;
     if (bad && !d.isBest && rv.showBest) {
@@ -980,13 +1059,13 @@ function rvPaint() {
       ov = `<svg viewBox="0 0 8 8"><line x1="${ax + ux * .18}" y1="${ay + uy * .18}" x2="${sx}" y2="${sy}" stroke="#8fd14f" stroke-width=".2" stroke-linecap="round" opacity=".9"/><polygon points="${ex},${ey} ${sx - uy * hw},${sy + ux * hw} ${sx + uy * hw},${sy - ux * hw}" fill="#8fd14f" opacity=".9"/></svg>` + ov;
     }
   }
-  setPart("rvCoach", pipHTML + coach); setPart("rvOv", ov);
+  setPart("rvCoach", pipHTML + coach + rvEngineHTML(i)); setPart("rvOv", ov);
 }
 function rvFlip() { rv.flip = !rv.flip; rvEl("rvEv").classList.toggle("flip", rv.flip); mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
 function rvPlay() { if (rv.timer) { clearInterval(rv.timer); rv.timer = null; } else { if (rv.i >= rv.N) rvGo(0, { sound: false }); rv.timer = setInterval(() => { if (!rv || rv.i >= rv.N) { if (rv) { clearInterval(rv.timer); rv.timer = null; rvPaint(); } return; } rvGo(rv.i + 1); }, 1100); } rvPaint(); }
 const rvActive = () => rv && rvEl("rvList");
 document.addEventListener("keydown", (e) => {
-  if (!rvActive() || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || "")) return; const k = e.key;
+  if (!rvActive() || rv.retry || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || "")) return; const k = e.key;
   if (k === "ArrowRight") { e.preventDefault(); rvGo(rv.i + 1); } else if (k === "ArrowLeft") { e.preventDefault(); rvGo(rv.i - 1); } else if (k === "Home") { e.preventDefault(); rvGo(0); } else if (k === "End") { e.preventDefault(); rvGo(rv.N); }
   else if (k === " ") { e.preventDefault(); rvPlay(); } else if (k === "f" || k === "F") rvFlip(); else if (k === "b" || k === "B") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); rvPaint(); }
 });
@@ -1097,7 +1176,8 @@ function modelPage() { setTimeout(() => countUp($("#app")), 60);
 function fresh() { if (typeof rvStop === "function") rvStop(); if (typeof olClose === "function") olClose(); const a = $("#app"); a.className = "fresh"; clearTimeout(fresh.t); fresh.t = setTimeout(() => { a.className = ""; }, 500); }
 function reviewIntro() {
   rvStop(); clearInterval(st.timer); live = null; st = { game: "reviewIntro" };
-  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("chart")}Review a game</h2><p class="sub">Paste a game in PGN or just the moves (like <span class="fine">1. e4 e5 2. Nf3 Nc6</span>), or take a real game between top players.</p><textarea id="pgnIn" rows="6" placeholder="Paste your PGN here" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px;font:13px ui-monospace,Menlo,monospace"></textarea><p class="fine" id="pgnMsg"></p><div class="row"><button class="btn" id="pgnGo">Review it</button><button class="btn ghost" id="pgnElite">Use a real top-level game</button></div></div>`;
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("chart")}Review a game</h2><p class="sub">Paste a game in PGN or just the moves (like <span class="fine">1. e4 e5 2. Nf3 Nc6</span>), or take a real game between top players.</p><textarea id="pgnIn" rows="6" placeholder="Paste your PGN here" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px;font:13px ui-monospace,Menlo,monospace"></textarea><p class="fine" id="pgnMsg"></p><div class="row"><button class="btn" id="pgnGo">Review it</button><button class="btn ghost" id="pgnElite">Use a real top-level game</button></div></div><div class="card" style="margin-top:12px"><h3 style="margin:0 0 6px">${ic("user")}Your own games</h3><p class="fine" style="margin-top:0">Type your username and pick the site. Your last 20 games appear; tap one and Pip reviews it with you.</p><div class="row"><input class="t" id="impUser" placeholder="Username" value="${esc(impUser().user || "")}" autocomplete="off" style="flex:1;min-width:160px"><button class="chip ${impUser().site !== "cc" ? "on" : ""}" data-impsite="li" type="button">Lichess</button><button class="chip ${impUser().site === "cc" ? "on" : ""}" data-impsite="cc" type="button">Chess.com</button></div><div id="impList" style="margin-top:10px"></div></div>`;
+  const iu = impUser(); if (iu.user) impLoad(iu.site || "li", iu.user);   // your games come back where you left them
 }
 /* =====================================================================================================================
    Four games with four different mechanics:
@@ -1875,8 +1955,8 @@ document.addEventListener("click", (e) => {
   if (t.id === "aiGo") return aiStart(st.level, st.color);
   if (t.id === "aiAgain" || t.id === "aiNew") return aiMenu();
   if (t.id === "aiReview") return reviewStart(live.c.history(), live.color, { from: "ai", names: live.color === "w" ? ["You", "My engine"] : ["My engine", "You"] });
-  if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : was === "champ" ? champPage() : reviewIntro(); }
-  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "pipv") { PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* private */ } if (!PIPV.on) AIVoice.stop(); t.classList.toggle("on", PIPV.on); return; } if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
+  if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : was === "champ" ? champPage() : was === "rank" ? GO.rank() : reviewIntro(); }
+  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "retry1") return rvRetry(); if (v === "retryshow") return rvRetryShow(); if (v === "retryend") return rvRetryEnd(); if (v === "pipv") { PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* private */ } if (!PIPV.on) AIVoice.stop(); t.classList.toggle("on", PIPV.on); return; } if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }
   if (t.dataset.intro) { fresh(); Usage.play("ch", t.dataset.intro); return intro(t.dataset.intro); }

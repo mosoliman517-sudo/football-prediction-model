@@ -184,7 +184,7 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 .rveng{margin-top:10px;padding:10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}.rvengh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .rvel2{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:13px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.rvel2:first-of-type{border-top:0}.rvel2.top .pvl{font-weight:600}
 .rvev{flex:none;min-width:48px;text-align:center;padding:3px 6px;border-radius:6px;font:800 12px ui-monospace,Menlo,monospace}.rvev.w{background:#f3f1ec;color:#1b1b1b}.rvev.b{background:#2b2926;color:#f3f1ec}
-.rvretry{margin:8px 0;width:100%}.pipmem{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--panel))}.pipmem b{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.pipspark{width:100%;max-width:300px;height:auto}
+.rvretry{margin:8px 0;width:100%}.rvxhd{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}.rvxhd b{display:inline-flex;align-items:center;gap:6px;color:var(--gold)}.rvxline{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.rvxs{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:color-mix(in srgb,var(--ink) 8%,transparent);font-weight:600;font-size:14px;animation:rvxIn .25s ease-out}.rvxs small{opacity:.6;font-weight:400}.rvxs i{font-style:normal;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center}@keyframes rvxIn{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}.rvxbtns{flex-wrap:wrap;gap:6px;margin-top:10px}.pipmem{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--panel))}.pipmem b{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}.pipspark{width:100%;max-width:300px;height:auto}
 .kocols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}.kocol{display:flex;flex-direction:column;gap:8px;justify-content:space-around}.kosc{font:800 15px Fraunces,serif;color:var(--gold);min-width:26px;text-align:right}
 @media(max-width:600px){.kocols{grid-auto-flow:row;grid-auto-columns:auto}}
 .h2hbtn{margin-top:10px}.h2hrec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:420px;margin:6px auto 8px}.h2hrec span{display:flex;flex-direction:column;align-items:center}.h2hrec b{font:900 34px/1 Fraunces,serif}.h2hrec .sW b{color:var(--gold)}.h2hrec .sL b{color:var(--ok)}.h2hrec small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -987,6 +987,71 @@ function rvRetryShow(pre = "") { const R = rv.retry, L = rv.pos[R.i - 1].lines[0
 function rvRetryEnd() { rv.retry = null; mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.flipped = rv.flip; rvPaint(); }
 document.addEventListener("click", (e) => { if (!rv || !rv.retry) return; const sq = e.target.closest && e.target.closest("#rvBoard [data-sq]"); if (sq) { e.stopPropagation(); rvRetryClick(sq.dataset.sq); } }, true);
 
+/* explore: play any moves from the position on the board; Stockfish grades each one as it lands, on its own engine so it never waits behind the review */
+let RVX_SF = null; const rvxSf = () => (RVX_SF = RVX_SF || mkSf());
+function rvxAn(fen) {
+  rv.xc = rv.xc || {}; if (rv.xc[fen]) return rv.xc[fen]; const c = new Chess(fen);
+  if (c.in_checkmate()) { const ww = c.turn() === "b"; return (rv.xc[fen] = Promise.resolve({ lines: [], ev: { mate: 0, cp: ww ? MATE_CP : -MATE_CP, w: ww ? 100 : 0, term: ww ? "1-0" : "0-1" } })); }
+  if (c.game_over()) return (rv.xc[fen] = Promise.resolve({ lines: [], ev: { mate: null, cp: 0, w: 50, term: "½-½" } }));
+  const k = rv.fen.indexOf(fen), have = k >= 0 && rv.pos[k] && rv.pos[k].lines && rv.pos[k].lines.length ? rv.pos[k] : null; if (have) return (rv.xc[fen] = Promise.resolve(have));
+  return (rv.xc[fen] = rvxSf().analyse(fen, SF_MODERN ? { multipv: 3, depth: 16, ms: 2500 } : { multipv: 2, depth: 12, ms: 1800 }).then((ln) => { const lines = ln.map((x) => lineW(x, c.turn())); return { lines, ev: lines[0] }; }).catch(() => { delete rv.xc[fen]; return null; }));
+}
+function rvxStart() {
+  if (!rv) return; if (rv.timer) rvPlay(); if (rv.retry) rvRetryEnd(); const f0 = rv.fen[rv.i];
+  rv.ex = { base: rv.i, f0, c: new Chess(f0), sel: null, steps: [], tok: 0 }; rvTab("moves"); rvxAn(f0); rvxPaint(); rvEl("rvCoach").scrollIntoView({ block: "nearest", behavior: "smooth" }); pipSay(pipPick("start", rv.i + 3));
+}
+function rvxGrade(st0, fenB, uci, a, b, recap) {
+  const white = new Chess(fenB).turn() === "w", pov = (w) => (white ? w : 100 - w), L = a.lines || [], inTop = L.find((x) => x.pv[0] === uci), best = L[0] ? L[0].pv[0] : uci;
+  const before = pov(a.ev.w); let after = inTop ? pov(inTop.w) : pov(b.ev.w); if (!inTop && L.length >= 2) after = Math.min(after, pov(L[L.length - 1].w)); if (b.ev.term) after = pov(b.ev.w);
+  const loss = Math.max(0, before - after), isBest = uci === best || loss < 0.6, second = L[1] ? pov(L[1].w) : null, nLegal = new Chess(fenB).moves().length;
+  let cls = nLegal === 1 ? "forced" : isBest ? "best" : loss <= 2 ? "excellent" : loss <= 5 ? "good" : loss <= 10 ? "inaccuracy" : loss <= 20 ? "mistake" : "blunder";
+  if (cls === "best" && second != null && pov(L[0].w) - second >= 10 && after >= 30 && after <= 97 && !recap) cls = "great";   /* the only move that holds */
+  Object.assign(st0, { cls, loss, before, after, best, isBest, bestSan: uciSan(fenB, best), white });
+}
+function rvxMove(m) {
+  const X = rv.ex, fenB = X.c.fen(), mv = X.c.move(m); if (!mv) return; X.sel = null; const uci = mv.from + mv.to + (mv.promotion || ""), fenA = X.c.fen();
+  X.steps.push({ san: mv.san, uci, fenB, fenA, from: mv.from, to: mv.to, cap: !!mv.captured, cls: null }); const stp = X.steps[X.steps.length - 1], tok = ++X.tok;
+  try { Snd.move && Snd.move(mv, X.c); } catch (e) { /* quiet */ } rvxPaint();
+  Promise.all([rvxAn(fenB), rvxAn(fenA)]).then(([a, b]) => {
+    if (!rv || rv.ex !== X || X.steps.indexOf(stp) < 0) return; if (!a || !b) { stp.cls = "err"; return rvxPaint(); }
+    const pv0 = X.steps[X.steps.indexOf(stp) - 1], recap = !!(mv.captured && (pv0 ? pv0.cap && pv0.to === mv.to : X.base && rv.mv[X.base - 1].captured && rv.mv[X.base - 1].to === mv.to)); rvxGrade(stp, fenB, uci, a, b, recap); stp.evA = b.ev; stp.evB = a.ev;
+    if (X.steps[X.steps.length - 1] === stp) { rvxPaint(); if (tok === X.tok) { clearTimeout(rv.pipT); rv.pipT = setTimeout(() => { if (rv && rv.ex === X && X.tok === tok) pipSay(pipPick(stp.cls === "forced" ? "good" : stp.cls, X.steps.length * 5 + rv.i)); }, 500); } }
+    else rvxPaint();
+  });
+}
+function rvxPaint() {
+  const X = rv && rv.ex; if (!X || !rvEl("rvCoach")) return; rvEl("rvXBtn")?.classList.add("on"); const f = rv.flip, c = X.c, last = X.steps[X.steps.length - 1], targets = X.sel ? c.moves({ square: X.sel, verbose: true }).map((m) => m.to) : [];
+  mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(c, { flip: f, sel: X.sel, targets, last: last ? [last.from, last.to] : X.base ? [rv.mv[X.base - 1].from, rv.mv[X.base - 1].to] : null }); rv.L.lastKey = "";
+  const fen = c.fen(), cachedP = rv.xc && rv.xc[fen]; let ov = "";
+  if (last && last.cls && last.cls !== "err") { const [tc, tr] = rvSq(last.to, f), r = RVC[last.cls]; ov += `<span class="sqb cls ${last.cls}" style="left:${(tc + 1) * 12.5}%;top:${tr * 12.5}%">${r[1]}</span>`; }
+  setPart("rvOv", ov);
+  const num = (fenX) => { const p = fenX.split(" "); return +p[5] + (p[1] === "w" ? "." : "..."); };
+  const chips = X.steps.map((s2, k) => `<span class="rvxs ${s2.cls || "wait"}" title="${s2.cls && RVC[s2.cls] ? RVC[s2.cls][0] : "Stockfish is looking"}">${k === 0 || s2.fenB.split(" ")[1] === "w" ? `<small>${num(s2.fenB)}</small>` : ""}${esc(s2.san)}${s2.cls && RVC[s2.cls] ? `<i class="cls ${s2.cls}">${RVC[s2.cls][1]}</i>` : s2.cls === "err" ? "<i>!</i>" : '<i><span class="spin"></span></i>'}</span>`).join("");
+  let body;
+  if (!last) body = `<p class="fine">Tap a piece, then a square. Any move for either side. Stockfish grades every move the moment it lands, and the game itself is left as it was.</p>`;
+  else if (!last.cls) body = `<div class="coachhd"><b>${num(last.fenB)} ${esc(last.san)}</b></div><p class="fine"><span class="spin"></span> Stockfish is grading this move…</p>`;
+  else if (last.cls === "err") body = `<p class="fine">Stockfish could not grade this move. It needs an internet connection the first time.</p>`;
+  else { const r = RVC[last.cls], bad = ["inaccuracy", "mistake", "blunder"].includes(last.cls); body = `<div class="coachhd"><i class="cls big ${last.cls}">${r[1]}</i><div><b>${num(last.fenB)} ${esc(last.san)}</b> <span class="cname ${last.cls}">is ${r[2]}</span></div><span class="evtxt">${fmtEv(last.evB)} → ${fmtEv(last.evA)}</span></div><div class="wc"><span>Winning chance</span><b>${Math.round(last.before)}% → ${Math.round(last.after)}%</b></div>${last.isBest ? "" : `<p class="fine">Best was <b>${esc(last.bestSan)}</b>${bad ? "" : ", but this is close"}.</p>`}`; }
+  const pk = last && last.cls && last.cls !== "err" ? (last.cls === "forced" ? "good" : last.cls) : "start";
+  setPart("rvCoach", `<div class="rvxhd"><b>${ic("compass")}Explore</b><span class="fine">from ${X.base ? `after ${Math.ceil(X.base / 2)}${X.base % 2 ? "." : "..."} ${esc(rv.sans[X.base - 1])}` : "the start"}</span></div><div class="pipbox">${pipSVG(PIP_MOOD[pk] || "calm")}<div class="pipsay"><b>${esc(coachName())}</b>${esc(pipPick(pk, X.steps.length * 5 + rv.i))}</div></div>${chips ? `<div class="rvxline">${chips}</div>` : ""}${body}<div id="rvxEng"></div><div class="row rvxbtns"><button class="btn ghost" data-rv="xundo" type="button" ${X.steps.length ? "" : "disabled"}>↶ Undo</button><button class="btn ghost" data-rv="xeng" type="button" ${c.game_over() ? "disabled" : ""}>${ic("bolt")}Engine move</button><button class="btn ghost" data-rv="xreset" type="button" ${X.steps.length ? "" : "disabled"}>⟲ Reset</button><button class="btn" data-rv="xend" type="button">Back to the game</button></div>`);
+  const tok = X.tok; (cachedP || rvxAn(fen)).then((p) => {
+    if (!p || !rv || rv.ex !== X || X.c.fen() !== fen) return; const W = p.ev.w, evl = rvEl("rvEvL"); rvEl("rvEvI").style.height = W + "%"; evl.textContent = fmtEv(p.ev); evl.className = "evl " + ((W >= 50) === f ? "top" : "bot") + (W >= 50 ? " onw" : " onb");
+    const e2 = rvEl("rvxEng"); if (e2 && p.lines.length) e2.innerHTML = `<div class="rveng"><div class="rvengh"><span class="label">Engine</span><span class="fine">depth ${p.lines[0].depth || "?"}</span></div>${p.lines.slice(0, 3).map((l, k) => `<div class="rvel2 ${k ? "" : "top"}"><b class="rvev ${l.cp >= 0 ? "w" : "b"}">${fmtEv(l)}</b><span class="pvl">${esc(pvLine(fen, l.pv, 8))}</span></div>`).join("")}</div>`;
+    else if (e2) e2.innerHTML = ""; void tok;
+  });
+  if (!rvEl("rvxEng").innerHTML) rvEl("rvxEng").innerHTML = c.game_over() ? "" : `<p class="fine"><span class="spin"></span> Stockfish is looking at this position…</p>`;
+}
+function rvxClick(sq) {
+  const X = rv.ex, c = X.c, p = c.get(sq);
+  if (X.sel && c.moves({ square: X.sel, verbose: true }).some((m) => m.to === sq)) { const pr = c.moves({ square: X.sel, verbose: true }).find((m) => m.to === sq); return rvxMove({ from: X.sel, to: sq, promotion: pr.promotion ? "q" : undefined }); }
+  X.sel = p && p.color === c.turn() && X.sel !== sq ? sq : null; rvxPaint();
+}
+function rvxEngine() { const X = rv.ex, fen = X.c.fen(); if (X.c.game_over() || X.busy) return; X.busy = true; rvxAn(fen).then((p) => { X.busy = false; if (!p || !rv || rv.ex !== X || X.c.fen() !== fen || !p.lines.length) return; rvxMove(uciMv(p.lines[0].pv[0])); }); }
+function rvxUndo() { const X = rv.ex; if (!X.steps.length) return; X.steps.pop(); X.c.undo(); X.sel = null; X.tok++; rvxPaint(); }
+function rvxReset() { const X = rv.ex; X.steps = []; X.c = new Chess(X.f0); X.sel = null; X.tok++; rvxPaint(); }
+function rvxEnd() { if (!rv || !rv.ex) return; rv.ex = null; rvEl("rvXBtn")?.classList.remove("on"); if (RVX_SF) RVX_SF.stopAll(); mkClear(document.getElementById("bd")); rvEl("rvBoard").innerHTML = boardHTML(rv.c, { flip: rv.flip, last: rv.i ? [rv.mv[rv.i - 1].from, rv.mv[rv.i - 1].to] : null }); rv.L.lastKey = ""; rv.L.flipped = rv.flip; rv._h = null; const co = rvEl("rvCoach"); if (co) co._h = null; rvPaint(); }
+document.addEventListener("click", (e) => { if (!rv || !rv.ex) return; const sq = e.target.closest && e.target.closest("#rvBoard [data-sq]"); if (sq) { e.stopPropagation(); rvxClick(sq.dataset.sq); } }, true);
+
 /* Pip remembers: your own reviewed games, kept in this browser */
 const PIPH_KEY = "bkc_pip_hist";
 const pipHist = () => { try { return JSON.parse(localStorage.getItem(PIPH_KEY) || "[]"); } catch (e) { return []; } };
@@ -1104,7 +1169,7 @@ function rvShell() {
   const f = rv.flip, bar = (side) => `<div class="pbar rvp" id="rvP${side}"></div>`;
   $("#app").innerHTML = `<div class="card rvcard" data-rvcard><div class="row" style="justify-content:space-between"><h2>${ic("chart")}Game review</h2><button class="btn ghost" id="rvBack" type="button">Back</button></div>
   <div class="rvgrid"><div class="rvleft">${bar("T")}<div class="rvbd"><div class="evv ${f ? "flip" : ""}" id="rvEv" title="Stockfish evaluation"><i id="rvEvI"></i><b class="evl" id="rvEvL">0.0</b></div><div class="lvwrap" id="rvWrap"><div id="rvBoard">${boardHTML(rv.c, { flip: f })}</div><div class="rvov" id="rvOv"></div></div></div>${bar("B")}
-    <div class="rvbtns"><button class="btn ghost" data-rv="0" type="button" title="Start (Home)">⏮</button><button class="btn ghost" data-rv="-1" type="button" title="Back (←)">◀</button><button class="btn" data-rv="play" id="rvPlay" type="button" title="Play (Space)">▶ Play</button><button class="btn ghost" data-rv="1" type="button" title="Forward (→)">▶</button><button class="btn ghost" data-rv="9999" type="button" title="End">⏭</button><button class="btn ghost" data-rv="best" id="rvBestBtn" type="button" title="Show the best move (B)">${ic("bulb")}</button><button class="btn ghost" data-rv="flip" type="button" title="Flip the board (F)">⇅</button><button class="btn ghost ${PIPV.on ? "on" : ""}" data-rv="pipv" id="rvPipV" type="button" title="Pip's voice">🔊</button></div><p class="fine" style="text-align:center;margin:0">Arrow keys step through the game. Space plays it.</p></div>
+    <div class="rvbtns"><button class="btn ghost" data-rv="0" type="button" title="Start (Home)">⏮</button><button class="btn ghost" data-rv="-1" type="button" title="Back (←)">◀</button><button class="btn" data-rv="play" id="rvPlay" type="button" title="Play (Space)">▶ Play</button><button class="btn ghost" data-rv="1" type="button" title="Forward (→)">▶</button><button class="btn ghost" data-rv="9999" type="button" title="End">⏭</button><button class="btn ghost" data-rv="best" id="rvBestBtn" type="button" title="Show the best move (B)">${ic("bulb")}</button><button class="btn ghost" data-rv="flip" type="button" title="Flip the board (F)">⇅</button><button class="btn ghost" data-rv="xstart" id="rvXBtn" type="button" title="Explore: play your own moves (E)">${ic("compass")}Explore</button><button class="btn ghost ${PIPV.on ? "on" : ""}" data-rv="pipv" id="rvPipV" type="button" title="Pip's voice">🔊</button></div><p class="fine" style="text-align:center;margin:0">Arrow keys step through the game. Space plays it. Explore (E) lets you try your own moves.</p></div>
   <div class="rvright" data-tab="moves"><div id="rvProg" class="rvprog"></div><div class="rvtabs"><button type="button" class="chip on" data-rvtab="moves">${ic("arrow")}Moves</button><button type="button" class="chip" data-rvtab="report">${ic("chart")}Game report</button></div><div class="rvt-report"><div class="rvacc" id="rvAcc"></div><div id="rvRep"></div><div id="rvCounts"></div><button class="btn rvstart" type="button" data-rvtab="moves">${ic("arrow")}Start the review</button></div><svg class="rvgraph" id="rvGraph" viewBox="0 0 300 80" preserveAspectRatio="none"><rect width="300" height="80" fill="#262421"/><path id="rvArea" fill="#e9e6df" opacity=".92"/><line x1="0" y1="40" x2="300" y2="40" stroke="#6b6761" stroke-width=".5"/><g id="rvDots"></g><line id="rvCur" y1="0" y2="80" stroke="#e8c35a" stroke-width="1.2"/></svg>
     <div class="rvcoach" id="rvCoach"></div><div class="rvlist" id="rvList">${Array.from({ length: Math.ceil(rv.N / 2) }, (_, k) => `<div class="rvrow"><span class="n">${k + 1}</span>${[0, 1].map((s) => { const p = k * 2 + s + 1; return p <= rv.N ? `<span class="m" data-ply="${p}" id="rvM${p}">${esc(rv.sans[p - 1])}</span>` : "<span></span>"; }).join("")}</div>`).join("")}</div>
     <p class="fine">Engine: ${SF_MODERN ? "Stockfish 17.1 (neural-network evaluation, running in your browser, about 16 moves deep)" : "Stockfish 10 (running in your browser, about 12 moves deep)"}. Stockfish is free software under the GPL; source at <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">github.com/official-stockfish</a>. Grades come from how much each move changes your winning chances. Accuracy uses the same formula as Lichess.</p></div></div></div>`;
@@ -1134,14 +1199,14 @@ function rvGraph() {
   rvEl("rvDots").innerHTML = rv.data.map((d, k) => (d && ["blunder", "mistake", "miss", "inaccuracy", "brilliant", "great"].includes(d.cls) && pts[k + 1] ? `<circle cx="${pts[k + 1][0].toFixed(1)}" cy="${pts[k + 1][1].toFixed(1)}" r="1.7" class="gd ${d.cls}"/>` : "")).join("");
 }
 function rvGo(i, o = {}) {
-  if (!rv) return; i = Math.max(0, Math.min(rv.N, i)); const prev = rv.i, step = i === prev + 1 && o.sound !== false; rv.i = i; rv.c.load(rv.fen[i]);
+  if (!rv) return; if (rv.ex) rvxEnd(); if (rv.retry) rvRetryEnd(); i = Math.max(0, Math.min(rv.N, i)); const prev = rv.i, step = i === prev + 1 && o.sound !== false; rv.i = i; rv.c.load(rv.fen[i]);
   rv.L.skipAnim = !(i === prev + 1); if (i !== prev) mkClear(document.getElementById("bd")); boardUpdate(rv.c, { play: false, last: i ? [rv.mv[i - 1].from, rv.mv[i - 1].to] : null }, rv.L);
   if (step && typeof Snd !== "undefined") Snd.move(rv.mv[i - 1], rv.c);
   rvPaint();
   clearTimeout(rv.pipT); if (step && !rv.timer) { const d = rv.data[i - 1]; if (d) rv.pipT = setTimeout(() => { if (rv && rv.i === i) pipSay((d.cls === "book" && rvFact(i)) || pipPick(rvLineKey(d), i * 7 + rv.N)); }, 900); }   // a beat after the move lands
 }
 function rvPaint() {
-  if (!rv || !rvEl("rvCoach") || rv.retry) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;
+  if (!rv || !rvEl("rvCoach") || rv.retry || rv.ex) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;
   const W = pos ? pos.ev.w : 50, evl = rvEl("rvEvL"); rvEl("rvEvI").style.height = W + "%"; evl.textContent = fmtEv(pos && pos.ev); evl.className = "evl " + ((W >= 50) === f ? "top" : "bot") + (W >= 50 ? " onw" : " onb");
   const bar = (side, sd) => setPart("rvP" + side, `<div class="av">${ic(sd === "w" ? "crown" : "user")}</div><div class="nm"><span><b>${esc(rv.names[sd === "w" ? 0 : 1])}</b><small>${sd === "w" ? "White" : "Black"}</small></span><span>${matHTML(c, sd)}</span></div>`);
   bar("T", f ? "w" : "b"); bar("B", f ? "b" : "w");
@@ -1169,7 +1234,7 @@ function rvFlip() { rv.flip = !rv.flip; rvEl("rvEv").classList.toggle("flip", rv
 function rvPlay() { if (rv.timer) { clearInterval(rv.timer); rv.timer = null; } else { if (rv.i >= rv.N) rvGo(0, { sound: false }); rv.timer = setInterval(() => { if (!rv || rv.i >= rv.N) { if (rv) { clearInterval(rv.timer); rv.timer = null; rvPaint(); } return; } rvGo(rv.i + 1); }, 1100); } rvPaint(); }
 const rvActive = () => rv && rvEl("rvList");
 document.addEventListener("keydown", (e) => {
-  if (!rvActive() || rv.retry || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || "")) return; const k = e.key;
+  if (!rvActive() || rv.retry || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || "")) return; const k = e.key; if (rv.ex) { if (k === "Escape" || k === "e" || k === "E") rvxEnd(); else if (k === "ArrowLeft" || k === "Backspace") { e.preventDefault(); rvxUndo(); } return; } if (k === "e" || k === "E") return rvxStart();
   if (k === "ArrowRight") { e.preventDefault(); rvGo(rv.i + 1); } else if (k === "ArrowLeft") { e.preventDefault(); rvGo(rv.i - 1); } else if (k === "Home") { e.preventDefault(); rvGo(0); } else if (k === "End") { e.preventDefault(); rvGo(rv.N); }
   else if (k === " ") { e.preventDefault(); rvPlay(); } else if (k === "f" || k === "F") rvFlip(); else if (k === "b" || k === "B") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); rvPaint(); }
 });
@@ -2286,7 +2351,7 @@ document.addEventListener("click", (e) => {
   if (t.id === "aiAgain" || t.id === "aiNew") return aiMenu();
   if (t.id === "aiReview") return reviewStart(live.c.history(), live.color, { from: "ai", names: live.color === "w" ? ["You", "My engine"] : ["My engine", "You"] });
   if (t.id === "rvBack") { const was = rv && rv.from; rvStop(); return was === "ai" ? aiMenu() : was === "online" ? olMenu() : was === "champ" ? champPage() : was === "rank" ? GO.rank() : reviewIntro(); }
-  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "retry1") return rvRetry(); if (v === "retryshow") return rvRetryShow(); if (v === "retryend") return rvRetryEnd(); if (v === "pipv") { PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* private */ } if (!PIPV.on) AIVoice.stop(); t.classList.toggle("on", PIPV.on); return; } if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
+  if (t.dataset.rv != null && t.dataset.rv !== "" && rvActive()) { const v = t.dataset.rv; if (v === "play") return rvPlay(); if (v === "best") { rv.showBest = !rv.showBest; store.set("rv_best", rv.showBest); return rvPaint(); } if (v === "flip") return rvFlip(); if (v === "xstart") return rv.ex ? rvxEnd() : rvxStart(); if (v === "xundo") return rvxUndo(); if (v === "xeng") return rvxEngine(); if (v === "xreset") return rvxReset(); if (v === "xend") return rvxEnd(); if (v === "retry1") return rvRetry(); if (v === "retryshow") return rvRetryShow(); if (v === "retryend") return rvRetryEnd(); if (v === "pipv") { PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* private */ } if (!PIPV.on) AIVoice.stop(); t.classList.toggle("on", PIPV.on); return; } if (v === "retry") { const f = rv.from, sans = rv.sans, col = rv.color, nm = rv.names, rs = rv.result; return reviewStart(sans, col, { from: f, names: nm, result: rs }); } return rvGo(v === "0" ? 0 : v === "9999" ? rv.N : rv.i + +v, { sound: v === "1" }); }
   if (t.dataset.diff) { DIFF = t.dataset.diff; store.set("diff", DIFF); document.querySelectorAll("[data-diff]").forEach((x) => x.classList.toggle("on", x.dataset.diff === DIFF)); const n = $("#dnote"); if (n) n.textContent = DNOTE[DIFF]; return; }
   if (t.dataset.hub) { fresh(); return hub(t.dataset.hub); }
   if (t.dataset.intro) { fresh(); Usage.play("ch", t.dataset.intro); return intro(t.dataset.intro); }

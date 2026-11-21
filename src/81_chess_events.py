@@ -15,14 +15,14 @@ import requests
 
 H = {"User-Agent": "ballknowledge-build (student project)", "Accept": "application/json"}
 EVENTS = [
-    {"id": "cand26", "sec": "open", "name": "Candidates 2026", "short": "Candidates", "tours": ["BLA70Vds"], "scoring": "std", "fmt": "8-player double round robin. The winner plays for the world title."},
-    {"id": "cand26w", "sec": "women", "name": "Women's Candidates 2026", "short": "Women's Candidates", "tours": ["xj4qM8Nw"], "scoring": "std", "fmt": "8-player double round robin. The winner plays for the women's world title."},
-    {"id": "norway26", "sec": "open", "name": "Norway Chess 2026", "short": "Norway Chess", "tours": ["kDQUxYbE"], "scoring": "norway", "fmt": "6-player double round robin. Classical win 3 points; a draw goes to Armageddon (1.5 for its winner, 1 for the loser)."},
-    {"id": "norway26w", "sec": "women", "name": "Norway Chess Women 2026", "short": "Norway Chess Women", "tours": ["NjcX8cBn"], "scoring": "norway", "fmt": "6-player double round robin. Classical win 3 points; a draw goes to Armageddon (1.5 for its winner, 1 for the loser)."},
-    {"id": "tata26", "sec": "open", "name": "Tata Steel Masters 2026", "short": "Tata Steel", "tours": ["3COxSfdj"], "scoring": "std", "fmt": "14-player round robin in Wijk aan Zee."},
-    {"id": "sinq26", "sec": "open", "name": "Sinquefield Cup 2026", "short": "Sinquefield Cup", "tours": ["2sMqschv"], "scoring": "std", "fmt": "10-player round robin, Grand Chess Tour."},
-    {"id": "stlr26", "sec": "open", "name": "Saint Louis Rapid 2026", "short": "Saint Louis Rapid", "tours": ["sM3C0X6U"], "scoring": "std", "fmt": "10-player rapid round robin, Grand Chess Tour. Shown 1 point a win here; the official combined table counts rapid double."},
-    {"id": "stlb26", "sec": "open", "name": "Saint Louis Blitz 2026", "short": "Saint Louis Blitz", "tours": ["d63PvEma"], "scoring": "std", "fmt": "10-player blitz double round robin, Grand Chess Tour."},
+    {"id": "cand26", "rounds": 14, "sec": "open", "name": "Candidates 2026", "short": "Candidates", "tours": ["BLA70Vds"], "scoring": "std", "fmt": "8-player double round robin. The winner plays for the world title."},
+    {"id": "cand26w", "rounds": 14, "sec": "women", "name": "Women's Candidates 2026", "short": "Women's Candidates", "tours": ["xj4qM8Nw"], "scoring": "std", "fmt": "8-player double round robin. The winner plays for the women's world title."},
+    {"id": "norway26", "rounds": 10, "sec": "open", "name": "Norway Chess 2026", "short": "Norway Chess", "tours": ["kDQUxYbE"], "scoring": "norway", "fmt": "6-player double round robin. Classical win 3 points; a draw goes to Armageddon (1.5 for its winner, 1 for the loser)."},
+    {"id": "norway26w", "rounds": 10, "sec": "women", "name": "Norway Chess Women 2026", "short": "Norway Chess Women", "tours": ["NjcX8cBn"], "scoring": "norway", "fmt": "6-player double round robin. Classical win 3 points; a draw goes to Armageddon (1.5 for its winner, 1 for the loser)."},
+    {"id": "tata26", "rounds": 13, "sec": "open", "name": "Tata Steel Masters 2026", "short": "Tata Steel", "tours": ["3COxSfdj"], "scoring": "std", "fmt": "14-player round robin in Wijk aan Zee."},
+    {"id": "sinq26", "rounds": 9, "sec": "open", "name": "Sinquefield Cup 2026", "short": "Sinquefield Cup", "tours": ["2sMqschv"], "scoring": "std", "fmt": "10-player round robin, Grand Chess Tour."},
+    {"id": "stlr26", "rounds": 9, "sec": "open", "name": "Saint Louis Rapid 2026", "short": "Saint Louis Rapid", "tours": ["sM3C0X6U"], "scoring": "std", "tc": "rapid", "fmt": "10-player rapid round robin, Grand Chess Tour. Shown 1 point a win here; the official combined table counts rapid double."},
+    {"id": "stlb26", "rounds": 18, "sec": "open", "name": "Saint Louis Blitz 2026", "short": "Saint Louis Blitz", "tours": ["d63PvEma"], "scoring": "std", "tc": "blitz", "fmt": "10-player blitz double round robin, Grand Chess Tour."},
     {"id": "gctf26", "sec": "open", "name": "Grand Chess Tour Finals 2026", "short": "GCT Finals", "tours": ["8gvkBl7u", "e5GlrSdz"], "scoring": "ko", "fmt": "The tour's top four in knockout matches: semifinals, then the final."},
 ]
 
@@ -37,7 +37,21 @@ def get(url, js=True):
     raise SystemExit("failed: " + url)
 
 
-def parse(pgn, stage):
+def tc_kind(tc, default):
+    """Time control as written by the broadcast: "40/7200:0+10", "600+0", free text in minutes, or nothing."""
+    t = (tc or "").lower()
+    if not t or t == "-":
+        return default
+    if t.startswith("600+0"):
+        return "armageddon"
+    m = re.search(r"(\d+)\s*min", t)
+    secs = int(m.group(1)) * 60 if m else int((re.findall(r"(\d+)", t.split(":")[-1].split("/")[-1]) or [0])[0])
+    if not m and 0 < secs < 180:   # "25+10", "5+2": minutes, not seconds
+        secs *= 60
+    return "classical" if "/" in t or secs >= 3600 else "rapid" if secs >= 600 else "blitz"
+
+
+def parse(pgn, stage, default="classical"):
     out = []
     for g in re.split(r"\n\n(?=\[Event )", pgn.strip()):
         h = dict(re.findall(r'^\[(\w+) "(.*)"\]$', g, re.M))
@@ -45,12 +59,9 @@ def parse(pgn, stage):
             continue
         body = g.split("\n\n", 1)[1] if "\n\n" in g else ""
         moves = " ".join(re.sub(r"\d+\.\.\.", "", re.sub(r"\{[^}]*\}", "", body)).split())
-        tc = h.get("TimeControl", "")
-        secs = int(re.findall(r"(\d+)", tc.split(":")[-1])[0]) if re.findall(r"\d+", tc) else 0
-        kind = "armageddon" if tc.startswith("600+0") or "armageddon" in (h.get("Round", "") + h.get("Event", "")).lower() else \
-               "classical" if "/" in tc or secs >= 3600 else "rapid" if secs >= 600 else "blitz"
+        kind = "armageddon" if "armageddon" in (h.get("Round", "") + h.get("Event", "")).lower() else tc_kind(h.get("TimeControl", ""), default)
         out.append({"w": h["WhiteFideId"], "b": h["BlackFideId"], "we": int(h.get("WhiteElo") or 0), "be": int(h.get("BlackElo") or 0), "r": h.get("Result", "*"),
-                    "rd": h.get("Round", ""), "bd": int(h.get("Board", "0") or 0), "tc": kind, "d": h.get("UTCDate", "").replace(".", "-"), "site": h.get("Site", ""), "st": stage, "m": moves})
+                    "rd": h.get("Round", "").split(".")[0], "bd": int(h.get("Board", "0") or 0), "tc": kind, "d": h.get("UTCDate", "").replace(".", "-"), "site": h.get("Site", ""), "st": stage, "m": moves})
     return out
 
 
@@ -62,7 +73,7 @@ def standings(games, scoring):
     if scoring == "norway":
         arm = {(g["rd"], frozenset((g["w"], g["b"]))): g for g in games if g["tc"] == "armageddon"}
         for g in games:
-            if g["tc"] != "classical" or g["r"] == "*":
+            if g["tc"] != "classical" or g["r"] == "*" or g["st"] == "Playoff":
                 continue
             if g["r"] == "1-0": add(g["w"], 3, "W"); add(g["b"], 0, "L")
             elif g["r"] == "0-1": add(g["b"], 3, "W"); add(g["w"], 0, "L")
@@ -73,8 +84,9 @@ def standings(games, scoring):
                     win = a["w"] if a["r"] == "1-0" else a["b"]
                     pts[win] += 1.5; pts[a["b"] if win == a["w"] else a["w"]] += 1
     else:
+        main = max({g["tc"] for g in games}, key=lambda k: sum(g["tc"] == k for g in games))   # the event's own time control; playoffs in another one do not count
         for g in games:
-            if g["r"] == "*" or g["tc"] == "armageddon":
+            if g["r"] == "*" or g["tc"] != main or g["st"] == "Playoff":
                 continue
             if g["r"] == "1/2-1/2": add(g["w"], 0.5, "D"); add(g["b"], 0.5, "D")
             else:
@@ -92,12 +104,26 @@ for ev in EVENTS:
         info = get(f"https://lichess.org/api/broadcast/{tid}")
         dates += [d for d in (info["tour"].get("dates") or []) if d]
         stage = info["tour"]["name"].split("|")[-1].strip() if len(ev["tours"]) > 1 else ""
-        games += parse(get(f"https://lichess.org/api/broadcast/{tid}.pgn", js=False), stage)
-        time.sleep(1)
+        # one request per broadcast round: the round's name ("Round 4 | Armageddon", "Playoff") is the reliable label;
+        # the PGN's own Round and TimeControl headers are sometimes the broadcast index or missing
+        for rnd in info.get("rounds", []):
+            nm = rnd["name"]; low = nm.lower()
+            gs = parse(get(f"https://lichess.org/api/broadcast/round/{rnd['id']}.pgn", js=False), stage, ev.get("tc", "classical"))
+            num = re.search(r"(\d+)", nm)
+            for g in gs:
+                if "armageddon" in low:
+                    g["tc"] = "armageddon"
+                elif "blitz" in low or "rapid" in low or "classical" in low:
+                    g["tc"] = "blitz" if "blitz" in low else "rapid" if "rapid" in low else "classical"
+                g["rd"] = num.group(1) if num else nm
+                if any(w in low for w in ("playoff", "tiebreak", "tie-break", "tie break")) or (ev.get("rounds") and num and int(num.group(1)) > ev["rounds"]):
+                    g["st"] = "Playoff"; g["rd"] = nm.split("|")[-1].strip()
+            games += gs
+            time.sleep(0.5)
     played = [g for g in games if g["r"] != "*"]
     table = standings(games, ev["scoring"]) if ev["scoring"] != "ko" else []
     site = next((g["site"] for g in games if g["site"]), "")
-    gd = sorted(g["d"] for g in games if g["d"])
+    gd = sorted(time.strftime("%Y-%m-%d", time.gmtime(d / 1000)) for d in dates) or sorted(g["d"] for g in games if g["d"])   # the broadcast's own dates; some games carry no date
     for g in games:
         g.pop("site", None)
     ev2 = {**ev, "site": site, "from": gd[0] if gd else None, "to": gd[-1] if gd else None, "done": bool(games) and len(played) == len(games), "games": games, "table": table}

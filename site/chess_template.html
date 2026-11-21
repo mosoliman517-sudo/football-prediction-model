@@ -243,7 +243,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 @keyframes fall{to{transform:translateY(620px) rotate(540deg)}}@keyframes ovin{from{opacity:0;transform:scale(.92)}}@keyframes bob{50%{transform:translateY(-8px) rotate(-4deg)}}
 .flashok{animation:flok .7s}.flashbad{animation:flbad .5s}@keyframes flok{0%{box-shadow:0 0 0 0 rgba(94,230,168,.9)}100%{box-shadow:0 0 0 22px rgba(94,230,168,0)}}@keyframes flbad{0%{box-shadow:0 0 0 0 rgba(255,107,127,.9)}100%{box-shadow:0 0 0 22px rgba(255,107,127,0)}}
 .pcz.slide{transition:transform .17s cubic-bezier(.3,.9,.4,1);z-index:5}
-.oppface{width:64px!important;height:64px!important;margin:0 auto 6px;background:none!important;display:flex;align-items:center;justify-content:center}.oppface svg{width:100%;height:100%}.council{display:flex;margin-left:-14px}.council svg{width:40px;height:40px;margin-left:-10px}.pbface{display:flex;width:100%;height:100%}.pbface svg{width:100%;height:100%}.opps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}.opp{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;cursor:pointer;color:var(--ink);font:inherit;transition:transform .2s cubic-bezier(.3,1.5,.5,1),border-color .2s}.opp:hover{transform:translateY(-4px)}.opp.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}.opp .av{width:64px;height:64px;border-radius:50%;background:rgba(232,195,90,.12);color:var(--gold);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:30px}.opp b{display:block;font:800 18px Fraunces,serif}
+.gymname{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0}.gymname b{color:var(--gold)}.gymsc{display:inline-flex;align-items:center;gap:6px;font-weight:700}.gymsc .cls{width:20px;height:20px;line-height:20px}.oppface{width:64px!important;height:64px!important;margin:0 auto 6px;background:none!important;display:flex;align-items:center;justify-content:center}.oppface svg{width:100%;height:100%}.council{display:flex;margin-left:-14px}.council svg{width:40px;height:40px;margin-left:-10px}.pbface{display:flex;width:100%;height:100%}.pbface svg{width:100%;height:100%}.opps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}.opp{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;cursor:pointer;color:var(--ink);font:inherit;transition:transform .2s cubic-bezier(.3,1.5,.5,1),border-color .2s}.opp:hover{transform:translateY(-4px)}.opp.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}.opp .av{width:64px;height:64px;border-radius:50%;background:rgba(232,195,90,.12);color:var(--gold);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:30px}.opp b{display:block;font:800 18px Fraunces,serif}
 .rv{display:grid;grid-template-columns:1fr;gap:12px}.rvgraph{width:100%;height:90px;background:#1b251f;border-radius:10px}.rvbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}.rvbtns .btn{min-width:48px;justify-content:center}
 .cls{display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;font:800 11px/18px Inter;color:#fff;vertical-align:middle}.cls.best{background:#5ee6a8;color:#06281a}.cls.forced{background:#9aa0a6;color:#1b1b1b}.cls.good{background:#8fb37a}.cls.inaccuracy{background:#e8c35a;color:#241c00}.cls.mistake{background:#ff9f45}.cls.blunder{background:#ff5b6e}
 .rvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.rvsum .tile b{font-size:24px}
@@ -394,7 +394,7 @@ const CG = [
   { id: "recog", g: "bk", ic: "eye", name: "Recognize the game", modes: "Solo streak", tag: "The first moves of a real game. Who was playing?", best: "recog" },
   { id: "blunder", g: "bk", ic: "warn", name: "Blunder or fine?", modes: "Solo streak", tag: "A move, graded by Stockfish. Blunder, mistake, inaccuracy or fine?", best: "blunder" },
   { id: "open", g: "bk", ic: "book", name: "Name the opening", modes: "Solo streak", tag: "A position on the board. Sicilian, Ruy Lopez, King's Indian?", best: "open" },
-  { id: "trainer", g: "bk", ic: "bulb", name: "Opening trainer", modes: "Solo", tag: "Play the known moves of an opening, move by move.", best: "trainer" },
+  { id: "trainer", g: "bk", ic: "bulb", name: "Pip's opening gym", modes: "Solo vs Pip", tag: "Pip plays a random opening and you get a random colour. Play the best lines: slip, and Pip stops you and shows the move.", best: "trainer" },
   { id: "mate", g: "bk", ic: "bolt", name: "Mate puzzles", modes: "Solo streak", tag: "Real puzzles: checkmate in 1, 2 or 3.", best: "mate" },
   { id: "elo", g: "bk", ic: "brain", name: "Estimate my Elo", modes: "Solo · 10 puzzles", tag: "Puzzles that adapt to you, then an estimate of your level.", best: "elo" },
   { id: "review", g: "bk", ic: "chart", name: "Review a game", modes: "Paste a PGN or use a real game", tag: "Every move graded, with an evaluation graph and the engine's preferred move.", best: "none" },
@@ -590,7 +590,65 @@ function liveClick(sq) {
   if (L.sel && L.targets.includes(sq)) { const mv = c.move({ from: L.sel, to: sq, promotion: "q" }); L.sel = null; L.targets = []; L.caps = []; if (mv) { L.last = [mv.from, mv.to]; Snd.move(mv, c); L.onMove(mv); } return; }
   if (p && p.color === L.color) { L.sel = sq; const ms = c.moves({ square: sq, verbose: true }); L.targets = ms.map((m) => m.to); L.caps = ms.filter((m) => m.captured || /e/.test(m.flags)).map((m) => m.to); L.refresh(); } else { L.sel = null; L.targets = []; L.caps = []; L.refresh(); }
 }
-function trainerStart() { st = { game: "trainer", done: 0 }; trainerNext(); }
+/* ---------- Pip's opening gym: Pip plays a random opening (its main line, then real master choices), you get a random colour.
+   Masters' moves and anything Stockfish calls fine are accepted; a real mistake is taken back and Pip shows what to play. ---------- */
+function trainerStart() { gymStart(); }
+const GYM_LEN = 10;   /* moves you play per opening */
+function gymStart() {
+  clearInterval(st.timer); const pool = OPEN_STORY.filter((s) => !/Bongcloud/.test(s.name)), S = pool[Math.floor(Math.random() * pool.length)], color = Math.random() < 0.5 ? "w" : "b", tot = store.get("gym_tot", { n: 0, book: 0 });
+  st = { game: "gym", S, line: S.line.split(" "), color, moves: 0, sc: { book: 0, ok: 0, fix: 0 }, msg: `Let's go. I picked an opening and you're ${color === "w" ? "White" : "Black"}. Play the best lines you know. If you slip, I'll stop you and show you the move.`, mood: "happy", hint: null, name: "", over: false, tot };
+  live = { c: new Chess(), color, sel: null, targets: [], last: null, lock: false, refresh: gymPaint, onMove: gymUser };
+  $("#app").className = "fresh"; gymPaint(); pipSay(st.msg); if (color === "b") gymPip();
+}
+const gymPick = (moves) => { const ok = moves.filter((m, k) => k === 0 || (m.white + m.draws + m.black) / moves.reduce((a, x) => a + x.white + x.draws + x.black, 0) >= 0.06), w = ok.map((m) => m.white + m.draws + m.black), t = w.reduce((a, b) => a + b, 0); let r = Math.random() * t; for (let k = 0; k < ok.length; k++) { r -= w[k]; if (r <= 0) return ok[k]; } return ok[0]; };
+async function gymPip() {
+  const me = st, L = live, c = L.c; L.lock = true; st.think = true; gymPaint(); const fen = c.fen(), h = c.history();
+  const onLine = h.length < me.line.length && h.every((m, k) => m === me.line[k]); let san = onLine ? me.line[h.length] : null;
+  const d = await exFetch(fen); if (st !== me || live !== L) return; if (d && d.opening && d.opening.name) me.name = d.opening.name;
+  if (!san && d && d.moves.length) san = gymPick(d.moves).san;
+  if (!san) { const ln = await Sf.analyse(fen, { depth: 12, ms: 900 }).catch(() => []); if (st !== me || live !== L) return; if (ln.length) san = uciSan(fen, ln[0].pv[0]); }
+  await new Promise((r) => setTimeout(r, 450)); if (st !== me || live !== L) return;
+  const m = san ? c.move(san) : null; st.think = false; if (!m) { L.lock = false; return gymPaint(); }
+  L.last = [m.from, m.to]; Snd.move(m, c); L.lock = false; const d2 = EX.cache[c.fen()]; if (d2 && d2.opening && d2.opening.name) me.name = d2.opening.name;
+  if (c.game_over()) return gymEnd(); gymPaint(); exFetch(c.fen()).then((d3) => { if (st === me && d3 && d3.opening && d3.opening.name && d3.opening.name !== me.name) { me.name = d3.opening.name; gymPaint(); } });   /* warm the cache for your reply */
+}
+async function gymUser(mv) {
+  const me = st, L = live, c = L.c; L.lock = true; const back = c.undo(), fenB = c.fen(); c.move(back); const fenA = c.fen(), san = mv.san; mkClear(document.getElementById("bd"));
+  if (me.hint) { if (san === me.hint.san) { me.hint = null; me.sc.fix++; me.msg = `${san}. That's the one. Now you'll remember it.`; me.mood = "happy"; return gymAccept(me); } c.undo(); L.last = null; me.msg = `Not that either. Play ${me.hint.san}: follow the arrow.`; me.mood = "hmm"; L.lock = false; gymPaint(); return gymArrow(); }
+  me.msg = "Checking your move…"; me.mood = "hmm"; gymPaint();
+  const d = await exFetch(fenB); if (st !== me) return; const tot = d ? d.moves.reduce((a, x) => a + x.white + x.draws + x.black, 0) : 0, hit = d && d.moves.find((x) => x.san === san), n = hit ? hit.white + hit.draws + hit.black : 0;
+  if (hit && n >= 10 && n / tot >= 0.02) { me.sc.book++; me.msg = `${san}: theory. ${n.toLocaleString()} master games went this way${hit === d.moves[0] ? ", it's their favourite" : ""}.`; me.mood = "happy"; return gymAccept(me); }
+  const [a, b] = await Promise.all([Sf.analyse(fenB, { multipv: 3, depth: 14, ms: 1500 }), Sf.analyse(fenA, { multipv: 1, depth: 14, ms: 1200 })].map((p) => p.catch(() => null))); if (st !== me) return;
+  if (!a || !a.length) { me.sc.ok++; me.msg = `${san}. I couldn't check it with the engine, so it counts.`; return gymAccept(me); }
+  const tb = new Chess(fenB).turn(), la = a.map((x) => lineW(x, tb)), pov = (w) => (tb === "w" ? w : 100 - w), uci = mv.from + mv.to + (mv.promotion || ""), inTop = la.find((x) => x.pv[0] === uci);
+  const after = inTop ? pov(inTop.w) : b && b.length ? pov(lineW(b[0], new Chess(fenA).turn()).w) : pov(la[0].w), loss = Math.max(0, pov(la[0].w) - after);
+  if (loss <= 4) { me.sc.ok++; me.msg = `${san}. Not the main theory, but it's fine: the engine barely minds.`; me.mood = "calm"; return gymAccept(me); }
+  const best = d && d.moves.length && d.moves[0].white + d.moves[0].draws + d.moves[0].black >= 10 ? d.moves[0].san : uciSan(fenB, la[0].pv[0]), bm = new Chess(fenB).move(best);
+  c.undo(); L.last = null; me.hint = { san: best, from: bm.from, to: bm.to }; me.mood = loss > 15 ? "shock" : "sad";
+  me.msg = `Stop! ${san} ${loss > 15 ? "is a real mistake" : "isn't good here"}: it costs about ${Math.round(loss)}% of your winning chances. ${d && d.moves[0] && d.moves[0].san === best ? "Masters play" : "The engine wants"} ${best}. Your turn: play it.`;
+  try { Snd.bad(); } catch (e) { /* quiet */ } pipSay(me.msg); L.lock = false; gymPaint(); gymArrow();
+}
+function gymArrow() { const H = st.hint, bd = document.getElementById("bd"); if (!H || !bd) return; const f = live.color === "b"; mkToggle(mkSvg(bd), rvSq(H.from, f), rvSq(H.to, f), "b"); }
+function gymAccept(me) { me.moves++; pipSay(me.msg); if (me.moves >= GYM_LEN || live.c.game_over()) return gymEnd(); live.lock = false; gymPaint(); gymPip(); }
+function gymEnd() {
+  const me = st; me.over = true; live.lock = true; const s = me.sc, tot = me.tot; tot.n++; tot.book += s.book; store.set("gym_tot", tot);
+  me.mood = s.fix === 0 ? "wow" : s.fix <= 2 ? "happy" : "calm"; me.msg = s.fix === 0 ? `Clean! ${s.book} theory moves and not one slip. You know the ${me.S.name}.` : `Done. ${s.book} theory moves, ${s.ok} fine ones, and ${s.fix} I had to fix. Next time those ${s.fix} will be automatic.`;
+  if (s.fix === 0) Snd.end(true); pipSay(me.msg); gymPaint();
+}
+function gymPaint() {
+  const me = st, L = live; if (!L || me.game !== "gym") return; const c = L.c, opp = L.color === "w" ? "b" : "w";
+  const bars = { top: `<div class="pbar"><div class="av"><span class="pbface">${pipSVGRaw(me.think ? "hmm" : me.mood === "shock" ? "shock" : "calm")}</span></div><div class="nm"><span><b>Pip</b><small>${me.think ? "choosing a move…" : opp === "w" ? "White" : "Black"}</small></span><span>${matHTML(c, opp)}</span></div></div>`, bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, 0) };
+  const named = me.name || (c.history().length ? "" : "");
+  const top = backRow("Pip's opening gym", "bulb", `Move ${Math.min(me.moves + 1, GYM_LEN)} of ${GYM_LEN} · ${me.tot.n} done`) + `<div class="gymname">${named ? `<b>${esc(named)}</b>` : `<span class="fine">Which opening is Pip playing? It will appear here.</span>`}<span class="gymsc"><i class="cls book">${RVC.book[1]}</i>${me.sc.book} <i class="cls best">✓</i>${me.sc.ok} <i class="cls mistake">?</i>${me.sc.fix}</span></div><div class="pipbox">${pipSVGRaw(me.mood)}<div class="pipsay"><b>Pip</b>${esc(me.msg)}</div></div>`;
+  const bottom = `<div class="row" style="justify-content:center;margin-top:8px">${me.hint && !me.over ? `<button class="btn" id="gymDo" type="button">${ic("bulb")}Play ${esc(me.hint.san)} for me</button>` : ""}${me.over ? `<button class="btn" id="gymNext" type="button">${ic("arrow")}Next opening</button><button class="btn ghost" id="gymEx" type="button">${ic("compass")}Explore this opening</button>` : `<button class="btn ghost" id="gymNext" type="button">New opening</button>`}</div>`;
+  liveRender(top, bottom, bars);
+}
+document.addEventListener("click", (e) => {
+  if (st.game !== "gym") return; const t = e.target.closest && e.target.closest("#gymDo,#gymNext,#gymEx"); if (!t) return;
+  if (t.id === "gymNext") return gymStart();
+  if (t.id === "gymEx") { EX.sans = live.c.history(); EX.sel = null; EX.tab = "name"; EX.quiz = null; st = { game: "x" }; return explorerPage(); }
+  if (t.id === "gymDo" && st.hint && !live.lock) { const m = live.c.move(st.hint.san); if (m) { live.last = [m.from, m.to]; Snd.move(m, live.c); gymUser(m); } }
+});
 function trainerNext() {
   const nm = (x) => (x.pgn.match(/\d+\./g) || []).length, o = rnd(OPEN.filter((x) => (DIFF === "easy" ? nm(x) >= 2 && nm(x) <= 3 : DIFF === "medium" ? nm(x) >= 3 && nm(x) <= 5 : DIFF === "hard" ? nm(x) >= 5 : nm(x) >= 6))), ref = new Chess(); ref.load_pgn(o.pgn); const book = ref.history(), color = Math.random() < 0.5 ? "w" : "b", c = new Chess();
   st.o = o; st.book = book; st.i = 0; st.wrong = 0;

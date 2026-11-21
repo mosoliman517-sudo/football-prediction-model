@@ -359,6 +359,64 @@ setInterval(() => {
   let top = innerHeight; document.querySelectorAll(".buzzers, .answerbox, .lvbar, .modal:not([hidden]) .sheet").forEach((x) => { const r = x.getBoundingClientRect(); if (r.height && r.top < innerHeight && r.bottom > innerHeight - 260) top = Math.min(top, r.top); });
   const want = top < innerHeight ? `${Math.max(10, innerHeight - top + 8)}px` : ""; if (el.style.bottom !== want) el.style.bottom = want;
 }, 700);
+/* Settings, the visual way: every choice is a row of cards you swipe through (or tap, or step with the arrows), each showing
+   what you get: the look as a little animated scene, each sidekick with their face, their blurb and one of their lines (tap to
+   hear it in their voice), each outfit on your current sidekick, the theme as a swatch and text sizes as real text.
+   Swiping a card into the middle applies it straight away. Shared by football and basketball (the build adds it to each page). */
+const SETUI = { t: {} };
+const setGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+function setApply(k, v) {   /* the same effect as the old chips, without rebuilding the page (so the carousel stays where it is) */
+  if (k === "look") { const [st, md] = TP_OPTS[+v]; setApply("style", st); setApply("theme", md); return; }
+  try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ }
+  try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ }
+  applyAppearance();
+  if (k === "mascot") setTimeout(() => { try { Mascot.dock(); Mascot.hello(); } catch (e) { /* no sidekick */ } }, 60);
+  if (k === "mascot_mode") setTimeout(() => { try { Mascot.dock(); if (v !== "off") Mascot.hello(); } catch (e) { /* no sidekick */ } }, 60);
+  if (k === "outfit") setTimeout(() => { try { outfitPaint(); Mascot.react("achieve", true); } catch (e) { /* no outfits */ } }, 60);
+}
+const lookNow = () => { const st = setGet("bk_style", TP_OPTS[0][0]), th = setGet("bk_theme", "dark"), md = th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th; const i = TP_OPTS.findIndex(([s, m]) => s === st && m === md); return i < 0 ? TP_OPTS.findIndex(([s]) => s === st) : i; };
+function carousel(id, cards) {
+  return `<div class="crsl" data-crsl="${id}"><button type="button" class="crbtn" data-crs="${id}|-1" aria-label="Previous">‹</button><div class="crtrack" id="crs-${id}">${cards.join("")}</div><button type="button" class="crbtn" data-crs="${id}|1" aria-label="Next">›</button></div><div class="crdots" id="crd-${id}">${cards.map((_, i) => `<i data-crdot="${id}|${i}"></i>`).join("")}</div>`;
+}
+function skLine(k, n) { const L = (MASCOTS[k].lines || {}), all = Object.values(L).flat().filter((x) => typeof x === "string" && x.length < 140); return n === 0 && L.welcome && L.welcome[0] ? L.welcome[0] : all.length ? all[(n * 7 + k.length) % all.length] : MASCOTS[k].blurb; }
+function appearanceV2() {
+  const look = lookNow(), sk = Mascot.id(), fit = typeof outfitNow === "function" ? outfitNow() : "classic", th = setGet("bk_theme", "auto"), tx = setGet("bk_text", "m"), md = Mascot.mode();
+  SETUI.line = SETUI.line || {};
+  const lookCards = TP_OPTS.map(([st, mdd, n, d, c], i) => `<button type="button" class="crcard ${i === look ? "on" : ""}" data-set="look|${i}"><span class="lkprev ${st} ${mdd}" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i class="lkbeam"></i><i class="lkbeam b2"></i><i class="lkball"></i><i class="lkbar"></i><i class="lkbar s"></i><i class="lkpill"></i></span><b>${n}</b><small>${d}</small></button>`);
+  const skCards = Mascot.mine.map((k) => `<div class="crcard skcard ${k === sk ? "on" : ""}" data-set="mascot|${k}" role="button" tabindex="0"><span class="skface">${MASCOT_SVG[k]("happy")}</span><b>${esc(MASCOTS[k].name)}</b><small>${esc(MASCOTS[k].blurb)}</small><span class="skbubble" id="skl-${k}">“${esc(skLine(k, SETUI.line[k] || 0))}”</span><span class="skbtns"><button type="button" class="btn ghost skhear" data-skhear="${k}">▶ Hear ${esc(MASCOTS[k].name.split(" ").pop())}</button><button type="button" class="btn ghost skmore" data-skmore="${k}">Another line</button></span></div>`);
+  const fitCards = (typeof OUTFITS !== "undefined" ? OUTFITS : []).map(([k, n, , how]) => { const ok = outfitOK(k); return `<button type="button" class="crcard ofcard ${k === fit ? "on" : ""} ${ok ? "" : "locked"}" ${ok ? `data-set="outfit|${k}"` : "disabled"} data-fit="${k}"><span class="skface ofprev">${OUTFIT_HAT[k] || ""}${MASCOT_SVG[sk]("happy")}</span><b>${ok ? "" : "🔒 "}${esc(n)}</b><small>${ok ? (k === fit ? "Wearing it" : "Tap to wear it") : esc(how)}</small></button>`; });
+  const themeCards = [["dark", "Dark", "Easy on the eyes at night"], ["light", "Light", "Bright, like a day game"], ["auto", "Follow my device", "Switches with your phone or computer"]].map(([k, n, d]) => `<button type="button" class="crcard thcard ${th === k ? "on" : ""}" data-set="theme|${k}"><span class="thprev ${k}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`);
+  const textCards = [["s", "Small", 13], ["m", "Normal", 16], ["l", "Large", 19], ["xl", "Extra large", 23]].map(([k, n, px]) => `<button type="button" class="crcard txcard ${tx === k ? "on" : ""}" data-set="text|${k}"><span class="txprev" style="font-size:${px}px">Who scored the winner?</span><b>${n}</b></button>`);
+  const seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-set="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
+  return `<h3 class="sethead">Your look</h3><p class="fine">Swipe through them. The one in the middle is the one you get.</p>${carousel("look", lookCards)}
+    <h3 class="sethead">Your sidekick</h3><p class="fine">They cheer, groan and narrate in their own voice. Tap ▶ to hear one.</p>${carousel("sk", skCards)}<div class="setsub"><span class="fine">Sidekick voice</span>${seg("mascot_mode", [["on", "Talks"], ["quiet", "Bubbles only"], ["off", "Hidden"]], md)}</div>
+    ${fitCards.length ? `<h3 class="sethead">Outfit</h3><p class="fine">Locked outfits unlock with your rank or achievements; each card says how.</p>${carousel("fit", fitCards)}` : ""}
+    <h3 class="sethead">Theme</h3>${carousel("th", themeCards)}
+    <h3 class="sethead">Text size</h3>${carousel("tx", textCards)}
+    <h3 class="sethead">Display</h3><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-set="contrast|${setGet("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${setGet("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-set="motion|${setGet("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${setGet("bk_motion", "") === "reduced"}">Reduce motion</button></div><p class="fine">Reduce motion also stops background effects after a refresh.</p>`;
+}
+function setCenter(track, smooth) { const c = track.querySelector(".crcard.on") || track.firstElementChild; if (!c) return; track.scrollTo({ left: c.offsetLeft - (track.clientWidth - c.clientWidth) / 2, behavior: smooth ? "smooth" : "instant" }); setDots(track); }
+function setDots(track) { const id = track.id.slice(4), cards = [...track.children], mid = track.scrollLeft + track.clientWidth / 2; let best = 0; cards.forEach((c, i) => { if (Math.abs(c.offsetLeft + c.clientWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].clientWidth / 2 - mid)) best = i; }); document.querySelectorAll(`#crd-${id} i`).forEach((d, i) => d.classList.toggle("on", i === best)); return cards[best]; }
+function setPick(card) {   /* make this card the chosen one: apply it and mark it */
+  if (!card || card.classList.contains("locked") || !card.dataset.set) return; const [k, v] = card.dataset.set.split("|"); if (card.classList.contains("on")) return;
+  card.parentElement.querySelectorAll(".crcard.on").forEach((x) => x.classList.remove("on")); card.classList.add("on"); setApply(k, v); try { Snd.tick(); } catch (e) { /* quiet */ }
+  if (k === "mascot") { const f = document.getElementById("crs-fit"); if (f) f.querySelectorAll(".ofprev").forEach((p) => { const hat = p.querySelector(".mhat"); p.innerHTML = (hat ? hat.outerHTML : "") + MASCOT_SVG[v]("happy"); }); }
+}
+function setWire(root) {
+  SETUI.lock = true; clearTimeout(SETUI.lockT); SETUI.lockT = setTimeout(() => { SETUI.lock = false; }, 700);   /* positioning the rows is not a choice */
+  root.querySelectorAll(".crtrack").forEach((t) => {
+    requestAnimationFrame(() => setCenter(t, false));
+    t.addEventListener("scroll", () => { setDots(t); clearTimeout(SETUI.t[t.id]); SETUI.t[t.id] = setTimeout(() => { if (SETUI.lock) return; setPick(setDots(t)); }, 220); }, { passive: true });
+  });
+}
+document.addEventListener("click", (e) => {
+  const h = e.target.closest && e.target.closest("[data-skhear]"); if (h) { e.stopPropagation(); const k = h.dataset.skhear, el = document.getElementById("skl-" + k), txt = el ? el.textContent.replace(/[“”]/g, "") : skLine(k, 0); try { AIVoice.play(txt, { voice: MASCOTS[k].voice, volume: 0.95 }); } catch (er) { /* no voice */ } h.closest(".crcard").querySelector(".skface").classList.add("talking"); setTimeout(() => h.closest(".crcard")?.querySelector(".skface")?.classList.remove("talking"), 2600); return; }
+  const m = e.target.closest && e.target.closest("[data-skmore]"); if (m) { e.stopPropagation(); const k = m.dataset.skmore; SETUI.line[k] = (SETUI.line[k] || 0) + 1; const el = document.getElementById("skl-" + k); if (el) { el.textContent = `“${skLine(k, SETUI.line[k])}”`; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); } return; }
+  const a = e.target.closest && e.target.closest("[data-crs]"); if (a) { const [id, d] = a.dataset.crs.split("|"), t = document.getElementById("crs-" + id); if (!t) return; const cur = setDots(t), cards = [...t.children], nx = cards[Math.max(0, Math.min(cards.length - 1, cards.indexOf(cur) + +d))]; t.scrollTo({ left: nx.offsetLeft - (t.clientWidth - nx.clientWidth) / 2, behavior: "smooth" }); return; }
+  const dot = e.target.closest && e.target.closest("[data-crdot]"); if (dot) { const [id, i] = dot.dataset.crdot.split("|"), t = document.getElementById("crs-" + id), c = t && t.children[+i]; if (c) t.scrollTo({ left: c.offsetLeft - (t.clientWidth - c.clientWidth) / 2, behavior: "smooth" }); return; }
+  const c = e.target.closest && e.target.closest(".crcard[data-set]"); if (c) { const t = c.parentElement; t.scrollTo({ left: c.offsetLeft - (t.clientWidth - c.clientWidth) / 2, behavior: "smooth" }); setPick(c); return; }
+  const chip = e.target.closest && e.target.closest(".chip[data-set]"); if (chip) { const [k, v] = chip.dataset.set.split("|"); setApply(k, v); try { Snd.tick(); } catch (er) { /* quiet */ } if (k === "contrast" || k === "motion") { const on = k === "contrast" ? v === "1" : v === "reduced"; chip.setAttribute("aria-pressed", on); chip.dataset.set = `${k}|${k === "contrast" ? (on ? 0 : 1) : on ? "full" : "reduced"}`; } else chip.parentElement.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", x === chip)); }
+}, true);
 
 paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
@@ -1724,7 +1782,7 @@ function themePick(done) {
   let picked = "1"; try { picked = localStorage.getItem(TP_PRE + "picked"); } catch (e) { /* storage blocked: skip */ }
   if (picked || /^#(join|challenge)/.test(location.hash)) return done();
   window.__tpDone = done;
-  modal(`<h2 style="font-size:26px">Pick your look</h2><p class="fine" style="margin-top:0">Tap one to preview it. You can change it any time in your profile, under Appearance.</p><div class="tpgrid">${TP_OPTS.map(([, md, n, d, c], i) => `<button type="button" class="tpopt" data-tp="${i}" aria-pressed="false"><span class="tpprev ${md}" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div>${`<h3 style="margin:16px 0 0">Pick your sidekick</h3><p class="fine" style="margin:2px 0 0">They cheer, groan and narrate in their own voice.</p><div class="tpgrid">${Mascot.mine.map((k) => `<button type="button" class="tpopt mscopt" data-msc="${k}" aria-pressed="${Mascot.id() === k}"><span class="tpprev">${MASCOT_SVG[k]("happy")}</span><b>${MASCOTS[k].name}</b><small>${MASCOTS[k].blurb}</small></button>`).join("")}</div>`}<label class="tpauto"><input type="checkbox" id="tpAuto"> Switch between light and dark with my device</label><div class="row" style="margin-top:12px"><button class="btn" id="tpGo" type="button">Let's go</button></div>`);
+  modal(`<h2 style="font-size:26px">Pick your look</h2><p class="fine" style="margin-top:0">Tap one to preview it. You can change it any time in Settings (the gear at the top).</p><div class="tpgrid">${TP_OPTS.map(([, md, n, d, c], i) => `<button type="button" class="tpopt" data-tp="${i}" aria-pressed="false"><span class="tpprev ${md}" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div>${`<h3 style="margin:16px 0 0">Pick your sidekick</h3><p class="fine" style="margin:2px 0 0">They cheer, groan and narrate in their own voice.</p><div class="tpgrid">${Mascot.mine.map((k) => `<button type="button" class="tpopt mscopt" data-msc="${k}" aria-pressed="${Mascot.id() === k}"><span class="tpprev">${MASCOT_SVG[k]("happy")}</span><b>${MASCOTS[k].name}</b><small>${MASCOTS[k].blurb}</small></button>`).join("")}</div>`}<label class="tpauto"><input type="checkbox" id="tpAuto"> Switch between light and dark with my device</label><div class="row" style="margin-top:12px"><button class="btn" id="tpGo" type="button">Let's go</button></div>`);
 }
 function tpSet(k, v) { try { localStorage.setItem(TP_PRE + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } }
 document.addEventListener("click", (e) => {
@@ -2083,10 +2141,11 @@ function renderSettings() {
   const el = $("#setPage"); if (!el) return; const lv = Snd.level, mu = Snd.music && lv > 0 ? 1 : 0, lang = curLang();
   const seg = (attr, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-${attr}="${v}" aria-pressed="${String(cur) === String(v)}">${n}</button>`).join("")}</div>`;
   el.innerHTML = `<div class="row" style="margin-bottom:8px"><button class="btn ghost" id="aboutBack" type="button">← Menu</button><h1 style="font-size:28px">Settings</h1></div>
+    <div class="card"><h3>Appearance</h3>${appearanceV2()}</div>
     <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, goals and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
     <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during matches. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
-    <div class="card"><h3>Language</h3><p class="fine">${lang === "en" ? "More of the site is translated over time; anything not translated yet stays in English." : "Teile der Seite sind noch Englisch."}</p>${seg("lang", LANGS.map(([c, n]) => [c, n]), lang)}</div>
-    <div class="card"><h3>Appearance</h3><p class="fine">Theme, text size, contrast and reduced motion are in your profile.</p><button class="btn ghost" data-go="profile" type="button">Open profile</button></div>`;
+    <div class="card"><h3>Language</h3><p class="fine">${lang === "en" ? "More of the site is translated over time; anything not translated yet stays in English." : "Teile der Seite sind noch Englisch."}</p>${seg("lang", LANGS.map(([c, n]) => [c, n]), lang)}</div>`;
+  setWire(el);
 }
 /* ================= Languages: German, French, Arabic =================
    Text is matched against the exact English wording and replaced; anything not in the lists below stays English. These are written to read like football talk in each language, not
@@ -2476,7 +2535,7 @@ async function renderProfilePage() {
     <label class="pfl">Favourite team</label><select id="pfTeam" aria-label="Favourite team"><option value="">None</option>${teams.map((n) => `<option value="${esc(n)}" ${p.favT === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${p.favT && TEAMCOL[p.favT] ? `<label class="pfl" style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" id="pfTheme" ${p.teamTheme !== false ? "checked" : ""} style="width:auto;flex:none"> Use ${esc(p.favT)} colours across the site</label>` : p.favT ? `<div class="fine" style="margin-top:6px">We do not have theme colours for ${esc(p.favT)} yet, so the site keeps its normal colours.</div>` : ""}</div>
   <div class="card"><h3>Elo history</h3><div id="pfElo2" class="fine">${signed ? "Loading…" : "Create an account to play Ranked and build a rating."}</div></div>
   <div class="card"><h3>Friends</h3>${signed ? `<div class="row"><input id="pfFriend" maxlength="16" placeholder="Friend's display name" aria-label="Friend's display name"><button class="btn" id="pfFriendAdd" type="button">Add</button></div><div class="fine" id="pfFriendMsg">They do not need to accept. You can see their Elo and favourites.</div><div id="pfFriends" class="lbx">${skelRows(2)}</div>` : '<div class="fine">Sign in to add friends.</div>'}</div></div>
-  <div class="card"><h3>This month</h3><p class="fine">A card with your month: games, days played, streak, favourite game, your club and a word from your sidekick.</p><button class="btn" id="recapBtn" type="button">Make my monthly recap</button></div><div class="card"><h3>Appearance</h3>${appearanceHTML()}</div>
+  <div class="card"><h3>This month</h3><p class="fine">A card with your month: games, days played, streak, favourite game, your club and a word from your sidekick.</p><button class="btn" id="recapBtn" type="button">Make my monthly recap</button></div><div class="card setlink"><div class="row" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">Look, sidekick and outfit</h3><p class="fine" style="margin:2px 0 0">Everything you can change lives in Settings now.</p></div><button class="btn" type="button" id="settingsBtn2"><svg class=ic><use href=#i-gear></use></svg> Open Settings</button></div></div>
   <div class="card"><h3>Your strengths</h3>${statsRadarHTML()}</div>
   <div class="card"><h3>Loading screens <span class="fine">${nSeen} of ${cat.length} collected</span></h3>${spl}</div>
   ${bpick}
@@ -3626,7 +3685,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.scope) { Snd.tick(); go(b.dataset.scope); route(e); return; }
   if (b.dataset.lg) { Snd.tick(); go("lab-" + SLUG[b.dataset.lg]); route(e); return; }
   if (b.id === "brand") { Snd.back(); S.cur = null; go(""); route(e); return; }
-  if (b.id === "settingsBtn") { go("settings"); return; }
+  if (b.id === "settingsBtn" || b.id === "settingsBtn2") { go("settings"); return; }
   if (b.id === "d2In") { const m = ($("#d2Mail").value || "").trim(), pw = $("#d2Pw").value || ""; if (!m || !pw) { $("#d2Msg").textContent = "Enter the email and password."; return; } $("#d2Msg").textContent = "Signing in…"; Dual.signIn(m, pw).then((r) => { if (r.ok) { $("#d2Pw") && ($("#d2Pw").value = ""); renderRanked(); } else $("#d2Msg") && ($("#d2Msg").textContent = r.error); }); return; }
   if (b.id === "d2Out") { Dual.out(); renderRanked(); return; }
   if (b.id === "d2Go") { const g = $("#d2Game").value; resetGames(); S.dual = true; Dual.game = g; S.hubGroup = "ranked"; S.rk = true; S.game = g === "who" || g === "career" || g === "club" || g === "blur" || g === "scramble" || g === "ttt" ? g : "ttt"; Net.lastRef = null; if (g === "ttt") { renderRoom(); newTTT("duo"); } else { S.game = g; renderRoom(); newQuiz(g, "duo", S.code || "ALL"); nextRound(); } return; }

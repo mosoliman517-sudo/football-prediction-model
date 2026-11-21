@@ -219,6 +219,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **21 November, late: a better result card to share.** The picture made by "Make a result card" (football and basketball) now has light rays behind the big number, the title and number shrink to fit instead of running off the edge, your profile picture (a player, a crest, an emoji or your initial) sits in a ring next to your name and rank, and your sidekick is drawn in the corner with one of their lines in a speech bubble.
 
+**21 November, late: a livelier football home.** A "Today" strip sits above the four doors: the *game of the day* (the same for everyone, picked from the date, with crests and a countdown to the next one; tapping it starts the game), the *next real kickoff* from the weekly tournament (crests, league and a countdown, linking to the predictions), and the number of *open ranked lobbies* when there are any. A card with nothing real to show stays hidden. The cards and the doors lean towards the mouse pointer, the game of the day has a slow light sweep, and everything settles in with a short entrance animation (off with Reduce motion).
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

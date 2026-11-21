@@ -732,7 +732,28 @@ function renderHome() {
     <button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">About</div><div class="dtag">Why this exists, how the model works, and what the data does not cover.</div><span class="dgo">Read</span></button>
     <button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">New here? A daily feed with one fun stat, a spotlight and a question, plus a short quiz that matches you to a club.</div><span class="dgo">Open</span></button>`;
   $("#ribbon").innerHTML = `<span><b class="num">${sm.n.toLocaleString()}</b> matches tested</span><span>model <b class="num">${pct(sm.pooled_acc, 1)}</b></span><span>bookmakers <b class="num">${pct(sm.market_acc, 1)}</b></span><span><b class="num">5</b> leagues</span><span><b class="num">10</b> seasons</span>`;
+  homeToday(); homeTilt();
 }
+/* ---------- the "Today" strip on the home screen: a game of the day (the same for everyone, picked from the date), the next real
+   kickoff of the weekly tournament, and how many ranked lobbies are open right now. Only real numbers; a part with nothing to show hides. ---------- */
+async function homeToday() {
+  let box = $("#homeToday"); if (!box) { $("#doors").insertAdjacentHTML("beforebegin", '<div id="homeToday" class="htoday"></div>'); box = $("#homeToday"); }
+  const all = [...GAMES, ...QUIZ_GAMES].filter((g) => GAME_IDS.includes(g.id)), g = all[hash("gotd-" + todayKey()) % all.length], clubs = Object.keys(CREST), faces = [0, 1, 2].map((j) => badge(clubs[hash(todayKey() + j) % clubs.length], "md")).join("");
+  box.innerHTML = `<button type="button" class="htcard htgotd" data-hgame="${g.id}"><span class="htlabel"><svg class=ic><use href=#i-star></use></svg> Game of the day</span><div class="gfaces">${g.faces ? g.faces([0, 1, 2].map((j) => clubs[hash(todayKey() + j) % clubs.length])) : faces}</div><b class="htname">${esc(g.name)}</b><span class="fine">${esc(g.tag || "")}</span><span class="htfoot"><span class="dgo">Play now</span><span class="fine num" id="htNew"></span></span></button><div class="htcol"><button type="button" class="htcard htsmall" data-group-go="weekly" id="htKick" hidden></button><button type="button" class="htcard htsmall" data-group-go="ranked" id="htLobby" hidden></button></div>`;
+  const tick = () => { const el = $("#htNew"); if (!el) return clearInterval(homeToday.t); const now = new Date(), mid = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)), ms = mid - now, h = Math.floor(ms / 3.6e6), m = Math.floor((ms % 3.6e6) / 6e4); el.textContent = `new game in ${h}h ${m}m`; };
+  clearInterval(homeToday.t); tick(); homeToday.t = setInterval(tick, 30000);
+  try { const r = await fetch("weekly.json?t=" + Math.floor(Date.now() / 6e5)); const fx = r.ok ? (await r.json()).fixtures : []; const nx = fx.map((f) => ({ ...f, at: new Date(f.kickoff) })).filter((f) => f.at > Date.now()).sort((a, b) => a.at - b.at)[0], k = $("#htKick");
+    if (nx && k) { k.hidden = false; k.innerHTML = `<span class="htlabel"><span class="livedot"></span> Next kickoff · ${esc(lgOf(nx.league).name)}</span><span class="htmatch">${badge(nx.home, "sm")}<b>${esc(nx.home)}</b><small>v</small><b>${esc(nx.away)}</b>${badge(nx.away, "sm")}</span><span class="fine" id="htKickIn">in ${countdown(nx.at - Date.now())} · predict the score</span>`; } } catch (e) { /* no forecast file: the card stays hidden */ }
+  if (Board.mode === "rest") { const rows = await Ranked.rpc("open_lobbies"), l = $("#htLobby"); if (rows && rows.length && l) { l.hidden = false; l.innerHTML = `<span class="htlabel"><svg class=ic><use href=#i-trophy></use></svg> Ranked</span><span class="htbig num">${rows.length}</span><span class="fine">open lobb${rows.length === 1 ? "y" : "ies"} right now · join one</span>`; } }
+}
+/* doors lean towards the pointer, like cards on a table */
+function homeTilt() {
+  if (typeof REDUCED !== "undefined" && REDUCED) return;
+  document.querySelectorAll("#doors .door, .htcard").forEach((d) => { if (d.dataset.tilt) return; d.dataset.tilt = 1;
+    d.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; const r = d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; d.style.transform = `perspective(700px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-3px)`; d.style.setProperty("--mx", `${(x + 0.5) * 100}%`); d.style.setProperty("--my", `${(y + 0.5) * 100}%`); });
+    d.addEventListener("pointerleave", () => { d.style.transform = ""; }); });
+}
+
 
 /* ---------- lobby ---------- */
 function renderLobby() {
@@ -3712,6 +3733,8 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.id === "rkSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.id === "rkQuick") { qmStart(); return; }
+  if (b.dataset.hgame) { Snd.tick(); S.code = "ALL"; go("games-" + SLUG["ALL"] + "-" + b.dataset.hgame); return; }
+  if (b.dataset.groupGo) { Snd.tick(); S.code = "ALL"; S.hubGroup = b.dataset.groupGo; S.game = null; go("games-" + SLUG["ALL"] + "-" + b.dataset.groupGo); return; }
   if (b.id === "rkCreate") { rankedStart($("#rkGame").value, $("#rkDiff").value, $("#rkVis").value === "pub"); return; }
   if (b.id === "rkJoinCode") { const c = ($("#rkCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } Snd.tick(); toast("Joining… the host's game appears when it connects"); resetGames(); S.rk = true; S.hubGroup = "ranked"; S.game = "ttt"; renderRoom(); openOnline("ttt"); joinRoomCode(c); return; }
   if (b.dataset.rkjoin) { const [c, g] = b.dataset.rkjoin.split("|"); Snd.tick(); rankedJoin(c, g); return; }

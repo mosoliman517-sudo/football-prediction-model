@@ -487,9 +487,42 @@ h2.sec { letter-spacing: -.01em; } .modes .mode b::after { content: " →"; colo
 @media (max-width: 560px) { .lbrow.lobby { grid-template-columns: 1fr auto; } .lbrow.lobby > div:nth-child(2) { grid-column: 1; } }
 .buzzers { position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 6; padding: 8px 0 2px; background: linear-gradient(transparent, var(--bg) 40%); }
 .answerbox { scroll-margin-bottom: 120px; }
+@media (min-width: 561px) { .answerbox { position: sticky; bottom: 132px; z-index: 7; box-shadow: 0 -14px 30px -18px #0008; } }
+html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 #qSug:empty, #tSug:empty, #rSug:empty { display: none; }
 .card:has(.buzzers) { overflow: visible; }
 @media (max-width: 560px) { .answerbox { position: sticky; bottom: max(78px, calc(env(safe-area-inset-bottom, 0px) + 78px)); z-index: 7; max-height: 42vh; overflow: auto; box-shadow: 0 -14px 30px -18px #000c; } .buzzers { bottom: max(8px, env(safe-area-inset-bottom, 0px)); } }
+
+/* ---- win / lose / streak effects (FX) ---- */
+.fx-pop { animation: fxPop .55s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes fxPop { 0% { transform: scale(.88); opacity: 0; } 60% { transform: scale(1.03); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.fx-shake { animation: fxShake .5s cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes fxShake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-9px); } 40%, 60% { transform: translateX(9px); } }
+.fx-float { position: fixed; z-index: 9400; pointer-events: none; font: 800 30px/1 var(--display); transform: translate(-50%, -50%); animation: fxFloat 1.15s cubic-bezier(.2, .8, .2, 1) forwards; text-shadow: 0 3px 14px #0007; white-space: nowrap; }
+.fx-float.good { color: var(--ok, #3ddc84); } .fx-float.bad { color: #ff5d5d; }
+@keyframes fxFloat { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -70%) scale(1.18); } 100% { opacity: 0; transform: translate(-50%, -190%) scale(1); } }
+.fx-burst { position: fixed; z-index: 9399; pointer-events: none; width: 0; height: 0; }
+.fx-burst i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); animation: fxRay .75s cubic-bezier(.1, .8, .3, 1) forwards; }
+.fx-burst b { position: absolute; left: -30px; top: -30px; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--ok, #3ddc84); animation: fxRing .6s ease-out forwards; }
+@keyframes fxRay { to { transform: translate(var(--x), var(--y)) scale(.2); opacity: 0; } }
+@keyframes fxRing { from { transform: scale(.3); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
+.fx-banner { position: fixed; left: 50%; top: 24%; z-index: 9450; pointer-events: none; transform: translate(-50%, -50%); text-align: center; font: 900 clamp(36px, 8vw, 68px)/1 var(--display); color: var(--accent); text-shadow: 0 0 34px var(--glow), 0 4px 0 #0006; animation: fxBanner 1.9s cubic-bezier(.2, 1.3, .4, 1) forwards; white-space: nowrap; }
+.fx-banner small { display: block; font: 800 13px/1.2 system-ui, sans-serif; letter-spacing: .22em; text-transform: uppercase; color: var(--ink); margin-top: 10px; text-shadow: 0 2px 10px #0008; }
+@keyframes fxBanner { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(-7deg); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(2deg); } 28% { transform: translate(-50%, -50%) scale(1) rotate(0); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -75%) scale(.96); } }
+.fx-dim { position: fixed; inset: 0; z-index: 9390; pointer-events: none; background: radial-gradient(circle at 50% 40%, transparent 30%, #000a 100%); animation: fxDim 1.4s ease forwards; }
+@keyframes fxDim { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+.fx-count { display: inline-block; animation: fxBump .5s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes fxBump { 40% { transform: scale(1.35); color: var(--ok, #3ddc84); } }
+@media (prefers-reduced-motion: reduce) { .fx-pop, .fx-shake, .fx-count { animation: none; } .fx-float, .fx-burst, .fx-banner, .fx-dim { display: none; } }
+
+/* ---- recommendations: your go-to game and one to try next ---- */
+.gfav { align-self: flex-start; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: 6px 10px; border-radius: 99px; background: var(--accent); color: var(--bg); box-shadow: 0 0 18px -4px var(--accent); }
+.gfav.try { background: transparent; color: var(--accent); border: 1px solid var(--accent); box-shadow: none; }
+.foryou { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 2px 0 18px; }
+.foryou .label { margin-right: 4px; }
+.fychip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 15px/1 var(--display); cursor: pointer; transition: transform .2s cubic-bezier(.3, 1.5, .5, 1), border-color .2s; }
+.fychip:hover { transform: translateY(-2px); border-color: var(--accent); } .fychip.fav { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+.fychip small { font: 600 12px/1 system-ui, sans-serif; color: var(--muted); }
 
 /* ---- loading screens ---- */
 .splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(5vh, 20px) 20px max(4vh, 18px); text-align: center; overflow: hidden; transition: opacity .6s ease, visibility .6s; color: #fff; font-family: var(--sans, system-ui); background: #0b1033; }
@@ -857,6 +890,7 @@ function paintSplashArt() {
 <script>
 const ASSET_BASE = "";   // the public build serves this page from /football/, so shared files live one level up
 const DATA = /*__DATA__*/null;
+/*__USAGE__*/
 paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -965,7 +999,7 @@ const Snd = (() => {
   function mStop() { if (mg && ctx) { mg.gain.cancelScheduledValues(ctx.currentTime); mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); } clearInterval(timer); timer = null; }
   function mSet(m) { want = m; if (!timer || m === mode) return; mg.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); clearTimeout(pend); pend = setTimeout(() => { mode = want; step = 0; nextT = ctx.currentTime + 0.1; mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.6); }, 700); }
   document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else if (level) ctx.resume(); });
-  const vib = (p) => { try { if (level && navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } };
+  const vib = (p) => { try { if (level && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) { /* not supported */ } };
   return {
     get level() { return level; },
     remix() { if (master) master.gain.value = gainFor(); if (mg && timer) mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.1); },
@@ -1311,6 +1345,39 @@ function confetti() {
   document.body.appendChild(box); setTimeout(() => box.remove(), 2600);
 }
 
+/* ---------- FX: the moments after a right or wrong answer ----------
+   hit(pts): a burst where you clicked and a floating +points.  miss(text): the card shakes and a red -points floats up.
+   streak(n): a banner at 3, 5, 10, 15, 20 and every 5 after.  best(score): "New best" at the end of a solo run.
+   Snd.right / Snd.wrong are wrapped, so every game gets at least the burst or the shake. */
+const FX = (() => {
+  let px = innerWidth / 2, py = innerHeight / 2, last = 0;
+  addEventListener("pointerdown", (e) => { px = e.clientX; py = e.clientY; }, { capture: true, passive: true });
+  const origin = () => { const a = document.activeElement; if (a && a !== document.body && a.getBoundingClientRect) { const r = a.getBoundingClientRect(); if (r.width && r.bottom > 0 && r.top < innerHeight) return [r.left + r.width / 2, r.top + r.height / 2]; } return [px, py]; };
+  const add = (cls, html, at, ms, label) => { const e = document.createElement("div"); e.className = cls; e.innerHTML = html; if (label) { e.setAttribute("role", "status"); e.setAttribute("aria-label", label); } else e.setAttribute("aria-hidden", "true"); if (at) { e.style.left = at[0] + "px"; e.style.top = at[1] + "px"; } document.body.appendChild(e); setTimeout(() => e.remove(), ms); return e; };
+  const cols = ["--ok", "--accent", "--accent2", "--glow"];
+  function burst(at) { let h = "<b></b>"; for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2 + Math.random() * 0.3, d = 60 + Math.random() * 70; h += `<i style="--c:var(${cols[k % cols.length]});--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d).toFixed(0)}px"></i>`; } add("fx-burst", h, at, 900); }
+  const float = (text, kind, at, label) => add("fx-float " + kind, text, at, 1200, label);
+  const after = (fn) => setTimeout(fn, 20);   // after the synchronous re-render that follows every answer
+  function shake(sel) { after(() => { const el = typeof sel === "string" ? document.querySelector(sel) : sel; if (!el) return; el.classList.remove("fx-shake"); void el.offsetWidth; el.classList.add("fx-shake"); setTimeout(() => el.classList.remove("fx-shake"), 520); }); }
+  function pop(sel) { after(() => document.querySelectorAll(sel).forEach((el, i) => { el.style.animationDelay = i * 80 + "ms"; el.classList.add("fx-pop"); })); }
+  function countUp(sel, from, to) { after(() => { const el = document.querySelector(sel); if (!el || REDUCED) return; const t0 = performance.now(); el.classList.add("fx-count"); (function f(t) { const k = Math.min(1, (t - t0) / 650), e = 1 - Math.pow(1 - k, 3); if (el.isConnected) el.textContent = Math.round(from + (to - from) * e); if (k < 1 && el.isConnected) requestAnimationFrame(f); })(t0); }); }
+  function banner(big, small, party = true) { if (REDUCED) return; document.querySelectorAll(".fx-banner").forEach((e) => e.remove()); add("fx-banner", `${big}<small>${small}</small>`, null, 2000, `${big}. ${small}`); if (party) confetti(); }
+  const MILESTONE = { 3: ["3 in a row", "Heating up"], 5: ["5 in a row", "On fire"], 10: ["10 in a row", "Unstoppable"], 15: ["15 in a row", "Ball knowledge"], 20: ["20 in a row", "Hall of fame"] };
+  const api = {
+    hit(pts) { last = performance.now(); if (REDUCED) return; const at = origin(); burst(at); if (pts) float("+" + pts, "good", [at[0], at[1] - 10], `Correct, plus ${pts}`); },
+    miss(text, sel = "#room > .card") { last = performance.now(); const at = origin(); if (!REDUCED && text) float(text, "bad", at, "Wrong, " + text); shake(sel); },
+    streak(n) { if (!n) return; const m = MILESTONE[n] || (n > 20 && n % 5 === 0 ? [n + " in a row", "Legendary"] : null); if (!m) return; setTimeout(() => { banner(m[0], m[1]); try { Snd.horn(); } catch (e) { /* no sound */ } }, 350); },
+    best(score) { setTimeout(() => { banner("New best!", score + " points"); try { Snd.horn(); } catch (e) { /* no sound */ } }, 450); },
+    over() { if (REDUCED) return; add("fx-dim", "", null, 1500); shake("#room > .card"); },
+    pop, countUp, shake,
+    auto(ok) { if (performance.now() - last < 120) return; last = performance.now(); if (ok) { if (!REDUCED) burst(origin()); } else shake("#room > .card"); },
+  };
+  const r0 = Snd.right, w0 = Snd.wrong;
+  Snd.right = function () { const v = r0.apply(this, arguments); api.auto(true); return v; };
+  Snd.wrong = function () { const v = w0.apply(this, arguments); api.auto(false); return v; };
+  return api;
+})();
+
 /* ---------- Daily 5 ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 function dailyFixtures(c, key) {
@@ -1583,13 +1650,13 @@ function renderHub() {
   heroQueue = [];
   const c = S.code, clubs = c === "ALL" ? Object.keys(CREST) : Object.keys(lgOf(c).crests || {}).length ? Object.keys(lgOf(c).crests) : [...new Set(allMatches(c).flatMap((r) => [r.m[1], r.m[2]]))];
   const pick = (k) => [0, 1, 2].map((j) => clubs[(hash(`${c}-${k}-${j}`)) % clubs.length]);
-  const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
+  const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div>${favPill(g.id)}<div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
   if (g === "ranked") { renderRanked(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("ranked")); return; }
   if (g === "live") { renderLive(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("live")); return; }
-  if (g === "model") { $("#room").innerHTML = weeklyCardHTML() + `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${GAMES.map(card).join("")}</div>`; weeklyBoard(); weeklyChampionCheck(); return; }
-  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
-  $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Three places to play, ${where}.</p><div class="groups">
+  if (g === "model") { $("#room").innerHTML = weeklyCardHTML() + `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${hubList(GAMES).map(card).join("")}</div>`; weeklyBoard(); weeklyChampionCheck(); return; }
+  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${hubList(QUIZ_GAMES).map((x, k) => card(x, k)).join("")}</div>`; return; }
+  $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Three places to play, ${where}.</p>${forYouHTML()}<div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Play online</div><div class="gtag">Ranked matches against real players for Elo and the leaderboard, plus live predictions on the next real fixtures.</div><span class="dgo">Play online</span></button></div>`;
@@ -1719,7 +1786,7 @@ function renderUpset() {
 function answerUpset(k) {
   const c = S.code, u = S.up; if (u.chosen != null) return; u.chosen = k; const ok = k === u.ans; S.upStreak = ok ? S.upStreak + 1 : 0;
   const st = store.items[`u_${c}`] || { rounds: 0, right: 0, best: 0 }; lockIn(`u_${c}`, { rounds: st.rounds + 1, right: st.right + (ok ? 1 : 0), best: Math.max(st.best, S.upStreak) }); afterUpset(ok, u.ps[u.ans], S.upStreak, u.items[u.ans].c);
-  Snd.flip(); renderUpset(); setTimeout(() => { ok ? (S.upStreak >= 3 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.upStreak >= 3) confetti(); }, 350);
+  Snd.flip(); renderUpset(); setTimeout(() => { ok ? (FX.hit(), S.upStreak >= 3 ? Snd.win() : Snd.right()) : (FX.miss(""), Snd.wrong()); if (ok) FX.streak(S.upStreak); if (ok && S.upStreak >= 3) confetti(); }, 350);
 }
 
 /* ---------- Guess the table ---------- */
@@ -1785,7 +1852,7 @@ function renderHol() {
 function answerHol(k) {
   const c = S.code, q = S.hol; if (q.chosen != null) return; q.chosen = k === "a" ? q.a : q.b; const ok = q.chosen === q.win; S.holStreak = ok ? S.holStreak + 1 : 0;
   const cur = store.items[`h_${c}`] || { best: 0 }; if (S.holStreak > cur.best) lockIn(`h_${c}`, { best: S.holStreak }); afterHol(ok, S.holStreak, q.c);
-  Snd.flip(); renderHol(); setTimeout(() => { ok ? (S.holStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.holStreak >= 5 && S.holStreak % 5 === 0) confetti(); }, 500);
+  Snd.flip(); renderHol(); setTimeout(() => { ok ? (FX.hit(), S.holStreak >= 5 ? Snd.win() : Snd.right()) : (FX.miss(""), Snd.wrong()); if (ok) FX.streak(S.holStreak); if (ok && S.holStreak >= 5 && S.holStreak % 5 === 0) confetti(); }, 500);
 }
 
 
@@ -1889,7 +1956,18 @@ const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"><
 const emptyState = (icon, title, text) => `<div class="fxempty"><span>${icon}</span><b>${title}</b><div class="fine">${text}</div></div>`;
 const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette", "Starting XI", "Scramble", "Who did it"];
 function award(id) { const p = prof(); if (p.ach[id]) return; unlock(p, id); saveProf(p); }
+/* ---------- recommendations (Usage lives in site/usage.js) ---------- */
+const USPORT = DATA.sport === "nba" ? "bb" : "fb";
+let HUB_ORD = { fav: null, next: null };
+function hubList(list) { const o = Usage.order(list, USPORT); HUB_ORD = o; return o.list; }
+const favPill = (id) => (id === HUB_ORD.fav ? '<span class="gfav">Your go-to</span>' : id === HUB_ORD.next ? '<span class="gfav try">Try next</span>' : "");
+function forYouHTML() {
+  const all = [...QUIZ_GAMES, ...GAMES], o = Usage.order(all, USPORT); if (!o.fav) return "";
+  const top = o.list.filter((g) => Usage.count(USPORT + ":" + g.id) > 0).slice(0, 3), nx = o.next && all.find((g) => g.id === o.next);
+  return `<div class="foryou"><span class="label">For you</span>${top.map((g) => `<button type="button" class="fychip ${g.id === o.fav ? "fav" : ""}" data-game="${g.id}">${g.name}<small>${Usage.count(USPORT + ":" + g.id)}×</small></button>`).join("")}${nx ? `<button type="button" class="fychip" data-game="${nx.id}">${nx.name}<small>try next</small></button>` : ""}</div>`;
+}
 function trackPlay(label) {
+  if (S.game) Usage.play(USPORT, S.game, 0.25);
   const p = prof(); label = label === "Write your number" ? "Market value" : label; p.rounds = (p.rounds || 0) + 1; p.played = { ...(p.played || {}) }; p.diffs = { ...(p.diffs || {}) };
   if (BK_LABELS.includes(label)) { p.played[label] = 1; p.diffs[S.diff] = 1; }
   const hr = new Date().getHours(); if (hr < 5) unlock(p, "night"); else if (hr < 7) unlock(p, "early");
@@ -1992,7 +2070,7 @@ function xBars(rows, note) { return `<div class="xs xs2">${rows.map(([n, v, k, h
 function buildScenes(path, name) {
   const sm = DATA.summary.ALL, b = BL(), model = Math.round(sm.pooled_acc * 1000) / 10, books = Math.round(sm.market_acc * 1000) / 10, nn = Math.round(sm.n / 1000);
   const who = name ? `, ${name}` : "";
-  const welcome = { h: "Welcome", say: `Welcome${who}. ballknowledge is a football site with two sides: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.`,
+  const welcome = { h: "Welcome", say: `Welcome${who}. This is the football side of ballknowledge, and it has two halves: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.`,
     v: () => `<div class="xs xs1"><div class="xlogo">ball<b>knowledge</b></div><div class="xtwo"><div style="--d:.8s"><svg class=ic><use href=#i-brain></use></svg>Test your knowledge</div><div style="--d:1.4s"><svg class=ic><use href=#i-chip></use></svg>Beat the model</div></div></div>` };
   const quiz = [
     { h: "The quiz games", say: "In the quiz games you get clues about a mystery player or club. The sooner you answer correctly, the more points you score, up to a thousand. A wrong guess costs a little, so be sure. If you are new, start on Easy: it only asks about the biggest stars.",
@@ -2016,18 +2094,22 @@ function buildScenes(path, name) {
 const XX = { i: 0, t: 0, playing: true, voice: true, timer: null, spDone: false, dur: [], sc: [] };
 const xDur = (s) => Math.max(5, s.say.split(/\s+/).length / 2.9 + 1);
 function startTour(path) {
-  closeTour(); XX.i = 0; XX.t = 0; XX.playing = true; XX.sc = buildScenes(path || "both", prof().nick || ""); XX.dur = XX.sc.map(xDur); XX.voice = !!window.speechSynthesis && XX.voice;
+  closeTour(); XX.i = 0; XX.t = 0; XX.playing = true; XX.sc = buildScenes(path || "both", prof().nick || ""); XX.dur = XX.sc.map(xDur); XX.voice = XX.voice; AIVoice.preload();
   const el = document.createElement("div"); el.id = "xp"; el.className = "xp"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Guided tour"); document.body.appendChild(el); xScene(); XX.timer = setInterval(xTick, 100);
 }
-function closeTour() { clearInterval(XX.timer); XX.timer = null; try { speechSynthesis.cancel(); } catch (e) { /* no speech */ } const el = $("#xp"); if (el) el.remove(); try { localStorage.setItem("bk_tour", "1"); } catch (e) { /* blocked */ } }
+function closeTour() { clearInterval(XX.timer); XX.timer = null; AIVoice.stop(); try { speechSynthesis.cancel(); } catch (e) { /* no speech */ } const el = $("#xp"); if (el) el.remove(); try { localStorage.setItem("bk_tour", "1"); } catch (e) { /* blocked */ } }
 function xSpeak() {
+  try { speechSynthesis.cancel(); } catch (e) { /* no device voice */ } AIVoice.stop(); XX.spDone = !XX.voice; if (!XX.voice) { XX.spDone = true; return; }
+  const i0 = XX.i; AIVoice.play(XX.sc[XX.i].say, { paused: !XX.playing, onend: () => { if (XX.i === i0) XX.spDone = true; } }).then((a) => { if (!a && XX.i === i0) xSpeakDevice(); });
+}
+function xSpeakDevice() {
   try { speechSynthesis.cancel(); } catch (e) { return; } XX.spDone = !XX.voice; if (!XX.voice || !window.speechSynthesis) { XX.spDone = true; return; }
   const u = new SpeechSynthesisUtterance(XX.sc[XX.i].say); const vs = speechSynthesis.getVoices(), v = vs.find((x) => /en[-_](GB|US)/i.test(x.lang) && /samantha|daniel|google|siri|karen/i.test(x.name)) || vs.find((x) => /^en/i.test(x.lang)); if (v) u.voice = v; u.rate = 1.12; u.onend = () => { XX.spDone = true; }; u.onerror = () => { XX.spDone = true; };
   if (!XX.playing) u.onstart = () => speechSynthesis.pause(); speechSynthesis.speak(u);
 }
 function xScene() {
   const el = $("#xp"); if (!el) return; const s = XX.sc[XX.i], total = XX.sc.length;
-  el.innerHTML = `<div class="xframe"><div class="xtop"><span class="label">${XX.i + 1} of ${total} · ${esc(s.h)}</span><span class="spacer"></span><button type="button" class="chip" data-x="voice" aria-pressed="${XX.voice}" ${window.speechSynthesis ? "" : "disabled"}>Voice</button><button type="button" class="chip" data-x="close">Close</button></div><div class="xstage" key="${XX.i}">${s.v()}</div><div class="xcap">${esc(s.say)}</div><div class="xctl"><button type="button" class="btn ghost" data-x="prev" ${XX.i ? "" : "disabled"}>Back</button><button type="button" class="btn" data-x="play">${XX.playing ? "Pause" : "Play"}</button><button type="button" class="btn ghost" data-x="next">${XX.i === total - 1 ? "Finish" : "Next"}</button></div><div class="xprog">${XX.sc.map((_, k) => `<i class="${k < XX.i ? "done" : k === XX.i ? "now" : ""}" data-x="go" data-k="${k}"><b style="width:${k < XX.i ? 100 : 0}%"></b></i>`).join("")}</div></div>`;
+  el.innerHTML = `<div class="xframe"><div class="xtop"><span class="label">${XX.i + 1} of ${total} · ${esc(s.h)}</span><span class="spacer"></span><button type="button" class="chip" data-x="voice" aria-pressed="${XX.voice}">Voice</button><button type="button" class="chip" data-x="close">Close</button></div><div class="xstage" key="${XX.i}">${s.v()}</div><div class="xcap">${esc(s.say)}</div><div class="xctl"><button type="button" class="btn ghost" data-x="prev" ${XX.i ? "" : "disabled"}>Back</button><button type="button" class="btn" data-x="play">${XX.playing ? "Pause" : "Play"}</button><button type="button" class="btn ghost" data-x="next">${XX.i === total - 1 ? "Finish" : "Next"}</button></div><div class="xprog">${XX.sc.map((_, k) => `<i class="${k < XX.i ? "done" : k === XX.i ? "now" : ""}" data-x="go" data-k="${k}"><b style="width:${k < XX.i ? 100 : 0}%"></b></i>`).join("")}</div></div>`;
   XX.t = 0; xSpeak();
 }
 function xTick() {
@@ -2037,8 +2119,8 @@ function xTick() {
 function xGo(k) { if (k >= XX.sc.length) { closeTour(); Snd.win(); return; } XX.i = Math.max(0, k); xScene(); }
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-x]"); if (!b || !$("#xp")) return; const a = b.dataset.x; Snd.tick();
   if (a === "close") closeTour(); else if (a === "next") xGo(XX.i + 1); else if (a === "prev") xGo(XX.i - 1); else if (a === "go") xGo(+b.dataset.k); else if (a === "cta") { const to = b.dataset.to; closeTour(); go(to); }
-  else if (a === "play") { XX.playing = !XX.playing; b.textContent = XX.playing ? "Pause" : "Play"; try { XX.playing ? speechSynthesis.resume() : speechSynthesis.pause(); } catch (err) { /* no speech */ } }
-  else if (a === "voice") { XX.voice = !XX.voice; b.setAttribute("aria-pressed", XX.voice); if (!XX.voice) { try { speechSynthesis.cancel(); } catch (err) { /* none */ } XX.spDone = true; } else xSpeak(); } });
+  else if (a === "play") { XX.playing = !XX.playing; b.textContent = XX.playing ? "Pause" : "Play"; XX.playing ? AIVoice.resume() : AIVoice.pause(); try { XX.playing ? speechSynthesis.resume() : speechSynthesis.pause(); } catch (err) { /* no speech */ } }
+  else if (a === "voice") { XX.voice = !XX.voice; b.setAttribute("aria-pressed", XX.voice); if (!XX.voice) { AIVoice.stop(); try { speechSynthesis.cancel(); } catch (err) { /* none */ } XX.spDone = true; } else xSpeak(); } });
 addEventListener("keydown", (e) => { if ($("#xp")) { if (e.key === "Escape") closeTour(); else if (e.key === "ArrowRight") xGo(XX.i + 1); else if (e.key === "ArrowLeft") xGo(XX.i - 1); else if (e.key === " " && !/BUTTON/.test(e.target.tagName)) { e.preventDefault(); const p = document.querySelector('[data-x="play"]'); if (p) p.click(); } } });
 function offerTour() {
   const nm = prof().nick, el = document.createElement("div"); el.id = "xoffer"; el.className = "xoffer";
@@ -3153,7 +3235,7 @@ function tickQuiz() {
 }
 function buzz(who) {
   const S_ = Q.s; if (!S_ || S_.phase !== "run" || S_.paused || S_.locked[who]) return;
-  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) { i.value = ""; setTimeout(() => { i.value = ""; i.focus(); i.scrollIntoView({ block: "center", behavior: "smooth" }); }, 0); }
+  S_.paused = true; S_.buzzed = who; S_.answerLeft = 12; S_.sug = []; Snd.lock(); renderQuiz(); const i = $("#qIn"); if (i) { i.value = ""; setTimeout(() => { i.value = ""; i.focus({ preventScroll: true }); const hd = $("#room .qhud") || $("#qClues"); if (hd) { const r = hd.getBoundingClientRect(); if (r.top < 56 || r.top > innerHeight * 0.3) hd.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); } }, 0); }
 }
 function submitAnswer(pickId) {
   const S_ = Q.s, d = QDEF[S_.game], a = d.ans(S_.r); if (!S_ || !S_.paused) return;
@@ -3164,12 +3246,12 @@ function submitAnswer(pickId) {
   if (ok) endRound(S_.buzzed); else wrongGuess(false);
 }
 function wrongGuess(timedOut) {
-  flashEdge(false); const S_ = Q.s, who = S_.buzzed; S_.scores[who] -= 150; if (S_.mode === "duo") S_.locked[who] = true; S_.paused = false; S_.buzzed = null; Snd.wrong(); toast(timedOut ? "Out of time: -150" : "Not it: -150");
+  flashEdge(false); const S_ = Q.s, who = S_.buzzed; S_.scores[who] -= 150; if (S_.mode === "duo") S_.locked[who] = true; S_.paused = false; S_.buzzed = null; FX.miss(timedOut ? "Time! -150" : "-150"); Snd.wrong();
   if (S_.mode === "duo" ? S_.locked[0] && S_.locked[1] : true) { if (S_.mode === "duo") endRound(null); else { S_.paused = false; renderQuiz(); } } else renderQuiz();
 }
 function endRound(winner) {
   const S_ = Q.s; stopQuiz(); S_.paused = false; S_.phase = "reveal"; let pts = 0;
-  if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; flashEdge(true); Snd.win(); if (pts > 700) confetti(); } else { if (S_.mode === "solo") S_.over = true; Snd.wrong(); }
+  if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; flashEdge(true); FX.hit(pts); Snd.win(); if (pts > 700) confetti(); FX.pop("#room .rcard, #room .rcard + *"); FX.countUp(`#room .qscore:nth-of-type(${winner + 2}) b`, S_.scores[winner] - pts, S_.scores[winner]); if (S_.mode === "solo") FX.streak(S_.streak); } else { if (S_.mode === "solo") { S_.over = true; FX.over(); } else FX.miss(""); Snd.wrong(); }
   if (S_.mode === "solo") { if (winner != null) saveResume(S_.game, S_.scope, S_.scores[0], S_.streak, S_.round); else clearResume(); } S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner === 0 && S_.game === "scramble" && S_.mode === "solo") { const p0 = prof(); p0.scrSolved = (p0.scrSolved || 0) + 1; if (p0.scrSolved >= 10) unlock(p0, "scramble10"); saveProf(p0); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
 const RESUME_KEY = "bk_resume";
@@ -3178,9 +3260,9 @@ const saveResume = (game, scope, score, streak, round) => { try { localStorage.s
 const clearResume = () => { try { localStorage.removeItem(RESUME_KEY); } catch (e) { /* blocked */ } };
 function finishQuiz() { clearResume();
   const S_ = Q.s; S_.phase = "done"; stopQuiz(); const best = Math.max(...S_.scores); if (S_.mode === "duo") { rankedEnd(S_, S_.scores); setTimeout(() => duoResult(S_.scores.slice(), QDEF[S_.game].name), 700); }
-  if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) lockIn(k, { best: S_.scores[0] }); }
+  let newBest = false; if (S_.mode === "solo") { const k = `best_${S_.game}_${S_.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }; if (S_.scores[0] > cur.best) { lockIn(k, { best: S_.scores[0] }); newBest = S_.scores[0] > 0; } }
   if (S_.mode === "solo") { const sc = Math.round(Math.max(0, S_.scores[0]) * DIFFX[S.diff]); reward(30 + Math.round(sc / 100), QDEF[S_.game].name, (p) => { if (S_.scores[0] >= 3500) unlock(p, "quizmaster"); }); Board.submit({ game: S_.game, league: S_.scope === "ALL" ? "all" : S_.scope, score: sc }); }
-  renderQuiz(); if (best > 0) { Snd.horn(); confetti(); }
+  renderQuiz(); FX.pop("#room .rcard, #room .vd"); if (newBest) FX.best(S_.scores[0]); else if (best > 0 && S_.mode === "duo") { Snd.horn(); confetti(); }
 }
 const answerOf = (S_) => { const d = QDEF[S_.game]; return d.ans(S_.r); };
 function answerCard(S_) {
@@ -3274,7 +3356,7 @@ function lockFinish() {
   const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
   if (duo && f.turn === 0) { f.turn = 1; c.guess = Math.ceil(c.n / 2); renderFinish(); return; }
   const n = duo ? 2 : 1; for (let i = 0; i < n; i++) { c.diffs[i] = Math.abs(c.guesses[i] - c.pos); c.pts[i] = Math.max(0, 1000 - 220 * c.diffs[i]); f.scores[i] += c.pts[i]; }
-  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) f.streak++; else f.over = true; track("finish", best <= finTol(), c.lg); }
+  const best = Math.min(...c.diffs.slice(0, n)); if (!duo) { if (best <= finTol()) { f.streak++; FX.streak(f.streak); } else { f.over = true; FX.over(); } track("finish", best <= finTol(), c.lg); }
   f.phase = "reveal"; best === 0 ? (Snd.win(), confetti()) : best <= 2 ? Snd.right() : Snd.wrong(); renderFinish();
 }
 function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "duo") rankedEnd(f, f.scores); if (f.mode === "solo") { const k = `best_finish_${f.scope}_${S.diff}`, cur = store.items[k] || { best: 0 }, sc = Math.round(f.scores[0] * DIFFX[S.diff]); if (f.scores[0] > cur.best) lockIn(k, { best: f.scores[0] }); reward(30 + Math.round(sc / 100), "Where did they finish?", null); Board.submit({ game: "finish", league: f.scope === "ALL" ? "all" : f.scope, score: sc }); } renderFinish(); }
@@ -3309,7 +3391,7 @@ function answerVH(kind, k) {
   const key = kind === "p" ? "pv" : "cv", q = S[key]; if (q.chosen != null) return; q.chosen = k; const ok = k === q.win; track("value", ok, null); S.vStreak = ok ? (S.vStreak || 0) + 1 : 0;
   const cur = store.items[`v_${S.code}`] || { best: 0 }; if (S.vStreak > cur.best) lockIn(`v_${S.code}`, { best: S.vStreak });
   reward(5 + (ok ? 5 + 2 * Math.min(S.vStreak, 10) : 0), "Market value", null); if (ok) Board.submit({ game: "pvalue", league: S.code === "ALL" ? "all" : S.code, score: S.vStreak });
-  Snd.flip(); renderVH(kind); setTimeout(() => { ok ? (S.vStreak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && S.vStreak >= 5 && S.vStreak % 5 === 0) confetti(); }, 500);
+  Snd.flip(); renderVH(kind); setTimeout(() => { ok ? (FX.hit(), S.vStreak >= 5 ? Snd.win() : Snd.right()) : (FX.miss(""), Snd.wrong()); if (ok) FX.streak(S.vStreak); if (ok && S.vStreak >= 5 && S.vStreak % 5 === 0) confetti(); }, 500);
 }
 
 /* ---------- Write your number: one or two players ---------- */
@@ -3406,7 +3488,7 @@ function renderRapid() {
 }
 function rapidPick(k) {
   const r = S.rp; if (!r || r.phase !== "play") return; const m = r.cur.m, ok = m[5] === k, mo = rapidModel(m, r.fm) === m[5];
-  r.n++; if (ok) { r.you++; r.streak++; r.best = Math.max(r.best, r.streak); Snd.tick(); } else { r.streak = 0; Snd.wrong(); } if (mo) r.mod++;
+  r.n++; if (ok) { r.you++; r.streak++; r.best = Math.max(r.best, r.streak); Snd.tick(); FX.hit(); FX.streak(r.streak); } else { r.streak = 0; Snd.wrong(); } if (mo) r.mod++;
   r.last = { ok, t: `${m[1]} ${m[3]}–${m[4]} ${m[2]}` }; nextRapid(); renderRapid();
 }
 function endRapid() { const r = S.rp; if (!r || r.phase === "done") return; r.phase = "done"; clearInterval(r.timer); if (r.you > r.mod) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + r.you * 2 + (r.you > r.mod ? 20 : 0), "Rapid fire", (p) => { if (r.you > r.mod) unlock(p, "rapid_win"); if (r.you >= 20) unlock(p, "rapid_20"); }); Board.submit({ game: "rapid", league: S.code === "ALL" ? "all" : S.code, score: r.you }); renderRapid(); }
@@ -4000,7 +4082,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "chCard") { challengeCard(chalC(), S.chal.code); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); resetGames(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
-  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
+  if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; Usage.play(USPORT, S.game); S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }
   if (b.id === "gamesBack") { Snd.back(); resetGames(); S.game = null; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); paintScore(); return; }
   if (b.id === "thPause") { theatre.paused = !theatre.paused; b.textContent = theatre.paused ? "Play" : "Pause"; return; }
   if (b.id === "thSpeed") { theatre.speed = theatre.speed === 3 ? 8 : theatre.speed === 8 ? 1 : 3; b.textContent = `Speed ${theatre.speed}x`; return; }

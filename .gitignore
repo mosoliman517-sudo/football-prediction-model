@@ -40,3 +40,7 @@ site/logos/
 01_data_market_value/new/
 01_data_nba/
 01_data_chess/
+
+# Kokoro voice generation (src/80_make_voice.py): local venv and model files
+.venv-tts/
+01_data_tts/

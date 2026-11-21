@@ -1,0 +1,36 @@
+{
+ "football_tour": [
+  "Welcome. This is the football side of ballknowledge, and it has two halves: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.",
+  "In the quiz games you get clues about a mystery player or club. The sooner you answer correctly, the more points you score, up to a thousand. A wrong guess costs a little, so be sure. If you are new, start on Easy: it only asks about the biggest stars.",
+  "Play alone and see how long your streak lasts, or challenge a friend. Create a room, send them the link, and you play at the same time from your own phones. Short timers keep it fast.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with ballknowledge originals.",
+  "In Beat the Model you pick the result of a real match before you see it: a home win, a draw, or an away win. You score a point for the right result, and two more for the exact score.",
+  "The model is a computer program that studies past results. It never sees the match it is predicting. Guessing at random gets about a third right. Backing the team in better form, a fan's educated guess, gets 47.8 percent. The professionals who set betting odds get 53. The model gets 52. Football is hard to predict: upsets are normal.",
+  "You can also predict upcoming real matches. Lock your pick before kickoff. The model plays along, and its score is pinned at the top of the leaderboard so you can see if you are beating it.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with Beat the Model.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with the games."
+ ],
+ "basketball_tour": [
+  "Welcome. This is the basketball side of ballknowledge, and it has two halves: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.",
+  "In the quiz games you get clues about a mystery player or team. The sooner you answer correctly, the more points you score, up to a thousand. A wrong guess costs a little, so be sure. If you are new, start on Easy: it only asks about the biggest stars.",
+  "In Beat the Model you pick the winner of a real NBA game before you see the result. Then you see what the model picked, and what really happened.",
+  "The model is a computer program that studies past results. It never sees the game it is predicting. Flipping a coin gets half right. Always backing the home team gets 58.6 percent. The model gets 66.4 percent. Upsets happen every night.",
+  "Play alone and see how long your streak lasts, or challenge a friend. Create a room, send them the link, and you play at the same time from your own phones. Short timers keep it fast.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with ballknowledge originals.",
+  "You can also predict upcoming real matches. Lock your pick before kickoff. The model plays along, and its score is pinned at the top of the leaderboard so you can see if you are beating it.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with Beat the Model.",
+  "That is all you need. Each game explains itself the first time you open it, and you can press the question mark any time to see it again. Press slash to search anything. Ready? Let's start with the games."
+ ],
+ "chess": [
+  "You win",
+  "You lost",
+  "Draw",
+  "Review ready",
+  "Let's play",
+  "Checkmate",
+  "Check",
+  "All three dailies done",
+  "Daily done. 1 to go",
+  "Daily done. 2 to go"
+ ]
+}

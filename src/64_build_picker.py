@@ -49,15 +49,18 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
   <div class="go">Play chess <span aria-hidden="true">→</span></div>
  </a>
 </main>
-<p class="note">Football and basketball share one login, with a separate profile, rating, badges, friends and leaderboards for each. Chess saves progress in your browser for now.</p>
+<p class="note">One login works for all three sports, with a separate profile, rating, badges and leaderboards for each. No account needed to play.</p>
 <script>
 (function () {
   var h = location.hash; if (/^#(join|challenge)-/.test(h)) { location.replace("football/" + h); return; }   // links shared before basketball existed
-  try { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } catch (e) {}
+  try { var us = Usage.sports(), main = document.querySelector(".cards"); if (us[0].n >= 3) { us.forEach(function (x) { main.appendChild(document.getElementById(x.s)); }); var t = document.createElement("span"); t.className = "last fav"; t.textContent = "Your favourite"; document.getElementById(us[0].s).appendChild(t); }
+    else { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } } catch (e) {}
   ["fb", "bb", "ch"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
 })();
 </script></body></html>
 '''
+PAGE = PAGE.replace("<script>\n(function () {", "<script>\n" + open("site/usage.js", encoding="utf-8").read() + "\n(function () {", 1)   # favourites: site/usage.js
+PAGE = PAGE.replace("</style>", ".last.fav{color:var(--c);border-color:var(--c);font-weight:700}\n@media(min-width:560px) and (max-width:860px){.cards>a:last-child:nth-child(odd){grid-column:1/-1}}\n</style>", 1)   # no lonely third card
 os.makedirs("docs", exist_ok=True)
 open("docs/index.html", "w", encoding="utf-8").write(PAGE)
 open("site/index.html", "w", encoding="utf-8").write(PAGE.replace('href="football/"', 'href="arena.html"').replace('href="basketball/"', 'href="nba.html"').replace('href="chess/"', 'href="chess.html"'))

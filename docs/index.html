@@ -24,6 +24,8 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
 .last{position:absolute;top:18px;right:18px;font-size:12px;color:var(--muted);border:1px solid var(--line);padding:3px 9px;border-radius:99px;background:#0b0f1488}
 .note{color:var(--muted);font-size:13px;text-align:center;max-width:560px;margin:0}
 @media(prefers-reduced-motion:reduce){a.card{transition:none}}
+.last.fav{color:var(--c);border-color:var(--c);font-weight:700}
+@media(min-width:560px) and (max-width:860px){.cards>a:last-child:nth-child(odd){grid-column:1/-1}}
 </style></head><body>
 <header><h1>ball<b>knowledge</b></h1><p class="sub">Pick your game.</p></header>
 <main class="cards">
@@ -46,11 +48,39 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);border-color:var(--
   <div class="go">Play chess <span aria-hidden="true">→</span></div>
  </a>
 </main>
-<p class="note">Football and basketball share one login, with a separate profile, rating, badges, friends and leaderboards for each. Chess saves progress in your browser for now.</p>
+<p class="note">One login works for all three sports, with a separate profile, rating, badges and leaderboards for each. No account needed to play.</p>
 <script>
+/* ---------- What you play most (shared by football, basketball, chess and the sport picker) ----------
+   Kept only in this browser (localStorage "bk_usage"); nothing is sent anywhere. Each key holds a score that halves
+   every 14 days, so what you play now counts more than what you played last month. Keys: "s:fb" (a sport),
+   "fb:who" (a game in a sport). Lists are only reordered once you have played at least three times, so a new
+   visitor sees the hand-picked order. */
+const Usage = (() => {
+  const K = "bk_usage", HL = 14 * 864e5, MIN = 3;
+  const load = () => { try { return JSON.parse(localStorage.getItem(K) || "{}") || {}; } catch (e) { return {}; } };
+  const save = (u) => { try { localStorage.setItem(K, JSON.stringify(u)); } catch (e) { /* private mode */ } };
+  const decay = (x, now) => (x ? x.s * Math.pow(0.5, (now - x.t) / HL) : 0);
+  function add(key, w) { const u = load(), now = Date.now(), x = u[key]; u[key] = { s: decay(x, now) + w, t: now, n: ((x && x.n) || 0) + (w >= 1 ? 1 : 0) }; save(u); }
+  return {
+    play(sport, game, w = 1) { add("s:" + sport, w); if (game) add(sport + ":" + game, w); },
+    count(key) { const x = load()[key]; return (x && x.n) || 0; },
+    /* list sorted by what you play, plus the favourite (played 3+ times) and one game to try next (never played) */
+    order(list, sport, idOf = (x) => x.id) {
+      const u = load(), now = Date.now(), rows = list.map((x, i) => { const k = u[sport + ":" + idOf(x)]; return { x, i, s: decay(k, now), n: (k && k.n) || 0 }; });
+      const total = rows.reduce((a, r) => a + r.n, 0);
+      if (total < MIN) return { list: list.slice(), fav: null, next: null };
+      rows.sort((a, b) => b.s - a.s || a.i - b.i);
+      const fav = rows[0].n >= MIN ? idOf(rows[0].x) : null, nx = rows.find((r) => !r.n);
+      return { list: rows.map((r) => r.x), fav, next: nx ? idOf(nx.x) : null };
+    },
+    sports() { const u = load(), now = Date.now(); return ["fb", "bb", "ch"].map((s) => ({ s, v: decay(u["s:" + s], now), n: (u["s:" + s] && u["s:" + s].n) || 0 })).sort((a, b) => b.v - a.v); },
+  };
+})();
+
 (function () {
   var h = location.hash; if (/^#(join|challenge)-/.test(h)) { location.replace("football/" + h); return; }   // links shared before basketball existed
-  try { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } catch (e) {}
+  try { var us = Usage.sports(), main = document.querySelector(".cards"); if (us[0].n >= 3) { us.forEach(function (x) { main.appendChild(document.getElementById(x.s)); }); var t = document.createElement("span"); t.className = "last fav"; t.textContent = "Your favourite"; document.getElementById(us[0].s).appendChild(t); }
+    else { var last = localStorage.getItem("bk_last_sport"); if (last === "fb" || last === "bb" || last === "ch") { var c = document.getElementById(last), s = document.createElement("span"); s.className = "last"; s.textContent = "Last played"; c.appendChild(s); } } } catch (e) {}
   ["fb", "bb", "ch"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { try { localStorage.setItem("bk_last_sport", id); } catch (e) {} }); });
 })();
 </script></body></html>

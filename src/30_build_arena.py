@@ -244,9 +244,29 @@ for nm in _h.NAMES:
     if uri:
         hero.append({"n": nm, "img": uri, "photo": photo, "card": _cards.get(_h.norm(nm))})
 quiz = json.load(open("02_processed_data/quiz_data.json", encoding="utf-8")) if os.path.exists("02_processed_data/quiz_data.json") else None
+
+
+def collapse_loan_backs(h):
+    """A, B, A, B -> A, B: a move to B, a loan back to A, then B again (Pulisic: Dortmund, Chelsea, Dortmund, Chelsea).
+    Transfermarkt lists the loan-back as two extra moves; to a reader it looks like a mistake. No club is ever dropped."""
+    h, changed = list(h), True
+    while changed:
+        changed = False
+        for i in range(len(h) - 3):
+            if h[i] == h[i + 2] and h[i + 1] == h[i + 3] and h[i] != h[i + 1]:
+                del h[i + 1:i + 3]; changed = True; break
+    return h
+
+
+if quiz:
+    _n = 0
+    for _p in quiz["players"]:
+        if _p.get("hist"):
+            _c = collapse_loan_backs(_p["hist"]); _n += _c != _p["hist"]; _p["hist"] = _c
+    print(f"career paths tidied (loan-backs collapsed): {_n}")
 print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
 data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "gn": GN, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
-html = open(TEMPLATE).read().replace("/*__SHARED__*/", open("site/shared_names.js", encoding="utf-8").read()).replace('const ASSET_BASE = "";', 'const ASSET_BASE = "../";' if PUBLIC else 'const ASSET_BASE = "";').replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
+html = open(TEMPLATE).read().replace("/*__SHARED__*/", open("site/shared_names.js", encoding="utf-8").read()).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read()).replace('const ASSET_BASE = "";', 'const ASSET_BASE = "../";' if PUBLIC else 'const ASSET_BASE = "";').replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."
 latest = max(m[0] for lg_ in leagues.values() for sn_ in lg_["seasons"].values() for m in sn_["matches"])
 STAMP = f'Build {datetime.now(timezone.utc):%d %b %Y %H:%M} UTC · {"public" if PUBLIC else "private"} · results through {latest}'
@@ -268,5 +288,7 @@ if PUBLIC:
     if PUBLIC:
         html = html.replace("</html>", '<script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("../sw.js").catch(() => {}));</script></html>')
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-open(OUT, "w").write(html)
+    from split_loader import split_main_script     # splash first, game code in app.<hash>.js
+    html = split_main_script(html, os.path.dirname(OUT))
+open(OUT, "w", encoding="utf-8").write(html)
 print(f"Wrote {OUT} ({len(html) / 1e6:.2f} MB)")

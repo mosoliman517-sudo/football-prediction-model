@@ -1086,6 +1086,10 @@ const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !=
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { voice: COACHES[coachId()].voice, volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */
 const RV_ELO = [[0, 100], [40, 400], [50, 700], [60, 1000], [70, 1350], [75, 1550], [80, 1800], [85, 2050], [90, 2350], [93, 2550], [95, 2700], [97, 2850], [99, 3000]];
+/* Game rating from average centipawn loss (ACPL): rating ~ 3100 x e^(-ACPL/100), a regression that fits rated games
+   from about 800 to 2800. Book and forced moves are left out; with few moves the estimate is pulled toward 1500,
+   because a handful of moves can't prove much. */
+function rvEloCpl(list) { const L = list.filter((x) => x.cls !== "book" && x.cls !== "forced" && x.cpl != null); if (L.length < 4) return null; const acpl = L.reduce((a, x) => a + x.cpl, 0) / L.length, raw = 3100 * Math.exp(-acpl / 100), w = L.length / (L.length + 10); return { elo: Math.round((w * raw + (1 - w) * 1500) / 50) * 50, acpl: Math.round(acpl) }; }
 function rvElo(acc) { for (let k = 1; k < RV_ELO.length; k++) if (acc <= RV_ELO[k][0]) { const [a0, e0] = RV_ELO[k - 1], [a1, e1] = RV_ELO[k]; return Math.round((e0 + (e1 - e0) * (acc - a0) / (a1 - a0)) / 50) * 50; } return 3000; }
 const rvNP = (fen) => { let s = 0; for (const ch of fen.split(" ")[0]) s += { q: 9, r: 5, b: 3, n: 3, Q: 9, R: 5, B: 3, N: 3 }[ch] || 0; return s; };
 function rvPhaseOf(i) { const lastBook = rv.book.lastIndexOf(true); if (rvNP(rv.fen[i - 1]) <= 26) return "end"; return i <= Math.min(30, Math.max(lastBook, 16)) ? "open" : "mid"; }
@@ -1094,7 +1098,7 @@ const rvGrade = (a) => (a == null ? null : a >= 95 ? "best" : a >= 88 ? "excelle
 function rvReport() {
   const el = rvEl("rvRep"); if (!el) return; if (!rv.done) { el.innerHTML = ""; return; }
   const side = (w) => rv.data.filter((x) => x && x.white === w && x.cls !== "book"), accOf = (l) => (l.length ? l.reduce((s, x) => s + x.acc, 0) / l.length : null);
-  const P = [true, false].map((w) => { const l = side(w), a = accOf(l); return { w, n: l.length, acc: a, elo: a != null && l.length >= 5 ? rvElo(a) : null, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
+  const P = [true, false].map((w) => { const l = side(w), a = accOf(l); return { w, n: l.length, acc: a, elo: (rvEloCpl(l) || {}).elo || null, acpl: (rvEloCpl(l) || {}).acpl, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
   const moments = rv.data.filter((x) => x && x.cls !== "book").sort((a, b) => b.loss - a.loss).slice(0, 3).filter((x) => x.loss >= 8);
   const shine = rv.data.filter((x) => x && (x.cls === "brilliant" || x.cls === "great")).slice(0, 3);
   const notes = [];
@@ -1102,12 +1106,12 @@ function rvReport() {
   const swing = rv.data.find((x) => x && x.before >= 85 && x.after < 60); if (swing) notes.push(`${esc(rv.names[swing.white ? 0 : 1])} had a winning position and let it slip with ${Math.ceil(swing.i / 2)}${swing.white ? "." : "..."} ${esc(swing.san)}.`);
   const cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
   [true, false].forEach((w) => { const b = cnt(w, "blunder"); if (!b && P[w ? 0 : 1].n >= 10) notes.push(`${esc(rv.names[w ? 0 : 1])} made no blunders.`); });
-  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo}</b><span>game rating</span></div>`).join("")}</div>
+  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo}</b><span>game rating${p.acpl != null ? ` · ${p.acpl} avg loss` : ""}</span></div>`).join("")}</div>
     <table class="rvph"><tr><th></th>${P.map((p) => `<th>${p.w ? "White" : "Black"}</th>`).join("")}</tr>${RV_PH.map(([k, n], j) => `<tr><td>${n}</td>${P.map((p) => { const g = rvGrade(p.ph[j]); return `<td>${g ? `<i class="cls ${g}" title="${Math.round(p.ph[j])}% accuracy">${RVC[g][1]}</i>` : '<span class="fine">—</span>'}</td>`; }).join("")}</tr>`).join("")}</table>
     ${notes.length ? `<ul class="rvnotes">${notes.slice(0, 4).map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
     ${moments.length || shine.length ? `<div class="rvkm"><span class="label">Key moments</span>${[...shine, ...moments].map((x) => `<button type="button" class="rvkmb" data-ply="${x.i}"><i class="cls ${x.cls}">${RVC[x.cls][1]}</i>${Math.ceil(x.i / 2)}${x.white ? "." : "..."} ${esc(x.san)}</button>`).join("")}</div>` : ""}
     ${(() => { const me = P[rv.color === "b" ? 1 : 0]; pipRemember(me.acc, me.elo); return pipMemoryHTML(me.acc); })()}
-    <p class="fine">Game rating is a rough estimate from accuracy alone; one game can swing it a lot. Phases: opening while in theory or the first moves, endgame once most pieces are off.</p></div>`;
+    <p class="fine">Game rating comes from the average centipawn loss (how many hundredths of a pawn each move gives away, book and forced moves left out); short games are pulled toward 1500, and one game can still swing it a lot. Phases: opening while in theory or the first moves, endgame once most pieces are off.</p></div>`;
 }
 /* ---------- review, part two: engine lines, retry a mistake, your own games, and Pip's memory ---------- */
 function rvEngineHTML(i) {
@@ -1207,7 +1211,7 @@ function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w), prev = rv.data[i - 2];
   const played = mv.from + mv.to + (mv.promotion || ""), L = a.lines || [], bestUci = L[0] ? L[0].pv[0] : played, inTop = L.find((x) => x.pv[0] === played);
   const before = pov(a.ev.w); let after = inTop ? pov(inTop.w) : pov(b.ev.w); if (!inTop && L.length >= 2) after = Math.min(after, pov(L[L.length - 1].w)); if (b.ev.term) after = pov(b.ev.w);
-  const sg = white ? 1 : -1, cpB = sg * a.ev.cp, cpA = sg * (inTop ? inTop.cp : b.ev.cp), pawns = Math.max(0, Math.min(99, (cpB - cpA) / 100));
+  const sg = white ? 1 : -1, cpB = sg * a.ev.cp, cpA = sg * (inTop ? inTop.cp : b.ev.cp), pawns = Math.max(0, Math.min(99, (cpB - cpA) / 100)), clampCp = (x) => Math.max(-800, Math.min(800, x)), cpl = Math.max(0, clampCp(cpB) - clampCp(cpA));   /* centipawn loss, with both sides clamped to +-8 pawns */
   const loss = Math.max(0, before - after), isBest = played === bestUci || loss < 0.6, second = L[1] ? pov(L[1].w) : null, nLegal = new Chess(rv.fen[i - 1]).moves().length;
   let cls = isBest ? "best" : loss <= 2 ? "excellent" : loss <= 5 ? "good" : loss <= 10 ? "inaccuracy" : loss <= 20 ? "mistake" : "blunder";
   const recapture = rv.mv[i - 2] && rv.mv[i - 2].captured && mv.to === rv.mv[i - 2].to;
@@ -1221,7 +1225,7 @@ function rvDerive(i) {
     if (good && mv.promotion && mv.promotion !== "q" && nLegal > 1) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = { under: mv.promotion }; }   // the right underpromotion
   }
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
-  return { i, white, san: mv.san, cls, loss, pawns, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
+  return { i, white, san: mv.san, cls, loss, pawns, cpl, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
 }
 function rvTab(t) { const r = document.querySelector(".rvright"); if (!r) return; r.dataset.tab = t; document.querySelectorAll("[data-rvtab].chip").forEach((x) => x.classList.toggle("on", x.dataset.rvtab === t)); }
 document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-rvtab]"); if (!t || !rvActive()) return; rvTab(t.dataset.rvtab); if (t.classList.contains("rvstart") && rv.i === 0) rvGo(1); });

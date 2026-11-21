@@ -264,6 +264,12 @@ if quiz:
         if _p.get("hist"):
             _c = collapse_loan_backs(_p["hist"]); _n += _c != _p["hist"]; _p["hist"] = _c
     print(f"career paths tidied (loan-backs collapsed): {_n}")
+if PUBLIC:   # public build: the photos become files that load when shown, instead of 2.8 MB of text in the game code
+    os.makedirs("docs/football/hero", exist_ok=True)
+    for _x in hero:
+        if str(_x["img"]).startswith("data:image/"):
+            _ext = _x["img"][11:_x["img"].index(";")]; _fn = f"hero/{_h.norm(_x['n'])}.{_ext}"
+            open(f"docs/football/{_fn}", "wb").write(base64.b64decode(_x["img"].split(",", 1)[1])); _x["img"] = _fn
 print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
 data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "gn": GN, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
 html = open(TEMPLATE).read().replace("/*__SHARED__*/", open("site/shared_names.js", encoding="utf-8").read()).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/mascot_lines.js", encoding="utf-8").read() + open("site/mascots.js", encoding="utf-8").read()).replace('const ASSET_BASE = "";', 'const ASSET_BASE = "../";' if PUBLIC else 'const ASSET_BASE = "";').replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))

@@ -242,6 +242,9 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 ### 22 Nov 2026: Status check and new voice clips
 Answered what is still planned (seasons and rewards stay paused; the games site is parked) and checked the Chatterbox voice job: about 1,075 of 1,832 lines now have the new voice, with roughly 3 hours to go. Committed the clips made since the last push.
 
+### 22 Nov 2026: Voice job stopped to cool the Mac
+Stopped the Chatterbox recording because the Mac was running hot. 1,107 lines have the new voice; the rest keep their older Kokoro clip until the job is started again (it resumes where it stopped). The script now adds clips that a stopped run made but had not yet listed: 37 such clips were found and are now used.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

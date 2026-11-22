@@ -25,9 +25,22 @@ STYLE = {"boot": 0.55, "rita": 0.4, "bench": 0.75, "rim": 0.55, "clock": 0.8, "s
 HYPE = {"bighit", "streak", "best", "rankup", "brilliant", "great", "win"}
 DEEP = {"deep", "brilliant_q", "brilliant_r", "brilliant_minor", "underpromo", "over", "rough_game", "loss"}
 idx_path = os.path.join(OUT, "index.json")
+J = jobs()
+# a stopped run can leave up to 9 clips made but not yet in the index (it saves every 10); add them now so none go unused
+_index = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else {}
+_fix = {}
+for v, t, c, k in J:
+    name = "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"
+    key = t if v == SITE else f"{v}|{t}"
+    if os.path.exists(os.path.join(OUT, name)) and _index.get(key) != name:
+        _fix[key] = name
+if _fix:
+    _index.update(_fix); json.dump(_index, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+    print(f"indexed {len(_fix)} clips left over from a stopped run", flush=True)
+if "--index-only" in sys.argv:
+    sys.exit(0)
 dev = "mps" if torch.backends.mps.is_available() else "cpu"
 model = ChatterboxTTS.from_pretrained(device=dev)
-J = jobs()
 todo = [(v, t, c, k) for v, t, c, k in J if not os.path.exists(os.path.join(OUT, "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"))]
 print(f"{len(J)} lines, {len(todo)} to make on {dev}", flush=True)
 t0, done = time.time(), 0

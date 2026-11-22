@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import glob
 from datetime import datetime, timezone
 
 import numpy as np
@@ -413,6 +414,27 @@ if PUBLIC:   # public build: the photos become files that load when shown, inste
             open(f"docs/football/{_fn}", "wb").write(base64.b64decode(_x["img"].split(",", 1)[1])); _x["img"] = _fn
 print(f"front page photos: {len(hero)} ({len(HEAD_CROPPED)} cut down to head and shoulders: {sorted(HEAD_CROPPED)}); quiz players: {len(quiz['players']) if quiz else 0}")
 data = {"leagues": leagues, "profiles": profiles, "summary": sm, "statsval": statsval, "board": board, "hero": hero, "colors": colours, "baselines": (json.load(open("02_processed_data/baselines.json")) if os.path.exists("02_processed_data/baselines.json") else None), "quiz": quiz, "gn": GN, "highlights": (json.load(open("02_processed_data/highlights.json", encoding="utf-8")) if os.path.exists("02_processed_data/highlights.json") else []), "about": (json.load(open("site/about.json", encoding="utf-8")) if os.path.exists("site/about.json") else {}), "audit": (json.load(open("02_processed_data/audit.json")) if os.path.exists("02_processed_data/audit.json") else None), "bracket": (json.load(open("02_processed_data/bracket.json", encoding="utf-8")) if os.path.exists("02_processed_data/bracket.json") else []), "xi": ((json.load(open("02_processed_data/xi.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi.json") else []) + (json.load(open("02_processed_data/xi_old.json", encoding="utf-8")) if os.path.exists("02_processed_data/xi_old.json") else []))}
+if PUBLIC:   # a lighter first download (public build only)
+    import hashlib as _hl
+    # 1. club badges as their own image files (about 0.8 MB of the first download): the browser fetches only those on screen and keeps them
+    os.makedirs("docs/football/crests", exist_ok=True); _keep = set()
+    for _lg in leagues.values():
+        for _club, _uri in list((_lg.get("crests") or {}).items()):
+            if isinstance(_uri, str) and _uri.startswith("data:image/"):
+                _raw = base64.b64decode(_uri.split(",", 1)[1]); _fn = f"crests/{_hl.sha1(_raw).hexdigest()[:10]}.{_uri.split(';')[0].split('/')[1]}"
+                open("docs/football/" + _fn, "wb").write(_raw); _keep.add(_fn); _lg["crests"][_club] = _fn
+    for _f in glob.glob("docs/football/crests/*"):
+        if "crests/" + os.path.basename(_f) not in _keep: os.remove(_f)
+    # 2. seasons before 2022-23 (most of the match data) in their own file, loaded just after the page opens; pages that pick
+    #    matches wait for it, so "the same for everyone" games stay the same for everyone
+    _old = {}
+    for _code, _lg in leagues.items():
+        for _sn in [x for x in _lg["seasons"] if x < "2022-23"]: _old.setdefault(_code, {})[_sn] = _lg["seasons"].pop(_sn)
+    _blob = ("window.__BK_OLD=" + json.dumps(_old, separators=(",", ":"), ensure_ascii=False) + ";").encode("utf-8"); _on = f"old.{_hl.sha1(_blob).hexdigest()[:10]}.js"
+    for _f in glob.glob("docs/football/old.*.js"):
+        if os.path.basename(_f) != _on: os.remove(_f)
+    open("docs/football/" + _on, "wb").write(_blob); data["oldFile"] = _on
+    print(f"lighter download: {len(_keep)} badge files, older seasons in {_on} ({len(_blob) / 1e6:.2f} MB)")
 import subprocess as _sp; _sp.run([sys.executable, "src/95_site_index.py"], check=True, capture_output=True)   # search index for all three sports
 html = open(TEMPLATE).read().replace("/*__SHARED__*/", open("site/shared_names.js", encoding="utf-8").read()).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/name_sync.js", encoding="utf-8").read() + open("site/seasons.js", encoding="utf-8").read() + open("site/allstats.js", encoding="utf-8").read() + open("site/install.js", encoding="utf-8").read() + open("site/gamefx.js", encoding="utf-8").read() + open("site/gamegrid.js", encoding="utf-8").read() + open("site/site_index.js", encoding="utf-8").read() + open("site/sitesearch.js", encoding="utf-8").read() + open("site/mascot_lines.js", encoding="utf-8").read() + open("site/mascots.js", encoding="utf-8").read() + open("site/settings_ui.js", encoding="utf-8").read()).replace('const ASSET_BASE = "";', 'const ASSET_BASE = "../";' if PUBLIC else 'const ASSET_BASE = "";').replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":")))
 CREDIT = " Results and odds come from football-data.co.uk."

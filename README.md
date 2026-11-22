@@ -313,6 +313,12 @@ Went through all three sports: an error sweep of every page, sample hints from e
 - **Back buttons.** Predict who won (chess) had none; Human bar's shows again now that the game loads.
 No errors on any page in the three sports; the main screens render in 30 ms or less. Still open: a first visit downloads about 12 MB of football data.
 
+### 22 Nov 2026: Football opens with less than half the download
+Before the football page could show anything, a first visit downloaded 3.6 MB (compressed). Two changes in the public build (src/30_build_arena.py):
+- **Club badges are image files** (160 in docs/football/crests/) instead of being embedded in the data, which took 0.8 MB of the first download. The browser fetches only the badges on screen, and the service worker keeps them.
+- **Seasons before 2022-23 arrive just after the page opens** (old.<hash>.js, 1.3 MB compressed). The home page, profile and settings never need them. Any page that picks matches (games, the daily feed, the model pages) waits for that file behind a "Loading every season…" note, which also keeps "the same for everyone" picks like Daily 5 and challenges unchanged. The file is retried twice if it fails.
+The first download is now about 1.55 MB compressed instead of 3.6 MB (data 1.33 MB plus code 0.22 MB). Checked: all 45,252 matches across 26 seasons are present after the background load, a forced slow load shows the note and then opens the game, badges show and draw onto share cards, and every football page loads with no errors. Basketball (0.7 MB) and chess (1.5 MB) were left as they are. Also fixed the Daily 5 text, which read "Five All five leagues matches".
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

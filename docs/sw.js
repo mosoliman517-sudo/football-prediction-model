@@ -10,9 +10,9 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(caches.match(e.request).then((m) => m || fetch(e.request).then((r) => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then((x) => x.put(e.request, c)); } return r; })));
     return;
   }
-  const hm = /\/(app|data)\.[0-9a-f]{10}\.js$/.exec(u.pathname);
+  const hm = /\/(app|data|old)\.[0-9a-f]{10}\.js$/.exec(u.pathname) || /\/(crests)\/[0-9a-f]{10}\.[a-z]+$/.exec(u.pathname);
   if (hm) {   // game code and game data: each name changes only when its content does, so a cached copy is always right
-    const kind = new RegExp("/" + hm[1] + "\\.[0-9a-f]{10}\\.js$");
+    const kind = hm[1] === "crests" ? /^$/ : new RegExp("/" + hm[1] + "\\.[0-9a-f]{10}\\.js$");   /* badges are kept (many files); code and data drop the previous copy */
     e.respondWith(caches.match(e.request).then((m) => m || fetch(e.request).then((r) => { if (r.ok) { const c = r.clone(), dir = u.pathname.replace(/[^/]*$/, ""); caches.open(CACHE).then((x) => x.put(e.request, c).then(() => x.keys()).then((ks) => ks.forEach((k) => { const p = new URL(k.url).pathname; if (p !== u.pathname && p.startsWith(dir) && kind.test(p)) x.delete(k); }))); } return r; })));   // and drop the previous copy of the same kind
     return;
   }

@@ -858,6 +858,16 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pct = (v, d = 0) => (v * 100).toFixed(d) + "%";
 const LG = DATA.leagues, ORDER = ["E0", "D1", "SP1", "I1", "F1"];
+/* Public build: seasons before 2016-17 come in their own file (DATA.oldFile), fetched as soon as the page starts, so the first screen
+   doesn't wait for them. Pages that pick matches wait for it (route below), so seeded "same for everyone" picks never change. */
+const OLDS = { ok: !DATA.oldFile, p: Promise.resolve(), tries: 0 };
+if (DATA.oldFile) OLDS.p = new Promise((res) => {
+  const load = () => { const sc = document.createElement("script"); sc.src = DATA.oldFile; sc.async = true;
+    sc.onload = () => { try { Object.entries(window.__BK_OLD || {}).forEach(([lg, ss]) => { if (LG[lg]) Object.assign(LG[lg].seasons, ss); }); window.__BK_OLD = null; } catch (e) { /* keep the recent seasons */ } OLDS.ok = true; res(); };
+    sc.onerror = () => { sc.remove(); if (++OLDS.tries < 3) setTimeout(load, 1500 * OLDS.tries); else { OLDS.ok = true; res(); } };
+    document.head.appendChild(sc); };
+  load();
+});
 LG.ALL = { name: "All five leagues", country: "Europe", tag: "Random matches from every league on one big pitch.", star: null, logo: null, crests: {}, seasons: {}, tables: {}, race: null, scorers: null };
 const lgs = (c) => (c === "ALL" ? ORDER : [c]);
 const SLUG = { E0: "premier-league", D1: "bundesliga", SP1: "la-liga", I1: "serie-a", F1: "ligue-1", ALL: "all-leagues" };
@@ -1112,6 +1122,10 @@ function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceStat
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette", "xi", "rapid", "bracket", "scramble", "iconic"];
 function route(ev) {
   const h = location.hash.slice(1);
+  if (!OLDS.ok && !/^(|profile|settings|about|album|admin)$/.test(h)) {   /* this page picks from every season: wait for the older ones (a second or two at most) */
+    let w = document.getElementById("oldWait"); if (!w) { w = document.createElement("div"); w.id = "oldWait"; w.setAttribute("role", "status"); w.innerHTML = '<span class="spin"></span> Loading every season…'; document.body.appendChild(w); }
+    OLDS.p.then(() => { const x = document.getElementById("oldWait"); if (x) x.remove(); if (location.hash.slice(1) === h) route(ev); }); return;
+  }
   stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; const ad = $("#adminPage"); if (ad) ad.hidden = true; const ab = $("#aboutPage"); if (ab) ab.hidden = true; const sp_ = $("#setPage"); if (sp_) sp_.hidden = true; const dp_ = $("#discPage"); if (dp_) dp_.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
@@ -1385,7 +1399,7 @@ function renderDaily() {
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.c}|${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button><button class="btn ghost" id="dailyCard" type="button">Make a result card</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from 2001 on, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${c === "ALL" ? "matches from all five leagues" : esc(lgOf(c).name) + " matches"} from 2001 on, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;

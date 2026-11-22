@@ -31,5 +31,9 @@ for voice, t, char, kind in jobs():
         samples, sr = k.create(t, voice=voice, speed=SPEED, lang="en-gb" if voice.startswith("b") else "en-us")
         sf.write(os.path.join(OUT, name), samples, sr, format="MP3"); made += 1
     index[key] = name
-json.dump(index, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+latest = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else {}   # the Chatterbox job may have added takes meanwhile: keep them
+for k2, v2 in index.items():
+    if k2 not in latest or not str(latest[k2]).startswith("cb_"):
+        latest[k2] = v2
+json.dump(latest, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
 print(f"{len(index)} keys, {made} new Kokoro clips")

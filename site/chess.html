@@ -856,7 +856,7 @@ const Snd = { ctx: null, master: null, mg: null, on: store.get("snd", true), mus
   tone(f, d, v, type, when, dest) { if (!this.on || !this.init()) return; try { const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + (when || 0); o.type = type || "triangle"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(v || 0.12, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(dest || this.master); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) { /* no audio */ } },
   noise(d, f0, f1, v) { if (!this.on || !this.init()) return; try { const c = this.ctx, len = Math.floor(c.sampleRate * d), b = c.createBuffer(1, len, c.sampleRate), x = b.getChannelData(0); for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = c.createBufferSource(); s.buffer = b; const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.setValueAtTime(f0, c.currentTime); f.frequency.exponentialRampToValueAtTime(f1, c.currentTime + d); const g = c.createGain(); g.gain.value = v; s.connect(f); f.connect(g); g.connect(this.master); s.start(); } catch (e) { /* no audio */ } },
   buzz(ms) { try { if (this.on && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) { /* no haptics */ } },
-  move(mv, c) { if (!this.on) return; const cap = mv && (mv.captured || /e/.test(mv.flags || "")); if (cap) { this.tone(130, 0.16, 0.2); this.noise(0.09, 1800, 600, 0.06); } else { this.tone(240, 0.07, 0.12); this.noise(0.04, 2400, 1400, 0.03); } if (mv && /[kq]/.test(mv.flags || "")) this.tone(330, 0.12, 0.08, "triangle", 0.07); this.buzz(cap ? 18 : 8); if (c && c.in_checkmate && c.in_checkmate()) { this.end(true); Voice.say("Checkmate"); } else if (c && c.in_check && c.in_check()) { this.tone(520, 0.1, 0.12, "square", 0.08); this.buzz(30); Voice.say("Check"); } },
+  move(mv, c) { if (!this.on) return; const cap = mv && (mv.captured || /e/.test(mv.flags || "")); if (cap) { this.tone(130, 0.16, 0.2); this.noise(0.09, 1800, 600, 0.06); } else { this.tone(240, 0.07, 0.12); this.noise(0.04, 2400, 1400, 0.03); } if (mv && /[kq]/.test(mv.flags || "")) this.tone(330, 0.12, 0.08, "triangle", 0.07); this.buzz(cap ? 18 : 8); if (c && c.in_checkmate && c.in_checkmate()) { this.end(true); Voice.say("Checkmate"); } else if (c && c.in_check && c.in_check()) { this.tone(660, 0.08, 0.06, "sine", 0.05); this.buzz(20); } },
   end(win) { if (!this.on) return; [0, 0.12, 0.24, 0.36].forEach((d, k) => this.tone(win ? [392, 494, 659, 784][k] : [330, 262, 220, 196][k], 0.34, 0.14, "triangle", d)); if (win) this.noise(1.2, 600, 2200, 0.04); this.buzz(win ? [20, 40, 20] : 60); },
   ok() { if (this.on) { this.tone(523, 0.12, 0.12); this.tone(784, 0.18, 0.12, "triangle", 0.1); } this.buzz(15); }, bad() { if (this.on) { this.tone(160, 0.25, 0.15, "sawtooth"); } this.buzz(50); }, tick() { this.tone(900, 0.03, 0.06, "sine"); },
   /* a calm generative piano-like loop: slow arpeggios over four chords, played live, nothing is downloaded */
@@ -912,7 +912,7 @@ function gymStart() {
   clearInterval(st.timer); const pool = OPEN_STORY.filter((s) => !/Bongcloud/.test(s.name)), S = pool[Math.floor(Math.random() * pool.length)], color = Math.random() < 0.5 ? "w" : "b", tot = store.get("gym_tot", { n: 0, book: 0 });
   st = { game: "gym", S, line: S.line.split(" "), color, moves: 0, sc: { book: 0, ok: 0, fix: 0 }, msg: `Let's go. I picked an opening and you're ${color === "w" ? "White" : "Black"}. Play the best lines you know. If you slip, I'll stop you and show you the move.`, mood: "happy", hint: null, name: "", over: false, tot };
   live = { c: new Chess(), color, sel: null, targets: [], last: null, lock: false, refresh: gymPaint, onMove: gymUser };
-  $("#app").className = "fresh"; gymPaint(); pipSay(st.msg); if (color === "b") gymPip();
+  $("#app").className = "fresh"; gymPaint(); pipSay(pipPick("start", 1)); if (color === "b") gymPip();
 }
 const gymPick = (moves) => { const ok = moves.filter((m, k) => k === 0 || (m.white + m.draws + m.black) / moves.reduce((a, x) => a + x.white + x.draws + x.black, 0) >= 0.06), w = ok.map((m) => m.white + m.draws + m.black), t = w.reduce((a, b) => a + b, 0); let r = Math.random() * t; for (let k = 0; k < ok.length; k++) { r -= w[k]; if (r <= 0) return ok[k]; } return ok[0]; };
 async function gymPip() {
@@ -928,26 +928,26 @@ async function gymPip() {
 }
 async function gymUser(mv) {
   const me = st, L = live, c = L.c; L.lock = true; const back = c.undo(), fenB = c.fen(); c.move(back); const fenA = c.fen(), san = mv.san; mkClear(document.getElementById("bd"));
-  if (me.hint) { if (san === me.hint.san) { me.hint = null; me.sc.fix++; me.msg = `${san}. That's the one. Now you'll remember it.`; me.mood = "happy"; return gymAccept(me); } c.undo(); L.last = null; me.msg = `Not that either. Play ${me.hint.san}: follow the arrow.`; me.mood = "hmm"; L.lock = false; gymPaint(); return gymArrow(); }
+  if (me.hint) { if (san === me.hint.san) { me.hint = null; me.sc.fix++; me.say = "best"; me.msg = `${san}. That's the one. Now you'll remember it.`; me.mood = "happy"; return gymAccept(me); } c.undo(); L.last = null; me.msg = `Not that either. Play ${me.hint.san}: follow the arrow.`; me.mood = "hmm"; L.lock = false; gymPaint(); return gymArrow(); }
   me.msg = "Checking your move…"; me.mood = "hmm"; gymPaint();
   const d = await exFetch(fenB); if (st !== me) return; const tot = d ? d.moves.reduce((a, x) => a + x.white + x.draws + x.black, 0) : 0, hit = d && d.moves.find((x) => x.san === san), n = hit ? hit.white + hit.draws + hit.black : 0;
-  if (hit && n >= 10 && n / tot >= 0.02) { me.sc.book++; me.msg = `${san}: theory. ${n.toLocaleString()} master games went this way${hit === d.moves[0] ? ", it's their favourite" : ""}.`; me.mood = "happy"; return gymAccept(me); }
+  if (hit && n >= 10 && n / tot >= 0.02) { me.sc.book++; me.msg = `${san}: theory. ${n.toLocaleString()} master games went this way${hit === d.moves[0] ? ", it's their favourite" : ""}.`; me.mood = "happy"; me.say = "best"; return gymAccept(me); }
   const [a, b] = await Promise.all([Sf.analyse(fenB, { multipv: 3, depth: 14, ms: 1500 }), Sf.analyse(fenA, { multipv: 1, depth: 14, ms: 1200 })].map((p) => p.catch(() => null))); if (st !== me) return;
   if (!a || !a.length) { me.sc.ok++; me.msg = `${san}. I couldn't check it with the engine, so it counts.`; return gymAccept(me); }
   const tb = new Chess(fenB).turn(), la = a.map((x) => lineW(x, tb)), pov = (w) => (tb === "w" ? w : 100 - w), uci = mv.from + mv.to + (mv.promotion || ""), inTop = la.find((x) => x.pv[0] === uci);
   const after = inTop ? pov(inTop.w) : b && b.length ? pov(lineW(b[0], new Chess(fenA).turn()).w) : pov(la[0].w), loss = Math.max(0, pov(la[0].w) - after);
-  if (loss <= 4) { me.sc.ok++; me.msg = `${san}. Not the main theory, but it's fine: the engine barely minds.`; me.mood = "calm"; return gymAccept(me); }
+  if (loss <= 4) { me.sc.ok++; me.msg = `${san}. Not the main theory, but it's fine: the engine barely minds.`; me.mood = "calm"; me.say = "good"; return gymAccept(me); }
   const best = d && d.moves.length && d.moves[0].white + d.moves[0].draws + d.moves[0].black >= 10 ? d.moves[0].san : uciSan(fenB, la[0].pv[0]), bm = new Chess(fenB).move(best);
   c.undo(); L.last = null; me.hint = { san: best, from: bm.from, to: bm.to }; me.mood = loss > 15 ? "shock" : "sad";
   me.msg = `Stop! ${san} ${loss > 15 ? "is a real mistake" : "isn't good here"}: it costs about ${Math.round(loss)}% of your winning chances. ${d && d.moves[0] && d.moves[0].san === best ? "Masters play" : "The engine wants"} ${best}. Your turn: play it.`;
-  try { Snd.bad(); } catch (e) { /* quiet */ } pipSay(me.msg); L.lock = false; gymPaint(); gymArrow();
+  try { Snd.bad(); } catch (e) { /* quiet */ } pipSay(pipPick(loss > 15 ? "blunder" : "mistake", me.moves)); L.lock = false; gymPaint(); gymArrow();
 }
 function gymArrow() { const H = st.hint, bd = document.getElementById("bd"); if (!H || !bd) return; const f = live.color === "b"; mkToggle(mkSvg(bd), rvSq(H.from, f), rvSq(H.to, f), "b"); }
-function gymAccept(me) { me.moves++; pipSay(me.msg); if (me.moves >= GYM_LEN || live.c.game_over()) return gymEnd(); live.lock = false; gymPaint(); gymPip(); }
+function gymAccept(me) { me.moves++; pipSay(pipPick(me.say || "good", me.moves)); if (me.moves >= GYM_LEN || live.c.game_over()) return gymEnd(); live.lock = false; gymPaint(); gymPip(); }
 function gymEnd() {
   const me = st; me.over = true; live.lock = true; const s = me.sc, tot = me.tot; tot.n++; tot.book += s.book; store.set("gym_tot", tot);
   me.mood = s.fix === 0 ? "wow" : s.fix <= 2 ? "happy" : "calm"; me.msg = s.fix === 0 ? `Clean! ${s.book} theory moves and not one slip. You know the ${me.S.name}.` : `Done. ${s.book} theory moves, ${s.ok} fine ones, and ${s.fix} I had to fix. Next time those ${s.fix} will be automatic.`;
-  if (s.fix === 0) Snd.end(true); pipSay(me.msg); gymPaint();
+  if (s.fix === 0) Snd.end(true); pipSay(pipPick(s.fix === 0 ? "great_game" : s.fix <= 2 ? "ok_game" : "rough_game", tot.n)); gymPaint();
 }
 function gymPaint() {
   const me = st, L = live; if (!L || me.game !== "gym") return; const c = L.c, opp = L.color === "w" ? "b" : "w";
@@ -1233,10 +1233,11 @@ const coachId = () => { try { const c = localStorage.getItem("bkc_coach"); retur
 const coachName = () => COACHES[coachId()].name;
 const pipPick = (k, seed) => { const c = coachId(), L = c === "pip" ? [...(PIP[k] || []), ...((COACH_LINES.pip || {})[k] || [])] : (COACH_LINES[c] || {})[k] || []; const A = L.length ? L : c === "pip" ? PIP.good : COACH_LINES[c].good; return A[Math.abs(seed | 0) % A.length]; };
 /* one fun fact per opening, the first time its name shows up in the review */
+const storyFact = (f) => (f.startsWith("Fun fact") ? f : "Fun fact: " + f);   /* the exact wording the voice clips were made from */
 function rvFact(i) {   /* book moves walk through the opening's story: the name, the idea, then the facts and a famous game, a new one each move */
   const nm = rv.openName[i]; if (!nm) return null; rv.storyAt = rv.storyAt || {}; if (rv.storyAt[i] !== undefined) return rv.storyAt[i];
   const S = openStory(nm); let items;
-  if (S) { const G = S.game && OPEN_GAMES[S.game]; items = [S.origin, "The idea: " + S.idea, ...S.facts.map((f) => (f.startsWith("Fun fact") ? f : "Fun fact: " + f)), ...(G ? [`A famous game in this opening: ${G.title}, ${G.who}, ${G.when}. ${G.note}`] : [])]; }
+  if (S) { const G = S.game && OPEN_GAMES[S.game]; items = [S.origin, "The idea: " + S.idea, ...S.facts.map(storyFact), ...(G ? [`A famous game in this opening: ${G.title}, ${G.who}, ${G.when}. ${G.note}`] : [])]; }
   else { const f = openFact(nm); items = f ? [f] : []; }
   rv.storyK = rv.storyK || {}; const key = S ? S.name : nm, k = rv.storyK[key] || 0; rv.storyK[key] = k + 1;
   return (rv.storyAt[i] = items[k] || null);
@@ -2797,7 +2798,7 @@ async function explorerPage() {
   const fam = name.split(":")[0].trim(), cs = OPST[fam], S = openStory(name);
   setPart("exName", name ? `<h3 style="margin:0 0 4px">${esc(name)}${d.opening && d.opening.eco ? ` <span class="fine">${d.opening.eco}</span>` : ""}</h3>${cs ? `<div class="exclub fine">Club level (${cs[0].toLocaleString()} games, average ${cs[4]}): White ${Math.round(cs[1] * 100)}% · draw ${Math.round(cs[2] * 100)}% · Black ${Math.round(cs[3] * 100)}%</div>` : ""}` : "");
   setPart("exStory", exStoryHTML(S));
-  if (S && EX.saidStory !== S.name) { EX.saidStory = S.name; pipSay(S.origin.split(". ")[0] + "."); }
+  if (S && EX.saidStory !== S.name) { EX.saidStory = S.name; pipSay(S.origin); }
   setPart("exQuiz", exQuizHTML(d));
   const tot = (m) => m.white + m.draws + m.black;
   setPart("exMoves", EX.quiz ? `<div class="extable exhide">${d.moves.slice(0, 5).map(() => `<div class="exrow"><b>?</b><span class="exbar"><i class="d" style="width:100%"></i></span></div>`).join("")}</div>` : d.moves.length ? `<div class="label" style="margin-top:12px">What masters play here</div><div class="extable">${d.moves.map((m) => { const n = tot(m), w = (100 * m.white) / n, dr = (100 * m.draws) / n, b = 100 - w - dr; return `<button class="exrow" type="button" data-exm="${esc(m.san)}"><b>${esc(m.san)}</b><span class="fine num">${n.toLocaleString()}</span><span class="exbar"><i class="w" style="width:${w}%">${w >= 22 ? Math.round(w) + "%" : ""}</i><i class="d" style="width:${dr}%">${dr >= 22 ? Math.round(dr) + "%" : ""}</i><i class="b" style="width:${b}%">${b >= 22 ? Math.round(b) + "%" : ""}</i></span><span class="fine num">${m.averageRating || ""}</span></button>`; }).join("")}</div>` : `<p class="fine">No master games reach this position. You've left the book.</p>`);
@@ -2853,9 +2854,9 @@ document.addEventListener("click", (e) => {
   if (v === "back") { stop(); EX.sel = null; EX.sans.pop(); return explorerPage(); }
   if (v === "reset") { stop(); EX.sans = []; EX.sel = null; return explorerPage(); }
   if (v === "play") return exPlayLine();
-  if (v === "fact") { EX.fact = (EX.fact || 0) + 1; const S = openStory(EX.lastName); if (S) pipSay(S.facts[EX.fact % S.facts.length]); return explorerPage(); }
+  if (v === "fact") { EX.fact = (EX.fact || 0) + 1; const S = openStory(EX.lastName); if (S) pipSay(storyFact(S.facts[EX.fact % S.facts.length])); return explorerPage(); }
   if (v === "quiz") { stop(); EX.quiz = EX.quiz ? null : { pts: 0, n: 0, streak: 0, msg: "" }; return explorerPage(); }
-  if (v.startsWith("tab:")) { EX.tab = v.slice(4); const S = openStory(EX.lastName); if (S && EX.tab !== "line") pipSay(EX.tab === "name" ? S.origin : EX.tab === "idea" ? S.idea : EX.tab === "facts" ? S.facts[(EX.fact || 0) % S.facts.length] : ""); return explorerPage(); }
+  if (v.startsWith("tab:")) { EX.tab = v.slice(4); const S = openStory(EX.lastName); if (S && EX.tab !== "line") pipSay(EX.tab === "name" ? S.origin : EX.tab === "idea" ? "The idea: " + S.idea : EX.tab === "facts" ? storyFact(S.facts[(EX.fact || 0) % S.facts.length]) : ""); return explorerPage(); }
   if (v.startsWith("to:")) { stop(); const S = openStory(EX.lastName); if (S) { EX.sans = S.line.split(" ").slice(0, +v.slice(3)); EX.sel = null; } return explorerPage(); }
   if (v.startsWith("mg:")) return exMasterGame(v.slice(3));
   if (v.startsWith("game:")) return exClassic(v.slice(5), false);

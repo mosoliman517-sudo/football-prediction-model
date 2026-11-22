@@ -63,6 +63,23 @@ def jobs():
     for c in SPORT_CHARS["bb"]:
         J += [(CHAR_VOICE[c], t, c, "tour") for t in lines.get("basketball_tour", [])]
     J += [("af_heart", t, "site", "tour") for g in ("football_tour", "basketball_tour", "chess") for t in lines.get(g, [])]
+    # opening stories (site/opening_stories.js), spoken by each chess coach in the review and the explorer: the name's history,
+    # "The idea: ...", each fact as "Fun fact: ...", and the famous-game sentence, worded exactly as the page builds them
+    st = open("site/opening_stories.js", encoding="utf-8").read()
+    games = {}
+    for m in re.finditer(r'^  (\w+): \{ title: "((?:[^"\\]|\\.)*)", who: "((?:[^"\\]|\\.)*)", when: "((?:[^"\\]|\\.)*)", note: "((?:[^"\\]|\\.)*)"', st, re.M):
+        games[m.group(1)] = f"A famous game in this opening: {m.group(2)}, {m.group(3)}, {m.group(4)}. {m.group(5)}"
+    for line in st.splitlines():
+        if not line.startswith("  { re:"):
+            continue
+        g = lambda k: (re.search(k + r': "((?:[^"\\]|\\.)*)"', line) or [None, None])[1]
+        name, origin, idea = g("name"), g("origin"), g("idea")
+        fm = re.search(r'facts: \[(.*?)\]', line)
+        facts = STR.findall(fm.group(1)) if fm else []
+        gk = (re.search(r'game: "(\w+)"', line) or [None, None])[1] or ("reti" if name == "Caro-Kann Defence" else None)
+        texts = [origin, "The idea: " + idea if idea else None] + [f if f.startswith("Fun fact") else "Fun fact: " + f for f in facts] + [games.get(gk)]
+        for c in SPORT_CHARS["ch"]:
+            J += [(CHAR_VOICE[c], t, c, "story") for t in texts if t]
     seen, out = set(), []
     for v, t, c, k in J:
         t = " ".join(t.replace('\\"', '"').split())

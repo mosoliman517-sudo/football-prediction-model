@@ -1767,11 +1767,8 @@ function xSpeak() {
   try { speechSynthesis.cancel(); } catch (e) { /* no device voice */ } AIVoice.stop(); XX.spDone = !XX.voice; if (!XX.voice) { XX.spDone = true; return; }
   const i0 = XX.i; AIVoice.play(XX.sc[XX.i].say, { voice: Mascot.voice(), paused: !XX.playing, onend: () => { if (XX.i === i0) XX.spDone = true; } }).then((a) => { if (!a && XX.i === i0) xSpeakDevice(); });
 }
-function xSpeakDevice() {
-  try { speechSynthesis.cancel(); } catch (e) { return; } XX.spDone = !XX.voice; if (!XX.voice || !window.speechSynthesis) { XX.spDone = true; return; }
-  const u = new SpeechSynthesisUtterance(XX.sc[XX.i].say); const vs = speechSynthesis.getVoices(), v = vs.find((x) => /en[-_](GB|US)/i.test(x.lang) && /samantha|daniel|google|siri|karen/i.test(x.name)) || vs.find((x) => /^en/i.test(x.lang)); if (v) u.voice = v; u.rate = 1.12; u.onend = () => { XX.spDone = true; }; u.onerror = () => { XX.spDone = true; };
-  if (!XX.playing) u.onstart = () => speechSynthesis.pause(); speechSynthesis.speak(u);
-}
+function xSpeakDevice() { XX.spDone = true; }   /* a line with no recorded clip stays on screen without the device voice */
+
 function xScene() {
   const el = $("#xp"); if (!el) return; const s = XX.sc[XX.i], total = XX.sc.length;
   el.innerHTML = `<div class="xframe"><div class="xtop"><span class="xmas">${Mascot.face(XX.i === total - 1 ? "wow" : "happy")}<b>${Mascot.name()}</b></span><span class="label">${XX.i + 1} of ${total} · ${esc(s.h)}</span><span class="spacer"></span><button type="button" class="chip" data-x="voice" aria-pressed="${XX.voice}">Voice</button><button type="button" class="chip" data-x="close">Close</button></div><div class="xstage" key="${XX.i}">${s.v()}</div><div class="xcap">${esc(s.say)}</div><div class="xctl"><button type="button" class="btn ghost" data-x="prev" ${XX.i ? "" : "disabled"}>Back</button><button type="button" class="btn" data-x="play">${XX.playing ? "Pause" : "Play"}</button><button type="button" class="btn ghost" data-x="next">${XX.i === total - 1 ? "Finish" : "Next"}</button></div><div class="xprog">${XX.sc.map((_, k) => `<i class="${k < XX.i ? "done" : k === XX.i ? "now" : ""}" data-x="go" data-k="${k}"><b style="width:${k < XX.i ? 100 : 0}%"></b></i>`).join("")}</div></div>`;
@@ -4032,7 +4029,9 @@ const Mix = { fx: 1, music: 1, voice: 0.9, say: false };
 try { Object.assign(Mix, JSON.parse(localStorage.getItem("bk_mix") || "{}")); } catch (e) { /* storage blocked */ }
 function applyMix() { window.MIXFX = Mix.fx; window.MIXMUS = Mix.music; try { Snd.remix(); } catch (e) { /* audio not started */ } try { localStorage.setItem("bk_mix", JSON.stringify(Mix)); } catch (e) { /* storage blocked */ } }
 applyMix();
-const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level === 0) return; try { const u = new SpeechSynthesisUtterance(text), vs = speechSynthesis.getVoices(); u.volume = Mix.voice; u.rate = 1.04; const v = vs.find((x) => /^en/i.test(x.lang) && /Samantha|Google US|Daniel|Natural|Aria|Alex/i.test(x.name)) || vs.find((x) => /^en/i.test(x.lang)); if (v) u.voice = v; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { /* no voice */ } } };
+/* No more device ("robot") voice: every spoken moment belongs to the sidekick, in its own recorded voice. The sidekick already
+   reacts to achievements, streaks, rank-ups, best scores and the end of a run; the few moments it did not cover are handed to it here. */
+const Voice = { say(text) { try { if (typeof Mascot === "undefined" || Mascot.mode() === "off") return; if (/All three dailies done|Secret found/i.test(text)) Mascot.react("achieve", true); } catch (e) { /* no sidekick on this page */ } } };
 { const pick = (a) => a[Math.floor(Math.random() * a.length)], win0 = Snd.win, right0 = Snd.right;
   Snd.win = function () { win0.apply(Snd, arguments); Voice.say(pick(["Winner!", "Brilliant!", "Nice one!", "What a finish!"])); };
   Snd.right = function () { right0.apply(Snd, arguments); try { const n = Q && Q.s && Q.s.streak; if (n >= 3 && n % 3 === 0) Voice.say("Streak of " + n); } catch (e) { /* no quiz */ } };
@@ -4040,7 +4039,7 @@ const Voice = { say(text) { if (!Mix.say || !window.speechSynthesis || Snd.level
 }
 { const rs0 = renderSettings;
   renderSettings = function () { rs0(); const el = $("#setPage"); if (!el || document.getElementById("mixCard")) return; const sl = (id, label, v) => `<label class="fine" style="display:grid;grid-template-columns:96px 1fr 40px;gap:10px;align-items:center;margin:8px 0">${label}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}" style="width:100%"><span class="num" id="${id}V">${Math.round(v * 100)}%</span></label>`;
-    el.insertAdjacentHTML("beforeend", `<div class="card" id="mixCard"><h3>Audio mixer</h3><p class="fine">Set effects, music and voice separately. Everything is made live in your browser, nothing is downloaded.</p>${sl("mixFx", "Effects", Mix.fx)}${sl("mixMus", "Music", Mix.music)}${sl("mixVoice", "Voice", Mix.voice)}<div class="row" style="margin-top:6px"><button class="chip" id="mixSay" type="button" aria-pressed="${Mix.say}">Announcer voice: ${Mix.say ? "On" : "Off"}</button><button class="chip" id="mixTest" type="button">Test sound</button></div></div>`); };
+    el.insertAdjacentHTML("beforeend", `<div class="card" id="mixCard"><h3>Audio mixer</h3><p class="fine">Set effects, music and voice separately. Everything is made live in your browser, nothing is downloaded.</p>${sl("mixFx", "Effects", Mix.fx)}${sl("mixMus", "Music", Mix.music)}${sl("mixVoice", "Voice", Mix.voice)}<div class="row" style="margin-top:6px"><button class="chip" id="mixTest" type="button">Test sound</button></div></div>`); };
   document.addEventListener("input", (e) => { const m = { mixFx: "fx", mixMus: "music", mixVoice: "voice" }[e.target.id]; if (!m) return; Mix[m] = e.target.value / 100; const l = document.getElementById(e.target.id + "V"); if (l) l.textContent = e.target.value + "%"; applyMix(); });
   document.addEventListener("click", (e) => { if (e.target.id === "mixSay") { Mix.say = !Mix.say; applyMix(); e.target.setAttribute("aria-pressed", Mix.say); e.target.textContent = "Announcer voice: " + (Mix.say ? "On" : "Off"); if (Mix.say) Voice.say("Game on"); } else if (e.target.id === "mixTest") { Snd.right(); setTimeout(() => Snd.win(), 500); } });
 }

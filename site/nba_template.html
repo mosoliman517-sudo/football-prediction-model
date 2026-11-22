@@ -2157,11 +2157,8 @@ function xSpeak() {
   try { speechSynthesis.cancel(); } catch (e) { /* no device voice */ } AIVoice.stop(); XX.spDone = !XX.voice; if (!XX.voice) { XX.spDone = true; return; }
   const i0 = XX.i; AIVoice.play(XX.sc[XX.i].say, { voice: Mascot.voice(), paused: !XX.playing, onend: () => { if (XX.i === i0) XX.spDone = true; } }).then((a) => { if (!a && XX.i === i0) xSpeakDevice(); });
 }
-function xSpeakDevice() {
-  try { speechSynthesis.cancel(); } catch (e) { return; } XX.spDone = !XX.voice; if (!XX.voice || !window.speechSynthesis) { XX.spDone = true; return; }
-  const u = new SpeechSynthesisUtterance(XX.sc[XX.i].say); const vs = speechSynthesis.getVoices(), v = vs.find((x) => /en[-_](GB|US)/i.test(x.lang) && /samantha|daniel|google|siri|karen/i.test(x.name)) || vs.find((x) => /^en/i.test(x.lang)); if (v) u.voice = v; u.rate = 1.12; u.onend = () => { XX.spDone = true; }; u.onerror = () => { XX.spDone = true; };
-  if (!XX.playing) u.onstart = () => speechSynthesis.pause(); speechSynthesis.speak(u);
-}
+function xSpeakDevice() { XX.spDone = true; }   /* a line with no recorded clip stays on screen without the device voice */
+
 function xScene() {
   const el = $("#xp"); if (!el) return; const s = XX.sc[XX.i], total = XX.sc.length;
   el.innerHTML = `<div class="xframe"><div class="xtop"><span class="xmas">${Mascot.face(XX.i === total - 1 ? "wow" : "happy")}<b>${Mascot.name()}</b></span><span class="label">${XX.i + 1} of ${total} · ${esc(s.h)}</span><span class="spacer"></span><button type="button" class="chip" data-x="voice" aria-pressed="${XX.voice}">Voice</button><button type="button" class="chip" data-x="close">Close</button></div><div class="xstage" key="${XX.i}">${s.v()}</div><div class="xcap">${esc(s.say)}</div><div class="xctl"><button type="button" class="btn ghost" data-x="prev" ${XX.i ? "" : "disabled"}>Back</button><button type="button" class="btn" data-x="play">${XX.playing ? "Pause" : "Play"}</button><button type="button" class="btn ghost" data-x="next">${XX.i === total - 1 ? "Finish" : "Next"}</button></div><div class="xprog">${XX.sc.map((_, k) => `<i class="${k < XX.i ? "done" : k === XX.i ? "now" : ""}" data-x="go" data-k="${k}"><b style="width:${k < XX.i ? 100 : 0}%"></b></i>`).join("")}</div></div>`;

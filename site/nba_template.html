@@ -1198,7 +1198,7 @@ function go(slug) { if (inMatch() && location.hash.replace("#", "") !== slug) { 
 /* page transitions: the browser's own view transitions where it has them, a short fade-in otherwise; never during a match or with Reduce motion */
 function pageTo(fn, box) {
   const calm = (typeof REDUCED !== "undefined" && REDUCED) || document.hidden || (typeof inMatch === "function" && inMatch());
-  if (!calm && document.startViewTransition) { try { document.startViewTransition(() => { fn(); }); return; } catch (e) { /* fall through */ } }
+  if (!calm && document.startViewTransition) { try { const vt = document.startViewTransition(() => { fn(); }); [vt.ready, vt.finished, vt.updateCallbackDone].forEach((x) => x && x.catch(() => {})); return; }   /* an overlapping transition is skipped on purpose; don't report it as an error */ catch (e) { /* fall through */ } }
   fn(); if (calm) return; const els = box ? [box] : [...document.querySelectorAll("#home:not([hidden]), #lobby:not([hidden]), #league:not([hidden]), #profilePage:not([hidden]), #setPage:not([hidden]), #aboutPage:not([hidden]), #discPage:not([hidden])")].slice(0, 2); els.forEach((x) => { if (!x) return; x.classList.remove("pgin"); void x.offsetWidth; x.classList.add("pgin"); });
 }
 function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceState(null, "", "#" + slug); } catch (e) { /* hash unavailable */ } pageTo(() => route()); }

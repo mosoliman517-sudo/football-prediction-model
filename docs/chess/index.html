@@ -364,20 +364,20 @@ table.tb{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit
 </div>
 <script>
 (function () {
-  var src = "app.cb3570e290.js", size = 6174228, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false;
+  var files = ["data.c20957122f.js", "app.5bca0dc046.js"], size = 6174445, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false, got = 0;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
-  function show(k) { if (bar) bar.style.width = (3 + 94 * Math.min(1, k)).toFixed(1) + "%"; }
-  function run(code) { if (done) return; done = true; var s = document.createElement("script"); s.text = code; document.body.appendChild(s); if (bar) bar.style.width = "100%"; }
-  function plain() { if (done) return; done = true; var s = document.createElement("script"); s.src = src; document.body.appendChild(s); }
-  if (!window.fetch || !window.TextDecoder || !window.ReadableStream) return plain();
-  fetch(src).then(function (r) {
+  function show() { if (bar) bar.style.width = (3 + 94 * Math.min(1, got / size)).toFixed(1) + "%"; }
+  function run(codes) { if (done) return; done = true; codes.forEach(function (code) { var s = document.createElement("script"); s.text = code; document.body.appendChild(s); }); if (bar) bar.style.width = "100%"; }
+  function plain() { if (done) return; done = true; (function next(i) { if (i >= files.length) return; var s = document.createElement("script"); s.src = files[i]; s.onload = function () { next(i + 1); }; document.body.appendChild(s); })(0); }
+  function one(src) { return fetch(src).then(function (r) {
     if (!r.ok || !r.body) throw new Error("load");
-    var rd = r.body.getReader(), dec = new TextDecoder(), parts = [], got = 0;
+    var rd = r.body.getReader(), dec = new TextDecoder(), parts = [];
     return (function pump() { return rd.read().then(function (x) {
       if (x.done) { parts.push(dec.decode()); return parts.join(""); }
-      got += x.value.length; parts.push(dec.decode(x.value, { stream: true })); show(got / size); return pump();
-    }); })();
-  }).then(run).catch(plain);
+      got += x.value.length; parts.push(dec.decode(x.value, { stream: true })); show(); return pump();
+    }); })(); }); }
+  if (!window.fetch || !window.TextDecoder || !window.ReadableStream || !window.Promise) return plain();
+  Promise.all(files.map(one)).then(run).catch(plain);
 })();
 </script>
 <script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("../sw.js").catch(() => {}));</script></html>

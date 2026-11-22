@@ -433,6 +433,7 @@ h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
 .nbvs{font:700 22px "Barlow Condensed",sans-serif;color:var(--muted)}
 .nbstep{display:flex;align-items:center;gap:6px}.nbstep input{width:88px;text-align:center;font-size:44px;line-height:1;background:transparent;border:0;border-bottom:3px solid var(--accent);color:#ffd23f;text-shadow:0 0 14px rgba(255,138,61,.55)}
 .nbstep .btn{width:38px;height:38px;padding:0;font-size:22px}
+@media (max-width:480px){.nbstep{gap:3px}.nbstep input{width:58px;font-size:32px}.nbstep .btn{width:30px;height:30px;font-size:18px}.nbscore{gap:6px}}
 .nbqrow{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
 .nbq{flex-direction:row;gap:8px;padding:8px 10px;min-height:0}.nbq b{font-size:15px}.nbq.sel{outline:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
 .nbtable{overflow-x:auto}.nbtable table{width:100%;border-collapse:collapse;font-size:14px}.nbtable th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px}.nbtable td{padding:6px;border-top:1px solid var(--line)}

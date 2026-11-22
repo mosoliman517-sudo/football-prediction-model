@@ -21,7 +21,7 @@ LESSONS.push(
 );
 
 /* ---------- 2. Endgame trainer ---------- */
-const EGS = [
+const ETS = [
   { id: "kq", name: "Queen mate", fen: "8/8/8/4k3/8/8/8/4K2Q w - - 0 1", goal: "mate", lim: 20, tag: "King and queen against a lone king.", tip: "Use the queen to shrink the king's box a knight's move away, bring your own king up, and never leave it without a move (that's stalemate)." },
   { id: "kr", name: "Rook mate", fen: "8/8/8/4k3/8/8/8/R3K3 w - - 0 1", goal: "mate", lim: 35, tag: "King and rook against a lone king.", tip: "Cut the king off with the rook, walk your king up to face it, then check along the edge. When kings face each other, the rook checks." },
   { id: "kp6", name: "King on the sixth", fen: "4k3/8/4K3/4P3/8/8/8/8 w - - 0 1", goal: "queen", lim: 15, tag: "King in front of the pawn wins.", tip: "With your king on the sixth rank in front of the pawn, this is always a win. Keep the king ahead and push only when it's safe from stalemate." },
@@ -30,24 +30,24 @@ const EGS = [
   { id: "phil", name: "Philidor defence", fen: "4k3/7R/8/4PK2/8/8/8/r7 b - - 0 1", goal: "hold", lim: 25, me: "b", tag: "Hold the draw a rook down a pawn.", tip: "Put your rook on the third rank (your sixth from White's side) to keep the king out. When the pawn advances, swing the rook behind it and check from far away." },
   { id: "kpdef", name: "Stop the pawn", fen: "8/8/8/8/4k3/8/4PK2/8 b - - 0 1", goal: "hold", lim: 25, me: "b", tag: "King against king and pawn: take the opposition.", tip: "Stay in front of the pawn and face the white king with one square between you (the opposition). Never step back to a square that lets it past." },
 ];
-function egMenu() {
+function etMenu() {
   clearInterval(st.timer); live = null; st = { game: "egm" }; $("#app").className = "fresh";
   const done = (id) => store.get("eg_" + id, 0);
-  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="learn">← Learn</button></div><h2 style="font-size:32px">${ic("crown")}Endgame trainer</h2><p class="sub">Seven endings every player should know, against Stockfish at full strength. Win the won ones inside the move limit, or hold the drawn ones. ${EGS.filter((e) => done(e.id)).length} of ${EGS.length} mastered.</p>
-    <div class="cpgrid">${EGS.map((e, k) => `<button class="cpcard gpk egcard ${done(e.id) ? "done" : ""}" type="button" data-eg="${k}" style="animation-delay:${k * 60}ms"><span class="egmini">${egMini(e.fen)}</span><b class="cpcname">${e.name}</b><span class="fine">${e.tag}</span><span class="cpwinner">${done(e.id) ? ic("trophy") + "Mastered" : (e.goal === "mate" ? "Checkmate" : e.goal === "queen" ? "Queen the pawn" : "Hold the draw") + ` · ${e.lim} moves`}</span></button>`).join("")}</div>`;
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="learn">← Learn</button></div><h2 style="font-size:32px">${ic("crown")}Endgame trainer</h2><p class="sub">Seven endings every player should know, against Stockfish at full strength. Win the won ones inside the move limit, or hold the drawn ones. ${ETS.filter((e) => done(e.id)).length} of ${ETS.length} mastered.</p>
+    <div class="cpgrid">${ETS.map((e, k) => `<button class="cpcard gpk egcard ${done(e.id) ? "done" : ""}" type="button" data-et="${k}" style="animation-delay:${k * 60}ms"><span class="egmini">${etMini(e.fen)}</span><b class="cpcname">${e.name}</b><span class="fine">${e.tag}</span><span class="cpwinner">${done(e.id) ? ic("trophy") + "Mastered" : (e.goal === "mate" ? "Checkmate" : e.goal === "queen" ? "Queen the pawn" : "Hold the draw") + ` · ${e.lim} moves`}</span></button>`).join("")}</div>`;
   scrollTo({ top: 0, behavior: "instant" });
 }
-const EG_GLYPH = { K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙", k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
-function egMini(fen) { const rows = fen.split(" ")[0].split("/"); let h = ""; rows.forEach((r, y) => { let x = 0; for (const ch of r) { if (/\d/.test(ch)) { for (let i = 0; i < +ch; i++, x++) h += `<i class="${(x + y) % 2 ? "d" : ""}"></i>`; } else { h += `<i class="${(x + y) % 2 ? "d" : ""}"><b class="${ch === ch.toUpperCase() ? "w" : "k"}">${EG_GLYPH[ch]}</b></i>`; x++; } } }); return `<span class="egb">${h}</span>`; }
-function egStart(k) {
-  clearInterval(st.timer); const E = EGS[k], c = new Chess(E.fen), me = E.me || "w";
-  st = { game: "eg", k, E, n: 0, msg: E.tip, over: null, think: false, hint: null };
-  live = { c, color: me, sel: null, targets: [], last: null, lock: false, refresh: egPaint, onMove: () => { st.n++; st.hint = null; if (egCheck()) return; egReply(); } };
-  $("#app").className = "fresh"; egPaint(); if (c.turn() !== me) egReply();
+const ET_GLYPH = { K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙", k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+function etMini(fen) { const rows = fen.split(" ")[0].split("/"); let h = ""; rows.forEach((r, y) => { let x = 0; for (const ch of r) { if (/\d/.test(ch)) { for (let i = 0; i < +ch; i++, x++) h += `<i class="${(x + y) % 2 ? "d" : ""}"></i>`; } else { h += `<i class="${(x + y) % 2 ? "d" : ""}"><b class="${ch === ch.toUpperCase() ? "w" : "k"}">${ET_GLYPH[ch]}</b></i>`; x++; } } }); return `<span class="egb">${h}</span>`; }
+function etStart(k) {
+  clearInterval(st.timer); const E = ETS[k], c = new Chess(E.fen), me = E.me || "w";
+  st = { game: "et", k, E, n: 0, msg: E.tip, over: null, think: false, hint: null };
+  live = { c, color: me, sel: null, targets: [], last: null, lock: false, refresh: etPaint, onMove: () => { st.n++; st.hint = null; if (etCheck()) return; etReply(); } };
+  $("#app").className = "fresh"; etPaint(); if (c.turn() !== me) etReply();
 }
-function egMaterial(c, color) { const out = {}; c.board().flat().forEach((p) => { if (p && p.color === color) out[p.type] = (out[p.type] || 0) + 1; }); return out; }
-function egCheck() {
-  const E = st.E, c = live.c, me = live.color, opp = me === "w" ? "b" : "w", mine = egMaterial(c, me), theirs = egMaterial(c, opp);
+function etMaterial(c, color) { const out = {}; c.board().flat().forEach((p) => { if (p && p.color === color) out[p.type] = (out[p.type] || 0) + 1; }); return out; }
+function etCheck() {
+  const E = st.E, c = live.c, me = live.color, opp = me === "w" ? "b" : "w", mine = etMaterial(c, me), theirs = etMaterial(c, opp);
   let res = null;
   if (c.in_checkmate()) res = c.turn() === opp ? ["win", "Checkmate. That's how it's done."] : ["loss", "You got mated. Try again: the tip above has the plan."];
   else if (c.in_stalemate()) res = ["loss", "Stalemate! The king had no moves and wasn't in check, so it's a draw. Always leave it a square."];
@@ -61,27 +61,27 @@ function egCheck() {
   if (!res) return false;
   st.over = { won: res[0] === "win", lost: res[0] === "loss", why: res[1] }; live.lock = true;
   if (st.over.won) { store.set("eg_" + E.id, 1); try { Snd.end(true); } catch (e) { /* quiet */ } } else { try { Snd.end(false); } catch (e) { /* quiet */ } }
-  egPaint(); return true;
+  etPaint(); return true;
 }
-function egReply() {
-  const me = st, L = live; L.lock = true; st.think = true; egPaint();
+function etReply() {
+  const me = st, L = live; L.lock = true; st.think = true; etPaint();
   Sf.analyse(L.c.fen(), { multipv: 1, depth: 16, ms: 700 }).then((l) => {
     if (st !== me || live !== L) return; const m = l.length ? L.c.move(uciMv(l[0].pv[0])) : null; st.think = false; L.lock = false;
-    if (m) { L.last = [m.from, m.to]; Snd.move(m, L.c); } if (!egCheck()) egPaint();
-  }).catch(() => { if (st !== me) return; st.think = false; st.msg = "Stockfish couldn't load. The trainer needs an internet connection the first time (about 1.5 MB)."; egPaint(); });
+    if (m) { L.last = [m.from, m.to]; Snd.move(m, L.c); } if (!etCheck()) etPaint();
+  }).catch(() => { if (st !== me) return; st.think = false; st.msg = "Stockfish couldn't load. The trainer needs an internet connection the first time (about 1.5 MB)."; etPaint(); });
 }
-async function egHint() {
-  if (!live || live.lock || st.over) return; const me = st; st.hint = "…"; egPaint();
+async function etHint() {
+  if (!live || live.lock || st.over) return; const me = st; st.hint = "…"; etPaint();
   try { const l = await Sf.analyse(live.c.fen(), { multipv: 1, depth: 18, ms: 900 }); if (st !== me) return; const c2 = new Chess(live.c.fen()), m = c2.move(uciMv(l[0].pv[0])); st.hint = m ? m.san : null; } catch (e) { st.hint = null; }
-  egPaint();
+  etPaint();
 }
-function egPaint() {
+function etPaint() {
   const E = st.E, L = live, c = L.c, o = st.over, opp = L.color === "w" ? "b" : "w", left = Math.max(0, E.lim - st.n);
   const bars = { top: pbar("robot", "Stockfish", "Full strength", c, opp, 0), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, 0) };
-  const over = o ? `<div class="endov ${o.won ? "win" : "loss"}">${o.won ? Array.from({ length: 22 }, (_, i) => `<i class="conf" style="left:${(i * 37) % 100}%;background:${["#e8c35a", "#5ee6a8", "#ff8a3d", "#fff"][i % 4]};animation-delay:${(i % 9) * 0.18}s"></i>`).join("") : ""}<h3>${o.won ? (E.goal === "hold" ? "Held!" : "Won!") : "Not this time"}</h3><p class="fine" style="color:#ddd">${esc(o.why)}</p><div class="row" style="justify-content:center"><button class="btn" data-eg="${st.k}">${o.won ? "Play it again" : "Try again"}</button><button class="btn ghost" data-go="eg">All endings</button></div></div>` : "";
+  const over = o ? `<div class="endov ${o.won ? "win" : "loss"}">${o.won ? Array.from({ length: 22 }, (_, i) => `<i class="conf" style="left:${(i * 37) % 100}%;background:${["#e8c35a", "#5ee6a8", "#ff8a3d", "#fff"][i % 4]};animation-delay:${(i % 9) * 0.18}s"></i>`).join("") : ""}<h3>${o.won ? (E.goal === "hold" ? "Held!" : "Won!") : "Not this time"}</h3><p class="fine" style="color:#ddd">${esc(o.why)}</p><div class="row" style="justify-content:center"><button class="btn" data-et="${st.k}">${o.won ? "Play it again" : "Try again"}</button><button class="btn ghost" data-go="et">All endings</button></div></div>` : "";
   const goal = E.goal === "mate" ? "Checkmate" : E.goal === "queen" ? "Queen the pawn" : "Hold the draw";
-  liveRender(`<div class="crumbs"><button class="btn ghost" data-go="eg">← Endings</button></div>` + backRow(E.name, "crown", `${goal} · <b class="num">${left}</b> move${left === 1 ? "" : "s"} left`),
-    `<div class="egtip"><b>${ic("bulb")}Plan</b> ${esc(st.msg)}</div><div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? "Stockfish is thinking…" : c.in_check() ? "Check!" : o ? "" : "Your move."}</span><button class="btn ghost" id="egHint" type="button" ${st.think || o ? "disabled" : ""}>${st.hint && st.hint !== "…" ? "Try " + esc(st.hint) : st.hint === "…" ? "Thinking…" : "Hint"}</button><button class="btn ghost" data-eg="${st.k}" type="button">Restart</button></div>`, bars, { over }); $("#app").classList.add("egmode");
+  liveRender(`<div class="crumbs"><button class="btn ghost" data-go="et">← Endings</button></div>` + backRow(E.name, "crown", `${goal} · <b class="num">${left}</b> move${left === 1 ? "" : "s"} left`),
+    `<div class="egtip"><b>${ic("bulb")}Plan</b> ${esc(st.msg)}</div><div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? "Stockfish is thinking…" : c.in_check() ? "Check!" : o ? "" : "Your move."}</span><button class="btn ghost" id="etHint" type="button" ${st.think || o ? "disabled" : ""}>${st.hint && st.hint !== "…" ? "Try " + esc(st.hint) : st.hint === "…" ? "Thinking…" : "Hint"}</button><button class="btn ghost" data-et="${st.k}" type="button">Restart</button></div>`, bars, { over }); $("#app").classList.add("egmode");
 }
 
 /* ---------- 3. Guess the famous game ---------- */
@@ -129,12 +129,12 @@ function fgPaint() {
   liveRender(`<div class="crumbs"><button class="btn ghost" data-go="famous">← Famous games</button></div>` + backRow(esc(G.title), "book", `<b class="num">${st.pts}</b> of ${st.max} · move ${Math.ceil((st.i + 1) / 2)}`),
     `<div class="egtip fg-${st.ok}">${st.msg}</div><div class="fgdots">${dots}</div><div class="row" style="justify-content:center;margin-top:6px"><span class="fine">${o ? "" : c.turn() === L.color && !L.lock ? "Your guess: what did they play?" : "…"}</span></div>`, bars, { over });
 }
-GO.eg = egMenu; GO.famous = fgMenu;
+GO.et = etMenu; GO.famous = fgMenu;
 document.addEventListener("click", (e) => {
-  const t = e.target.closest && e.target.closest("[data-eg],[data-fg],#egHint"); if (!t) return;
-  if (t.id === "egHint") return egHint();
+  const t = e.target.closest && e.target.closest("[data-et],[data-fg],#etHint"); if (!t) return;
+  if (t.id === "etHint") return etHint();
   e.stopPropagation(); try { Snd.tick(); } catch (x) { /* quiet */ }
-  if (t.dataset.eg != null) return pageTo(() => { fresh(); egStart(+t.dataset.eg); }, $("#app"));
+  if (t.dataset.et != null) return pageTo(() => { fresh(); etStart(+t.dataset.et); }, $("#app"));
   if (t.dataset.fg != null) return pageTo(() => { fresh(); fgStart(t.dataset.fg); }, $("#app"));
 }, true);
 (() => { const s = document.createElement("style"); s.textContent = `

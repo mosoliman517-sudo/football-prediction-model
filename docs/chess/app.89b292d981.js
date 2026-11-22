@@ -48,6 +48,33 @@ const AIVoice = (() => {
   }
   return { play, stop, pause() { if (cur) cur.pause(); }, resume() { if (cur) cur.play().catch(() => {}); }, preload: load };
 })();
+/* One display name everywhere. Football, basketball and chess keep their own profile tables (public, nba, chess schemas in the
+   same Supabase project), so a rename used to change only one of them and each page kept showing its own old name. Now:
+   - a rename in any sport is saved to all three;
+   - the football (public) name is the master: every page reads it after signing in and adopts it if its own copy differs;
+   - nobody gets a name made from their email without being asked: with no name yet, a small window asks you to pick one
+     (your email's first part is only the suggestion). Shared by all three pages (each build includes this file). */
+const NameSync = {
+  hdr(cfg, t, schema) { const h = { apikey: cfg.key, Authorization: "Bearer " + t, "Content-Type": "application/json" }; if (schema !== "public") { h["Accept-Profile"] = schema; h["Content-Profile"] = schema; } return h; },
+  async master(cfg, t) { try { const r = await fetch(`${cfg.url}/rest/v1/profiles?select=nick`, { headers: this.hdr(cfg, t, "public") }); if (!r.ok) return null; const j = await r.json(); return (j && j[0] && j[0].nick) || null; } catch (e) { return null; } },
+  async own(cfg, t, schema) { try { const r = await fetch(`${cfg.url}/rest/v1/profiles?select=nick`, { headers: this.hdr(cfg, t, schema) }); if (!r.ok) return null; const j = await r.json(); return (j && j[0] && j[0].nick) || null; } catch (e) { return null; } },
+  /* saves the name in all three sports; returns each schema's answer ("ok", "taken", "invalid" or null when unreachable) */
+  async setAll(cfg, t, nick) {
+    const out = {}; await Promise.all(["public", "chess", "nba"].map(async (s) => { try { const r = await fetch(`${cfg.url}/rest/v1/rpc/set_nickname`, { method: "POST", headers: this.hdr(cfg, t, s), body: JSON.stringify({ p_nick: nick }) }); out[s] = r.ok ? await r.json() : null; } catch (e) { out[s] = null; } }));
+    try { localStorage.setItem("bk_name_all", nick); } catch (e) { /* storage blocked */ }
+    return out;
+  },
+  suggest(email) { return ((email || "player").split("@")[0].replace(/[^A-Za-z0-9]/g, "").slice(0, 12) || "player").padEnd(3, "x"); },
+  /* asks for a name; save(nick) must return { ok } or { error } */
+  ask(suggestion, save) {
+    if (document.getElementById("nsAsk")) return; const m = document.createElement("div"); m.id = "nsAsk";
+    m.innerHTML = `<div class="nsbox" role="dialog" aria-label="Choose your display name"><h2>Pick your name</h2><p>This is how you appear on leaderboards, in lobbies and to friends, in every sport. You can change it later in your profile.</p><input id="nsIn" maxlength="16" value="${String(suggestion).replace(/[^A-Za-z0-9 _.-]/g, "")}" aria-label="Display name"><div class="nsmsg" id="nsMsg"></div><div class="nsrow"><button type="button" id="nsGo">Save my name</button></div></div>`;
+    document.body.appendChild(m); const inp = m.querySelector("#nsIn"); setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    const go = async () => { const v = inp.value.trim(), msg = m.querySelector("#nsMsg"); if (!/^[A-Za-z0-9 _.-]{3,16}$/.test(v)) { msg.textContent = "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores."; return; } msg.textContent = "Saving…"; const r = await save(v); if (r && r.ok) { m.remove(); } else msg.textContent = (r && r.error) || "That name is taken. Try another."; };
+    m.querySelector("#nsGo").onclick = go; inp.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  },
+};
+(() => { const s = document.createElement("style"); s.textContent = "#nsAsk{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:16px;animation:nsIn .25s ease-out}#nsAsk .nsbox{width:min(420px,100%);background:#141b17;color:#f4f1ea;border:2px solid var(--accent,var(--gold,#f2c14e));border-radius:20px;padding:22px;box-shadow:0 24px 60px -20px #000}#nsAsk h2{margin:0 0 6px;font-size:26px}#nsAsk p{margin:0 0 12px;opacity:.8;font-size:14px;line-height:1.45}#nsAsk input{width:100%;box-sizing:border-box;font:700 20px inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line,#ffffff33);background:rgba(0,0,0,.25);color:inherit}#nsAsk .nsmsg{min-height:20px;font-size:13px;margin:8px 0;color:#ff9a8a}#nsAsk .nsrow{display:flex;justify-content:flex-end}#nsAsk button{font:700 15px inherit;padding:10px 18px;border-radius:12px;border:0;background:var(--accent,var(--gold,#f2c14e));color:#111;cursor:pointer}@keyframes nsIn{from{opacity:0}}"; document.head.appendChild(s); })();
 /* Chess coaches: Pip (a pawn six squares from his dream), Queen Vera (a retired queen, elegant and blunt) and Bishop Bea
    (a calm diagonal thinker). Each has lines for every move grade, the start and end of a review, and results. */
 const COACHES = {
@@ -1640,8 +1667,14 @@ const Cloud = {
   async signIn(email, pw) { const { ok, j } = await this.auth("token?grant_type=password", { email, password: pw }); if (!ok || !this.take(j)) return { error: this.err(j) }; await this.after(); return { ok: true }; },
   async signOut() { try { if (this.session) await fetch(`${this.cfg.url}/auth/v1/logout`, { method: "POST", headers: this.authHdr(this.session.access_token) }); } catch (e) { /* offline */ } this.session = null; this.persist(); this.nick = ""; store.set("nick", ""); acctPaint(); },
   async rpc(fn, args, tok) { try { const r = await fetch(`${this.cfg.url}/rest/v1/rpc/${fn}`, { method: "POST", headers: this.hdr(tok), body: JSON.stringify(args || {}) }); if (!r.ok) { this.live = false; return null; } this.live = true; const t = await r.text(); return t ? JSON.parse(t) : null; } catch (e) { this.live = false; return null; } },
-  async setNick(n) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; const j = await this.rpc("set_nickname", { p_nick: n }, t); if (j === "ok") { this.nick = n; store.set("nick", n); acctPaint(); return { ok: true }; } if (j == null) return { error: "Leaderboards are not switched on yet. Your nickname will work once they are." }; return { error: j === "taken" ? "That nickname is taken. Try another." : "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." }; },
-  async after() { await this.pull(); acctPaint(); if (!this.nick) { const base = ((this.session.user.email || "player").split("@")[0].replace(/[^A-Za-z0-9]/g, "").slice(0, 10) || "player").padEnd(3, "x"); for (let k = 0; k < 5; k++) { const r = await this.setNick(k ? base + Math.floor(10 + Math.random() * 990) : base); if (r.ok || /not switched/.test(r.error || "")) break; } } await this.push(); },
+  async setNick(n) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; const all = await NameSync.setAll(this.cfg, t, n), j = all.chess; if (j === "ok") { this.nick = n; store.set("nick", n); acctPaint(); return { ok: true }; } if (j == null) return { error: "Leaderboards are not switched on yet. Your nickname will work once they are." }; return { error: j === "taken" ? "That nickname is taken. Try another." : "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." }; },   /* saved in all three sports at once */
+  async syncName() {   /* adopt the master (football) name; with no name anywhere, ask for one */
+    const t = await this.token(); if (!t) return; const master = await NameSync.master(this.cfg, t);
+    if (master) { if (this.nick !== master) { this.nick = master; store.set("nick", master); acctPaint(); } const mine = await NameSync.own(this.cfg, t, "chess"); if (mine !== master) await this.setNick(master); return; }
+    const mine = await NameSync.own(this.cfg, t, "chess"); if (mine) { this.nick = mine; store.set("nick", mine); acctPaint(); await NameSync.setAll(this.cfg, t, mine); return; }
+    NameSync.ask(NameSync.suggest(this.session.user.email), (v) => this.setNick(v));
+  },
+  async after() { await this.pull(); acctPaint(); await this.syncName(); await this.push(); },
   bests() { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("bkc_best_")) { try { o[k.slice(4)] = JSON.parse(localStorage.getItem(k)); } catch (e) { /* skip */ } } } return o; },
   async pull() { const t = await this.token(); if (!t) return; try { const r = await fetch(`${this.cfg.url}/rest/v1/progress?select=data`, { headers: this.hdr(t) }); if (!r.ok) return; const rows = await r.json(); const d = rows[0] && rows[0].data; if (d && d.look && !localStorage.getItem("bkc_look")) { try { localStorage.setItem("bkc_look", d.look); document.documentElement.setAttribute("data-theme", lookResolve(d.look)); thPaint(); } catch (e) { /* ignore */ } } if (d) Object.entries(d).forEach(([k, v]) => { if (k.startsWith("best_") && typeof v === "number" && v > store.get(k, 0)) store.set(k, v); }); } catch (e) { /* offline */ } },
   async push() { const t = await this.token(); if (!t) return; try { await fetch(`${this.cfg.url}/rest/v1/progress`, { method: "POST", headers: { ...this.hdr(t), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: this.session.user.id, data: { ...this.bests(), look: lookNow() }, updated_at: new Date().toISOString() }) }); } catch (e) { /* offline */ } },
@@ -1721,7 +1754,7 @@ const dpStart = () => { const key = todayK(), pool = PZ.filter((p) => p.rating >
 const dhStart = () => { st = { game: "hbar", round: 0, score: 0, rounds: 1, log: [], daily: "h" }; st.pre = seeded(todayK() + "h", () => hbPick()); hbNext(); };
 const dtStart = () => { st = { game: "tact", round: 0, score: 0, rounds: 1, log: [], minNet: 200, secs: 25, daily: "t" }; tactNext(); };
 
-acctPaint(); if (Cloud.signedIn) Cloud.pull().then(acctPaint);
+acctPaint(); if (Cloud.signedIn) Cloud.pull().then(() => { acctPaint(); return Cloud.syncName(); });
 /* =====================================================================================================================
    Play a friend: a room code, a clock, resign, draw offers, rematch and a review afterwards.
    Messages travel over free public MQTT brokers (and BroadcastChannel for two tabs on one device), the same way the other sports do two-device play.

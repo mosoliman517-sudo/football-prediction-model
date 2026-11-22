@@ -239,6 +239,9 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **22 November: no more robot voice.** A shared "announcer" in football and basketball spoke "Achievement unlocked", streaks, rank-ups and wins with the device's built-in text-to-speech, on top of the sidekick, which already reacts to those moments in its own recorded voice. The announcer is gone (and its switch in the audio mixer): every spoken moment now belongs to the sidekick, and the one moment it did not cover (all three dailies done) is handed to it. The match replay no longer falls back to the device voice for a commentary line without a clip (the line stays on screen), and chess never falls back to the device voice either. Checked in the browser: an achievement, a win and "dailies done" triggered no device voice, and the sidekick answered once in its own voice.
 
+### 22 Nov 2026: Status check and new voice clips
+Answered what is still planned (seasons and rewards stay paused; the games site is parked) and checked the Chatterbox voice job: about 1,075 of 1,832 lines now have the new voice, with roughly 3 hours to go. Committed the clips made since the last push.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

@@ -618,6 +618,7 @@ html { scroll-padding-top: 64px; } #room { scroll-margin-top: 64px; }
 .searchbox input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--ink); font: 600 18px var(--sans, system-ui); } .searchres { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow: auto; } .sres { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 9px 10px; border-radius: 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; } .sres.on, .sres:hover { background: color-mix(in srgb, var(--accent) 20%, var(--surface2)); } .sres small { color: var(--muted); } .sic { display: inline-flex; justify-content: center; font-size: 20px; }
 .skel { height: 48px; border-radius: 14px; background: linear-gradient(90deg, var(--surface2) 25%, color-mix(in srgb, var(--surface2) 78%, var(--ink)) 37%, var(--surface2) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; } @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 .wrap { zoom: var(--zoom, 1); }
+:root[data-mode="light"] { --home: #b3570b; --draw: #556075; --away: #0b6fb3; --ok: #11803c; --bad: #c4243b; }   /* the result colours, darkened enough to read on a light page */
 :root[data-mode="light"][data-league] { --bg: #f2f4fb; --surface: #ffffff; --surface2: #e9edf7; --ink: #12172b; --muted: #55607f; --line: #cfd6e6; --on-accent: #ffffff; color-scheme: light; }
 :root[data-mode="light"] .stadium { opacity: .16; } :root[data-mode="light"] #fx { opacity: .3; } :root[data-mode="light"] .card, :root[data-mode="light"] .gpick, :root[data-mode="light"] .gcard { box-shadow: 0 10px 30px -18px #2a3358aa; } :root[data-mode="light"] .gpick { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, #fff), #fff 65%); }
 :root[data-mode="light"] .holc.ans .holv { color: #11803c; }
@@ -946,7 +947,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button><span class="rbsep"></span><button type="button" class="rbsk" data-sk="cheer" aria-label="Your sidekick cheers">📣 Cheer</button><button type="button" class="rbsk" data-sk="tease" aria-label="Your sidekick teases">😏 Tease</button><button type="button" class="rbsk" data-sk="gg" aria-label="Your sidekick says good game">🤝 GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 22 Nov 2026 11:10 UTC · private · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 22 Nov 2026 11:37 UTC · private · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -1074,8 +1075,8 @@ const Season = {
     if (!rows) { b.innerHTML = this.missing ? '<div class="fine">Seasons need the latest database update (online/schema_v13.sql).</div>' : '<div class="fine">Could not load the season. Try again in a moment.</div>'; return; }
     if (!rows.length) { b.innerHTML = emptyState(SN_CUP("champ"), "The season has just started", "Nobody has played a ranked match this month yet. Win the first one and you're top of the table."); return; }
     const pod = rows.slice(0, 3), order = pod.length === 3 ? [1, 0, 2] : pod.map((_, i) => i);
-    b.innerHTML = `<div class="snpod">${order.map((i) => { const r = pod[i]; return `<div class="snpp p${i + 1} ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" style="--d:${120 + i * 140}ms">${i === 0 ? '<span class="sncrown">👑</span>' : ""}${avatarHTML(r.avatar, "lg", r.nick)}<b>${esc(r.nick)}</b><span class="num">${r.pts}</span><div class="snstep">${i + 1}</div></div>`; }).join("")}</div>`
-      + rows.slice(3).map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}"><b class="num">${i + 4}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.pts}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("");
+    b.innerHTML = `<div class="snpod">${order.map((i) => { const r = pod[i]; return `<div class="snpp p${i + 1} ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog" style="--d:${120 + i * 140}ms">${i === 0 ? '<span class="sncrown">👑</span>' : ""}${avatarHTML(r.avatar, "lg", r.nick)}<b>${esc(r.nick)}</b><span class="num">${r.pts}</span><div class="snstep">${i + 1}</div></div>`; }).join("")}</div>`
+      + rows.slice(3).map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog"><b class="num">${i + 4}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.pts}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("");
   },
 };
 const ord = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
@@ -1095,6 +1096,27 @@ const SN_CUP = (k) => { const c = { champ: ["#ffe27a", "#d49a12"], podium: ["#f2
 .bktabs{display:flex;gap:6px;margin:0 0 12px}
 @media (max-width:520px){.snrew{grid-template-columns:repeat(2,1fr)}.snname{font-size:24px}.snme{text-align:left;justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){.snglow,.sncrown,.snpp{animation:none}}`; document.head.appendChild(s); })();
+/* ---------- season nudges: a card on the home screen (countdown, your place and points, the player just above you) and a note
+   when someone has passed you since your last visit. Football and basketball both show it; it hides without the database. ---------- */
+Season.nudge = async function () {
+  if (typeof Board === "undefined" || Board.mode !== "rest") return; const col = document.querySelector("#homeToday .htcol"); if (!col || document.getElementById("htSeason")) return;
+  const card = document.createElement("button"); card.type = "button"; card.className = "htcard htsmall htseason"; card.id = "htSeason"; card.dataset.snGo = "1";
+  const m = this.month(); card.innerHTML = `<span class="htlabel">${SN_CUP("champ")} ${esc(this.name(m))} season</span><span class="fine">Ends in <b class="num">${this.left()}</b></span>`; col.prepend(card);
+  if (!Account.signedIn) { card.insertAdjacentHTML("beforeend", '<span class="fine">Everyone starts on 1000. Sign in and win ranked games to climb.</span>'); return; }
+  const [mine, rows] = await Promise.all([this.mine(m), this.board(m)]); if (!card.isConnected) return;
+  if (!mine) { card.insertAdjacentHTML("beforeend", `<span class="htmatch"><b class="num">1000</b><small>not ranked yet: one ranked game puts you on the table${rows && rows.length ? ` with ${rows.length} other${rows.length === 1 ? "" : "s"}` : ""}</small></span>`); return; }
+  const me = prof().nick, i = rows ? rows.findIndex((r) => r.nick === me) : -1, above = i > 0 ? rows[i - 1] : null;
+  card.insertAdjacentHTML("beforeend", `<span class="htmatch"><b class="htbig num">${ord(mine.place)}</b><small>of ${mine.players} · <b class="num">${mine.pts}</b> pts</small></span><span class="fine">${above ? `${esc(above.nick)} is ${above.pts - mine.pts} point${above.pts - mine.pts === 1 ? "" : "s"} ahead` : mine.place === 1 ? "You're top. Stay there." : ""}</span>`);
+  try { const k = "bk_sn_place_" + (typeof SPORT_KEY !== "undefined" ? SPORT_KEY : location.pathname.split("/")[1]) + "_" + m, was = +localStorage.getItem(k) || 0; localStorage.setItem(k, mine.place);
+    if (was && mine.place > was && above) toast(`<b>${esc(above.nick)} passed you</b><br>You're ${ord(mine.place)} in the ${esc(this.name(m))} season now, ${above.pts - mine.pts} behind. Win one back.`); } catch (e) { /* storage blocked */ }
+};
+setTimeout(() => {
+  if (typeof renderHome !== "function") return; const prev = renderHome;
+  try { renderHome = function () { prev.apply(this, arguments); setTimeout(() => Season.nudge(), 50); }; } catch (e) { return; }
+  if (document.getElementById("homeToday")) Season.nudge();
+}, 0);
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-sn-go]"); if (!b) return; try { Snd.tick(); } catch (x) { /* quiet */ } S.btab = "season"; const slug = /basketball/.test(location.pathname) ? "nba" : "all-leagues"; go("games-" + slug + "-boards"); });
+(() => { const s = document.createElement("style"); s.textContent = `.htseason .htlabel svg{width:18px;height:18px}.htseason{border-color:color-mix(in srgb,#d49a12 60%,var(--line))}.htseason .htbig{font-size:34px;color:var(--accent)}`; document.head.appendChild(s); })();
 /* Your numbers in every sport, on one card in the football and basketball profiles (each build includes this file).
    All three sports live on the same site, so this reads each one's saved progress from this browser (football
    "arena-plays-v1", basketball "arena-nba-plays-v1", chess "bkc_*") and, when you're signed in, each ranked Elo from its own
@@ -1146,6 +1168,7 @@ const PCard = {
       <div class="row" style="margin-top:14px">${r.nick !== prof().nick && Account.signedIn ? `<button class="btn" data-pcadd="${esc(r.nick)}" type="button">Add friend</button>` : ""}<button class="btn ghost" id="modalClose" type="button">Close</button></div>`;
   },
 };
+document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-pc]")) { e.preventDefault(); PCard.open(e.target.dataset.pc); } });
 document.addEventListener("click", (e) => {
   const a = e.target.closest && e.target.closest("[data-pc]"); if (a && !e.target.closest("button:not([data-pc])")) { e.preventDefault(); try { Snd.tick(); } catch (x) { /* quiet */ } PCard.open(a.dataset.pc); return; }
   const f = e.target.closest && e.target.closest("[data-pcadd]"); if (f) { f.disabled = true; Ranked.rpcx("add_friend", { p_nick: f.dataset.pcadd }).then((r) => { f.textContent = r.ok && r.data === "ok" ? "Added" : r.ok && r.data === "exists" ? "Already friends" : "Couldn't add"; }); }
@@ -1159,8 +1182,43 @@ document.addEventListener("click", (e) => {
 .pcBox h2{margin:0;font-size:26px}.pcTop{display:flex;gap:14px;align-items:center;margin:-6px -6px 12px;padding:14px;border-radius:18px;background:radial-gradient(circle at 15% 30%,color-mix(in srgb,var(--accent,#f2c14e) 38%,transparent),transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--accent,#f2c14e) 18%,transparent),transparent)}.pcAv{position:relative}.pcAv.on::after{content:"";position:absolute;right:4px;bottom:4px;width:14px;height:14px;border-radius:50%;background:#3ddc84;border:3px solid var(--card,#141b17)}
 .pcDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ddc84;margin-right:6px;animation:snPulse 1.6s infinite}.pcRank{margin-top:4px}.pcBox .asG{grid-template-columns:repeat(4,1fr)}
 .pcForm{display:flex;gap:4px;align-items:center;margin-top:10px;flex-wrap:wrap}.pcForm i{font:800 11px var(--mono,monospace);font-style:normal;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#111}.pcForm i.w{background:#3ddc84}.pcForm i.l{background:#ff7a7a}.pcForm i.d{background:#c9d1e0}
-[data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}
+[data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}[data-pc]:focus-visible{outline:3px solid var(--accent,#f2c14e);outline-offset:2px;border-radius:12px}
 @media (max-width:640px){.asW{grid-template-columns:1fr}.pcBox .asG{grid-template-columns:repeat(2,1fr)}}`; document.head.appendChild(s); })();
+/* ---------- profile hero: the top of the profile page, shared by football and basketball ----------
+   A banner in your colours with a slow light sweep, your picture inside a ring that fills with your progress to the next
+   level, your name, badges and level, then counters that roll up (Elo, streak, achievements, XP, rounds), your best medals
+   and your season trophies. */
+const PHero = {
+  html(o) {
+    const tile = (v, l, ic, id) => `<div class="phT"><span class="phTi">${ic}</span><b class="num phN" ${id ? `id="${id}"` : ""} data-to="${typeof v === "number" ? v : ""}">${typeof v === "number" ? 0 : v}</b><small>${l}</small></div>`;
+    const cab = (() => { try { const s = prof().rseasons || {}; return Object.keys(s).filter((k) => s[k]).sort().reverse().slice(0, 4).map((k) => { const f = s[k], t = Season.tier(f) || ["played"]; return `<span class="phCup" title="${esc(Season.name(k))}: ${ord(f.place)} of ${f.players}">${SN_CUP(t[0])}</span>`; }).join(""); } catch (e) { return ""; } })();
+    setTimeout(() => this.roll(), 60);
+    return `<div class="phero"><div class="phSweep" aria-hidden="true"></div><div class="phRankBg" aria-hidden="true">${o.rankIcon || ""}</div>
+      <div class="phTop"><div class="phAv" style="--p:${Math.max(0, Math.min(100, o.pct || 0))}"><span class="phRing"></span>${o.av}<span class="phLv" title="Level">${esc(o.levelShort || "")}</span></div>
+        <div class="phId"><h1>${o.name}${o.badges || ""}</h1><div class="phLevel"><b>${esc(o.level)}</b> · ${o.xp.toLocaleString()} XP · ${o.next}</div><div class="phBar"><i style="--w:${o.pct || 0}%"></i></div><div class="phChips">${o.fav || ""}</div></div>
+        ${o.medals && o.medals.length || cab ? `<div class="phShelf">${cab ? `<div class="phCups">${cab}</div>` : ""}${o.medals && o.medals.length ? `<div class="phMedals">${o.medals.join("")}</div>` : ""}<small>${cab ? "Seasons" : ""}${cab && o.medals.length ? " · " : ""}${o.medals.length ? "Best medals" : ""}</small></div>` : ""}</div>
+      <div class="phTiles">${o.elo != null ? tile(o.elo, `Elo · ${o.rank || ""}`, "🏆", "pfElo") : tile("–", "Elo · sign in to play ranked", "🏆", "pfElo")}${tile(o.streak, "day streak", "🔥")}${tile(o.won, `of ${o.total} achievements`, "🏅")}${tile(o.xp, "XP", "⚡")}${tile(o.rounds, "rounds played", "🎯")}</div></div>`;
+  },
+  roll() {
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelectorAll(".phero .phN").forEach((el, i) => { const to = +el.dataset.to; if (el.dataset.to === "" || isNaN(to)) return; if (reduce || to === 0) { el.textContent = to.toLocaleString(); return; }
+      const t0 = performance.now() + i * 90, d = 900; (function step(t) { if (!el.isConnected) return; const k = Math.max(0, Math.min(1, (t - t0) / d)), e = 1 - Math.pow(1 - k, 3); if (el.dataset.to !== String(to)) return; el.textContent = Math.round(to * e).toLocaleString(); if (k < 1) requestAnimationFrame(step); })(performance.now()); });
+  },
+};
+(() => { const s = document.createElement("style"); s.textContent = `
+.phero{position:relative;overflow:hidden;border-radius:26px;padding:22px;margin-bottom:16px;border:1px solid var(--line,#ffffff22);background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--accent,#f2c14e) 34%,transparent),transparent 55%),radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--accent,#f2c14e) 16%,transparent),transparent 60%),var(--surface,#ffffff0d)}
+.phSweep{position:absolute;inset:-50% -20%;background:linear-gradient(105deg,transparent 40%,#ffffff1f 50%,transparent 60%);animation:phSweep 7s ease-in-out infinite;pointer-events:none}@keyframes phSweep{0%{transform:translateX(-60%)}60%,100%{transform:translateX(60%)}}
+.phRankBg{position:absolute;right:-30px;top:-30px;width:220px;height:220px;opacity:.09;pointer-events:none;transform:rotate(-12deg)}.phRankBg svg,.phRankBg .ic{width:100%;height:100%}
+.phTop{position:relative;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.phAv{position:relative;width:112px;height:112px;display:grid;place-items:center;flex:0 0 auto}
+.phRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent,#f2c14e) calc(var(--p) * 1%),color-mix(in srgb,var(--ink,#fff) 14%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent 58%,#000 59%);mask:radial-gradient(circle,transparent 58%,#000 59%);animation:phRing 1.2s cubic-bezier(.2,.8,.2,1) both}@keyframes phRing{from{transform:rotate(-90deg);opacity:0}}
+.phAv .av{width:92px!important;height:92px!important;font-size:36px}.phLv{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font:800 10px var(--mono,monospace);letter-spacing:.08em;padding:3px 8px;border-radius:999px;background:var(--accent,#f2c14e);color:#111;white-space:nowrap;text-transform:uppercase}
+.phId{flex:1;min-width:200px}.phId h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1.05}.phLevel{opacity:.85;font-size:14px;margin-top:4px}.phBar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--ink,#fff) 12%,transparent);margin:8px 0;overflow:hidden;max-width:420px}.phBar i{display:block;height:100%;width:var(--w);border-radius:99px;background:linear-gradient(90deg,var(--accent,#f2c14e),color-mix(in srgb,var(--accent,#f2c14e) 50%,#fff));animation:asGrow 1.1s cubic-bezier(.2,.8,.2,1) both}
+.phChips{display:flex;gap:6px;flex-wrap:wrap}.phShelf{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px;border-radius:18px;background:color-mix(in srgb,var(--ink,#fff) 6%,transparent);border:1px solid var(--line,#ffffff22)}.phShelf small{font-size:11px;opacity:.7}
+.phCups,.phMedals{display:flex;gap:6px}.phCup svg{width:38px;height:38px;filter:drop-shadow(0 3px 4px #0005)}.phMedals>*{transform:scale(1.1)}
+.phTiles{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}.phT{padding:10px 12px;border-radius:16px;background:color-mix(in srgb,var(--ink,#fff) 6%,transparent);border:1px solid var(--line,#ffffff22);animation:htIn .6s cubic-bezier(.2,1.2,.4,1) both}.phT:nth-child(2){animation-delay:.06s}.phT:nth-child(3){animation-delay:.12s}.phT:nth-child(4){animation-delay:.18s}.phT:nth-child(5){animation-delay:.24s}
+.phTi{font-size:18px}.phT b{display:block;font-size:26px;line-height:1.1}.phT small{font-size:11.5px;opacity:.75;display:block;line-height:1.25}@keyframes htIn{from{transform:translateY(14px);opacity:0}}
+@media (max-width:640px){.phTiles{grid-template-columns:repeat(2,1fr)}.phT:last-child{grid-column:1/-1}.phAv{width:92px;height:92px}.phAv .av{width:74px!important;height:74px!important}}
+@media (prefers-reduced-motion:reduce){.phSweep,.phRing,.phBar i,.phT{animation:none}}`; document.head.appendChild(s); })();
 /* Install ballknowledge as an app, from any sport page (each build includes this file).
    Chrome, Edge and Android offer a real install prompt: we keep it and show a small "Get the app" chip from your second day of
    playing (never on the first visit, never once installed, and "Not now" hides it for two weeks). iPhone and iPad have no
@@ -1200,6 +1258,69 @@ Install.init();
 @keyframes bkiIn{from{opacity:0;transform:translate(-50%,30px)}}
 #bkInstIos{position:fixed;inset:0;z-index:100001;background:#000a;display:flex;align-items:flex-end;justify-content:center;padding:16px}#bkInstIos .bkib{background:#141b17;color:#f4f1ea;border-radius:20px;padding:18px 20px;width:min(440px,100%);border:1px solid #ffffff2a}
 #bkInstIos h3{margin:0 0 8px;font-size:19px}#bkInstIos ol{margin:0 0 12px;padding-left:20px;line-height:1.7}#bkInstIos svg{vertical-align:-3px}#bkInstIos button{font:700 15px inherit;padding:10px 18px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111}`; document.head.appendChild(s); })();
+/* Accessibility: a "Skip to content" button, the first thing keyboard users reach, shown only when focused. It's a button
+   rather than a #link because the sites route by the address hash. It moves focus to the visible main area. */
+(() => {
+  const go = () => { const t = [...document.querySelectorAll("#league:not([hidden]) #room, #league:not([hidden]), #home:not([hidden]), #profilePage:not([hidden]), main, #app")].find((x) => x.offsetParent !== null || x.tagName === "MAIN"); if (!t) return; if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "-1"); t.focus({ preventScroll: false }); };
+  const add = () => { if (document.getElementById("bkSkip")) return; const b = document.createElement("button"); b.id = "bkSkip"; b.type = "button"; b.textContent = "Skip to content"; b.onclick = go; document.body.prepend(b); };
+  if (document.body) add(); else addEventListener("DOMContentLoaded", add);
+  const s = document.createElement("style"); s.textContent = "#bkSkip{position:fixed;left:12px;top:-60px;z-index:100002;padding:10px 16px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111;font:700 15px system-ui,sans-serif;transition:top .2s}#bkSkip:focus{top:12px;outline:3px solid #fff;outline-offset:2px}[tabindex='-1']:focus{outline:none}"; document.head.appendChild(s);
+})();
+/* In-game feedback for every quiz in football and basketball (each build includes this file).
+   Both sites play Snd.right() for a right answer and Snd.wrong() for a wrong one, so this wraps those two calls:
+   - right: a burst of sparks from the answer you tapped, a green glow on it, and a combo counter that appears from three in a row
+     (with flames from five, and a bigger burst at 5, 10, 15...);
+   - wrong: the answer you tapped shakes, the screen edge flashes red, and the combo resets.
+   Changing game resets the combo too. Reduced motion (the device setting or the site's) turns it all off. */
+const GFX = {
+  last: null, lastAt: 0, combo: 0, best: 0, where: "",
+  calm() { return matchMedia("(prefers-reduced-motion: reduce)").matches || (typeof REDUCED !== "undefined" && REDUCED); },
+  target() { const t = this.last; return t && t.isConnected && Date.now() - this.lastAt < 2500 ? t : null; },
+  burst(el, n, big) {
+    const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2 - 20, top: innerHeight / 2 - 20, width: 40, height: 40 }, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const box = document.createElement("div"); box.className = "gfxB"; box.style.left = cx + "px"; box.style.top = cy + "px";
+    const cols = ["#5ee6a8", "#ffd23f", "#ffffff", "var(--accent,#f2c14e)"];
+    for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + Math.random() * 0.4, d = (big ? 90 : 55) + Math.random() * (big ? 70 : 35), s = document.createElement("i"); s.style.setProperty("--x", Math.cos(a) * d + "px"); s.style.setProperty("--y", Math.sin(a) * d + "px"); s.style.background = cols[i % cols.length]; s.style.animationDelay = Math.random() * 60 + "ms"; if (big && i % 3 === 0) s.className = "st"; box.appendChild(s); }
+    document.body.appendChild(box); setTimeout(() => box.remove(), 900);
+  },
+  pill() {
+    let p = document.getElementById("gfxCombo"); if (this.combo < 3) { if (p) { p.classList.add("out"); setTimeout(() => p && p.remove(), 300); } return; }
+    if (!p) { p = document.createElement("div"); p.id = "gfxCombo"; document.body.appendChild(p); }
+    p.className = this.combo >= 10 ? "hot2" : this.combo >= 5 ? "hot" : ""; p.innerHTML = `${this.combo >= 5 ? '<span class="gfxFl">🔥</span>' : ""}<b class="num">${this.combo}</b><small>in a row</small>`;
+    p.style.animation = "none"; void p.offsetWidth; p.style.animation = "";
+  },
+  right() {
+    const here = location.hash; if (here !== this.where) { this.where = here; this.combo = 0; }
+    this.combo++; this.best = Math.max(this.best, this.combo); if (this.calm()) return;
+    const el = this.target(), milestone = this.combo >= 5 && this.combo % 5 === 0;
+    this.burst(el, milestone ? 26 : 12, milestone); if (el) { el.classList.remove("gfxOk", "gfxNo"); void el.offsetWidth; el.classList.add("gfxOk"); setTimeout(() => el.classList.remove("gfxOk"), 900); }
+    this.pill();
+  },
+  wrong() {
+    const here = location.hash; if (here !== this.where) { this.where = here; } this.combo = 0; this.pill(); if (this.calm()) return;
+    const el = this.target(); if (el) { el.classList.remove("gfxOk", "gfxNo"); void el.offsetWidth; el.classList.add("gfxNo"); setTimeout(() => el.classList.remove("gfxNo"), 600); }
+    const v = document.createElement("div"); v.className = "gfxV"; document.body.appendChild(v); setTimeout(() => v.remove(), 700);
+  },
+};
+addEventListener("pointerdown", (e) => { const t = e.target.closest && e.target.closest("button, [role=button], .opt, .pick, .tile, a"); if (t) { GFX.last = t; GFX.lastAt = Date.now(); } }, true);
+addEventListener("keydown", (e) => { if (e.key === "Enter") { GFX.last = document.activeElement; GFX.lastAt = Date.now(); } }, true);
+addEventListener("hashchange", () => { GFX.combo = 0; GFX.pill(); });
+setTimeout(() => {
+  if (typeof Snd === "undefined" || Snd.__gfx) return; Snd.__gfx = true;
+  const r = Snd.right, w = Snd.wrong;
+  if (r) Snd.right = function () { try { GFX.right(); } catch (e) { /* visuals only */ } return r.apply(this, arguments); };
+  if (w) Snd.wrong = function () { try { GFX.wrong(); } catch (e) { /* visuals only */ } return w.apply(this, arguments); };
+}, 0);
+(() => { const s = document.createElement("style"); s.textContent = `
+.gfxB{position:fixed;z-index:9500;pointer-events:none;width:0;height:0}.gfxB i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;animation:gfxFly .75s cubic-bezier(.15,.8,.3,1) forwards}.gfxB i.st{width:12px;height:12px;border-radius:2px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+@keyframes gfxFly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+.gfxOk{animation:gfxOk .8s cubic-bezier(.2,1.4,.4,1)!important;box-shadow:0 0 0 3px #5ee6a8,0 0 28px -2px #5ee6a8!important}@keyframes gfxOk{30%{transform:scale(1.06)}}
+.gfxNo{animation:gfxNo .5s cubic-bezier(.36,.07,.19,.97)!important;box-shadow:0 0 0 3px #ff6b6b!important}@keyframes gfxNo{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.gfxV{position:fixed;inset:0;z-index:9400;pointer-events:none;box-shadow:inset 0 0 90px 10px #ff3b3b88;animation:gfxV .65s ease-out forwards}@keyframes gfxV{from{opacity:1}to{opacity:0}}
+#gfxCombo{position:fixed;z-index:9450;right:16px;top:88px;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#141b17ee;color:#fff;border:2px solid #5ee6a8;box-shadow:0 10px 26px -10px #000;animation:gfxPop .45s cubic-bezier(.2,1.6,.4,1);pointer-events:none}
+#gfxCombo b{font-size:22px;line-height:1}#gfxCombo small{font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.08em}#gfxCombo.hot{border-color:#ffb21f;box-shadow:0 0 24px -4px #ff8a3d}#gfxCombo.hot2{border-color:#ff4d4d;box-shadow:0 0 34px -2px #ff4d4d;background:linear-gradient(90deg,#3a0d0d,#141b17)}
+#gfxCombo.out{opacity:0;transform:scale(.6);transition:.25s}.gfxFl{font-size:20px;display:inline-block;animation:gfxFl .5s ease-in-out infinite alternate}@keyframes gfxFl{to{transform:scale(1.18) rotate(-8deg)}}@keyframes gfxPop{from{transform:scale(.4);opacity:0}}
+@media (prefers-reduced-motion:reduce){.gfxB,.gfxV{display:none}}`; document.head.appendChild(s); })();
 /* Lines for the football and basketball sidekicks (spoken with Kokoro, see src/80_make_voice.py). Funny on top, a little real underneath. */
 const MASCOT_LINES = {
   boot: {
@@ -1689,7 +1810,7 @@ const Snd = (() => {
     wrong() { vib([40, 50, 40]); run((t) => { note(64, t, 0.3, "sine", 0.07, -2); note(60, t + 0.16, 0.42, "sine", 0.06, -1); }); },
     win() { vib([30, 40, 70]); run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); noise(t + 0.1, 1.3, 500, 1700, 0.035, 0.5); }); },
     horn() { vib([60, 40, 120]); run((t) => { [55, 59, 62].forEach((n) => note(n, t, 0.9, "sawtooth", 0.035)); [67, 71, 74].forEach((n) => note(n, t + 0.02, 0.9, "square", 0.018)); noise(t + 0.15, 1.8, 450, 1500, 0.045, 0.45); }); },
-    league(code) { run((t) => { const sc = SCALES[code], r = ROOT[code]; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code], 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
+    league(code) { run((t) => { const sc = SCALES[code] || SCALES.ALL, r = ROOT[code] || ROOT.ALL; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code] || "triangle", 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
     back() { run((t) => { note(67, t, 0.22, "sine", 0.07); note(60, t + 0.11, 0.3, "sine", 0.07); }); },
     goal() { run((t) => { noise(t, 0.5, 400, 2600, 0.07, 0.7); [67, 71, 74, 79].forEach((n, i) => note(n, t + 0.05 + i * 0.07, 0.5, "triangle", 0.07)); }); },
     whistle() { run((t) => { note(88, t, 0.16, "sine", 0.045); note(88.5, t + 0.19, 0.3, "sine", 0.045); }); },
@@ -3024,7 +3145,7 @@ async function paintLobbies() {
   const rows = await Ranked.rpc("open_lobbies"), box = $("#rkList"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Could not load lobbies. Check your connection.</div>'; return; }
   const me = prof().nick, list = rows.filter((r) => r.nick !== me || true);
-  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div data-pc="${esc(r.nick)}">${avatarHTML(r.avatar, "xs", r.nick)}<b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : emptyState("<svg class=ic><use href=#i-seat></use></svg>", "No open lobbies", "Create one above and wait for someone to hop in.");
+  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog">${avatarHTML(r.avatar, "xs", r.nick)}<b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : emptyState("<svg class=ic><use href=#i-seat></use></svg>", "No open lobbies", "Create one above and wait for someone to hop in.");
   const st = $("#rkStamp"); if (st) st.textContent = "updates every few seconds";
 }
 /* ---------- The finale: one end-of-game card for every game. A ribbon and a trophy (gold for a win or a good run, silver for a
@@ -3102,7 +3223,7 @@ async function renderBoards() {
   if (tab === "season") return Season.render(body);
   const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
   if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
-  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}" data-pc="${esc(r.nick)}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.");
+  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.");
 }
 
 
@@ -3646,8 +3767,7 @@ async function renderProfilePage() {
   const avs = AVATARS.map((e) => `<button type="button" class="avopt ${p.avatar === "i:" + e ? "on" : ""}" data-av="i:${e}" aria-label="Avatar ${e}"><svg class='ic'><use href='#i-${e}'/></svg></button>`).join("") + (DATA.hero || []).filter((h) => h.img && !h.photo).map((h) => `<button type="button" class="avopt ${p.avatar === "h:" + h.n ? "on" : ""}" data-av="h:${esc(h.n)}" aria-label="${esc(h.n)}"><img src="${h.img}" alt=""></button>`).join("") + (p.favT && CREST[p.favT] ? `<button type="button" class="avopt ${p.avatar === "c:" + p.favT ? "on" : ""}" data-av="c:${esc(p.favT)}" aria-label="${esc(p.favT)} badge"><img class="avc" src="${CREST[p.favT]}" alt=""></button>` : "");
   const teams = Object.keys(QZ.clubs).filter((n) => CREST[n]).sort();
   el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Profile</span></div></nav>
-  <div class="card pfhead">${avatarHTML(p.avatar, "xl", p.nick)}<div class="pfid"><h1>${esc(p.nick || "Guest")}${signed ? badgesHTML(myBadges(), true) : ""}</h1><div class="label">${esc(lv.name)} · ${p.xp} XP${lv.next ? ` · next: ${esc(lv.next)} at ${lv.to}` : " · top rank"}</div><div class="xpbar"><i style="width:${pct2}%"></i></div>
-    <div class="pfchips"><span class="chip2"><b class="num" id="pfElo">${signed ? Ranked.elo : "–"}</b> Elo ${signed ? rankTag(Ranked.elo) + " " + rankOf(Ranked.elo).name : ""}</span><span class="chip2"><b class="num">${st}</b> day streak</span><span class="chip2"><b class="num">${won}/${ACH.length}</b> achievements</span>${favP ? `<span class="chip2"><svg class=ic><use href=#i-star></use></svg> ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}</div></div></div>
+  ${PHero.html({ av: avatarHTML(p.avatar, "xl", p.nick), name: esc(p.nick || "Guest"), badges: signed ? badgesHTML(myBadges(), true) : "", level: lv.name, levelShort: "Lv " + (lv.i + 1), xp: p.xp || 0, next: lv.next ? `next: ${esc(lv.next)} at ${lv.to.toLocaleString()}` : "top rank", pct: pct2, elo: signed ? Ranked.elo : null, rank: signed ? rankOf(Ranked.elo).name : "", rankIcon: signed ? rankOf(Ranked.elo).icon : "", streak: st, won, total: ACH.length, rounds: p.rounds || 0, fav: `${favP ? `<span class="chip2"><svg class=ic><use href=#i-star></use></svg> ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}`, medals: [...ACH].filter(([id]) => p.ach[id]).sort((a, b) => ACH_TIER[b[0]] - ACH_TIER[a[0]]).slice(0, 3).map(([id]) => `<span title="${esc(badgeName(id))}">${bdg(id, true)}</span>`) })}
   ${AllStats.html()}
   <div class="pfgrid"><div class="card"><h3>Edit profile</h3>
     ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
@@ -3665,7 +3785,7 @@ async function renderProfilePage() {
   <div class="card"><h3>Account</h3>${accountHTML()}<div class="row" style="margin-top:12px"><button class="btn ghost" id="shareRecord" type="button">Share my record</button><button class="btn ghost" id="pfShare" type="button">Share my profile card</button><button class="btn ghost" id="tourBtn" type="button">Replay the tour</button><button class="btn ghost" id="newBtn" type="button">What's new</button><button class="btn" data-go="album" type="button"><svg class=ic><use href=#i-album></use></svg> Sticker album</button></div></div>`;
   Object.keys(keep).forEach((id) => { const x = $("#" + id); if (x) x.value = keep[id]; });
   if (!signed) return;
-  Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) e.textContent = Ranked.elo; });
+  Ranked.refresh().then(() => { const e = $("#pfElo"); if (e) { e.dataset.to = Ranked.elo; e.textContent = Ranked.elo.toLocaleString(); } });
   Ranked.rpc("my_elo_history").then((rows) => { const b = $("#pfElo2"); if (b) b.innerHTML = rows ? eloChart(rows) + historyList(rows) : '<div class="fine">History needs the latest database update (schema_v3.sql).</div>'; });
   paintFriends();
 }
@@ -3676,7 +3796,7 @@ function historyList(rows) {
 async function paintFriends() {
   const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
-  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow" data-pc="${esc(r.nick)}">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.");
+  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.");
 }
 
 /* ================= Challenge a friend ================= */
@@ -5740,7 +5860,7 @@ function nbLkTeam(t) {
 { const old = renderAboutPage; renderAboutPage = function () {
     if (S.abTab !== "look") return old();
     const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${S.abTab === k}">${n}</button>`).join("")}</div>`;
-    $("#aboutPage").innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}<div class="card abx"><h2><svg class=ic><use href=#i-search></use></svg> Look up a player or team</h2><p class="sub">Type a name. You get a player's season-by-season numbers, titles and awards, or a team's seasons and how each one ended.</p><input class="t" id="nbLk" placeholder="e.g. LeBron, Curry, Celtics, Spurs" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"><div class="hub" id="nbLkSug" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px"></div></div><div id="nbLkRes"></div>`;
+    $("#aboutPage").innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}<div class="card abx"><h2><svg class=ic><use href=#i-search></use></svg> Look up a player or team</h2><p class="sub">Type a name. You get a player's season-by-season numbers, titles and awards, or a team's seasons and how each one ended.</p><input class="t" id="nbLk" aria-label="Look up a player or team" placeholder="e.g. LeBron, Curry, Celtics, Spurs" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"><div class="hub" id="nbLkSug" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px"></div></div><div id="nbLkRes"></div>`;
   }; }
 S.abTab = "look";
 document.addEventListener("input", (e) => { if (e.target.id !== "nbLk") return; $("#nbLkSug").innerHTML = nbLkSearch(e.target.value).map((x) => `<button type="button" class="chip" data-nbl="${esc(x.k)}">${esc(x.label)} <span class="fine">${esc(x.sub)}</span></button>`).join(""); });
@@ -5859,6 +5979,62 @@ Object.assign(HOWTO, {
   "g:nbou": ["Over or under", ["What you do", "A real past game and a line from our model: its predicted total points, or the predicted margin. Choose over or under (cover or don't cover) and a stake."], ["Scoring", "You start with 1,000 coins and play 10 games. A right call wins your stake, a wrong one loses it."], ["Good to know", "The line is the model's own prediction, so it is fair on average. Easy and medium show each team's season averages. Elite only uses close calls."]],
 });
 BOARD_GAMES.push(["nbrank", "Rank the five", "best score (of 500)"], ["nbtime", "Career timeline", "best score (of 500)"], ["nbou", "Over or under", "best bankroll"]); BK_LABELS.push("Rank the five", "Career timeline", "Over or under");
+/* Basketball front page glow-up (appended after the basketball overlay, so it wraps the final renderHome).
+   The same "Today" strip football has, in basketball terms:
+   - Game of the day: one game for everyone, picked from the date, with a countdown to tomorrow's.
+   - Tonight in the NBA: today's real games from ESPN's public scoreboard (live scores while they're on, tip-off times before,
+     finals after), with the team logos. If ESPN can't be reached, or there are no games today, the card hides.
+   - Ranked: how many lobbies are open right now (hidden when there are none).
+   And the section cards lean towards the pointer, like football's. */
+{
+  const homePrev = renderHome;
+  renderHome = function () { homePrev(); nbToday(); nbTilt(); };
+}
+async function nbToday() {
+  let box = $("#homeToday"); if (!box) { const d = $("#doors"); if (!d) return; d.insertAdjacentHTML("beforebegin", '<div id="homeToday" class="htoday"></div>'); box = $("#homeToday"); }
+  const all = [...GAMES, ...QUIZ_GAMES].filter((g) => GAME_IDS.includes(g.id)); if (!all.length) return;
+  const g = all[hash("gotd-" + todayKey()) % all.length], teams = Object.keys(CREST), faces = [0, 1, 2].map((j) => badge(teams[hash(todayKey() + j) % teams.length], "md")).join("");
+  box.innerHTML = `<button type="button" class="htcard htgotd" data-nbgame="${esc(g.id)}"><span class="htlabel"><svg class=ic><use href=#i-star></use></svg> Game of the day</span><div class="gfaces">${faces}</div><b class="htname">${esc(g.name)}</b><span class="fine">${esc(g.tag || "")}</span><span class="htfoot"><span class="dgo">Play now</span><span class="fine num" id="htNew"></span></span></button>
+    <div class="htcol"><button type="button" class="htcard htsmall" id="htNba" hidden data-nbgroup="live"></button><button type="button" class="htcard htsmall" id="htLobby" hidden data-nbgroup="ranked"></button></div>`;
+  const tick = () => { const el = $("#htNew"); if (!el) return clearInterval(nbToday.t); const now = new Date(), mid = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)), ms = mid - now; el.textContent = `new game in ${Math.floor(ms / 3.6e6)}h ${Math.floor((ms % 3.6e6) / 6e4)}m`; };
+  clearInterval(nbToday.t); tick(); nbToday.t = setInterval(tick, 30000);
+  try {
+    const r = await fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"), j = r.ok ? await r.json() : null, ev = (j && j.events) || [], el = $("#htNba");
+    if (el && ev.length) {
+      const live = ev.filter((e) => e.status.type.state === "in"), pre = ev.filter((e) => e.status.type.state === "pre"), done = ev.filter((e) => e.status.type.state === "post");
+      const pick = live[0] || pre[0] || done[done.length - 1], cs = pick.competitions[0].competitors, away = cs.find((c) => c.homeAway === "away"), home = cs.find((c) => c.homeAway === "home"), state = pick.status.type.state;
+      const logo = (c) => (c.team.logo ? `<img class="htlogo" src="${esc(c.team.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : "");
+      const mid = state === "pre" ? `<small>at</small>` : `<b class="num">${esc(away.score)}</b><small>–</small><b class="num">${esc(home.score)}</b>`;
+      el.hidden = false;
+      el.innerHTML = `<span class="htlabel">${live.length ? '<span class="livedot"></span> Live now' : "Tonight in the NBA"} · ${ev.length} game${ev.length === 1 ? "" : "s"}</span><span class="htmatch">${logo(away)}<b>${esc(away.team.abbreviation)}</b>${mid}<b>${esc(home.team.abbreviation)}</b>${logo(home)}</span><span class="fine">${esc(pick.status.type.shortDetail || "")}${live.length > 1 ? ` · ${live.length} games on` : pre.length && state !== "pre" ? ` · ${pre.length} still to come` : ""}</span>`;
+    }
+  } catch (e) { /* ESPN unreachable: the card stays hidden */ }
+  if (Board.mode === "rest") { const rows = await Ranked.rpc("open_lobbies"), l = $("#htLobby"); if (rows && rows.length && l) { l.hidden = false; l.innerHTML = `<span class="htlabel"><svg class=ic><use href=#i-trophy></use></svg> Ranked</span><span class="htbig num">${rows.length}</span><span class="fine">open lobb${rows.length === 1 ? "y" : "ies"} right now · join one</span>`; } }
+}
+function nbTilt() {
+  if (typeof REDUCED !== "undefined" && REDUCED) return;
+  document.querySelectorAll("#doors .door, .htcard").forEach((d) => { if (d.dataset.tilt) return; d.dataset.tilt = 1;
+    d.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; const r = d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; d.style.transform = `perspective(700px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-3px)`; d.style.setProperty("--mx", `${(x + 0.5) * 100}%`); d.style.setProperty("--my", `${(y + 0.5) * 100}%`); });
+    d.addEventListener("pointerleave", () => { d.style.transform = ""; }); });
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest && e.target.closest("[data-nbgame],[data-nbgroup]"); if (!b) return;
+  try { Snd.tick(); } catch (x) { /* quiet */ } const slug = Object.keys(BYSLUG).find((k) => k !== "all-leagues") || "nba";
+  if (b.dataset.nbgame) { go("games-" + slug + "-" + b.dataset.nbgame); return; }
+  S.hubGroup = b.dataset.nbgroup; S.game = null; go("games-" + slug + "-" + b.dataset.nbgroup);
+});
+(() => { const s = document.createElement("style"); s.textContent = `
+.htoday{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;margin:0 0 14px}@media(max-width:720px){.htoday{grid-template-columns:1fr}}.htcol{display:flex;flex-direction:column;gap:14px}
+.htcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:16px 18px;border-radius:20px;border:1px solid var(--line);background:radial-gradient(circle at var(--mx,80%) var(--my,0%),color-mix(in srgb,var(--accent) 18%,transparent),transparent 55%),var(--surface);color:var(--ink);font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.2,1.2,.4,1),box-shadow .25s,border-color .25s;animation:htIn .6s cubic-bezier(.2,1.2,.4,1) both;overflow:hidden}
+.htcard:hover{border-color:var(--accent);box-shadow:0 16px 40px -18px var(--accent)}.htgotd{min-height:190px}
+.htgotd::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 80%,color-mix(in srgb,var(--accent) 35%,transparent) 90%,transparent 100%);animation:htSweep 6s linear infinite;pointer-events:none;opacity:.5}
+.htcol .htcard:nth-child(1){animation-delay:.08s}.htcol .htcard:nth-child(2){animation-delay:.16s}@keyframes htIn{from{transform:translateY(14px);opacity:0}}@keyframes htSweep{to{transform:rotate(360deg)}}
+.htlabel{display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.htname{font:400 30px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.htfoot{display:flex;align-items:center;gap:12px;margin-top:auto;width:100%;justify-content:space-between;position:relative;z-index:1}.htmatch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:18px}.htmatch small{opacity:.6}.htmatch .num{font-family:"Orbitron",var(--mono);font-size:22px;color:#ffb21f}
+.htlogo{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 3px #0006)}.htbig{font:800 40px/1 var(--display)}
+.livedot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 0 0 #ff4d4d;animation:nbLive 1.4s infinite}@keyframes nbLive{70%{box-shadow:0 0 0 8px #ff4d4d00}}
+#doors .door{transition:transform .25s cubic-bezier(.2,1.2,.4,1),box-shadow .25s}#doors .door::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none}#doors .door:hover::before{opacity:1}
+@media (prefers-reduced-motion: reduce){.htgotd::after,.livedot{animation:none}}`; document.head.appendChild(s); })();
 
 /* ===== two players on one device can type their own names (shared by football and basketball) ===== */
 const PN = ["Player 1", "Player 2"];

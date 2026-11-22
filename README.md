@@ -270,6 +270,16 @@ Picked from a poll:
 ### 22 Nov 2026: Seasons and player cards are live
 The owner ran online/run_now_v13_v14.sql. Checked from outside the site: season_board and player_card answer on both the football and basketball schemas. Nobody has played a ranked match yet, so the season starts empty.
 
+### 22 Nov 2026: Front pages, profile banner, game effects, season nudges, accessibility
+From the poll:
+- **Chess front page** (site/chess_home.js). A hero with a real board replaying a famous game on a loop (pieces slide, captures fade, the last move glows, with a "Guess every move" link); a Today row with the three dailies and the weekly cup, ticked off as you finish them, plus your streak; cards for the three coaches with their faces and Play buttons; a New row (endgame trainer, famous games, 24 lessons); and section cards that tilt towards the pointer.
+- **Basketball front page** (site/nba_home.js). The same Today strip football has: a game of the day, "Tonight in the NBA" with today's real games from ESPN's public scoreboard (live scores, tip-off times or finals, with logos; it hides when ESPN can't be reached), open ranked lobbies, and tilting cards.
+- **Profile banner** (football and basketball): your picture inside a ring that fills towards the next level, your level and XP bar, counters that roll up (Elo, streak, achievements, XP, rounds), your three best medals and your season trophies.
+- **Game effects** (site/gamefx.js): every right answer in football and basketball sends a burst of sparks from the button you tapped and makes it glow; from three in a row a combo counter appears (flames from five, a bigger burst every five). A wrong answer shakes the button and flashes the screen edge red. Reduced motion turns these off.
+- **Season nudges**: a card on the football and basketball home pages with the season countdown, your place and points, and how far behind the player above you you are. If someone has passed you since your last visit, a note says who.
+- **Sweep at desktop width in every look** (5 football, 4 basketball, 3 chess), checking contrast, overflow and labels. Fixed: the home, draw, away, right and wrong colours were too pale to read on the light looks (now darker there); basketball crashed when its league sound played (it had no musical scale).
+- **Accessibility**: a "Skip to content" button for keyboard users on all three sites; labels on seven chess inputs and the basketball lookup box; and player-card rows that can be reached and opened with the keyboard.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

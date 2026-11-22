@@ -43,8 +43,8 @@ const Season = {
     if (!rows) { b.innerHTML = this.missing ? '<div class="fine">Seasons need the latest database update (online/schema_v13.sql).</div>' : '<div class="fine">Could not load the season. Try again in a moment.</div>'; return; }
     if (!rows.length) { b.innerHTML = emptyState(SN_CUP("champ"), "The season has just started", "Nobody has played a ranked match this month yet. Win the first one and you're top of the table."); return; }
     const pod = rows.slice(0, 3), order = pod.length === 3 ? [1, 0, 2] : pod.map((_, i) => i);
-    b.innerHTML = `<div class="snpod">${order.map((i) => { const r = pod[i]; return `<div class="snpp p${i + 1} ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" style="--d:${120 + i * 140}ms">${i === 0 ? '<span class="sncrown">👑</span>' : ""}${avatarHTML(r.avatar, "lg", r.nick)}<b>${esc(r.nick)}</b><span class="num">${r.pts}</span><div class="snstep">${i + 1}</div></div>`; }).join("")}</div>`
-      + rows.slice(3).map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}"><b class="num">${i + 4}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.pts}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("");
+    b.innerHTML = `<div class="snpod">${order.map((i) => { const r = pod[i]; return `<div class="snpp p${i + 1} ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog" style="--d:${120 + i * 140}ms">${i === 0 ? '<span class="sncrown">👑</span>' : ""}${avatarHTML(r.avatar, "lg", r.nick)}<b>${esc(r.nick)}</b><span class="num">${r.pts}</span><div class="snstep">${i + 1}</div></div>`; }).join("")}</div>`
+      + rows.slice(3).map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog"><b class="num">${i + 4}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.pts}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("");
   },
 };
 const ord = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
@@ -64,3 +64,24 @@ const SN_CUP = (k) => { const c = { champ: ["#ffe27a", "#d49a12"], podium: ["#f2
 .bktabs{display:flex;gap:6px;margin:0 0 12px}
 @media (max-width:520px){.snrew{grid-template-columns:repeat(2,1fr)}.snname{font-size:24px}.snme{text-align:left;justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){.snglow,.sncrown,.snpp{animation:none}}`; document.head.appendChild(s); })();
+/* ---------- season nudges: a card on the home screen (countdown, your place and points, the player just above you) and a note
+   when someone has passed you since your last visit. Football and basketball both show it; it hides without the database. ---------- */
+Season.nudge = async function () {
+  if (typeof Board === "undefined" || Board.mode !== "rest") return; const col = document.querySelector("#homeToday .htcol"); if (!col || document.getElementById("htSeason")) return;
+  const card = document.createElement("button"); card.type = "button"; card.className = "htcard htsmall htseason"; card.id = "htSeason"; card.dataset.snGo = "1";
+  const m = this.month(); card.innerHTML = `<span class="htlabel">${SN_CUP("champ")} ${esc(this.name(m))} season</span><span class="fine">Ends in <b class="num">${this.left()}</b></span>`; col.prepend(card);
+  if (!Account.signedIn) { card.insertAdjacentHTML("beforeend", '<span class="fine">Everyone starts on 1000. Sign in and win ranked games to climb.</span>'); return; }
+  const [mine, rows] = await Promise.all([this.mine(m), this.board(m)]); if (!card.isConnected) return;
+  if (!mine) { card.insertAdjacentHTML("beforeend", `<span class="htmatch"><b class="num">1000</b><small>not ranked yet: one ranked game puts you on the table${rows && rows.length ? ` with ${rows.length} other${rows.length === 1 ? "" : "s"}` : ""}</small></span>`); return; }
+  const me = prof().nick, i = rows ? rows.findIndex((r) => r.nick === me) : -1, above = i > 0 ? rows[i - 1] : null;
+  card.insertAdjacentHTML("beforeend", `<span class="htmatch"><b class="htbig num">${ord(mine.place)}</b><small>of ${mine.players} · <b class="num">${mine.pts}</b> pts</small></span><span class="fine">${above ? `${esc(above.nick)} is ${above.pts - mine.pts} point${above.pts - mine.pts === 1 ? "" : "s"} ahead` : mine.place === 1 ? "You're top. Stay there." : ""}</span>`);
+  try { const k = "bk_sn_place_" + (typeof SPORT_KEY !== "undefined" ? SPORT_KEY : location.pathname.split("/")[1]) + "_" + m, was = +localStorage.getItem(k) || 0; localStorage.setItem(k, mine.place);
+    if (was && mine.place > was && above) toast(`<b>${esc(above.nick)} passed you</b><br>You're ${ord(mine.place)} in the ${esc(this.name(m))} season now, ${above.pts - mine.pts} behind. Win one back.`); } catch (e) { /* storage blocked */ }
+};
+setTimeout(() => {
+  if (typeof renderHome !== "function") return; const prev = renderHome;
+  try { renderHome = function () { prev.apply(this, arguments); setTimeout(() => Season.nudge(), 50); }; } catch (e) { return; }
+  if (document.getElementById("homeToday")) Season.nudge();
+}, 0);
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-sn-go]"); if (!b) return; try { Snd.tick(); } catch (x) { /* quiet */ } S.btab = "season"; const slug = /basketball/.test(location.pathname) ? "nba" : "all-leagues"; go("games-" + slug + "-boards"); });
+(() => { const s = document.createElement("style"); s.textContent = `.htseason .htlabel svg{width:18px;height:18px}.htseason{border-color:color-mix(in srgb,#d49a12 60%,var(--line))}.htseason .htbig{font-size:34px;color:var(--accent)}`; document.head.appendChild(s); })();

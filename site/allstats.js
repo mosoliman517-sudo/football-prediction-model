@@ -49,6 +49,7 @@ const PCard = {
       <div class="row" style="margin-top:14px">${r.nick !== prof().nick && Account.signedIn ? `<button class="btn" data-pcadd="${esc(r.nick)}" type="button">Add friend</button>` : ""}<button class="btn ghost" id="modalClose" type="button">Close</button></div>`;
   },
 };
+document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-pc]")) { e.preventDefault(); PCard.open(e.target.dataset.pc); } });
 document.addEventListener("click", (e) => {
   const a = e.target.closest && e.target.closest("[data-pc]"); if (a && !e.target.closest("button:not([data-pc])")) { e.preventDefault(); try { Snd.tick(); } catch (x) { /* quiet */ } PCard.open(a.dataset.pc); return; }
   const f = e.target.closest && e.target.closest("[data-pcadd]"); if (f) { f.disabled = true; Ranked.rpcx("add_friend", { p_nick: f.dataset.pcadd }).then((r) => { f.textContent = r.ok && r.data === "ok" ? "Added" : r.ok && r.data === "exists" ? "Already friends" : "Couldn't add"; }); }
@@ -62,5 +63,40 @@ document.addEventListener("click", (e) => {
 .pcBox h2{margin:0;font-size:26px}.pcTop{display:flex;gap:14px;align-items:center;margin:-6px -6px 12px;padding:14px;border-radius:18px;background:radial-gradient(circle at 15% 30%,color-mix(in srgb,var(--accent,#f2c14e) 38%,transparent),transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--accent,#f2c14e) 18%,transparent),transparent)}.pcAv{position:relative}.pcAv.on::after{content:"";position:absolute;right:4px;bottom:4px;width:14px;height:14px;border-radius:50%;background:#3ddc84;border:3px solid var(--card,#141b17)}
 .pcDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ddc84;margin-right:6px;animation:snPulse 1.6s infinite}.pcRank{margin-top:4px}.pcBox .asG{grid-template-columns:repeat(4,1fr)}
 .pcForm{display:flex;gap:4px;align-items:center;margin-top:10px;flex-wrap:wrap}.pcForm i{font:800 11px var(--mono,monospace);font-style:normal;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#111}.pcForm i.w{background:#3ddc84}.pcForm i.l{background:#ff7a7a}.pcForm i.d{background:#c9d1e0}
-[data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}
+[data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}[data-pc]:focus-visible{outline:3px solid var(--accent,#f2c14e);outline-offset:2px;border-radius:12px}
 @media (max-width:640px){.asW{grid-template-columns:1fr}.pcBox .asG{grid-template-columns:repeat(2,1fr)}}`; document.head.appendChild(s); })();
+/* ---------- profile hero: the top of the profile page, shared by football and basketball ----------
+   A banner in your colours with a slow light sweep, your picture inside a ring that fills with your progress to the next
+   level, your name, badges and level, then counters that roll up (Elo, streak, achievements, XP, rounds), your best medals
+   and your season trophies. */
+const PHero = {
+  html(o) {
+    const tile = (v, l, ic, id) => `<div class="phT"><span class="phTi">${ic}</span><b class="num phN" ${id ? `id="${id}"` : ""} data-to="${typeof v === "number" ? v : ""}">${typeof v === "number" ? 0 : v}</b><small>${l}</small></div>`;
+    const cab = (() => { try { const s = prof().rseasons || {}; return Object.keys(s).filter((k) => s[k]).sort().reverse().slice(0, 4).map((k) => { const f = s[k], t = Season.tier(f) || ["played"]; return `<span class="phCup" title="${esc(Season.name(k))}: ${ord(f.place)} of ${f.players}">${SN_CUP(t[0])}</span>`; }).join(""); } catch (e) { return ""; } })();
+    setTimeout(() => this.roll(), 60);
+    return `<div class="phero"><div class="phSweep" aria-hidden="true"></div><div class="phRankBg" aria-hidden="true">${o.rankIcon || ""}</div>
+      <div class="phTop"><div class="phAv" style="--p:${Math.max(0, Math.min(100, o.pct || 0))}"><span class="phRing"></span>${o.av}<span class="phLv" title="Level">${esc(o.levelShort || "")}</span></div>
+        <div class="phId"><h1>${o.name}${o.badges || ""}</h1><div class="phLevel"><b>${esc(o.level)}</b> · ${o.xp.toLocaleString()} XP · ${o.next}</div><div class="phBar"><i style="--w:${o.pct || 0}%"></i></div><div class="phChips">${o.fav || ""}</div></div>
+        ${o.medals && o.medals.length || cab ? `<div class="phShelf">${cab ? `<div class="phCups">${cab}</div>` : ""}${o.medals && o.medals.length ? `<div class="phMedals">${o.medals.join("")}</div>` : ""}<small>${cab ? "Seasons" : ""}${cab && o.medals.length ? " · " : ""}${o.medals.length ? "Best medals" : ""}</small></div>` : ""}</div>
+      <div class="phTiles">${o.elo != null ? tile(o.elo, `Elo · ${o.rank || ""}`, "🏆", "pfElo") : tile("–", "Elo · sign in to play ranked", "🏆", "pfElo")}${tile(o.streak, "day streak", "🔥")}${tile(o.won, `of ${o.total} achievements`, "🏅")}${tile(o.xp, "XP", "⚡")}${tile(o.rounds, "rounds played", "🎯")}</div></div>`;
+  },
+  roll() {
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelectorAll(".phero .phN").forEach((el, i) => { const to = +el.dataset.to; if (el.dataset.to === "" || isNaN(to)) return; if (reduce || to === 0) { el.textContent = to.toLocaleString(); return; }
+      const t0 = performance.now() + i * 90, d = 900; (function step(t) { if (!el.isConnected) return; const k = Math.max(0, Math.min(1, (t - t0) / d)), e = 1 - Math.pow(1 - k, 3); if (el.dataset.to !== String(to)) return; el.textContent = Math.round(to * e).toLocaleString(); if (k < 1) requestAnimationFrame(step); })(performance.now()); });
+  },
+};
+(() => { const s = document.createElement("style"); s.textContent = `
+.phero{position:relative;overflow:hidden;border-radius:26px;padding:22px;margin-bottom:16px;border:1px solid var(--line,#ffffff22);background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--accent,#f2c14e) 34%,transparent),transparent 55%),radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--accent,#f2c14e) 16%,transparent),transparent 60%),var(--surface,#ffffff0d)}
+.phSweep{position:absolute;inset:-50% -20%;background:linear-gradient(105deg,transparent 40%,#ffffff1f 50%,transparent 60%);animation:phSweep 7s ease-in-out infinite;pointer-events:none}@keyframes phSweep{0%{transform:translateX(-60%)}60%,100%{transform:translateX(60%)}}
+.phRankBg{position:absolute;right:-30px;top:-30px;width:220px;height:220px;opacity:.09;pointer-events:none;transform:rotate(-12deg)}.phRankBg svg,.phRankBg .ic{width:100%;height:100%}
+.phTop{position:relative;display:flex;gap:18px;align-items:center;flex-wrap:wrap}.phAv{position:relative;width:112px;height:112px;display:grid;place-items:center;flex:0 0 auto}
+.phRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent,#f2c14e) calc(var(--p) * 1%),color-mix(in srgb,var(--ink,#fff) 14%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent 58%,#000 59%);mask:radial-gradient(circle,transparent 58%,#000 59%);animation:phRing 1.2s cubic-bezier(.2,.8,.2,1) both}@keyframes phRing{from{transform:rotate(-90deg);opacity:0}}
+.phAv .av{width:92px!important;height:92px!important;font-size:36px}.phLv{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font:800 10px var(--mono,monospace);letter-spacing:.08em;padding:3px 8px;border-radius:999px;background:var(--accent,#f2c14e);color:#111;white-space:nowrap;text-transform:uppercase}
+.phId{flex:1;min-width:200px}.phId h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1.05}.phLevel{opacity:.85;font-size:14px;margin-top:4px}.phBar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--ink,#fff) 12%,transparent);margin:8px 0;overflow:hidden;max-width:420px}.phBar i{display:block;height:100%;width:var(--w);border-radius:99px;background:linear-gradient(90deg,var(--accent,#f2c14e),color-mix(in srgb,var(--accent,#f2c14e) 50%,#fff));animation:asGrow 1.1s cubic-bezier(.2,.8,.2,1) both}
+.phChips{display:flex;gap:6px;flex-wrap:wrap}.phShelf{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px;border-radius:18px;background:color-mix(in srgb,var(--ink,#fff) 6%,transparent);border:1px solid var(--line,#ffffff22)}.phShelf small{font-size:11px;opacity:.7}
+.phCups,.phMedals{display:flex;gap:6px}.phCup svg{width:38px;height:38px;filter:drop-shadow(0 3px 4px #0005)}.phMedals>*{transform:scale(1.1)}
+.phTiles{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}.phT{padding:10px 12px;border-radius:16px;background:color-mix(in srgb,var(--ink,#fff) 6%,transparent);border:1px solid var(--line,#ffffff22);animation:htIn .6s cubic-bezier(.2,1.2,.4,1) both}.phT:nth-child(2){animation-delay:.06s}.phT:nth-child(3){animation-delay:.12s}.phT:nth-child(4){animation-delay:.18s}.phT:nth-child(5){animation-delay:.24s}
+.phTi{font-size:18px}.phT b{display:block;font-size:26px;line-height:1.1}.phT small{font-size:11.5px;opacity:.75;display:block;line-height:1.25}@keyframes htIn{from{transform:translateY(14px);opacity:0}}
+@media (max-width:640px){.phTiles{grid-template-columns:repeat(2,1fr)}.phT:last-child{grid-column:1/-1}.phAv{width:92px;height:92px}.phAv .av{width:74px!important;height:74px!important}}
+@media (prefers-reduced-motion:reduce){.phSweep,.phRing,.phBar i,.phT{animation:none}}`; document.head.appendChild(s); })();

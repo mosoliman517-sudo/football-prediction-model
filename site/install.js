@@ -37,3 +37,11 @@ Install.init();
 @keyframes bkiIn{from{opacity:0;transform:translate(-50%,30px)}}
 #bkInstIos{position:fixed;inset:0;z-index:100001;background:#000a;display:flex;align-items:flex-end;justify-content:center;padding:16px}#bkInstIos .bkib{background:#141b17;color:#f4f1ea;border-radius:20px;padding:18px 20px;width:min(440px,100%);border:1px solid #ffffff2a}
 #bkInstIos h3{margin:0 0 8px;font-size:19px}#bkInstIos ol{margin:0 0 12px;padding-left:20px;line-height:1.7}#bkInstIos svg{vertical-align:-3px}#bkInstIos button{font:700 15px inherit;padding:10px 18px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111}`; document.head.appendChild(s); })();
+/* Accessibility: a "Skip to content" button, the first thing keyboard users reach, shown only when focused. It's a button
+   rather than a #link because the sites route by the address hash. It moves focus to the visible main area. */
+(() => {
+  const go = () => { const t = [...document.querySelectorAll("#league:not([hidden]) #room, #league:not([hidden]), #home:not([hidden]), #profilePage:not([hidden]), main, #app")].find((x) => x.offsetParent !== null || x.tagName === "MAIN"); if (!t) return; if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "-1"); t.focus({ preventScroll: false }); };
+  const add = () => { if (document.getElementById("bkSkip")) return; const b = document.createElement("button"); b.id = "bkSkip"; b.type = "button"; b.textContent = "Skip to content"; b.onclick = go; document.body.prepend(b); };
+  if (document.body) add(); else addEventListener("DOMContentLoaded", add);
+  const s = document.createElement("style"); s.textContent = "#bkSkip{position:fixed;left:12px;top:-60px;z-index:100002;padding:10px 16px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111;font:700 15px system-ui,sans-serif;transition:top .2s}#bkSkip:focus{top:12px;outline:3px solid #fff;outline-offset:2px}[tabindex='-1']:focus{outline:none}"; document.head.appendChild(s);
+})();

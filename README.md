@@ -301,6 +301,18 @@ A friend got lost on the site. From the poll (keep the menus but tidy them, one 
 - **First-visit guide** on the sport picker: three screens (what ballknowledge is, how every sport is laid out, where to start, with sport buttons). It shows once, and "New here? How ballknowledge works" reopens it.
 Checked at phone and desktop width: football 23 games, basketball 15, chess 19, no sideways scrolling, and search jumps between sports.
 
+### 22 Nov 2026: Full walkthrough: bugs, accuracy, phone layout
+Went through all three sports: an error sweep of every page, sample hints from every quiz, phone and desktop screenshots, timings, and a check of the new code for name clashes. Found and fixed:
+- **Human bar (chess) was broken.** The moving board added to the chess front page today used a function name that Human bar already used, so starting Human bar did nothing. Renamed, and every new file was checked for clashes (none left).
+- **Hints gave away the answer.** "Earlier clubs" in Who am I listed the player's current club when the two files spelled it differently (Gerard Moreno: "Villarreal" in the history, "Villarreal CF" now) and their youth teams ("FC Villarreal C"). Clubs are now matched by their words without FC, CF, youth and so on, in football and basketball. Truncated youth names read "(youth)".
+- **Out-of-date managers.** "Coach today" came from a stale club snapshot (Amorim at United, Tudor at Juventus). It now uses the manager in each club's latest match and says when: "Manager in May 2026: Michael Carrick".
+- **Undated market values.** Values now say they're from June 2026, taken from the data at build time.
+- **Basketball teams under today's names.** Ray Allen's 2006-07 was credited to the "Thunder". Hints, career paths and Who dropped it now use the name in that season (SuperSonics, New Orleans Hornets, Bobcats), with the right logo. Tic-tac-toe labels say "Played for the Thunder (or SuperSonics)".
+- **Phones: the game started off-screen.** Tapping Solo or Two players left the clues below the bottom of the screen while the timer ran. The page now scrolls to the game.
+- **What's new.** It showed the whole change history as one long list. It now shows the latest three, with older ones behind "Show older changes", and lists today's changes.
+- **Back buttons.** Predict who won (chess) had none; Human bar's shows again now that the game loads.
+No errors on any page in the three sports; the main screens render in 30 ms or less. Still open: a first visit downloads about 12 MB of football data.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

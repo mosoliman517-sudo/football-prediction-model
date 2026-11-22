@@ -536,7 +536,7 @@ function eliteBars() {
 function eliteAsk() {
   const g = st.g, s = st.stage, ev = evalPos(live.c) / 100, mv = Math.ceil(st.ply / 2), pickRow = (cur) => `<div class="opts">${RES.map((r, k) => `<button class="opt ${cur === k ? "sel" : ""}" data-ep="${k}">${r}</button>`).join("")}</div>`;
   if (s > 0) { st.evs[s] = ev; st.mpicks[s] = leanOf(ev); }
-  const top = `<div class="row" style="justify-content:space-between"><h2>${ic("trophy")}Predict who won</h2><span class="fine">Game ${st.i + 1} of 3 · you ${st.you} · model ${st.mod}</span></div><p class="fine" style="margin:0">${esc(g.event)}${/^\d{4}-/.test(g.date) ? " · " + esc(g.date) : ""}</p>`;
+  const top = `${chBack()}<div class="row" style="justify-content:space-between"><h2>${ic("trophy")}Predict who won</h2><span class="fine">Game ${st.i + 1} of 3 · you ${st.you} · model ${st.mod}</span></div><p class="fine" style="margin:0">${esc(g.event)}${/^\d{4}-/.test(g.date) ? " · " + esc(g.date) : ""}</p>`;
   const msg = s === 0 ? `<p class="sub">Before a single move: who wins? A correct call now is worth <b>3 points</b>.</p>${pickRow(st.picks[0])}<p class="fine">The model gives White ${Math.round(g.p[0] * 100)}%, Draw ${Math.round(g.p[1] * 100)}%, Black ${Math.round(g.p[2] * 100)}% (it never trained on this game).</p>` : `<p class="sub"><b>Move ${mv}.</b> The engine's evaluation: <b>${ev > 0 ? "White +" + ev.toFixed(1) : ev < 0 ? "Black +" + (-ev).toFixed(1) : "equal"}</b>. Who wins now? Worth <b>${PTS[s]} point${PTS[s] === 1 ? "" : "s"}</b>.</p>${pickRow(st.picks[s])}`;
   liveRender(top, `<div class="evrow">${s > 0 ? `<div class="evbar2"><i style="width:${wcOf(ev * 100).toFixed(0)}%"></i></div>` : ""}</div>${msg}`, eliteBars());
 }
@@ -2840,27 +2840,27 @@ document.addEventListener("click", (e) => {
    - New: the endgame trainer, Guess the famous game and the lessons.
    - Then the stats and the sections, as before. */
 const HB = { timer: null, game: null, i: 0, els: {} };
-function hbBoard() { let sq = ""; for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) sq += `<i class="${(r + f) % 2 ? "d" : "l"}" data-hs="${"abcdefgh"[f]}${8 - r}"></i>`; return `<div class="hbw"><div class="hbb" id="hbBoard">${sq}<div class="hbp" id="hbPieces"></div></div><div class="hbcap" id="hbCap"></div></div>`; }
-const hbXY = (s) => ({ x: "abcdefgh".indexOf(s[0]) * 12.5, y: (8 - +s[1]) * 12.5 });
-function hbPlace(el, s) { const p = hbXY(s); el.style.left = p.x + "%"; el.style.top = p.y + "%"; }
-function hbSetup() {
+function heroBoard() { let sq = ""; for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) sq += `<i class="${(r + f) % 2 ? "d" : "l"}" data-hs="${"abcdefgh"[f]}${8 - r}"></i>`; return `<div class="hbw"><div class="hbb" id="heroBoard">${sq}<div class="hbp" id="hbPieces"></div></div><div class="hbcap" id="hbCap"></div></div>`; }
+const heroXY = (s) => ({ x: "abcdefgh".indexOf(s[0]) * 12.5, y: (8 - +s[1]) * 12.5 });
+function heroPlace(el, s) { const p = heroXY(s); el.style.left = p.x + "%"; el.style.top = p.y + "%"; }
+function heroSetup() {
   const box = document.getElementById("hbPieces"); if (!box) return; box.innerHTML = ""; HB.els = {};
-  const c = new Chess(); c.board().forEach((row, r) => row.forEach((p, f) => { if (!p) return; const s = "abcdefgh"[f] + (8 - r), el = document.createElement("b"); el.className = `pc pc-${p.color}${p.type}`; hbPlace(el, s); box.appendChild(el); HB.els[s] = el; }));
+  const c = new Chess(); c.board().forEach((row, r) => row.forEach((p, f) => { if (!p) return; const s = "abcdefgh"[f] + (8 - r), el = document.createElement("b"); el.className = `pc pc-${p.color}${p.type}`; heroPlace(el, s); box.appendChild(el); HB.els[s] = el; }));
 }
-function hbNext() {
+function heroNext() {
   const ks = Object.keys(OPEN_GAMES); const k = ks[Math.floor(Math.random() * ks.length)], G = OPEN_GAMES[k], c = new Chess(); if (!c.load_pgn(G.pgn)) return;
-  HB.game = { k, G, mv: c.history({ verbose: true }) }; HB.i = 0; hbSetup();
+  HB.game = { k, G, mv: c.history({ verbose: true }) }; HB.i = 0; heroSetup();
   const cap = document.getElementById("hbCap"); if (cap) cap.innerHTML = `<b>${esc(G.title)}</b><span>${esc(G.when)} · <button type="button" class="hblink" data-fg="${k}">Guess every move</button></span>`;
-  document.querySelectorAll("#hbBoard i.hl").forEach((x) => x.classList.remove("hl"));
+  document.querySelectorAll("#heroBoard i.hl").forEach((x) => x.classList.remove("hl"));
 }
-function hbStep() {
-  if (!document.getElementById("hbBoard")) { clearInterval(HB.timer); HB.timer = null; return; }
-  if (!HB.game || HB.i >= HB.game.mv.length) { if (HB.game && HB.i >= HB.game.mv.length && !HB.pause) { HB.pause = 1; return; } HB.pause = 0; return hbNext(); }
+function heroStep() {
+  if (!document.getElementById("heroBoard")) { clearInterval(HB.timer); HB.timer = null; return; }
+  if (!HB.game || HB.i >= HB.game.mv.length) { if (HB.game && HB.i >= HB.game.mv.length && !HB.pause) { HB.pause = 1; return; } HB.pause = 0; return heroNext(); }
   const m = HB.game.mv[HB.i++], E = HB.els, kill = (s) => { const x = E[s]; if (x) { x.classList.add("gone"); setTimeout(() => x.remove(), 400); delete E[s]; } };
   if (m.flags.includes("e")) kill(m.to[0] + m.from[1]); else if (m.captured) kill(m.to);
-  const el = E[m.from]; if (el) { delete E[m.from]; E[m.to] = el; hbPlace(el, m.to); if (m.promotion) setTimeout(() => { el.className = `pc pc-${m.color}${m.promotion}`; }, 300); }
-  if (m.flags.includes("k") || m.flags.includes("q")) { const r = m.color === "w" ? "1" : "8", [rf, rt] = m.flags.includes("k") ? ["h" + r, "f" + r] : ["a" + r, "d" + r], re = E[rf]; if (re) { delete E[rf]; E[rt] = re; hbPlace(re, rt); } }
-  document.querySelectorAll("#hbBoard i.hl").forEach((x) => x.classList.remove("hl")); [m.from, m.to].forEach((s) => { const q = document.querySelector(`#hbBoard [data-hs="${s}"]`); if (q) q.classList.add("hl"); });
+  const el = E[m.from]; if (el) { delete E[m.from]; E[m.to] = el; heroPlace(el, m.to); if (m.promotion) setTimeout(() => { el.className = `pc pc-${m.color}${m.promotion}`; }, 300); }
+  if (m.flags.includes("k") || m.flags.includes("q")) { const r = m.color === "w" ? "1" : "8", [rf, rt] = m.flags.includes("k") ? ["h" + r, "f" + r] : ["a" + r, "d" + r], re = E[rf]; if (re) { delete E[rf]; E[rt] = re; heroPlace(re, rt); } }
+  document.querySelectorAll("#heroBoard i.hl").forEach((x) => x.classList.remove("hl")); [m.from, m.to].forEach((s) => { const q = document.querySelector(`#heroBoard [data-hs="${s}"]`); if (q) q.classList.add("hl"); });
 }
 function home() {
   try { CH.v = "home"; cpClose(); RKS.prof = null; } catch (e) { /* not set up yet */ }
@@ -2870,7 +2870,7 @@ function home() {
   $("#app").innerHTML = `<div class="hero hero2"><div class="wall" aria-hidden="true">${wallHTML()}</div>
     <div class="h2l"><div class="sec" style="margin-top:0">${ic("crown")}Chess, predicted and played</div><h1>ball<em>knowledge</em></h1><p class="sub" style="font-size:17px;max-width:520px">Out-call a model on real games, guess a grandmaster's next move, solve puzzles and test your level. Everything comes from real data; nothing is made up.</p>
       <div class="row h2cta"><button class="btn" type="button" data-go="dp">${ic("bolt")}Today's puzzle</button><button class="btn ghost" type="button" data-go="ai">${ic("robot")}Play a coach</button></div></div>
-    <div class="h2r">${hbBoard()}</div></div>
+    <div class="h2r">${heroBoard()}</div></div>
     <div class="statstrip" id="statstrip"><div><b class="cu" data-to="${PZ.length}">${PZ.length}</b><span>real puzzles</span></div><div><b class="cu" data-to="${EM.length}">${EM.length}</b><span>top-level games</span></div><div><b class="cu" data-to="${PLAYERS.length}">${PLAYERS.length}</b><span>players profiled</span></div><div><b class="cu" data-to="${Math.round(S.acc * 1000) / 10}" data-dec="1" data-suf="%">${pct(S.acc, 1)}</b><span>model accuracy</span></div></div>
     <div class="hsec"><h2>${ic("clock")}Today</h2>${streak ? `<span class="hflame">🔥 ${streak}-day streak</span>` : ""}</div>
     <div class="htoday">${DAILIES.map(([k, n, icn, tag, go, fmt], i) => { const v = d[k]; return `<button class="ht ${v != null ? "done" : ""}" type="button" data-go="${go}" style="--d:${i * 80}ms"><span class="hti">${ic(icn)}</span><b>${n}</b><small>${v != null ? esc(fmt(v)) : esc(tag)}</small><span class="htk">${v != null ? "✓" : "Play"}</span></button>`; }).join("")}
@@ -2883,8 +2883,8 @@ function home() {
       <button class="hn" type="button" data-go="learn"><span class="hnb hnic">${ic("book")}</span><div><b>${LESSONS.length} lessons</b><small>Forks, pins, zugzwang, in-between moves and more, each a short set of real puzzles.</small></div></button></div>
     <div class="hsec"><h2>${ic("compass")}Explore</h2></div>
     <div class="doors"><button class="door" data-go="games"><div class="di">${ic("puzzle")}</div><div class="dname">Games</div><div class="dtag">The originals, Beat the model and the daily challenges, all in one place.</div></button><button class="door" data-go="learn"><div class="di">${ic("book")}</div><div class="dname">Learn</div><div class="dtag">An opening explorer with master games and fun facts, lessons, endgames and famous games.</div></button><button class="door" data-go="review"><div class="di">${ic("eye")}</div><div class="dname">Game review</div><div class="dtag">Your own games from Lichess or chess.com, or any PGN, graded move by move by Stockfish 17 with your coach.</div></button><button class="door" data-go="model"><div class="di">${ic("chart")}</div><div class="dname">Our model</div><div class="dtag">How it works, how good it really is, and a lookup for any player or tournament.</div></button>${(RK.lists.open || []).length ? `<button class="door" data-go="rank"><div class="di">${ic("chart")}</div><div class="dname">World rankings</div><div class="dtag">The FIDE top 100, men and women, classical, rapid and blitz. Tap anyone for their profile.</div></button>` : ""}<button class="door" data-go="champ"><div class="di">${ic("crown")}</div><div class="dname">Championships</div><div class="dtag">The World Championship match, women's titles and the reigning champions.</div></button><button class="door" data-go="board"><div class="di">${ic("trophy")}</div><div class="dname">Leaderboards</div><div class="dtag">Best scores from signed-in players, for every game.</div></button></div>`;
-  cuRun($("#app")); hbNext(); HB.pause = 0;
-  if (!(typeof REDUCED !== "undefined" && REDUCED)) HB.timer = setInterval(hbStep, 1300);
+  cuRun($("#app")); heroNext(); HB.pause = 0;
+  if (!(typeof REDUCED !== "undefined" && REDUCED)) HB.timer = setInterval(heroStep, 1300);
   document.querySelectorAll(".door").forEach((b) => { b.addEventListener("pointermove", (e) => { const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; b.style.transform = `perspective(700px) rotateY(${x * 7}deg) rotateX(${-y * 7}deg) translateY(-2px)`; b.style.setProperty("--mx", (x + 0.5) * 100 + "%"); b.style.setProperty("--my", (y + 0.5) * 100 + "%"); }); b.addEventListener("pointerleave", () => { b.style.transform = ""; }); });
 }
 GO.home = home;

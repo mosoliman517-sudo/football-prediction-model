@@ -12,12 +12,17 @@ const AWN = { MVP: "NBA MVP", FMVP: "Finals MVP", DPOY: "Defensive Player of the
 const ordSeason = (s) => s;                                  // "2011-12" is already how fans write a season
 const POSLONG = (p) => (p.sub || p.pos || "player").toLowerCase();
 const natOf = (p) => p.nat || "";
-const bestLine = (b, unit) => (b ? `${b.avg} ${unit} a game in ${b.season} (${b.team})` : "");
+/* the data files every season under today's franchise name; in text that names a season, use the name the team had then
+   (Ray Allen's 2006-07 was with the Seattle SuperSonics, not the Thunder) */
+const nbEra = (team, season) => { const y = +String(season || "").slice(0, 4); if (!y) return team; if (team === "Thunder" && y < 2008) return "SuperSonics"; if (team === "Pelicans" && y < 2013) return "Hornets"; if (team === "Hornets" && y >= 2004 && y < 2014) return "Bobcats"; return team; };
+const nbSeasonOf = (d) => { const t = new Date(d); return isNaN(t) ? "" : String(t.getUTCMonth() >= 7 ? t.getUTCFullYear() : t.getUTCFullYear() - 1); };
+const nbEraSpan = (team, from, to) => { const a = nbEra(team, from), b = nbEra(team, to); return a === b ? a : `${a}/${b}`; };
+const bestLine = (b, unit) => (b ? `${b.avg} ${unit} a game in ${b.season} (${nbEra(b.team, b.season)})` : "");
 const PLAYOFF_ROUND = ["Missed the playoffs", "Lost in the first round", "Lost in the second round", "Lost in the conference finals", "Reached the NBA Finals but lost", "Won the NBA title"];
 
 /* ---------- clue ladders, hardest first ---------- */
 function playerClues(p) {
-  const a = ageOf(p), prev = p.hist.filter((c) => c !== p.club).filter((c, i, arr) => arr.indexOf(c) === i).slice(-3), cl = [];
+  const a = ageOf(p), prevT = (p.cr && p.cr.length ? p.cr.filter(([t]) => !sameClub(t, p.club)).map(([t, f, to]) => ({ t, n: nbEraSpan(t, f, to) })) : p.hist.filter((c) => !sameClub(c, p.club)).map((t) => ({ t, n: t }))).filter((c, i, arr) => arr.findIndex((x) => x.n === c.n) === i).slice(-3), prev = prevT.map((x) => x.n), cl = [];
   if (p.city || p.bc) cl.push(["Birthplace", `Born in ${p.city ? p.city + (p.bc && p.bc !== p.city ? ", " + p.bc : "") : p.bc}`, flagOf(p.bc || p.nat)]);
   if (p.h) cl.push(["Height", `${ftIn(p.h)} tall (${Math.round(p.h)} cm)`]);
   cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
@@ -26,17 +31,17 @@ function playerClues(p) {
   if (p.ba && p.ba.avg >= 4.5) cl.push(["Passing", `Best passing season since ${COVER}: ${bestLine(p.ba, "assists")}`]);
   if (p.pts >= 5000) cl.push(["Career", `${p.pts.toLocaleString("en-US")} points, ${p.reb.toLocaleString("en-US")} rebounds and ${p.ast.toLocaleString("en-US")} assists since ${COVER}`]);
   if ((p.aw || []).length) cl.push(["Awards", `Won ${Object.entries(p.aw.reduce((m, [k, s]) => { (m[k] = m[k] || []).push(s); return m; }, {})).map(([k, v]) => `${AWN[k]} (${v.join(", ")})`).join("; ")}`, "<svg class=ic><use href=#i-medal></use></svg>"]);
-  if ((p.ti || []).length) cl.push(["Titles", `NBA champion ${p.ti.length > 1 ? p.ti.length + " times" : "once"}: ${p.ti.map((t) => `${t.team} ${t.season}`).join(", ")}`, "<svg class=ic><use href=#i-trophy></use></svg>"]);
+  if ((p.ti || []).length) cl.push(["Titles", `NBA champion ${p.ti.length > 1 ? p.ti.length + " times" : "once"}: ${p.ti.map((t) => `${nbEra(t.team, t.season)} ${t.season}`).join(", ")}`, "<svg class=ic><use href=#i-trophy></use></svg>"]);
   cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
   cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
-  if (prev.length) cl.push(["Earlier teams", `Previously with ${prev.join(", ")}`, prev.map((c) => clubBadgeFor(c, "sm")).join("")]);
+  if (prev.length) cl.push(["Earlier teams", `Previously with ${prev.join(", ")}`, prevT.map((x) => clubBadgeFor(x.t, "sm")).join("")]);
   if (p.club) cl.push(["Team", `${p.active ? "Plays for" : "Last team:"} ${p.club}`, clubBadgeFor(p.club, "sm")]);
   cl.push(["Name", `${p.n.split(" ").length} word${p.n.split(" ").length > 1 ? "s" : ""}, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
   return cl;
 }
 function careerClues(p) {
   const cl = [], seen = [];
-  p.cr.forEach(([team, from, to], i) => cl.push([i === 0 ? "Started" : `Move ${i}`, i === 0 ? `Career began with the ${team}` : `Then the ${team}`, clubBadgeFor(team, "sm")]));
+  p.cr.forEach(([team, from, to], i) => cl.push([i === 0 ? "Started" : `Move ${i}`, i === 0 ? `Career began with the ${nbEraSpan(team, from, to)}` : `Then the ${nbEraSpan(team, from, to)}`, clubBadgeFor(team, "sm")]));
   cl.push(["Age", `${ageOf(p)} years old`]); cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]); cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
   cl.push(["Name", `Starts with ${p.n[0]}, ${p.n.replace(/ /g, "").length} letters`]);
   return cl;
@@ -71,7 +76,7 @@ const NBA_TEAMS_FULL = () => Object.keys(QZ.clubs);
 function tttCategories(pool, scope) {
   const F = {}, add = (c) => { (F[c.fam] || (F[c.fam] = [])).push(c); }, count = (f) => pool.filter(f).length;
   const teams = {}, nats = {}; pool.forEach((p) => { new Set(p.hist).forEach((c) => { teams[c] = (teams[c] || 0) + 1; }); if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
-  Object.entries(teams).filter(([c, n]) => n >= 25 && CREST[c]).forEach(([c]) => add({ id: "club:" + c, fam: "club", label: `Played for the ${c}`, icon: badge(c, "md"), test: (p) => p.hist.includes(c) }));
+  Object.entries(teams).filter(([c, n]) => n >= 25 && CREST[c]).forEach(([c]) => add({ id: "club:" + c, fam: "club", label: `Played for the ${c}${({ Thunder: " (or SuperSonics)", Pelicans: " (or New Orleans Hornets)", Hornets: " (or Bobcats)" })[c] || ""}`, icon: badge(c, "md"), test: (p) => p.hist.includes(c) }));   /* the franchise counts under its old names too, and the label says so */
   Object.entries(nats).filter(([n, v]) => v >= 8 && n !== "United States").forEach(([n]) => add({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "<svg class=ic><use href=#i-globe></use></svg>"}</span>`, test: (p) => p.nat === n }));
   const usa = (p) => p.nat === "United States", abroad = (p) => p.nat && p.nat !== "United States";
   if (count(usa) >= 60) add({ id: "nat:usa", fam: "nat", label: "American players", icon: `<span class="cflag">${flagOf("United States")}</span>`, test: usa });
@@ -511,12 +516,12 @@ function droppedClues(r) {
   cl.push(["Stat line", `${g.pts} points, ${g.reb} rebounds and ${g.ast} assists`]);
   cl.push(["Shooting", `${g.fg[0]} of ${g.fg[1]} from the field, ${g.tp[0]} of ${g.tp[1]} from three, in ${g.min} minutes`]);
   if (g.stl >= 3 || g.blk >= 3) cl.push(["Defence", `${g.stl} steal${g.stl === 1 ? "" : "s"} and ${g.blk} block${g.blk === 1 ? "" : "s"}`]);
-  cl.push(["Game", `${g.home ? "At home against" : "On the road at"} the ${g.opp}${g.po ? " in the playoffs" : ""}, ${nbDate(g.date)}`]);
+  cl.push(["Game", `${g.home ? "At home against" : "On the road at"} the ${nbEra(g.opp, nbSeasonOf(g.date))}${g.po ? " in the playoffs" : ""}, ${nbDate(g.date)}`]);
   cl.push(["Result", `${g.won ? "Won" : "Lost"} ${Math.max(...g.score)}-${Math.min(...g.score)}`]);
   if (p.h) cl.push(["Height", `${ftIn(p.h)} tall`]);
   cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
   cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
-  cl.push(["Team", `Played for the ${g.team}`, clubBadgeFor(g.team, "sm")]);
+  cl.push(["Team", `Played for the ${nbEra(g.team, nbSeasonOf(g.date))}`, clubBadgeFor(g.team, "sm")]);
   cl.push(["Name", `${p.n.split(" ").length} words, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
   return cl;
 }

@@ -72,3 +72,11 @@ html[data-sec=games] #scope:not(:empty)::before{content:"League";font:700 11px/1
   setTimeout(label, 1500);
   const s = document.createElement("style"); s.textContent = `.bar .hlabbed{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:auto!important;min-height:38px;padding-top:4px!important;padding-bottom:3px!important}.bar .hlab{font:700 9.5px/1 var(--mono,monospace);letter-spacing:.04em;opacity:.8;white-space:nowrap}@media (max-width:420px){.bar .hlab{font-size:8.5px}}`; document.head.appendChild(s);
 })();
+/* Phones: starting a round (Solo, Two players...) scrolls the game itself into view. Before, the clues and the timer started
+   below the bottom of the screen, under the header, the league bar and the "How it works" box. */
+document.addEventListener("click", (e) => {
+  const b = e.target.closest && e.target.closest("#room button.mode, #room [data-mode], #ttDuo, #ttOnline");
+  if (!b || innerWidth >= 760) return;
+  setTimeout(() => { if (typeof pnLive === "function" && document.getElementById("pnAsk")) return; const t = document.querySelector("#room .qhud") || document.querySelector("#room .card"); if (!t) return; const y = t.getBoundingClientRect().top + scrollY - 70; if (Math.abs(y - scrollY) > 40) scrollTo({ top: Math.max(0, y), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }, 450);
+});
+(() => { const s = document.createElement("style"); s.textContent = ".newold{margin-top:10px}.newold summary{cursor:pointer;font-weight:700;padding:8px 0;color:var(--accent)}"; document.head.appendChild(s); })();

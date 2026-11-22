@@ -239,6 +239,23 @@ def main():
     for lg, club, tm, sc in report:
         print(f"  {lg:<4}{club:<22}-> {tm:<40}{sc}")
     print(f"clubs joined: {len(facts)} of {len(report)}")
+    # clubs.csv's coach is a stale snapshot; the match file names the manager in every game, so take each club's most recent
+    # match and keep its date, and the page says "Manager in <month year>" rather than pretending it is today's
+    gm = pd.read_csv("01_data_market_value/games.csv", usecols=["date", "home_club_id", "away_club_id", "home_club_manager_name", "away_club_manager_name"])
+    last = {}
+    for side in ("home", "away"):
+        x = gm[[f"{side}_club_id", f"{side}_club_manager_name", "date"]].dropna()
+        for cid, mgr, d in x.itertuples(index=False):
+            cid = int(cid)
+            if cid not in last or d > last[cid][1]:
+                last[cid] = (mgr, d)
+    fixed = 0
+    for f in facts.values():
+        if f["cid"] in last:
+            f["coach"], f["coachAt"] = last[f["cid"]][0], last[f["cid"]][1][:7]; fixed += 1
+        else:
+            f["coach"] = ""   # no dated source: leave it out rather than show a stale name
+    print(f"managers from the latest match: {fixed} of {len(facts)}")
     # transfer files spell clubs differently from clubs.csv ("Chelsea" v "Chelsea Football Club"), so map every spelling seen there to the arena name through the club id
     by_id = {f["cid"]: ours for ours, f in facts.items()}
     tn = pd.read_csv("01_data_market_value/transfers.csv", usecols=["from_club_id", "from_club_name", "to_club_id", "to_club_name"])
@@ -336,7 +353,8 @@ def main():
     print("players with an EA portrait:", sum(1 for q in players if q.get("ea")), "of", len(players))
     print("players with a TheSportsDB photo:", sum(1 for q in players if q.get("iu")))
     print("players with a Commons photo:", sum(1 for q in players if q.get("im")))
-    json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
+    val_at = str(pd.read_csv("01_data_market_value/player_valuations.csv", usecols=["date"])["date"].max())[:7]   # market values are as of this month; the page says so
+    json.dump({"players": players, "clubs": facts, "alias": alias, "asOf": AS_OF, "valAt": val_at}, open("02_processed_data/quiz_data.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
     print("Saved 02_processed_data/quiz_data.json")
 
 

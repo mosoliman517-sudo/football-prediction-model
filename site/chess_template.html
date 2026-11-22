@@ -484,7 +484,7 @@ function eliteBars() {
 function eliteAsk() {
   const g = st.g, s = st.stage, ev = evalPos(live.c) / 100, mv = Math.ceil(st.ply / 2), pickRow = (cur) => `<div class="opts">${RES.map((r, k) => `<button class="opt ${cur === k ? "sel" : ""}" data-ep="${k}">${r}</button>`).join("")}</div>`;
   if (s > 0) { st.evs[s] = ev; st.mpicks[s] = leanOf(ev); }
-  const top = `<div class="row" style="justify-content:space-between"><h2>${ic("trophy")}Predict who won</h2><span class="fine">Game ${st.i + 1} of 3 · you ${st.you} · model ${st.mod}</span></div><p class="fine" style="margin:0">${esc(g.event)}${/^\d{4}-/.test(g.date) ? " · " + esc(g.date) : ""}</p>`;
+  const top = `${chBack()}<div class="row" style="justify-content:space-between"><h2>${ic("trophy")}Predict who won</h2><span class="fine">Game ${st.i + 1} of 3 · you ${st.you} · model ${st.mod}</span></div><p class="fine" style="margin:0">${esc(g.event)}${/^\d{4}-/.test(g.date) ? " · " + esc(g.date) : ""}</p>`;
   const msg = s === 0 ? `<p class="sub">Before a single move: who wins? A correct call now is worth <b>3 points</b>.</p>${pickRow(st.picks[0])}<p class="fine">The model gives White ${Math.round(g.p[0] * 100)}%, Draw ${Math.round(g.p[1] * 100)}%, Black ${Math.round(g.p[2] * 100)}% (it never trained on this game).</p>` : `<p class="sub"><b>Move ${mv}.</b> The engine's evaluation: <b>${ev > 0 ? "White +" + ev.toFixed(1) : ev < 0 ? "Black +" + (-ev).toFixed(1) : "equal"}</b>. Who wins now? Worth <b>${PTS[s]} point${PTS[s] === 1 ? "" : "s"}</b>.</p>${pickRow(st.picks[s])}`;
   liveRender(top, `<div class="evrow">${s > 0 ? `<div class="evbar2"><i style="width:${wcOf(ev * 100).toFixed(0)}%"></i></div>` : ""}</div>${msg}`, eliteBars());
 }

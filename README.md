@@ -267,6 +267,9 @@ Picked from a poll:
 - **Bug sweep**. Every chess page, 41 football pages and all the basketball pages were checked at phone width for errors and sideways overflow. Fixed: the new endgame trainer reused two function names from the existing Endgame verdict game and would have broken it; page transitions that overlapped reported errors. Found but not fixed: basketball's friends list doesn't show online status, as football's does.
 - **Speed**. The game data now ships in its own data.<hash>.js, apart from the code. Football's code file went from 12 MB to 0.67 MB. Data only changes on a model refresh, so after an ordinary update returning players download well under 1 MB instead of 12. The service worker caches both files.
 
+### 22 Nov 2026: Seasons and player cards are live
+The owner ran online/run_now_v13_v14.sql. Checked from outside the site: season_board and player_card answer on both the football and basketball schemas. Nobody has played a ranked match yet, so the season starts empty.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

@@ -248,6 +248,9 @@ Stopped the Chatterbox recording because the Mac was running hot. 1,107 lines ha
 ### 22 Nov 2026: Gentle mode for the voice job
 The voice script takes `--rest N`: it pauses N seconds after each line and uses fewer CPU threads, so a laptop is not working flat out the whole time. Restarted at low priority with a 20-second rest, which is a bit under half the earlier load. It now takes about 35 seconds per line, roughly 7 hours for the 725 lines left.
 
+### 22 Nov 2026: Voice job back to full speed
+By request, the voice job runs at full speed again, with no rest between lines: about 3 hours for the 714 lines left. Gentle mode (`--rest N`) stays in the script for when it is needed.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

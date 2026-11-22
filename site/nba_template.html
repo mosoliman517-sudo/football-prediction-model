@@ -4232,7 +4232,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
   if (b.id === "broMore") { closeBro(); const r = $("#reveal"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
   if (b.id === "broNext") { closeBro(); const n = $("#nextBtn") || $("#dailyNext"); if (n) n.click(); return; }
-  if (b.id === "scH0" || b.id === "scH1") { const S_ = Q.s, i = +b.id.slice(3); if (!S_ || S_.game !== "scramble" || S_.phase !== "run" || S_.paused || (S_.hn || 0) >= 4) return; if (i === 1 && Net.role === "host" && !Net.applying) return; S_.hv[i] = true; const need = S_.mode === "duo" ? S_.hv[0] && S_.hv[1] : true; if (need) { S_.hn = (S_.hn || 0) + 1; S_.hv = [false, false]; Snd.lock(); paintClues(); toast("Hint " + S_.hn); } else Snd.tick(); renderQuiz(); return; }
+  if (b.id === "scH0" || b.id === "scH1") { const S_ = Q.s, i = +b.id.slice(3); if (!S_ || S_.game !== "scramble" || S_.phase !== "run" || S_.paused || (S_.hn || 0) >= 4) return; if (i === 1 && Net.role === "host" && Net.started && !Net.applying) return; S_.hv[i] = true; const need = S_.mode === "duo" ? S_.hv[0] && S_.hv[1] : true; if (need) { S_.hn = (S_.hn || 0) + 1; S_.hv = [false, false]; Snd.lock(); paintClues(); toast("Hint " + S_.hn); } else Snd.tick(); renderQuiz(); return; }
   if (b.dataset.dctab) { S.dcTab = b.dataset.dctab; Snd.tick(); renderDiscover(); return; }
   if (b.dataset.dfq != null) { const d = S.df; if (!d || d.pick != null || dfDays(prof())[d.key]) return; d.pick = b.dataset.dfq; const p = prof(); p.dfDone = { ...(p.dfDone || {}), [d.key]: 1 }; const ks = Object.keys(p.dfDone).sort(); while (ks.length > 120) delete p.dfDone[ks.shift()]; const s = dfStreak(p); if (s >= 7) unlock(p, "daily_habit"); saveProf(p); d.pick === d.q.ans ? (Snd.right(), reward(10, "Daily feed", () => {})) : (Snd.wrong(), reward(4, "Daily feed", () => {})); renderDiscover(); return; }
   if (b.id === "dfShare") { const d = S.df, s = dfStreak(prof()); const txt = `ballknowledge daily ${d.key}: ${d.pick === d.q.ans ? "got" : "missed"} "${d.q.text}" · ${s} day streak`; try { navigator.clipboard.writeText(txt).then(() => toast("Copied"), () => toast(txt)); } catch (e) { toast(txt); } return; }
@@ -4282,14 +4282,14 @@ document.addEventListener("click", (e) => {
   if (b.id === "qChal") { const g = Q.s; beatShare(g.game, g.scores[0]); return; }
   if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `ballknowledge, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
-  if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }
+  if (b.id === "qB1") { if (Net.role === "host" && Net.started && !Net.applying) return; buzz(1); return; }
   if (b.id === "qGuess") { submitAnswer(null); return; }
   if (b.dataset.sug != null && b.closest("#qSug")) { const v = b.dataset.sug; submitAnswer(QDEF[Q.s.game].unit === "club" ? v : +v); return; }
   if (b.id === "finStart") { newFinish("solo"); Snd.tick(); return; }
   if (b.id === "finDuo") { newFinish("duo"); Snd.tick(); return; }
   if (b.id === "finOnline") { openOnline("finish"); return; }
   if (b.id === "finAgain") { newFinish(S.fin.mode); Snd.tick(); return; }
-  if (b.id === "finLock") { if (Net.role === "host" && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
+  if (b.id === "finLock") { if (Net.role === "host" && Net.started && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
   if (b.id === "finNext") { nextFinish(); Snd.tick(); return; }
   if (b.id === "finEnd") { endFinish(); return; }
   if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(Math.max(...f.scores)), sub: f.mode === "solo" ? `streak of ${f.streak}` : "points", line: "Table knowledge.", share: `ballknowledge, Where did they finish?: ${Math.max(...f.scores)} points.`, tiles: [[String(f.mode === "solo" ? f.streak : f.rounds), f.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [f.mode, "mode"]] }); return; }
@@ -4297,7 +4297,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "vNext") { S.pv = S.cv = null; S.vk = rnd(["p", "c"]); Snd.tick(); renderVH(S.vk); return; }
   if (b.id === "nmSolo") { S.vsolo = true; S.vStreak = 0; S.vk = rnd(["p", "c"]); Snd.tick(); renderValue(); return; }
   if (b.id === "nmDuo") { newNumber("duo"); Snd.tick(); return; }
-  if (b.id === "nmLock") { if (Net.role === "host" && !Net.applying && S.num.turn === 1) return; lockNumber(); return; }
+  if (b.id === "nmLock") { if (Net.role === "host" && Net.started && !Net.applying && S.num.turn === 1) return; lockNumber(); return; }
   if (b.id === "nmNext") { Snd.tick(); nextNumber(); return; }
   if (b.id === "nmEnd") { endNumber(); return; }
   if (b.id === "nmAgain") { newNumber(S.num.mode); return; }
@@ -4320,15 +4320,15 @@ document.addEventListener("click", (e) => {
   if (b.id === "xiGiveUp") { endXI(); return; }
   if (b.id === "ttSolo") { newTTT("solo"); Snd.tick(); return; }
   if (b.id === "ttDuo") { newTTT("duo"); Snd.tick(); return; }
-  if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
-  if (b.dataset.dr != null && b.dataset.dr !== "") { const t = S.ttt; if (!t || t.phase !== "draft") return; if (Net.role === "host" && !Net.applying && t.turn === 1) return; if (t.mode === "solo" && t.turn === 1) return; draftPick(b.dataset.dr); return; }
+  if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && Net.started && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
+  if (b.dataset.dr != null && b.dataset.dr !== "") { const t = S.ttt; if (!t || t.phase !== "draft") return; if (Net.role === "host" && Net.started && !Net.applying && t.turn === 1) return;   /* only while an online opponent is connected: a room left open must not lock Player 2 out of a one-device game */ if (t.mode === "solo" && t.turn === 1) return; draftPick(b.dataset.dr); return; }
   if (b.id === "tCancel") { S.ttt.sel = null; renderTTT(); return; }
-  if (b.id === "tGuess") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
+  if (b.id === "tGuess") { if (Net.role === "host" && Net.started && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
   if (b.dataset.sug != null && b.closest("#tSug")) { tttSubmit(b.dataset.sug); return; }
   if (b.id === "rDuo") { newRoulette(); Snd.tick(); return; }
   if (b.id === "rOnline") { openOnline("roulette"); return; }
-  if (b.id === "rGuess") { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
-  if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
+  if (b.id === "rGuess") { if (Net.role === "host" && Net.started && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
+  if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && Net.started && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
   if (b.id === "rNext") { Snd.tick(); nextRoulette(); return; }
   if (b.id === "rFinish") { S.rou.phase = "done"; rankedEnd(S.rou, S.rou.wins); Snd.win(); confetti(); renderRoulette(); return; }
   if (b.id === "rAgain") { newRoulette(); return; }

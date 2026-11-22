@@ -947,7 +947,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button><span class="rbsep"></span><button type="button" class="rbsk" data-sk="cheer" aria-label="Your sidekick cheers">📣 Cheer</button><button type="button" class="rbsk" data-sk="tease" aria-label="Your sidekick teases">😏 Tease</button><button type="button" class="rbsk" data-sk="gg" aria-label="Your sidekick says good game">🤝 GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 22 Nov 2026 16:13 UTC · private · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 22 Nov 2026 16:18 UTC · private · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -4966,7 +4966,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "tbCard") { const d = store.items[tabKey(S.tab.c, S.tab.season)]; if (d) tableCardNow({ lg: S.tab.c, season: d.season, youErr: d.youErr, modErr: d.modErr, lastErr: d.lastErr }); return; }
   if (b.id === "broMore") { closeBro(); const r = $("#reveal"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
   if (b.id === "broNext") { closeBro(); const n = $("#nextBtn") || $("#dailyNext"); if (n) n.click(); return; }
-  if (b.id === "scH0" || b.id === "scH1") { const S_ = Q.s, i = +b.id.slice(3); if (!S_ || S_.game !== "scramble" || S_.phase !== "run" || S_.paused || (S_.hn || 0) >= 4) return; if (i === 1 && Net.role === "host" && !Net.applying) return; S_.hv[i] = true; const need = S_.mode === "duo" ? S_.hv[0] && S_.hv[1] : true; if (need) { S_.hn = (S_.hn || 0) + 1; S_.hv = [false, false]; Snd.lock(); paintClues(); toast("Hint " + S_.hn); } else Snd.tick(); renderQuiz(); return; }
+  if (b.id === "scH0" || b.id === "scH1") { const S_ = Q.s, i = +b.id.slice(3); if (!S_ || S_.game !== "scramble" || S_.phase !== "run" || S_.paused || (S_.hn || 0) >= 4) return; if (i === 1 && Net.role === "host" && Net.started && !Net.applying) return; S_.hv[i] = true; const need = S_.mode === "duo" ? S_.hv[0] && S_.hv[1] : true; if (need) { S_.hn = (S_.hn || 0) + 1; S_.hv = [false, false]; Snd.lock(); paintClues(); toast("Hint " + S_.hn); } else Snd.tick(); renderQuiz(); return; }
   if (b.dataset.dctab) { S.dcTab = b.dataset.dctab; Snd.tick(); renderDiscover(); return; }
   if (b.dataset.dfq != null) { const d = S.df; if (!d || d.pick != null || dfDays(prof())[d.key]) return; d.pick = b.dataset.dfq; const p = prof(); p.dfDone = { ...(p.dfDone || {}), [d.key]: 1 }; const ks = Object.keys(p.dfDone).sort(); while (ks.length > 120) delete p.dfDone[ks.shift()]; const s = dfStreak(p); if (s >= 7) unlock(p, "daily_habit"); saveProf(p); d.pick === d.q.ans ? (Snd.right(), reward(10, "Daily feed", () => {})) : (Snd.wrong(), reward(4, "Daily feed", () => {})); renderDiscover(); return; }
   if (b.id === "dfShare") { const d = S.df, s = dfStreak(prof()); const txt = `ballknowledge daily ${d.key}: ${d.pick === d.q.ans ? "got" : "missed"} "${d.q.text}" · ${s} day streak`; try { navigator.clipboard.writeText(txt).then(() => toast("Copied"), () => toast(txt)); } catch (e) { toast(txt); } return; }
@@ -5016,14 +5016,14 @@ document.addEventListener("click", (e) => {
   if (b.id === "qChal") { const g = Q.s; beatShare(g.game, g.scores[0]); return; }
   if (b.id === "qCard") { const g = Q.s, d = QDEF[g.game]; showCard("quiz", { lg: S.code, title: d.name, big: String(Math.max(...g.scores)), sub: g.mode === "duo" ? `Player 1 ${g.scores[0]} · Player 2 ${g.scores[1]}` : "points", line: "How much ball knowledge have you got?", share: `ballknowledge, ${d.name}: ${Math.max(...g.scores)} points. Think you know more?`, tiles: [[String(g.mode === "solo" ? g.streak : g.rounds || d.rounds), g.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [g.mode, "mode"]] }); return; }
   if (b.id === "qB0") { buzz(0); return; }
-  if (b.id === "qB1") { if (Net.role === "host" && !Net.applying) return; buzz(1); return; }
+  if (b.id === "qB1") { if (Net.role === "host" && Net.started && !Net.applying) return; buzz(1); return; }
   if (b.id === "qGuess") { submitAnswer(null); return; }
   if (b.dataset.sug != null && b.closest("#qSug")) { const v = b.dataset.sug; submitAnswer(QDEF[Q.s.game].unit === "club" ? v : +v); return; }
   if (b.id === "finStart") { newFinish("solo"); Snd.tick(); return; }
   if (b.id === "finDuo") { newFinish("duo"); Snd.tick(); return; }
   if (b.id === "finOnline") { openOnline("finish"); return; }
   if (b.id === "finAgain") { newFinish(S.fin.mode); Snd.tick(); return; }
-  if (b.id === "finLock") { if (Net.role === "host" && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
+  if (b.id === "finLock") { if (Net.role === "host" && Net.started && !Net.applying && S.fin.mode === "duo" && S.fin.turn === 1) return; lockFinish(); return; }
   if (b.id === "finNext") { nextFinish(); Snd.tick(); return; }
   if (b.id === "finEnd") { endFinish(); return; }
   if (b.id === "finCard") { const f = S.fin; showCard("quiz", { lg: S.code, title: "Where did they finish?", big: String(Math.max(...f.scores)), sub: f.mode === "solo" ? `streak of ${f.streak}` : "points", line: "Table knowledge.", share: `ballknowledge, Where did they finish?: ${Math.max(...f.scores)} points.`, tiles: [[String(f.mode === "solo" ? f.streak : f.rounds), f.mode === "solo" ? "streak" : "rounds"], [S.code === "ALL" ? "All 5" : S.code, "league"], [f.mode, "mode"]] }); return; }
@@ -5031,7 +5031,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "vNext") { S.pv = S.cv = null; S.vk = rnd(["p", "c"]); Snd.tick(); renderVH(S.vk); return; }
   if (b.id === "nmSolo") { S.vsolo = true; S.vStreak = 0; S.vk = rnd(["p", "c"]); Snd.tick(); renderValue(); return; }
   if (b.id === "nmDuo") { newNumber("duo"); Snd.tick(); return; }
-  if (b.id === "nmLock") { if (Net.role === "host" && !Net.applying && S.num.turn === 1) return; lockNumber(); return; }
+  if (b.id === "nmLock") { if (Net.role === "host" && Net.started && !Net.applying && S.num.turn === 1) return; lockNumber(); return; }
   if (b.id === "nmNext") { Snd.tick(); nextNumber(); return; }
   if (b.id === "nmEnd") { endNumber(); return; }
   if (b.id === "nmAgain") { newNumber(S.num.mode); return; }
@@ -5054,15 +5054,15 @@ document.addEventListener("click", (e) => {
   if (b.id === "xiGiveUp") { endXI(); return; }
   if (b.id === "ttSolo") { newTTT("solo"); Snd.tick(); return; }
   if (b.id === "ttDuo") { newTTT("duo"); Snd.tick(); return; }
-  if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
-  if (b.dataset.dr != null && b.dataset.dr !== "") { const t = S.ttt; if (!t || t.phase !== "draft") return; if (Net.role === "host" && !Net.applying && t.turn === 1) return; if (t.mode === "solo" && t.turn === 1) return; draftPick(b.dataset.dr); return; }
+  if (b.dataset.tc != null && b.dataset.tc !== "") { if (Net.role === "host" && Net.started && !Net.applying && S.ttt.turn === 1) return; S.ttt.sel = +b.dataset.tc; S.ttt.msg = ""; Snd.tick(); renderTTT(); return; }
+  if (b.dataset.dr != null && b.dataset.dr !== "") { const t = S.ttt; if (!t || t.phase !== "draft") return; if (Net.role === "host" && Net.started && !Net.applying && t.turn === 1) return;   /* only while an online opponent is connected: a room left open must not lock Player 2 out of a one-device game */ if (t.mode === "solo" && t.turn === 1) return; draftPick(b.dataset.dr); return; }
   if (b.id === "tCancel") { S.ttt.sel = null; renderTTT(); return; }
-  if (b.id === "tGuess") { if (Net.role === "host" && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
+  if (b.id === "tGuess") { if (Net.role === "host" && Net.started && !Net.applying && S.ttt.turn === 1) return; tttSubmit(null); return; }
   if (b.dataset.sug != null && b.closest("#tSug")) { tttSubmit(b.dataset.sug); return; }
   if (b.id === "rDuo") { newRoulette(); Snd.tick(); return; }
   if (b.id === "rOnline") { openOnline("roulette"); return; }
-  if (b.id === "rGuess") { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
-  if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
+  if (b.id === "rGuess") { if (Net.role === "host" && Net.started && !Net.applying && S.rou.turn === 1) return; rouSubmit(null); return; }
+  if (b.dataset.sug != null && b.closest("#rSug")) { if (Net.role === "host" && Net.started && !Net.applying && S.rou.turn === 1) return; rouSubmit(b.dataset.sug); return; }
   if (b.id === "rNext") { Snd.tick(); nextRoulette(); return; }
   if (b.id === "rFinish") { S.rou.phase = "done"; rankedEnd(S.rou, S.rou.wins); Snd.win(); confetti(); renderRoulette(); return; }
   if (b.id === "rAgain") { newRoulette(); return; }
@@ -6039,16 +6039,20 @@ document.addEventListener("click", (e) => {
 
 /* ===== two players on one device can type their own names (shared by football and basketball) ===== */
 const PN = ["Player 1", "Player 2"];
-try { PN[0] = localStorage.getItem("bk_pn1") || PN[0]; PN[1] = localStorage.getItem("bk_pn2") || PN[1]; } catch (e) { /* storage blocked */ }
-function nameFix(node) { if (PN[0] === "Player 1" && PN[1] === "Player 2") return; if (node.nodeType === 3) { if (/Player [12]/.test(node.data)) node.data = node.data.replace(/Player 1/g, PN[0]).replace(/Player 2/g, PN[1]); return; } if (node.nodeType !== 1 || /SCRIPT|STYLE|INPUT|TEXTAREA/.test(node.tagName)) return; const w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (/Player [12]/.test(n.data)) n.data = n.data.replace(/Player 1/g, PN[0]).replace(/Player 2/g, PN[1]); }
+/* Names last only for the game you're playing on this device: nothing is remembered between visits (names typed in
+   an earlier game, or your account name, used to come back and replace "Player 1" across the whole site), and they're only
+   swapped in while a one-device game is on screen, never in online rooms. */
+try { localStorage.removeItem("bk_pn1"); localStorage.removeItem("bk_pn2"); } catch (e) { /* storage blocked */ }
+const pnLive = () => { try { return !(Net.role && Net.started) && !!((S.ttt && S.ttt.mode === "duo") || (Q.s && Q.s.mode === "duo") || S.rou || (S.fin && S.fin.mode === "duo") || (S.num && S.num.mode === "duo")); } catch (e) { return false; } };   /* a one-device game is open (its result screen included) */
+function nameFix(node) { if (PN[0] === "Player 1" && PN[1] === "Player 2") return; if (!pnLive()) return; if (node.nodeType === 3) { if (/Player [12]/.test(node.data)) node.data = node.data.replace(/Player 1/g, PN[0]).replace(/Player 2/g, PN[1]); return; } if (node.nodeType !== 1 || /SCRIPT|STYLE|INPUT|TEXTAREA/.test(node.tagName)) return; const w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (/Player [12]/.test(n.data)) n.data = n.data.replace(/Player 1/g, PN[0]).replace(/Player 2/g, PN[1]); }
 new MutationObserver((ms) => { ms.forEach((m) => { if (m.type === "characterData") nameFix(m.target); else m.addedNodes.forEach(nameFix); }); }).observe(document.body, { childList: true, subtree: true, characterData: true });
 function askNames(then) {
-  const old = document.getElementById("pnAsk"); if (old) old.remove(); let me = ""; try { me = (typeof prof === "function" && prof().nick) || ""; } catch (e) { /* no profile */ }
+  const old = document.getElementById("pnAsk"); if (old) old.remove(); const me = "";
   const d = document.createElement("div"); d.id = "pnAsk"; d.setAttribute("style", "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px");
   const v1 = PN[0] !== "Player 1" ? PN[0] : me, v2 = PN[1] !== "Player 2" ? PN[1] : "";
   d.innerHTML = `<div class="card" style="max-width:420px;width:100%"><h2 style="font-size:26px;margin-bottom:6px">Who is playing?</h2><p class="sub" style="margin-bottom:12px">Type your names so the scores say who is who. You can leave them blank.</p><div style="display:grid;gap:10px"><label class="fine">Player 1 (A key)<input id="pn1" maxlength="14" autocomplete="off" value="${esc(v1)}" placeholder="Player 1" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"></label><label class="fine">Player 2 (L key)<input id="pn2" maxlength="14" autocomplete="off" value="${esc(v2)}" placeholder="Player 2" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"></label></div><div class="row" style="margin-top:14px"><button class="btn" id="pnGo" type="button">Start</button><button class="btn ghost" id="pnX" type="button">Cancel</button></div></div>`;
   document.body.appendChild(d); const i1 = d.querySelector("#pn1"); i1.focus(); i1.select();
-  const go = () => { const a = d.querySelector("#pn1").value.trim().replace(/[<>]/g, ""), b = d.querySelector("#pn2").value.trim().replace(/[<>]/g, ""); PN[0] = a || "Player 1"; PN[1] = b && b !== a ? b : a ? "Player 2" : "Player 2"; if (PN[1] === PN[0]) PN[1] = "Player 2"; try { localStorage.setItem("bk_pn1", PN[0]); localStorage.setItem("bk_pn2", PN[1]); } catch (e) { /* ok */ } d.remove(); then(); setTimeout(() => nameFix(document.body), 0); };
+  const go = () => { const a = d.querySelector("#pn1").value.trim().replace(/[<>]/g, ""), b = d.querySelector("#pn2").value.trim().replace(/[<>]/g, ""); PN[0] = a || "Player 1"; PN[1] = b && b !== a ? b : a ? "Player 2" : "Player 2"; if (PN[1] === PN[0]) PN[1] = "Player 2"; try { /* kept in memory only */ } catch (e) { /* ok */ } d.remove(); then(); setTimeout(() => nameFix(document.body), 0); };
   d.addEventListener("click", (e) => { if (e.target.id === "pnGo") go(); else if (e.target.id === "pnX" || e.target === d) d.remove(); }); d.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); else if (e.key === "Escape") d.remove(); e.stopPropagation(); });
 }
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button.mode"); if (!b || b.dataset.named || !/one device/i.test(b.textContent)) return; e.stopPropagation(); e.preventDefault(); askNames(() => { b.dataset.named = "1"; b.click(); delete b.dataset.named; }); }, true);

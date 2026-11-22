@@ -286,6 +286,11 @@ Reported: the loading-screen collection was stuck at "1 of 55". The real bug was
 ### 22 Nov 2026: Tic-tac-toe online draft fixed
 Reported: tic-tac-toe is bugged. One-device games in both sports, typed answers, suggestions and the Enter key all worked when tested. The bug was in online games, played on two devices. Player 2's device forwards their taps to the host, but only square taps and name suggestions, not category picks. So in the draft Player 2 couldn't pick a column, and the game never got past it. Category picks are now forwarded too (football and basketball). Tested with two tabs: the full draft, then a square claimed from each side. The answer prompt also read oddly ("Name a player who is Name starts with A and…"); it now says "Name a player who fits both: … and …".
 
+### 22 Nov 2026: Player 2 picks and one-device names
+Two more reports:
+- **Player 2 couldn't pick a category in tic-tac-toe.** Beyond the online fix above, a second cause: if you had opened an online room and left it open, the page still treated you as the host and ignored every Player 2 tap in a one-device game (draft picks, squares, answers, and the same in Scramble, Finish, Market value and Club roulette). Those checks now apply only while an online opponent is actually connected. Tested with a room left open: Player 2 drafted all three categories.
+- **Old names showing up.** Names typed for a one-device game were saved for good, Player 1 was pre-filled with the account name, and every "Player 1" and "Player 2" on the site was swapped for them, online rooms included. Names now last only for the game being played, nothing is pre-filled, old saved names are cleared, and the swap only happens while a one-device game (or its result screen) is open.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

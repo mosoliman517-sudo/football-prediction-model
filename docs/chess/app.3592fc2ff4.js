@@ -546,6 +546,19 @@ function liveClick(sq) {
    Masters' moves and anything Stockfish calls fine are accepted; a real mistake is taken back and Pip shows what to play. ---------- */
 function trainerStart() { gymStart(); }
 const GYM_LEN = 10;   /* moves you play per opening */
+/* the opening's name as the game goes: a banner when it changes, the trail of names, and Pip tells the story of each new family */
+function gymName(me, nm) {
+  if (!nm || nm === me.name) return; const fam = (x) => (x || "").split(":")[0].trim(), newFam = fam(nm) !== fam(me.name); me.name = nm; me.trail = me.trail || [];
+  const parts = nm.split(/:\s*|,\s*/); me.trail = parts; me.flash = Date.now();
+  const S = openStory(nm); if (newFam && S && me.told !== S.name) { me.told = S.name; me.story = S.origin; me.storyTill = me.moves + 2; setTimeout(() => { if (st === me) pipSay(S.origin); }, 900); }
+}
+/* the engine's verdict on the position, for the bar under the name */
+function gymEval(me) { const fen = live.c.fen(); if (live.c.game_over()) return; Sf.analyse(fen, { depth: 12, ms: 700 }).then((l) => { if (st !== me || !live || live.c.fen() !== fen || !l.length) return; me.ev = lineW(l[0], live.c.turn()); gymPaintEval(); }).catch(() => {}); }
+function gymPaintEval() {
+  const me = st, el = document.getElementById("gymEv"); if (!el || !me.ev) return; const w = me.ev.w, mineW = live.color === "w" ? w : 100 - w;
+  el.querySelector(".gevw").style.width = w + "%"; el.querySelector(".gevt").textContent = fmtEv(me.ev); el.querySelector(".gevt").className = "gevt " + (w >= 50 ? "onw" : "onb");
+  el.querySelector(".gevs").textContent = mineW >= 70 ? "You're doing great" : mineW >= 55 ? "You're a bit better" : mineW > 45 ? "Level" : mineW > 30 ? "Pip is a bit better" : "Pip is clearly better";
+}
 function gymStart() {
   clearInterval(st.timer); const pool = OPEN_STORY.filter((s) => !/Bongcloud/.test(s.name)), S = pool[Math.floor(Math.random() * pool.length)], color = Math.random() < 0.5 ? "w" : "b", tot = store.get("gym_tot", { n: 0, book: 0 });
   st = { game: "gym", S, line: S.line.split(" "), color, moves: 0, sc: { book: 0, ok: 0, fix: 0 }, msg: `Let's go. I picked an opening and you're ${color === "w" ? "White" : "Black"}. Play the best lines you know. If you slip, I'll stop you and show you the move.`, mood: "happy", hint: null, name: "", over: false, tot };
@@ -556,13 +569,13 @@ const gymPick = (moves) => { const ok = moves.filter((m, k) => k === 0 || (m.whi
 async function gymPip() {
   const me = st, L = live, c = L.c; L.lock = true; st.think = true; gymPaint(); const fen = c.fen(), h = c.history();
   const onLine = h.length < me.line.length && h.every((m, k) => m === me.line[k]); let san = onLine ? me.line[h.length] : null;
-  const d = await exFetch(fen); if (st !== me || live !== L) return; if (d && d.opening && d.opening.name) me.name = d.opening.name;
+  const d = await exFetch(fen); if (st !== me || live !== L) return; if (d && d.opening && d.opening.name) gymName(me, d.opening.name);
   if (!san && d && d.moves.length) san = gymPick(d.moves).san;
   if (!san) { const ln = await Sf.analyse(fen, { depth: 12, ms: 900 }).catch(() => []); if (st !== me || live !== L) return; if (ln.length) san = uciSan(fen, ln[0].pv[0]); }
   await new Promise((r) => setTimeout(r, 450)); if (st !== me || live !== L) return;
   const m = san ? c.move(san) : null; st.think = false; if (!m) { L.lock = false; return gymPaint(); }
-  L.last = [m.from, m.to]; Snd.move(m, c); L.lock = false; const d2 = EX.cache[c.fen()]; if (d2 && d2.opening && d2.opening.name) me.name = d2.opening.name;
-  if (c.game_over()) return gymEnd(); gymPaint(); exFetch(c.fen()).then((d3) => { if (st === me && d3 && d3.opening && d3.opening.name && d3.opening.name !== me.name) { me.name = d3.opening.name; gymPaint(); } });   /* warm the cache for your reply */
+  L.last = [m.from, m.to]; Snd.move(m, c); L.lock = false; const d2 = EX.cache[c.fen()]; if (d2 && d2.opening && d2.opening.name) gymName(me, d2.opening.name); gymEval(me);
+  if (c.game_over()) return gymEnd(); gymPaint(); exFetch(c.fen()).then((d3) => { if (st === me && d3 && d3.opening && d3.opening.name && d3.opening.name !== me.name) { gymName(me, d3.opening.name); gymPaint(); } });   /* warm the cache for your reply */
 }
 async function gymUser(mv) {
   const me = st, L = live, c = L.c; L.lock = true; const back = c.undo(), fenB = c.fen(); c.move(back); const fenA = c.fen(), san = mv.san; mkClear(document.getElementById("bd"));
@@ -581,7 +594,7 @@ async function gymUser(mv) {
   try { Snd.bad(); } catch (e) { /* quiet */ } pipSay(pipPick(loss > 15 ? "blunder" : "mistake", me.moves)); L.lock = false; gymPaint(); gymArrow();
 }
 function gymArrow() { const H = st.hint, bd = document.getElementById("bd"); if (!H || !bd) return; const f = live.color === "b"; mkToggle(mkSvg(bd), rvSq(H.from, f), rvSq(H.to, f), "b"); }
-function gymAccept(me) { me.moves++; pipSay(pipPick(me.say || "good", me.moves)); if (me.moves >= GYM_LEN || live.c.game_over()) return gymEnd(); live.lock = false; gymPaint(); gymPip(); }
+function gymAccept(me) { me.moves++; { const dd = EX.cache[live.c.fen()]; if (dd && dd.opening && dd.opening.name) gymName(me, dd.opening.name); else exFetch(live.c.fen()).then((d4) => { if (st === me && d4 && d4.opening && d4.opening.name) { gymName(me, d4.opening.name); gymPaint(); } }); } gymEval(me); pipSay(pipPick(me.say || "good", me.moves)); if (me.moves >= GYM_LEN || live.c.game_over()) return gymEnd(); live.lock = false; gymPaint(); gymPip(); }
 function gymEnd() {
   const me = st; me.over = true; live.lock = true; const s = me.sc, tot = me.tot; tot.n++; tot.book += s.book; store.set("gym_tot", tot);
   me.mood = s.fix === 0 ? "wow" : s.fix <= 2 ? "happy" : "calm"; me.msg = s.fix === 0 ? `Clean! ${s.book} theory moves and not one slip. You know the ${me.S.name}.` : `Done. ${s.book} theory moves, ${s.ok} fine ones, and ${s.fix} I had to fix. Next time those ${s.fix} will be automatic.`;
@@ -591,9 +604,9 @@ function gymPaint() {
   const me = st, L = live; if (!L || me.game !== "gym") return; const c = L.c, opp = L.color === "w" ? "b" : "w";
   const bars = { top: `<div class="pbar"><div class="av"><span class="pbface">${pipSVGRaw(me.think ? "hmm" : me.mood === "shock" ? "shock" : "calm")}</span></div><div class="nm"><span><b>Pip</b><small>${me.think ? "choosing a move…" : opp === "w" ? "White" : "Black"}</small></span><span>${matHTML(c, opp)}</span></div></div>`, bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, 0) };
   const named = me.name || (c.history().length ? "" : "");
-  const top = backRow("Pip's opening gym", "bulb", `Move ${Math.min(me.moves + 1, GYM_LEN)} of ${GYM_LEN} · ${me.tot.n} done`) + `<div class="gymname">${named ? `<b>${esc(named)}</b>` : `<span class="fine">Which opening is Pip playing? It will appear here.</span>`}<span class="gymsc"><i class="cls book">${RVC.book[1]}</i>${me.sc.book} <i class="cls best">✓</i>${me.sc.ok} <i class="cls mistake">?</i>${me.sc.fix}</span></div><div class="pipbox">${pipSVGRaw(me.mood)}<div class="pipsay"><b>Pip</b>${esc(me.msg)}</div></div>`;
+  const top = backRow("Pip's opening gym", "bulb", `Move ${Math.min(me.moves + 1, GYM_LEN)} of ${GYM_LEN} · ${me.tot.n} done`) + `<div class="gymname ${me.flash && Date.now() - me.flash < 1500 ? "flash" : ""}">${named ? `<span class="gymtrail">${(me.trail || [named]).map((x, k, A) => `<b class="${k === A.length - 1 ? "last" : ""}">${esc(x)}</b>`).join('<i>›</i>')}</span>` : `<span class="fine">Which opening is Pip playing? It will appear here.</span>`}<span class="gymsc"><i class="cls book">${RVC.book[1]}</i>${me.sc.book} <i class="cls best">✓</i>${me.sc.ok} <i class="cls mistake">?</i>${me.sc.fix}</span></div><div class="gymev" id="gymEv" title="Stockfish\'s evaluation"><span class="gevbar"><i class="gevw" style="width:${me.ev ? me.ev.w : 50}%"></i></span><b class="gevt">${me.ev ? fmtEv(me.ev) : "0.0"}</b><span class="gevs fine">${me.ev ? "" : "Level"}</span></div><div class="pipbox">${pipSVGRaw(me.mood)}<div class="pipsay"><b>Pip</b>${esc(me.msg)}${me.story && me.moves < (me.storyTill || 0) ? `<span class="gymstory"><b>${esc(me.told || "")}</b> ${esc(me.story)}</span>` : ""}</div></div>`;
   const bottom = `<div class="row" style="justify-content:center;margin-top:8px">${me.hint && !me.over ? `<button class="btn" id="gymDo" type="button">${ic("bulb")}Play ${esc(me.hint.san)} for me</button>` : ""}${me.over ? `<button class="btn" id="gymNext" type="button">${ic("arrow")}Next opening</button><button class="btn ghost" id="gymEx" type="button">${ic("compass")}Explore this opening</button>` : `<button class="btn ghost" id="gymNext" type="button">New opening</button>`}</div>`;
-  liveRender(top, bottom, bars);
+  liveRender(top, bottom, bars); gymPaintEval();
 }
 document.addEventListener("click", (e) => {
   if (st.game !== "gym") return; const t = e.target.closest && e.target.closest("#gymDo,#gymNext,#gymEx"); if (!t) return;
@@ -619,9 +632,22 @@ function puzzleLoad(p) {
   const pz = { p, i: 1, done: false, ok: null };
   live = { c, color: c.turn(), sel: null, targets: [], last: [f.slice(0, 2), f.slice(2, 4)], lock: false, refresh: () => puzzlePaint(), onMove: (mv) => puzzleMove(mv, pz) }; st.pz = pz; return pz;
 }
+/* puzzles: a right move that gives up material (a piece of 3 or more left where it can be taken for less, or taken for free) or the
+   right underpromotion is marked Brilliant, like in the review */
+function pzBrill(c, mv) {
+  if (mv.promotion && mv.promotion !== "q") return { kind: "underpromo", txt: `Brilliant!! Promoting to a ${{ n: "knight", r: "rook", b: "bishop" }[mv.promotion]}, not a queen.` };
+  const V = PV[mv.promotion || mv.piece] || 0, got = mv.captured ? PV[mv.captured] || 0 : 0; if (V < 3 || V - got < 2) return null;
+  const caps = c.moves({ verbose: true }).filter((m) => m.to === mv.to && m.captured); if (!caps.length) return null;
+  const cheapest = Math.min(...caps.map((m) => PV[m.piece] || 0)), take = caps.find((m) => (PV[m.piece] || 0) === cheapest);
+  const t = new Chess(c.fen()); t.move(take); const back = t.moves({ verbose: true }).some((m) => m.to === mv.to && m.captured);
+  if (back && cheapest >= V) return null;   /* a fair trade, not a sacrifice */
+  const name = { q: "queen", r: "rook", b: "bishop", n: "knight" }[mv.promotion || mv.piece];
+  return { kind: mv.piece === "q" ? "brilliant_q" : mv.piece === "r" ? "brilliant_r" : "brilliant_minor", txt: `Brilliant!! You offered your ${name}.` };
+}
+function pzBadge(sq) { const w = document.getElementById("lvWrap"); if (!w) return; const [c, r] = rvSq(sq, live.color === "b"); const b = document.createElement("span"); b.className = "sqb cls brilliant pzbr"; b.textContent = "!!"; b.style.left = (c + 1) * 12.5 + "%"; b.style.top = r * 12.5 + "%"; w.appendChild(b); setTimeout(() => b.remove(), 2600); }
 function puzzleMove(mv, pz) {
   const want = pz.p.moves[pz.i], got = mv.from + mv.to + (mv.promotion && want.length > 4 ? mv.promotion : ""), mates = live.c.in_checkmate();
-  if (got === want || (mates && /mate/.test(pz.p.themes.join(" ")))) { pz.i++; if (pz.i >= pz.p.moves.length || mates) { pz.done = true; pz.ok = pz.fail ? false : true; live.lock = true; return puzzleEnd(pz); } live.lock = true; puzzlePaint(); setTimeout(() => { const o = pz.p.moves[pz.i]; const m2 = live.c.move({ from: o.slice(0, 2), to: o.slice(2, 4), promotion: o[4] }); live.last = [m2.from, m2.to]; pz.i++; live.lock = false; puzzlePaint(); }, 450); }
+  if (got === want || (mates && /mate/.test(pz.p.themes.join(" ")))) { const br = pzBrill(live.c, mv); if (br) { pz.brill = (pz.brill || 0) + 1; st.msg = br.txt; setTimeout(() => pzBadge(mv.to), 60); try { Snd.end(true); } catch (e) { /* quiet */ } pipPop(pipPick(br.kind, pz.i), "wow"); pipSay(pipPick(br.kind, pz.i)); } pz.i++; if (pz.i >= pz.p.moves.length || mates) { pz.done = true; pz.ok = pz.fail ? false : true; live.lock = true; return puzzleEnd(pz); } live.lock = true; puzzlePaint(); setTimeout(() => { const o = pz.p.moves[pz.i]; const m2 = live.c.move({ from: o.slice(0, 2), to: o.slice(2, 4), promotion: o[4] }); live.last = [m2.from, m2.to]; pz.i++; live.lock = false; puzzlePaint(); }, 450); }
   else { live.c.undo(); pz.fail = true; pz.done = true; pz.ok = false; live.lock = true; live.last = null; st.msg = `Not that one. The answer was ${solSAN(pz)}.`; puzzleEnd(pz); }
 }
 function solSAN(pz) { const c = new Chess(pz.p.fen), m0 = pz.p.moves[0]; c.move({ from: m0.slice(0, 2), to: m0.slice(2, 4), promotion: m0[4] }); const m = pz.p.moves[1], r = c.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] }); return r ? r.san : m; }

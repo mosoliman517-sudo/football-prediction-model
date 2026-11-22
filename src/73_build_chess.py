@@ -45,7 +45,7 @@ print("lookup:", len(evs), "events,", len(names), "players,", len(lookup["games"
 data = {"lookup": lookup, "model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
 import base64, glob
 pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(data:image/svg+xml;base64,{base64.b64encode(open(f,'rb').read()).decode()})}}" for f in sorted(glob.glob("01_data_chess/pieces/*.svg")))
-html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/name_sync.js", encoding="utf-8").read() + open("site/coach_lines.js", encoding="utf-8").read() + open("site/opening_stories.js", encoding="utf-8").read())
+html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/name_sync.js", encoding="utf-8").read() + open("site/coach_lines.js", encoding="utf-8").read() + open("site/opening_stories.js", encoding="utf-8").read() + open("site/install.js", encoding="utf-8").read())
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
 data["champ"] = json.load(open("02_processed_data/chess_champ.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_champ.json") else None   # src/78: Total Chess games + FIDE profiles
@@ -57,8 +57,11 @@ _rc = json.load(open("02_processed_data/chess_ratecal.json")) if os.path.exists(
 data["ratecal"] = {k: _rc[k] for k in ("book", "coef", "speeds", "maps", "curve", "spread") if k in _rc} if _rc else None   # src/85: game-rating calibration
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
+html = html.replace("/*__EXTRAS__*/", open("site/chess_extras.js", encoding="utf-8").read())   # more lessons, endgame trainer, guess the famous game
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
-if PUBLIC: html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + html + "</html>"
+if PUBLIC:   # installable like the other sports: manifest, icons, and the shared offline service worker
+    pwa = '<link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="../apple-touch-icon.png">'
+    html = '<!doctype html><html lang="en"><head><meta charset="utf-8">' + pwa + html + '<script>if ("serviceWorker" in navigator && location.protocol === "https:") addEventListener("load", () => navigator.serviceWorker.register("../sw.js").catch(() => {}));</script></html>'
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 if PUBLIC:
     sys.path.insert(0, "src"); from split_loader import split_main_script     # splash first, game code in app.<hash>.js

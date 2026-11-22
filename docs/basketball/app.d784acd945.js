@@ -75,6 +75,177 @@ const NameSync = {
   },
 };
 (() => { const s = document.createElement("style"); s.textContent = "#nsAsk{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:16px;animation:nsIn .25s ease-out}#nsAsk .nsbox{width:min(420px,100%);background:#141b17;color:#f4f1ea;border:2px solid var(--accent,var(--gold,#f2c14e));border-radius:20px;padding:22px;box-shadow:0 24px 60px -20px #000}#nsAsk h2{margin:0 0 6px;font-size:26px}#nsAsk p{margin:0 0 12px;opacity:.8;font-size:14px;line-height:1.45}#nsAsk input{width:100%;box-sizing:border-box;font:700 20px inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line,#ffffff33);background:rgba(0,0,0,.25);color:inherit}#nsAsk .nsmsg{min-height:20px;font-size:13px;margin:8px 0;color:#ff9a8a}#nsAsk .nsrow{display:flex;justify-content:flex-end}#nsAsk button{font:700 15px inherit;padding:10px 18px;border-radius:12px;border:0;background:var(--accent,var(--gold,#f2c14e));color:#111;cursor:pointer}@keyframes nsIn{from{opacity:0}}"; document.head.appendChild(s); })();
+/* Ranked seasons, shared by football and basketball (each build includes this file).
+   A season is a calendar month (UTC). Everyone starts each season on 1000 season points, and every ranked result moves them by
+   the same amount it moves your Elo (the database adds up this month's rating history: season_board / my_season in
+   online/schema_v13.sql). Lifetime Elo is untouched and still used for matchmaking.
+   Rewards: when a season ends, the page reads where you finished and unlocks an achievement (Season regular for 10+ games,
+   Top 10, Podium, Champion) and keeps the finish in your trophy cabinet. */
+const Season = {
+  month(d) { d = d || new Date(); return d.toISOString().slice(0, 7); },
+  prev() { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); return this.month(d); },
+  name(m) { const [y, mo] = m.split("-"); return new Date(Date.UTC(+y, +mo - 1, 1)).toLocaleString(undefined, { month: "long", timeZone: "UTC" }) + " " + y; },
+  ends() { const d = new Date(); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)); },
+  left() { const s = Math.max(0, (this.ends() - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; },
+  missing: false,
+  async board(m) {   /* public: works signed out too; a 404 means schema_v13.sql has not been run yet */
+    try { const t = Account.signedIn ? await Account.token() : null; const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/season_board`, { method: "POST", headers: t ? Account.hdr(t) : Board.headers(), body: JSON.stringify({ p_month: m }) }); if (r.status === 404) { this.missing = true; return null; } return r.ok ? await r.json() : null; } catch (e) { return null; }
+  },
+  async mine(m) { const r = await Ranked.rpc("my_season", { p_month: m }); return r && r[0] ? r[0] : null; },
+  tier(f) { if (!f || f.games < 1) return null; if (f.place === 1 && f.players >= 3) return ["champ", "Champion"]; if (f.place <= 3 && f.players >= 5) return ["podium", "Podium"]; if (f.place <= 10 && f.players >= 12) return ["top10", "Top 10"]; if (f.games >= 10) return ["regular", "Season regular"]; return ["played", "Took part"]; },
+  /* once per finished season: read the final standing, keep it in the cabinet and unlock the reward */
+  async reward() {
+    if (!Account.signedIn || Board.mode !== "rest") return; const pm = this.prev(), p = prof(); p.rseasons = p.rseasons || {};
+    if (p.rseasons[pm] !== undefined) return;
+    const f = await this.mine(pm); if (this.missing) return;
+    p.rseasons[pm] = f ? { place: f.place, players: f.players, pts: f.pts, games: f.games, wins: f.wins } : 0; saveProf(p);
+    if (!f) return; const t = this.tier(f);
+    if (f.games >= 10) award("season_regular"); if (t && ["top10", "podium", "champ"].includes(t[0])) award("season_top10"); if (t && ["podium", "champ"].includes(t[0])) award("season_podium"); if (t && t[0] === "champ") award("season_champ");
+    try { toast(`<b>${esc(this.name(pm))} season over</b><br>You finished ${ord(f.place)} of ${f.players} with ${f.pts} points.`, "ach"); } catch (e) { /* no toast yet */ }
+  },
+  cabinet() {
+    const s = prof().rseasons || {}, ks = Object.keys(s).filter((k) => s[k]).sort().reverse();
+    if (!ks.length) return "";
+    return `<div class="sncab"><h3>Trophy cabinet</h3><div class="sncabrow">${ks.map((k) => { const f = s[k], t = this.tier(f) || ["played", "Took part"]; return `<div class="sntro ${t[0]}" title="${esc(t[1])}"><span class="sntroic">${SN_CUP(t[0])}</span><b>${esc(this.name(k))}</b><small>${ord(f.place)} of ${f.players} · ${f.pts} pts</small></div>`; }).join("")}</div></div>`;
+  },
+  async render(box) {
+    const m = this.month(), me = prof().nick;
+    box.innerHTML = `<div class="snhero"><div class="snglow"></div><div><div class="snkick">Season</div><h2 class="snname">${esc(this.name(m))}</h2><div class="fine">Everyone starts on 1000. Ranked results move your season points like your Elo. Ends in <b class="num" id="snLeft">${this.left()}</b>.</div></div><div class="snme" id="snMe">${skelRows(1)}</div></div>
+      <div class="snrew">${[["regular", "Season regular", "10 ranked games"], ["top10", "Top 10", "with 12+ players"], ["podium", "Podium", "top 3 with 5+ players"], ["champ", "Champion", "first place"]].map(([k, n, d]) => `<div class="snr ${k}"><span>${SN_CUP(k)}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div>
+      <div id="snBoard" class="lbx">${skelRows(5)}</div>${this.cabinet()}`;
+    clearInterval(this.iv); this.iv = setInterval(() => { const el = document.getElementById("snLeft"); if (!el) return clearInterval(this.iv); el.textContent = this.left(); }, 30000);
+    const [rows, mine] = await Promise.all([this.board(m), Account.signedIn ? this.mine(m) : null]);
+    const b = document.getElementById("snBoard"), mb = document.getElementById("snMe"); if (!b) return;
+    if (mb) mb.innerHTML = !Account.signedIn ? '<div class="fine">Sign in to play the season.</div>' : mine ? `<b class="num snpts">${mine.pts}</b><small>${ord(mine.place)} of ${mine.players}<br>${mine.games} played · ${mine.wins} won</small>` : '<b class="num snpts">1000</b><small>Not ranked yet<br>play a ranked match</small>';
+    if (!rows) { b.innerHTML = this.missing ? '<div class="fine">Seasons need the latest database update (online/schema_v13.sql).</div>' : '<div class="fine">Could not load the season. Try again in a moment.</div>'; return; }
+    if (!rows.length) { b.innerHTML = emptyState(SN_CUP("champ"), "The season has just started", "Nobody has played a ranked match this month yet. Win the first one and you're top of the table."); return; }
+    const pod = rows.slice(0, 3), order = pod.length === 3 ? [1, 0, 2] : pod.map((_, i) => i);
+    b.innerHTML = `<div class="snpod">${order.map((i) => { const r = pod[i]; return `<div class="snpp p${i + 1} ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}" style="--d:${120 + i * 140}ms">${i === 0 ? '<span class="sncrown">👑</span>' : ""}${avatarHTML(r.avatar, "lg", r.nick)}<b>${esc(r.nick)}</b><span class="num">${r.pts}</span><div class="snstep">${i + 1}</div></div>`; }).join("")}</div>`
+      + rows.slice(3).map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}" data-pc="${esc(r.nick)}"><b class="num">${i + 4}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.pts}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("");
+  },
+};
+const ord = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+const SN_CUP = (k) => { const c = { champ: ["#ffe27a", "#d49a12"], podium: ["#f2f4f8", "#9aa3b2"], top10: ["#e7b07a", "#a8642c"], regular: ["#9fe3c4", "#2f9e6e"], played: ["#c9d1e0", "#6c7690"] }[k] || ["#ccc", "#888"]; return `<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="sn-${k}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs><path d="M18 8h28v12a14 14 0 0 1-28 0z" fill="url(#sn-${k})" stroke="#0006" stroke-width="2"/><path d="M18 12h-8a8 8 0 0 0 9 10M46 12h8a8 8 0 0 1-9 10" fill="none" stroke="url(#sn-${k})" stroke-width="4"/><rect x="28" y="33" width="8" height="12" fill="url(#sn-${k})"/><rect x="20" y="45" width="24" height="8" rx="2" fill="url(#sn-${k})" stroke="#0006" stroke-width="2"/></svg>`; };
+(() => { const s = document.createElement("style"); s.textContent = `
+.snhero{position:relative;overflow:hidden;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:18px;border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent,#f2c14e) 22%,transparent),transparent 70%),var(--surface,#ffffff10);border:1px solid var(--line,#ffffff22)}
+.snglow{position:absolute;inset:-40% -10% auto auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent,#f2c14e) 45%,transparent),transparent 65%);animation:snPulse 5s ease-in-out infinite;pointer-events:none}
+@keyframes snPulse{50%{transform:scale(1.15);opacity:.7}}
+.snkick{font:700 12px var(--mono,monospace);letter-spacing:.14em;text-transform:uppercase;opacity:.75}.snname{margin:2px 0 6px;font-size:30px}
+.snme{position:relative;min-width:150px;text-align:right;display:flex;gap:10px;align-items:center;justify-content:flex-end}.snme small{opacity:.8;font-size:12px;line-height:1.35;text-align:left}.snpts{font-size:38px;color:var(--accent,#f2c14e)}
+.snrew{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.snr{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 6px;border-radius:14px;background:var(--surface,#ffffff10);border:1px solid var(--line,#ffffff22)}.snr span svg{width:34px;height:34px}.snr b{font-size:13px}.snr small{font-size:11px;opacity:.7}
+.snpod{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:8px 0 14px}.snpp{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:min(30%,150px);animation:snUp .6s cubic-bezier(.2,1.4,.4,1) both;animation-delay:var(--d)}.snpp b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.snpp .num{font-weight:800}
+.snstep{width:100%;border-radius:12px 12px 4px 4px;display:grid;place-items:center;font:800 26px var(--mono,monospace);color:#111}.p1 .snstep{height:92px;background:linear-gradient(#ffe27a,#d49a12)}.p2 .snstep{height:66px;background:linear-gradient(#f2f4f8,#9aa3b2)}.p3 .snstep{height:48px;background:linear-gradient(#e7b07a,#a8642c)}
+.snpp{padding-top:26px}.snpp .av{width:58px;height:58px;font-size:24px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:var(--surface,#ffffff18);border:3px solid #9aa3b2;box-shadow:0 8px 20px -10px #000}.snpp .av img{width:100%;height:100%;object-fit:cover}.p1 .av{width:72px;height:72px;border-color:#d49a12;box-shadow:0 0 0 4px color-mix(in srgb,#ffe27a 35%,transparent),0 10px 26px -10px #000}.p3 .av{border-color:#a8642c}.sncrown{top:0}
+.snpp.me b{color:var(--accent,#f2c14e)}.sncrown{position:absolute;top:-22px;font-size:24px;animation:snBob 2s ease-in-out infinite}@keyframes snBob{50%{transform:translateY(-4px) rotate(-6deg)}}@keyframes snUp{from{opacity:0;transform:translateY(30px)}}
+.sncab{margin-top:16px}.sncab h3{font-size:20px;margin:0 0 8px}.sncabrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.sntro{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 12px;border-radius:14px;background:var(--surface,#ffffff10);border:1px solid var(--line,#ffffff22);min-width:118px}.sntroic svg{width:44px;height:44px}.sntro small{opacity:.75;font-size:11px}.sntro.champ{box-shadow:0 0 0 2px #d49a12 inset}
+.bktabs{display:flex;gap:6px;margin:0 0 12px}
+@media (max-width:520px){.snrew{grid-template-columns:repeat(2,1fr)}.snname{font-size:24px}.snme{text-align:left;justify-content:flex-start}}
+@media (prefers-reduced-motion:reduce){.snglow,.sncrown,.snpp{animation:none}}`; document.head.appendChild(s); })();
+/* Your numbers in every sport, on one card in the football and basketball profiles (each build includes this file).
+   All three sports live on the same site, so this reads each one's saved progress from this browser (football
+   "arena-plays-v1", basketball "arena-nba-plays-v1", chess "bkc_*") and, when you're signed in, each ranked Elo from its own
+   database schema. Nothing is estimated: a sport you haven't played says so.
+   Also the player card: tap a name on a leaderboard or in Friends to see that player's public profile (online/schema_v14.sql). */
+const AllStats = {
+  read(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  sport(key) {
+    const items = this.read(key); if (!items) return null;
+    const p = items.profile || {}, plays = Object.entries(items).filter(([k]) => k.startsWith("p_")).map(([, v]) => v).filter((x) => x && x.res);
+    let cur = 0, best = 0, yr = 0, mr = 0; plays.slice().sort((a, b) => (a.at < b.at ? -1 : 1)).forEach((x) => { if (x.pick === x.res) { yr++; cur++; best = Math.max(best, cur); } else cur = 0; if (x.mpick === x.res) mr++; });
+    const days = Object.keys(p.days || {}).filter((d) => p.days[d] > 0);
+    return { rounds: p.rounds || 0, xp: p.xp || 0, ach: Object.keys(p.ach || {}).length, n: plays.length, yr, mr, best, days: days.length, since: days.sort()[0] || null };
+  },
+  chess() {
+    const g = (k, d) => { const v = this.read("bkc_" + k); return v == null ? d : v; };
+    const rec = g("ai_rec", null), gym = g("gym_tot", null), bests = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("bkc_best_")) bests[k.slice(9)] = +this.read(k) || 0; } } catch (e) { /* blocked */ }
+    if (!rec && !gym && !Object.keys(bests).length) return null;
+    return { rec, gym, bests };
+  },
+  pct(a, n) { return n ? Math.round((a / n) * 100) + "%" : "–"; },
+  tile(v, l) { return `<div class="asT"><b class="num">${v}</b><small>${l}</small></div>`; },
+  html() {
+    const fb = this.sport("arena-plays-v1"), bb = this.sport("arena-nba-plays-v1"), ch = this.chess();
+    const ball = (s, name, cls, elo) => `<div class="asS ${cls}"><div class="asH"><span class="asIc">${cls === "fb" ? "⚽" : "🏀"}</span><b>${name}</b><span class="asElo" data-aselo="${elo}">Elo –</span></div>${s ? `<div class="asG">${this.tile(s.rounds.toLocaleString(), "rounds played")}${this.tile(s.n ? this.pct(s.yr, s.n) : "–", s.n ? `your calls right (${s.n})` : "no predictions yet")}${this.tile(s.n ? this.pct(s.mr, s.n) : "–", "the model on the same")}${this.tile(s.best, "best run of right calls")}${this.tile(s.days, "days played")}${this.tile(s.ach, "achievements")}</div>${s.n ? `<div class="asBar"><i style="--w:${(s.yr / s.n) * 100}%"></i><i class="m" style="--w:${(s.mr / s.n) * 100}%"></i></div><div class="fine">${s.yr > s.mr ? "You're ahead of the model." : s.yr === s.mr ? "Dead level with the model." : `The model leads by ${s.mr - s.yr}.`}</div>` : ""}` : '<div class="fine">Not played in this browser yet.</div>'}</div>`;
+    const chessBox = `<div class="asS ch"><div class="asH"><span class="asIc">♞</span><b>Chess</b></div>${ch ? `<div class="asG">${ch.rec ? this.tile(`${ch.rec.w}-${ch.rec.d}-${ch.rec.l}`, "vs the coaches (W-D-L)") : this.tile("–", "no games vs the coaches")}${ch.gym ? this.tile(ch.gym.n, "opening gym lines") + this.tile(ch.gym.book, "book moves found") : ""}${Object.entries(ch.bests).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => this.tile(v, "best " + k.replace(/_/g, " "))).join("")}</div>` : '<div class="fine">Not played in this browser yet.</div>'}</div>`;
+    setTimeout(() => this.elo(), 0);
+    return `<div class="card asCard"><h3>Across every sport</h3><div class="asW">${ball(fb, "Football", "fb", "public")}${ball(bb, "Basketball", "bb", "nba")}${chessBox}</div><div class="fine" style="margin-top:8px">From this browser's saved progress; ranked Elo comes from your account.</div></div>`;
+  },
+  async elo() {
+    if (typeof Account === "undefined" || !Account.signedIn || typeof Board === "undefined" || Board.mode !== "rest") return; const t = await Account.token(); if (!t) return;
+    for (const s of ["public", "nba"]) { const el = document.querySelector(`[data-aselo="${s}"]`); if (!el) continue; try { const r = await fetch(`${Board.cfg.url}/rest/v1/rpc/my_rating`, { method: "POST", headers: NameSync.hdr(Board.cfg, t, s), body: "{}" }); const j = r.ok ? await r.json() : null; el.textContent = j && j[0] && j[0].games ? `Elo ${j[0].elo}` : "unranked"; } catch (e) { /* offline */ } }
+  },
+};
+/* ---------- player card: anyone's public profile ---------- */
+const PCard = {
+  async open(nick) {
+    if (typeof modal !== "function") return; modal(`<div class="pcBox"><div class="pcTop"><div class="skel" style="height:90px"></div></div></div>`);
+    let r = null; try { const t = Account.signedIn ? await Account.token() : null; const x = await fetch(`${Board.cfg.url}/rest/v1/rpc/player_card`, { method: "POST", headers: t ? Account.hdr(t) : Board.headers(), body: JSON.stringify({ p_nick: nick }) }); r = x.status === 404 ? "missing" : x.ok ? (await x.json())[0] : null; } catch (e) { r = null; }
+    const box = document.querySelector(".pcBox"); if (!box) return;
+    if (r === "missing") { box.innerHTML = `<h2>${esc(nick)}</h2><p class="fine">Player cards need the latest database update (online/schema_v14.sql).</p><div class="row"><button class="btn ghost" id="modalClose" type="button">Close</button></div>`; return; }
+    if (!r) { box.innerHTML = `<h2>${esc(nick)}</h2><p class="fine">Couldn't load this player. Try again in a moment.</p><div class="row"><button class="btn ghost" id="modalClose" type="button">Close</button></div>`; return; }
+    const on = r.last_seen && Date.now() - new Date(r.last_seen) < 180000, form = (r.form || []).slice(-10);
+    box.innerHTML = `<div class="pcTop"><div class="pcAv ${on ? "on" : ""}">${avatarHTML(r.avatar, "xl", r.nick)}</div><div><h2>${esc(r.nick)}${badgesHTML(r.badges)}</h2><div class="fine">${on ? '<span class="pcDot"></span>Online now' : r.last_seen ? "Last seen " + new Date(r.last_seen).toLocaleDateString() : ""}</div><div class="pcRank">${rankTag(r.elo)} <b class="num">${r.elo}</b> Elo · ${esc(rankOf(r.elo).name)}</div></div></div>
+      <div class="asG">${AllStats.tile(r.games, "ranked games")}${AllStats.tile(AllStats.pct(r.wins, r.games), "won")}${AllStats.tile(r.season_pts != null ? r.season_pts : "–", "season points")}${AllStats.tile(r.season_place ? ord(r.season_place) : "–", "this season")}</div>
+      ${form.length ? `<div class="pcForm"><span class="fine">Last ${form.length}</span>${form.map((d) => `<i class="${d > 0 ? "w" : d < 0 ? "l" : "d"}" title="${d > 0 ? "+" : ""}${d}">${d > 0 ? "W" : d < 0 ? "L" : "D"}</i>`).join("")}</div>` : ""}
+      ${r.fav_player || r.fav_team ? `<div class="fine" style="margin-top:8px">${r.fav_player ? "Favourite player: <b>" + esc(r.fav_player) + "</b>" : ""}${r.fav_player && r.fav_team ? " · " : ""}${r.fav_team ? "Supports <b>" + esc(r.fav_team) + "</b>" : ""}</div>` : ""}
+      <div class="row" style="margin-top:14px">${r.nick !== prof().nick && Account.signedIn ? `<button class="btn" data-pcadd="${esc(r.nick)}" type="button">Add friend</button>` : ""}<button class="btn ghost" id="modalClose" type="button">Close</button></div>`;
+  },
+};
+document.addEventListener("click", (e) => {
+  const a = e.target.closest && e.target.closest("[data-pc]"); if (a && !e.target.closest("button:not([data-pc])")) { e.preventDefault(); try { Snd.tick(); } catch (x) { /* quiet */ } PCard.open(a.dataset.pc); return; }
+  const f = e.target.closest && e.target.closest("[data-pcadd]"); if (f) { f.disabled = true; Ranked.rpcx("add_friend", { p_nick: f.dataset.pcadd }).then((r) => { f.textContent = r.ok && r.data === "ok" ? "Added" : r.ok && r.data === "exists" ? "Already friends" : "Couldn't add"; }); }
+});
+(() => { const s = document.createElement("style"); s.textContent = `
+.asW{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.asS{border-radius:16px;padding:12px;border:1px solid var(--line,#ffffff22);background:var(--surface,#ffffff0d);position:relative;overflow:hidden}
+.asS::before{content:"";position:absolute;inset:0 0 auto;height:4px}.asS.fb::before{background:linear-gradient(90deg,#3ddc84,#f2c14e)}.asS.bb::before{background:linear-gradient(90deg,#ff8a3d,#e94560)}.asS.ch::before{background:linear-gradient(90deg,#c9a46a,#6b4f2a)}
+.asH{display:flex;align-items:center;gap:8px;margin-bottom:8px}.asIc{font-size:20px}.asH b{font-size:16px;flex:1}.asElo{font:700 12px var(--mono,monospace);padding:3px 8px;border-radius:999px;background:var(--surface,#ffffff14);border:1px solid var(--line,#ffffff22)}
+.asG{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.asT{padding:8px;border-radius:10px;background:var(--bg2,#00000014)}.asT b{display:block;font-size:20px}.asT small{font-size:11px;opacity:.75;line-height:1.2;display:block}
+.asBar{position:relative;height:8px;border-radius:99px;background:var(--line,#ffffff22);margin:8px 0 4px;overflow:hidden}.asBar i{position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--accent,#f2c14e);border-radius:99px;animation:asGrow .9s cubic-bezier(.2,.8,.2,1) both}.asBar i.m{top:5px;background:#8a93a8;opacity:.9}@keyframes asGrow{from{width:0}}
+.pcBox h2{margin:0;font-size:26px}.pcTop{display:flex;gap:14px;align-items:center;margin:-6px -6px 12px;padding:14px;border-radius:18px;background:radial-gradient(circle at 15% 30%,color-mix(in srgb,var(--accent,#f2c14e) 38%,transparent),transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--accent,#f2c14e) 18%,transparent),transparent)}.pcAv{position:relative}.pcAv.on::after{content:"";position:absolute;right:4px;bottom:4px;width:14px;height:14px;border-radius:50%;background:#3ddc84;border:3px solid var(--card,#141b17)}
+.pcDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ddc84;margin-right:6px;animation:snPulse 1.6s infinite}.pcRank{margin-top:4px}.pcBox .asG{grid-template-columns:repeat(4,1fr)}
+.pcForm{display:flex;gap:4px;align-items:center;margin-top:10px;flex-wrap:wrap}.pcForm i{font:800 11px var(--mono,monospace);font-style:normal;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#111}.pcForm i.w{background:#3ddc84}.pcForm i.l{background:#ff7a7a}.pcForm i.d{background:#c9d1e0}
+[data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}
+@media (max-width:640px){.asW{grid-template-columns:1fr}.pcBox .asG{grid-template-columns:repeat(2,1fr)}}`; document.head.appendChild(s); })();
+/* Install ballknowledge as an app, from any sport page (each build includes this file).
+   Chrome, Edge and Android offer a real install prompt: we keep it and show a small "Get the app" chip from your second day of
+   playing (never on the first visit, never once installed, and "Not now" hides it for two weeks). iPhone and iPad have no
+   prompt, so the chip opens two steps: Share, then Add to Home Screen. Installed, the site opens full screen with its own icon,
+   and the pages you've visited work offline (the service worker keeps them). */
+const Install = {
+  dp: null,
+  standalone() { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; },
+  ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); },
+  days() { try { const k = "bk_visit_days", d = JSON.parse(localStorage.getItem(k) || "[]"), t = new Date().toISOString().slice(0, 10); if (!d.includes(t)) { d.push(t); localStorage.setItem(k, JSON.stringify(d.slice(-30))); } return d.length; } catch (e) { return 1; } },
+  snoozed() { try { return Date.now() < +(localStorage.getItem("bk_install_snooze") || 0); } catch (e) { return false; } },
+  show() {
+    if (this.standalone() || this.snoozed() || document.getElementById("bkInst") || location.protocol !== "https:" && !/localhost|127\.0\.0\.1/.test(location.hostname)) return;
+    if (!this.dp && !this.ios()) return;
+    const c = document.createElement("div"); c.id = "bkInst";
+    c.innerHTML = `<img src="${location.pathname.split("/").length > 2 ? "../" : ""}icon-192.png" alt=""><div><b>Get the app</b><small>Full screen, its own icon, works offline.</small></div><button type="button" class="bkiGo">Install</button><button type="button" class="bkiX" aria-label="Not now">✕</button>`;
+    document.body.appendChild(c);
+    c.querySelector(".bkiX").onclick = () => { try { localStorage.setItem("bk_install_snooze", Date.now() + 14 * 864e5); } catch (e) { /* blocked */ } c.classList.add("out"); setTimeout(() => c.remove(), 300); };
+    c.querySelector(".bkiGo").onclick = () => {
+      if (this.dp) { this.dp.prompt(); this.dp.userChoice.then((r) => { if (r && r.outcome === "accepted") c.remove(); this.dp = null; }); return; }
+      const m = document.createElement("div"); m.id = "bkInstIos"; m.innerHTML = `<div class="bkib"><h3>Add ballknowledge to your Home Screen</h3><ol><li>Tap the <b>Share</b> button <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5M5 12v8h14v-8"/></svg> in Safari's toolbar.</li><li>Scroll and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol><button type="button">Got it</button></div>`;
+      document.body.appendChild(m); m.onclick = (e) => { if (e.target === m || e.target.tagName === "BUTTON") m.remove(); };
+    };
+  },
+  init() {
+    const n = this.days();
+    addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); this.dp = e; if (n >= 2) setTimeout(() => this.show(), 8000); });
+    addEventListener("appinstalled", () => { const c = document.getElementById("bkInst"); if (c) c.remove(); });
+    if (this.ios() && n >= 2) setTimeout(() => this.show(), 8000);
+  },
+};
+Install.init();
+(() => { const s = document.createElement("style"); s.textContent = `
+#bkInst{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9000;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:18px;background:#141b17f2;color:#f4f1ea;border:1px solid #ffffff2a;box-shadow:0 18px 40px -14px #000;width:min(440px,calc(100% - 32px));backdrop-filter:blur(10px);animation:bkiIn .5s cubic-bezier(.2,1.3,.4,1)}
+#bkInst.out{opacity:0;transform:translate(-50%,20px);transition:.3s}#bkInst img{width:40px;height:40px;border-radius:10px}#bkInst div{flex:1;min-width:0}#bkInst b{display:block;font-size:15px}#bkInst small{font-size:12px;opacity:.75}
+#bkInst .bkiGo{font:700 14px inherit;padding:9px 14px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111;cursor:pointer}#bkInst .bkiX{background:none;border:0;color:inherit;opacity:.6;font-size:16px;cursor:pointer;padding:6px}
+@keyframes bkiIn{from{opacity:0;transform:translate(-50%,30px)}}
+#bkInstIos{position:fixed;inset:0;z-index:100001;background:#000a;display:flex;align-items:flex-end;justify-content:center;padding:16px}#bkInstIos .bkib{background:#141b17;color:#f4f1ea;border-radius:20px;padding:18px 20px;width:min(440px,100%);border:1px solid #ffffff2a}
+#bkInstIos h3{margin:0 0 8px;font-size:19px}#bkInstIos ol{margin:0 0 12px;padding-left:20px;line-height:1.7}#bkInstIos svg{vertical-align:-3px}#bkInstIos button{font:700 15px inherit;padding:10px 18px;border-radius:12px;border:0;background:var(--accent,#f2c14e);color:#111}`; document.head.appendChild(s); })();
 /* Lines for the football and basketball sidekicks (spoken with Kokoro, see src/80_make_voice.py). Funny on top, a little real underneath. */
 const MASCOT_LINES = {
   boot: {
@@ -1435,6 +1606,10 @@ const ACH = [
   ["ranked_win", "Winner winner", "Win a ranked match"],
   ["ranked5", "Regular", "Finish five ranked matches"],
   ["elo1200", "Rising", "Reach 1200 Elo"],
+  ["season_regular", "Season regular", "Play 10 ranked games in one monthly season"],
+  ["season_top10", "Top 10", "Finish a monthly season in the top 10 (12+ players)"],
+  ["season_podium", "Podium", "Finish a monthly season in the top 3 (5+ players)"],
+  ["season_champ", "Season champion", "Win a monthly season"],
   ["alldiff", "Every level", "Play a ballknowledge game on all four difficulty levels"],
   ["rounds100", "Century", "Play 100 games"],
   ["squad", "The whole squad", "Play all eleven ballknowledge originals"],
@@ -1461,11 +1636,11 @@ const ACH = [
 ];
 /* Badge difficulty: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary. Every unlocked achievement can be equipped as a badge. */
 const TIERS = [["Common", "#9aa3b2"], ["Uncommon", "#4ade80"], ["Rare", "#38bdf8"], ["Epic", "#c084fc"], ["Legendary", "#fbbf24"]];
-const ACH_TIER = { curious: 0, avatar: 0, fav: 0, social: 0, first_call: 0, first_buzz: 0, sticker1: 0, pred1: 0, ranked_first: 0, early: 0, night: 0, flame3: 0,
+const ACH_TIER = { season_regular: 2, season_top10: 3, season_podium: 3, season_champ: 4, curious: 0, avatar: 0, fav: 0, social: 0, first_call: 0, first_buzz: 0, sticker1: 0, pred1: 0, ranked_first: 0, early: 0, night: 0, flame3: 0,
   draw: 1, sharp: 1, upset: 1, streak5: 1, hat3: 1, dailybeat: 1, splash_10: 1, splash_rare: 1, pred10: 1, tttwin: 1, friend: 1, table: 1, hol5: 1, decade: 1, alldiff: 1,
   speed: 2, md9: 2, daily5: 2, flame7: 2, globe: 2, ranked_win: 2, elo1200: 2, ranked5: 2, rounds100: 2, stick50: 2, page: 2, squad: 2, giant: 2,
   elite_win: 3, streak10: 3, streak10q: 3, beatmodel: 3, quizmaster: 3, captain: 3, splash_leg: 3, stick150: 4, splash_all: 4, wk_play: 1, wk_win: 4, ic_perfect: 3, login7: 2, login30: 4, xi_perfect: 3, rapid_win: 2, rapid_20: 3, bracket_win: 3, scramble10: 2, daily_habit: 2, club_quiz: 0 };
-const ACH_ICON = { first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", wk_play: "calendar", wk_win: "trophy", ic_perfect: "live", login7: "flame", login30: "flame", xi_perfect: "users", rapid_win: "bolt", rapid_20: "timer", bracket_win: "trophy", scramble10: "brain", daily_habit: "calendar", club_quiz: "compass", owner: "crown", admin: "shield" };
+const ACH_ICON = { season_regular: "calendar", season_top10: "medal", season_podium: "trophy", season_champ: "crown", first_call: "target", giant: "swords", sharp: "target", draw: "minus", streak5: "flame", streak10: "bolt", upset: "search", daily5: "star", dailybeat: "calendar", flame3: "flame", flame7: "flame", md9: "chart", table: "rank", hol5: "trend", globe: "globe", decade: "hourglass", friend: "handshake", captain: "medal", quizmaster: "brain", tttwin: "net", splash_all: "monitor", splash_10: "monitor", splash_rare: "gem", splash_leg: "gem", first_buzz: "bulb", speed: "timer", elite_win: "crown", hat3: "ball", streak10q: "bolt", night: "moon", early: "sun", social: "users", avatar: "user", fav: "star", ranked_first: "shield", ranked_win: "trophy", ranked5: "shield", elo1200: "trend", alldiff: "compass", rounds100: "games", squad: "users", curious: "search", pred1: "fore", pred10: "fore", beatmodel: "chip", sticker1: "album", page: "album", stick50: "album", stick150: "album", wk_play: "calendar", wk_win: "trophy", ic_perfect: "live", login7: "flame", login30: "flame", xi_perfect: "users", rapid_win: "bolt", rapid_20: "timer", bracket_win: "trophy", scramble10: "brain", daily_habit: "calendar", club_quiz: "compass", owner: "crown", admin: "shield" };
 const ROLE_BADGES = { owner: ["Owner", "Owns ballknowledge. Only the owner can wear this."], admin: ["Admin", "Looks after ballknowledge. Only admins can wear this."] };
 const badgeName = (id) => ROLE_BADGES[id] ? ROLE_BADGES[id][0] : ((ACH.find((a) => a[0] === id) || [])[1] || "");
 const badgeTier = (id) => ROLE_BADGES[id] ? 5 : ACH_TIER[id] != null ? ACH_TIER[id] : 0;
@@ -1870,6 +2045,7 @@ function rankedEnd(ref, sc) {
 }
 async function ensureNick() {   /* one name everywhere: adopt the master (football) name, or ask you to pick one; never a name made from your email without asking */
   if (!Account.signedIn || Board.mode !== "rest") return; const t = await Account.token(); if (!t) return;
+  Season.reward();
   const master = await NameSync.master(Board.cfg, t), p = prof();
   if (master) { if (p.nick !== master) { p.nick = master; p.board = true; store.items.profile = p; saveLocal(); paintProfileBtn(); } const mine = await NameSync.own(Board.cfg, t, "nba"); if (mine !== master) await Account.setNick(master); return; }
   NameSync.ask(p.nick || NameSync.suggest(Account.session.user.email), async (n) => { const r = await Account.setNick(n); if (r && r.ok) { const q = prof(); q.nick = n; q.board = true; store.items.profile = q; saveProf(q); paintProfileBtn(); try { toast("Name saved: " + esc(n)); } catch (e) { /* no toast */ } } return r; });
@@ -1894,7 +2070,7 @@ async function paintLobbies() {
   const rows = await Ranked.rpc("open_lobbies"), box = $("#rkList"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Could not load lobbies. Check your connection.</div>'; return; }
   const me = prof().nick, list = rows.filter((r) => r.nick !== me || true);
-  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div>${avatarHTML(r.avatar, "xs", r.nick)}<b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : emptyState("<svg class=ic><use href=#i-seat></use></svg>", "No open lobbies", "Create one above and wait for someone to hop in.");
+  box.innerHTML = list.length ? list.map((r) => `<div class="lbrow lobby"><div data-pc="${esc(r.nick)}">${avatarHTML(r.avatar, "xs", r.nick)}<b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span></div><div class="fine">${esc(rkName(r.game))} · ${esc((DIFFS.find((d) => d[0] === r.diff) || [, r.diff])[1])}</div><button class="btn" data-rkjoin="${esc(r.code)}|${esc(r.game)}" type="button" ${r.nick === me ? "disabled" : ""}>${r.nick === me ? "Yours" : "Join"}</button></div>`).join("") : emptyState("<svg class=ic><use href=#i-seat></use></svg>", "No open lobbies", "Create one above and wait for someone to hop in.");
   const st = $("#rkStamp"); if (st) st.textContent = "updates every few seconds";
 }
 /* ---------- The finale: one end-of-game card for every game. A ribbon and a trophy (gold for a win or a good run, silver for a
@@ -1965,13 +2141,14 @@ function rankedJoin(code, game) {
   resetGames(); S.rk = true; S.game = game === "number" ? "value" : game; S.hubGroup = "ranked"; renderRoom(); openOnline(game); joinRoomCode(code); Net.ranked = true;
 }
 async function renderBoards() {
-  const p = prof();
-  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Leaderboard</h2><span class="fine">Ranked by Elo</span></div><div id="bBody" class="lbx" style="margin-top:10px">${skelRows(5)}</div></div>`;
+  const p = prof(), tab = S.btab || "season";
+  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Leaderboard</h2><div class="bktabs scope"><button type="button" class="chip" data-btab="season" aria-pressed="${tab === "season"}">This season</button><button type="button" class="chip" data-btab="all" aria-pressed="${tab === "all"}">All time</button></div></div><div id="bBody" class="lbx" style="margin-top:10px">${skelRows(5)}</div></div>`;
   const body = $("#bBody");
   if (Board.mode !== "rest") { body.innerHTML = '<div class="fine">The leaderboard needs the online database.</div>'; return; }
+  if (tab === "season") return Season.render(body);
   const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
   if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
-  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.");
+  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}" data-pc="${esc(r.nick)}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.");
 }
 
 
@@ -2517,6 +2694,7 @@ async function renderProfilePage() {
   el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Profile</span></div></nav>
   <div class="card pfhead">${avatarHTML(p.avatar, "xl", p.nick)}<div class="pfid"><h1>${esc(p.nick || "Guest")}${signed ? badgesHTML(myBadges(), true) : ""}</h1><div class="label">${esc(lv.name)} · ${p.xp} XP${lv.next ? ` · next: ${esc(lv.next)} at ${lv.to}` : " · top rank"}</div><div class="xpbar"><i style="width:${pct2}%"></i></div>
     <div class="pfchips"><span class="chip2"><b class="num" id="pfElo">${signed ? Ranked.elo : "–"}</b> Elo ${signed ? rankTag(Ranked.elo) + " " + rankOf(Ranked.elo).name : ""}</span><span class="chip2"><b class="num">${st}</b> day streak</span><span class="chip2"><b class="num">${won}/${ACH.length}</b> achievements</span>${favP ? `<span class="chip2"><svg class=ic><use href=#i-star></use></svg> ${esc(favP.n)}</span>` : ""}${p.favT ? `<span class="chip2">${CREST[p.favT] ? badge(p.favT, "sm") : ""} ${esc(p.favT)}</span>` : ""}</div></div></div>
+  ${AllStats.html()}
   <div class="pfgrid"><div class="card"><h3>Edit profile</h3>
     ${signed ? `<label class="pfl">Display name</label><div class="row"><input id="pfNick" maxlength="16" value="${esc(p.nick || "")}" aria-label="Display name"><button class="btn" id="pfNickSave" type="button">Save</button></div><div class="fine" id="pfNickMsg"></div>` : `<div class="fine">Sign in to choose a display name and use friends and Elo.</div>`}
     <label class="pfl">Profile picture</label><div class="avgrid">${avs}</div>
@@ -2544,7 +2722,7 @@ function historyList(rows) {
 async function paintFriends() {
   const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
   if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
-  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.");
+  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow" data-pc="${esc(r.nick)}">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.");
 }
 
 /* ================= Challenge a friend ================= */
@@ -3732,6 +3910,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.cfix) { const [lg, sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(lg, sn, +i, "chal", `x_${S.chal.code}_${lg}_${sn}_${i}`); return; }
   if (b.id === "chCopy") { copyChallenge(chalC(), S.chal.code); return; }
   if (b.id === "chCard") { challengeCard(chalC(), S.chal.code); return; }
+  if (b.dataset.btab) { S.btab = b.dataset.btab; Snd.tick(); renderBoards(); return; }
   if (b.dataset.b) { const [k, v] = b.dataset.b.split("|"); if (k === "game") S.bgame = v; else if (k === "period") S.bperiod = v; else S.bscope = v; Snd.tick(); renderBoards(); return; }
   if (b.dataset.room) { Snd.tick(); resetGames(); S.room = b.dataset.room; S.game = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRooms(); renderRoom(); return; }
   if (b.dataset.game) { Snd.tick(); resetGames(); S.game = b.dataset.game; Usage.play(USPORT, S.game); S.hubGroup = MODEL_IDS.includes(S.game) ? "model" : "bk"; S.chal = null; S.cur = null; S.md = null; S.up = null; S.tab = null; S.hol = null; renderRoom(); if (innerWidth < 760) $("#room").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); return; }

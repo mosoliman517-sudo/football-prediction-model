@@ -2430,6 +2430,8 @@ function learnPage() {
   rvStop(); clearInterval(st.timer); live = null; st = { game: "learn" }; $("#app").className = "fresh";
   $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><h2 style="font-size:32px">${ic("book")}Learn</h2><div class="pipbox">${pipSVG("happy")}<div class="pipsay"><b>${esc(coachName())}</b>${esc(LESSON_HELLO[coachId()] || LESSON_HELLO.pip)}</div></div>
     <div class="cpgrid"><button class="cpcard gpk" type="button" data-go="explorer"><span class="gpki">${ic("compass")}</span><b class="cpcname">Opening explorer</b><span class="fine">Step through any opening and see how masters and club players score with each move, with a fun fact for the big ones.</span></button>
+    <button class="cpcard gpk" type="button" data-go="eg"><span class="gpki">${ic("crown")}</span><b class="cpcname">Endgame trainer</b><span class="fine">Seven endings every player should know, against Stockfish at full strength. Win them, or hold the draw.</span>${(() => { const n = (typeof EGS !== "undefined" ? EGS : []).filter((e) => store.get("eg_" + e.id, 0)).length; return n ? `<span class="cpwinner">${ic("trophy")}${n} mastered</span>` : '<span class="cpwinner">New</span>'; })()}</button>
+    <button class="cpcard gpk" type="button" data-go="famous"><span class="gpki">${ic("book")}</span><b class="cpcname">Guess the famous game</b><span class="fine">Sit in Morphy's chair at the opera, or Fischer's at 13. Guess every move of a classic.</span><span class="cpwinner">New</span></button>
     ${LESSONS.map((l, k) => `<button class="cpcard gpk" type="button" data-lesson="${k}"><span class="gpki">${ic(l.ic)}</span><b class="cpcname">${l.name}</b><span class="fine">${l.tag}</span>${store.get("lesson_" + l.id, 0) ? `<span class="cpwinner">${ic("trophy")}Done: ${store.get("lesson_" + l.id, 0)}/3</span>` : ""}</button>`).join("")}</div>`;
   scrollTo({ top: 0, behavior: "instant" });
 }
@@ -2598,6 +2600,7 @@ document.addEventListener("click", (e) => {
 });
 
 const GO = { learn: learnPage, explorer: () => explorerPage(), sim: () => simPage(), games: gamesPage, wk: wkStart, champ: () => champPage(), rank: () => (RKS.prof ? profPage(RKS.prof) : rankPage()), online: olMenu, daily: dailyPage, board: () => boardPage(), dp: dpStart, dh: dhStart, dt: dtStart, hbar: hbStart, tact: tactStart, endg: egStart, blind: blindStart, call: callStart, elite: eliteStart, next: nextStart, recog: recogStart, blunder: blunderStart, open: openStart, trainer: trainerStart, mate: () => mateStart(2), elo: eloStart, ai: aiMenu, review: reviewIntro, who: whoStart, model: modelPage, home };
+/*__EXTRAS__*/
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);

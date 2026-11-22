@@ -2810,8 +2810,8 @@ const scrambleName = (name) => name.split(/\s+/).map((w) => scrambleWord(w.repla
 function scrambleClues(r) {
   const name = r.kind === "player" ? r.p.n : r.e.n, words = name.split(/\s+/), kindWord = r.kind === "player" ? "a footballer" : r.kind === "club" ? "a club" : "a manager";
   const pattern = words.map((w) => [...w.replace(/[^\p{L}'-]/gu, "")].map(() => "_").join(" ")).join("    "), first = words.map((w) => w[0].toUpperCase()).join(" ");
-  const extra = r.kind === "player" ? `${r.p.nat ? r.p.nat + " " : ""}${(r.p.sub || r.p.pos || "").toLowerCase()}` : r.kind === "club" ? `from the ${lgOf(r.e.lg || (QZ.clubs[r.e.n] || {}).lg || "E0").name}` : `has managed in the Big 5 leagues`;
-  return [["Letters", r.scr], ["It is…", kindWord], ["Shape", pattern], ["Starts with", first], ["Extra hint", extra]];
+  const extra = r.kind === "player" ? `${r.p.nat ? r.p.nat + " " : ""}${(r.p.sub || r.p.pos || "").toLowerCase()}` : r.kind === "club" ? `from the ${lgOf(r.e.lg || (QZ.clubs[r.e.n] || {}).lg || "E0").name}` : (() => { const st_ = QZ.players.filter((p) => (p.mg || []).includes(r.e.n)).sort((a, b) => (b.val || 0) - (a.val || 0)); return st_.length ? `managed ${st_[0].n}` + (st_[1] ? ` and ${st_[1].n}` : "") : "a manager in this data"; })();   /* a real clue: the best-known players who played under them */
+  return [["Letters", r.scr], ["It is…", kindWord], ["Starts with", first], ["Extra hint", extra]];
 }
 QDEF.scramble = { name: "Scramble", unit: "name", rounds: 5, clueS: 7, mk: (scope) => {
   const kind = rnd(["player", "club", "manager"]);

@@ -231,6 +231,8 @@ Written as dated notes, as it happened. Development ran in bursts around heavy a
 
 **22 November: a fairer Scramble.** The "Shape" clue (blanks for each letter) gave nothing the scrambled letters did not already show, so it is gone. A manager's extra clue said "has managed in the Big 5 leagues", which is true of every manager in the game; it now names the two most valuable players who played under them in our match data (for example "managed Harry Kane and Dean Huijsen" for José Mourinho). Same in basketball.
 
+**22 November: the model refreshes itself.** `src/91_refresh_model.py` is one command that downloads the current season's results for the five leagues, stops if nothing is newer than what the model already has, and otherwise re-runs the walk-forward model (src/29), match stats (src/33), title race (src/32), the weekly forecast file (src/40) and both football builds (src/30), then commits and pushes. A scheduled task on the owner's Mac runs it every Monday and Thursday at 09:00 (local time), when weekend and midweek results are usually published. Checked today: football-data.co.uk has results to 8 November (the international break followed; this weekend's games are not published yet), which the model already has, so the script correctly did nothing.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

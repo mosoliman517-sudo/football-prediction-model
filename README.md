@@ -283,6 +283,9 @@ From the poll:
 ### 22 Nov 2026: Fixed progress being wiped on every visit
 Reported: the loading-screen collection was stuck at "1 of 55". The real bug was bigger. Since the login streak was added on 18 November, football and basketball saved the profile at start-up (the login streak, the loading-screen collection) before reading saved progress from the browser. That save replaced everything with an almost empty profile, so for guests XP, achievements, plays and the collection reset on every visit. Signed-in players got their progress back from their account. The saved progress is now read the moment the page starts. Tested over three reloads in each sport: the collection grows and XP stays. Guest progress already lost on a device can't be recovered.
 
+### 22 Nov 2026: Tic-tac-toe online draft fixed
+Reported: tic-tac-toe is bugged. One-device games in both sports, typed answers, suggestions and the Enter key all worked when tested. The bug was in online games, played on two devices. Player 2's device forwards their taps to the host, but only square taps and name suggestions, not category picks. So in the draft Player 2 couldn't pick a column, and the game never got past it. Category picks are now forwarded too (football and basketball). Tested with two tabs: the full draft, then a square claimed from each side. The answer prompt also read oddly ("Name a player who is Name starts with A and…"); it now says "Name a player who fits both: … and …".
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

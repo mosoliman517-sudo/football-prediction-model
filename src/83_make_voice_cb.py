@@ -37,10 +37,14 @@ for v, t, c, k in J:
 if _fix:
     _index.update(_fix); json.dump(_index, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
     print(f"indexed {len(_fix)} clips left over from a stopped run", flush=True)
+# --rest N: pause N seconds after each line (gentler on a hot laptop; 15 is about half the load)
+REST = float(sys.argv[sys.argv.index("--rest") + 1]) if "--rest" in sys.argv else 0
 if "--index-only" in sys.argv:
     sys.exit(0)
 dev = "mps" if torch.backends.mps.is_available() else "cpu"
 model = ChatterboxTTS.from_pretrained(device=dev)
+if REST:
+    torch.set_num_threads(2)  # fewer CPU threads in gentle mode
 todo = [(v, t, c, k) for v, t, c, k in J if not os.path.exists(os.path.join(OUT, "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"))]
 print(f"{len(J)} lines, {len(todo)} to make on {dev}", flush=True)
 t0, done = time.time(), 0
@@ -56,6 +60,8 @@ for v, t, c, k in todo:
     name = "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"
     sf.write(os.path.join(OUT, name), wav.squeeze(0).cpu().numpy(), model.sr, format="MP3")
     pending[t if v == SITE else f"{v}|{t}"] = name; done += 1
+    if REST:
+        time.sleep(REST)  # cool-down between lines so the Mac does not run flat out
     if done % 10 == 0 or done == len(todo):
         index = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else {}
         index.update(pending); pending = {}

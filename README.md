@@ -245,6 +245,9 @@ Answered what is still planned (seasons and rewards stay paused; the games site 
 ### 22 Nov 2026: Voice job stopped to cool the Mac
 Stopped the Chatterbox recording because the Mac was running hot. 1,107 lines have the new voice; the rest keep their older Kokoro clip until the job is started again (it resumes where it stopped). The script now adds clips that a stopped run made but had not yet listed: 37 such clips were found and are now used.
 
+### 22 Nov 2026: Gentle mode for the voice job
+The voice script takes `--rest N`: it pauses N seconds after each line and uses fewer CPU threads, so a laptop is not working flat out the whole time. Restarted at low priority with a 20-second rest, which is a bit under half the earlier load. It now takes about 35 seconds per line, roughly 7 hours for the 725 lines left.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

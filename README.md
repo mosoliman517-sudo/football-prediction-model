@@ -251,6 +251,9 @@ The voice script takes `--rest N`: it pauses N seconds after each line and uses 
 ### 22 Nov 2026: Voice job back to full speed
 By request, the voice job runs at full speed again, with no rest between lines: about 3 hours for the 714 lines left. Gentle mode (`--rest N`) stays in the script for when it is needed.
 
+### 22 Nov 2026: Voice job restarted
+The voice job had stopped partway through (1,281 of 1,832 lines had the new voice). Restarted it, picking up where it stopped, with 551 lines to go. The new clips are committed.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

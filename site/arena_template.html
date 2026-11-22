@@ -1149,6 +1149,7 @@ const store = { items: {}, coll: null, uid: null, mode: "local" };
 const LOCAL_KEY = "arena-plays-v1";
 function loadLocal() { try { store.items = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}"); } catch (e) { store.items = {}; } }
 function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(store.items)); } catch (e) { /* storage unavailable */ } }
+loadLocal();   /* read saved progress at once: code that runs at start-up (the login streak, the loading-screen collection) saves the profile, and saving before this point used to overwrite everything with an empty profile */
 async function lockIn(key, body) {
   store.items[key] = body; saveLocal(); paintScore(); if (typeof Account !== "undefined") Account.queue();
   if (store.coll) { try { await store.coll.doc(key).set(body); } catch (e) { store.mode = "local"; } }

@@ -254,6 +254,9 @@ By request, the voice job runs at full speed again, with no rest between lines: 
 ### 22 Nov 2026: Voice job restarted
 The voice job had stopped partway through (1,281 of 1,832 lines had the new voice). Restarted it, picking up where it stopped, with 551 lines to go. The new clips are committed.
 
+### 22 Nov 2026: Chess stories keep the Kokoro voice
+The last voice lines were mostly long chess opening stories, at about 30 seconds each in Chatterbox. By request, the voice script takes `--skip story`, so those keep their Kokoro clip (every one already has one) and Chatterbox finishes the shorter lines. Story lines that already had a Chatterbox clip keep it.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

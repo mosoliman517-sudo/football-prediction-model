@@ -46,6 +46,9 @@ model = ChatterboxTTS.from_pretrained(device=dev)
 if REST:
     torch.set_num_threads(2)  # fewer CPU threads in gentle mode
 todo = [(v, t, c, k) for v, t, c, k in J if not os.path.exists(os.path.join(OUT, "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"))]
+# --skip story: leave these kinds on their Kokoro clip (the long chess opening stories take twice as long each)
+SKIP = set(sys.argv[sys.argv.index("--skip") + 1].split(",")) if "--skip" in sys.argv else set()
+todo = [x for x in todo if x[3] not in SKIP]
 print(f"{len(J)} lines, {len(todo)} to make on {dev}", flush=True)
 t0, done = time.time(), 0
 pending = {}

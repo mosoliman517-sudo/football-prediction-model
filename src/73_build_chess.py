@@ -45,7 +45,8 @@ print("lookup:", len(evs), "events,", len(names), "players,", len(lookup["games"
 data = {"lookup": lookup, "model": model, "openings": openings, "players": players, "elite": em, "eliteMoves": elite_moves, "evals": evals, "puzzles": puzzles}
 import base64, glob
 pcss = "".join(f".pc-{os.path.basename(f)[:2].lower()}{{background-image:url(data:image/svg+xml;base64,{base64.b64encode(open(f,'rb').read()).decode()})}}" for f in sorted(glob.glob("01_data_chess/pieces/*.svg")))
-html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/name_sync.js", encoding="utf-8").read() + open("site/coach_lines.js", encoding="utf-8").read() + open("site/opening_stories.js", encoding="utf-8").read() + open("site/install.js", encoding="utf-8").read())
+import subprocess as _sp; _sp.run([sys.executable, "src/95_site_index.py"], check=True, capture_output=True)   # search index for all three sports
+html = open("site/chess_template.html", encoding="utf-8").read().replace("/*__PIECES__*/", pcss).replace("/*__USAGE__*/", open("site/usage.js", encoding="utf-8").read() + open("site/voice.js", encoding="utf-8").read() + open("site/name_sync.js", encoding="utf-8").read() + open("site/coach_lines.js", encoding="utf-8").read() + open("site/opening_stories.js", encoding="utf-8").read() + open("site/install.js", encoding="utf-8").read() + open("site/site_index.js", encoding="utf-8").read() + open("site/sitesearch.js", encoding="utf-8").read())
 import os
 data["board"] = json.load(open("site/board_config.json")) if os.path.exists("site/board_config.json") else None
 data["champ"] = json.load(open("02_processed_data/chess_champ.json", encoding="utf-8")) if os.path.exists("02_processed_data/chess_champ.json") else None   # src/78: Total Chess games + FIDE profiles

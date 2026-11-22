@@ -291,6 +291,16 @@ Two more reports:
 - **Player 2 couldn't pick a category in tic-tac-toe.** Beyond the online fix above, a second cause: if you had opened an online room and left it open, the page still treated you as the host and ignored every Player 2 tap in a one-device game (draft picks, squares, answers, and the same in Scramble, Finish, Market value and Club roulette). Those checks now apply only while an online opponent is actually connected. Tested with a room left open: Player 2 drafted all three categories.
 - **Old names showing up.** Names typed for a one-device game were saved for good, Player 1 was pre-filled with the account name, and every "Player 1" and "Player 2" on the site was swapped for them, online rooms included. Names now last only for the game being played, nothing is pre-filled, old saved names are cleared, and the swap only happens while a one-device game (or its result screen) is open.
 
+### 22 Nov 2026: Redesign so nobody gets lost
+A friend got lost on the site. From the poll (keep the menus but tidy them, one games grid, all three sports, plus a guide, labels, back buttons and search):
+- **One games page per sport** (site/gamegrid.js for football and basketball, the chess version in site/chess_home.js). Every game is on one page with filter chips (Quizzes, Predict real games, Daily, With a friend, Online; chess: Puzzles and quizzes, Predict, Daily, Play someone, Train), counts on each chip, coloured tags on each card and a "Find a game" box. These replace the folders (ballknowledge originals, Beat the Model, Play online), which still open from old links. Leaving a game you opened from the grid brings you back to the grid.
+- **Slim league bar on game pages.** The page-sized "All five leagues" banner is now a slim bar with a "League" label before the chips, so games start near the top. Model pages keep the big header.
+- **Header icons labelled**: Album, Search, Settings and Streak now have words under the icons.
+- **Back buttons**: about 18 chess game screens had no way back except the logo. Each now has one, to the Daily challenges or its games section.
+- **Search across all three sports** (src/95_site_index.py builds site/site_index.js from the games lists at build time; site/sitesearch.js). Football and basketball search now also lists matching games and pages from the other sports. Chess has a Search button (or press /) over all three sports. Chess pages can be opened from a link (chess/#go-games and so on), which is how results land on the right page.
+- **First-visit guide** on the sport picker: three screens (what ballknowledge is, how every sport is laid out, where to start, with sport buttons). It shows once, and "New here? How ballknowledge works" reopens it.
+Checked at phone and desktop width: football 23 games, basketball 15, chess 19, no sideways scrolling, and search jumps between sports.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

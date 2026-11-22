@@ -73,3 +73,34 @@ document.addEventListener("click", (e) => { const t = e.target.closest && e.targ
 .door::before{content:"";position:absolute;inset:0;background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--gold,#c79a3a) 22%,transparent),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none}.door:hover::before{opacity:1}
 @media (max-width:760px){.hero2{grid-template-columns:1fr}.hbb{width:min(100%,300px)}.htoday{grid-template-columns:repeat(2,1fr)}.hcoach,.hnew{grid-template-columns:1fr}.chc{flex-direction:row;text-align:left}.chface{width:64px;height:64px;flex:0 0 auto}}
 @media (prefers-reduced-motion:reduce){.chface,.ht{animation:none}.hbb{transform:none}}`; document.head.appendChild(s); })();
+/* ---------- the Games page, redesigned like football's and basketball's: every chess game on one page with filter chips
+   (Puzzles and quizzes, Predict, Daily, Play someone, Train) and a search box, instead of folders. ---------- */
+const CGG = { f: "all", q: "" };
+const CGG_F = [["all", "All games"], ["quiz", "Puzzles & quizzes"], ["predict", "Predict"], ["daily", "Daily"], ["play", "Play someone"], ["train", "Train"]];
+function cggItems() {
+  const out = CG.filter((x) => x.id !== "review").map((x) => ({ id: x.id, name: x.name, tag: x.tag, modes: x.modes, ic: x.ic, attr: `data-intro="${x.id}"`, t: new Set([x.g === "model" ? "predict" : ["ai", "online"].includes(x.id) ? "play" : ["trainer", "open", "endg", "elo"].includes(x.id) ? "train" : "quiz"]) }));
+  DAILIES.forEach(([k, n, icn, tag, go]) => out.push({ id: go, name: n, tag, ic: icn, attr: `data-go="${go}"`, t: new Set(["daily", "quiz"]) }));
+  out.push({ id: "wk", name: "Weekly cup", tag: "Five puzzles, the same for everyone this week. One attempt, faster solves score more.", ic: "trophy", attr: 'data-go="wk"', t: new Set(["daily", "quiz"]) });
+  out.push({ id: "sim", name: "Simulate a match", tag: "Pick anyone, from Carlsen to your friend on chess.com, and play 1,000 games against them in a second.", ic: "swords", attr: 'data-go="sim"', t: new Set(["play"]) });
+  out.push({ id: "et", name: "Endgame trainer", tag: "Seven endings every player should know, against full-strength Stockfish.", ic: "crown", attr: 'data-go="et"', t: new Set(["train"]) });
+  out.push({ id: "famous", name: "Guess the famous game", tag: "Replay the Opera Game, the Immortal and more from the winner's chair.", ic: "book", attr: 'data-go="famous"', t: new Set(["train", "quiz"]) });
+  out.push({ id: "learn", name: `${LESSONS.length} lessons`, tag: "Forks, pins, zugzwang and more, each a short set of real puzzles.", ic: "book", attr: 'data-go="learn"', t: new Set(["train"]) });
+  return out;
+}
+function gamesPage() {
+  clearInterval(st.timer); live = null; rvStop(); st = { game: "games" }; $("#app").className = "fresh";
+  const all = cggItems(), q = CGG.q.trim().toLowerCase(), list = all.filter((x) => (CGG.f === "all" || x.t.has(CGG.f)) && (!q || (x.name + " " + x.tag).toLowerCase().includes(q)));
+  const lab = (k) => (CGG_F.find((f) => f[0] === k) || [, k])[1].replace("Puzzles & quizzes", "Puzzle");
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><div class="cgghead"><div><h2 style="font-size:32px;margin:0">${ic("puzzle")}Play</h2><p class="sub" style="margin:4px 0 0">${all.length} games. Tap one to start.</p></div><label class="cggs">${ic("search")}<input id="cggQ" type="search" placeholder="Find a game" aria-label="Find a game" value="${esc(CGG.q)}" autocomplete="off"></label></div>
+    <div class="chips cggf">${CGG_F.map(([k, n]) => `<button type="button" class="chip ${CGG.f === k ? "on" : ""}" data-cggf="${k}" aria-pressed="${CGG.f === k}">${n} <small>${k === "all" ? all.length : all.filter((x) => x.t.has(k)).length}</small></button>`).join("")}</div>
+    ${diffBar ? diffBar() : ""}
+    <div class="hubgrid">${list.map((x, k) => `<button class="gcard" ${x.attr} style="animation-delay:${Math.min(k, 12) * 40}ms"><div class="gi"><div class="di">${ic(x.ic || "puzzle")}</div></div><div class="gname">${esc(x.name)}</div><div class="cggt">${[...x.t].map((t) => `<span class="t-${t}">${esc(lab(t))}</span>`).join("")}</div><div class="gtag">${esc(x.tag || "")}</div></button>`).join("") || `<p class="fine">No game matches "${esc(CGG.q)}".</p>`}</div>`;
+  const i = document.getElementById("cggQ"); if (i && CGG.focus) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); CGG.focus = false; }
+  scrollTo({ top: 0, behavior: "instant" });
+}
+GO.games = gamesPage;
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-cggf]"); if (!b) return; e.stopPropagation(); CGG.f = b.dataset.cggf; try { Snd.tick(); } catch (x) { /* quiet */ } gamesPage(); }, true);
+document.addEventListener("input", (e) => { if (e.target.id !== "cggQ") return; CGG.q = e.target.value; CGG.focus = true; gamesPage(); });
+(() => { const s = document.createElement("style"); s.textContent = `.cgghead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.cggs{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);min-width:min(260px,100%)}.cggs .ic{width:18px;height:18px;opacity:.6}.cggs input{border:0;background:transparent;color:var(--ink);font:inherit;outline:none;width:100%}.cggs:focus-within{border-color:var(--gold)}
+.cggf{margin-bottom:12px}.cggf small{opacity:.6;font-weight:700;margin-left:3px}.cggt{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 4px}.cggt span{font:700 10px/1 var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.cggt .t-quiz{background:color-mix(in srgb,#7c5cff 22%,transparent)}.cggt .t-predict{background:color-mix(in srgb,#1fa463 24%,transparent)}.cggt .t-daily{background:color-mix(in srgb,#f2c14e 30%,transparent)}.cggt .t-play{background:color-mix(in srgb,#ff8a3d 26%,transparent)}.cggt .t-train{background:color-mix(in srgb,#38bdf8 26%,transparent)}`; document.head.appendChild(s); })();

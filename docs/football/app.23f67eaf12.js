@@ -1,4 +1,5 @@
 
+const ASSET_BASE = "../";   // the public build serves this page from /football/, so shared files live one level up
 const DATA = window.__BK_DATA;
 /* ---------- What you play most (shared by football, basketball, chess and the sport picker) ----------
    Kept only in this browser (localStorage "bk_usage"); nothing is sent anywhere. Each key holds a score that halves
@@ -613,8 +614,76 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
   else if (b.dataset.pcchal) { e.stopPropagation(); try { closeModal(); } catch (x) { /* none open */ } setTimeout(() => { try { challengeModal(b.dataset.pcchal); } catch (x) { toast("Sign in to challenge someone."); } }, 80); }
 }, true);
 (() => { const s = document.createElement("style"); s.textContent = ".pcLink{margin-top:10px}"; document.head.appendChild(s); })();
+/* Watch a friend's online match live (football and basketball; each build includes this file).
+   An online game is run by the host's browser, which sends a copy of the game panel to the other player after every change. A
+   spectator listens to the same room and shows that same panel, read-only: they can't click, type, buzz or pick anything.
+   How you watch: the host (while a match is running) gets a small "Watch link" chip; send that link, or just the room code, and
+   the other person opens it (or types the code under "Watch a match" on the Ranked page). The link looks like  #watch-ABCD.
+   Rooms are not private: like every online room here, anyone who knows the 4-letter code can join as a player or a spectator, and
+   the chip says so. Spectators never send answers or reactions. */
+const Spec = {
+  watchers: new Map(), seen: new Set(), got: false, code: null, hello: null, keep: null,
+  link(code) { return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}#watch-${code}`; },
+  count() { const now = Date.now(); this.watchers.forEach((t, k) => { if (now - t > 70000) this.watchers.delete(k); }); return this.watchers.size; },
+  /* spectator side */
+  start(code) {
+    this.stop(true); Net.close(); this.code = code; this.got = false; this.seen = new Set(); this.id = Math.random().toString(36).slice(2, 8);
+    Net.role = "watch"; Net.open(code); Net.role = "watch"; document.body.dataset.net = "watch";
+    const room = document.getElementById("room"); if (room) room.innerHTML = `<div class="card specwait"><h2>Watching room ${esc(code)}</h2><p class="sub" id="specMsg">Looking for the match…</p></div>`;
+    this.bar(); const say = () => { try { Net.send({ k: "watchhello", id: this.id }); } catch (e) { /* not connected yet */ } };
+    say(); this.hello = setInterval(() => { if (Net.role !== "watch") return this.stop(); if (!this.got) { say(); const m = document.getElementById("specMsg"), secs = Math.round((Date.now() - (Net.since || Date.now())) / 1000); if (m) m.textContent = !Net.linked() ? (secs > 12 ? "Could not reach the room server. Check your connection." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${code}. Check the code, and that the match is still going.` : "Looking for the match…"; } else say(); }, 2500);
+  },
+  stop(quiet) { clearInterval(this.hello); this.hello = null; try { if (Net.role === "watch" && Net.code) Net.send({ k: "watchbye", id: this.id }); } catch (e) { /* already closed */ } const b = document.getElementById("specBar"); if (b) b.remove(); if (!quiet && Net.role === "watch") { Net.close(); } document.body.dataset.net = Net.role || ""; },
+  bar() {
+    let b = document.getElementById("specBar"); if (!b) { b = document.createElement("div"); b.id = "specBar"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+    b.innerHTML = `<span class="specdot ${this.got ? "live" : ""}"></span><b>${this.got ? "Watching live" : "Looking for the match"}</b><span class="fine num">room ${esc(this.code || "")}</span><span class="specro">view only</span><button type="button" class="btn ghost" id="specLeave">Leave</button>`;
+  },
+  recv(m) {
+    if (!m || m.from === "watch") return; if (m.i) { if (this.seen.has(m.i)) return; this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); }
+    if (m.k === "html") { const room = document.getElementById("room"); if (!room) return; if (!this.got) { this.got = true; this.bar(); } room.innerHTML = m.h; room.classList.add("specro-room"); }
+    else if (m.k === "duo") { try { duoResultShow(m.names, m.scores, m.sub); } catch (e) { /* no result screen */ } }
+    else if (m.k === "react") { try { floatReact(m.e); } catch (e) { /* quiet */ } }
+    else if (m.k === "end") { toast("The match ended"); this.stop(); }
+  },
+  /* host side: a spectator said hello, so send them the current panel and count them */
+  hostHello(m) { this.watchers.set(m.id || "w", Date.now()); if (Net.started) Net.push(true); else Net.send({ k: "waiting" }); this.chip(); },
+  chip() {
+    const show = Net.role === "host" && Net.started; let c = document.getElementById("specChip");
+    if (!show) { if (c) c.remove(); return; }
+    if (!c) { c = document.createElement("div"); c.id = "specChip"; document.body.appendChild(c); }
+    const n = this.count(); c.innerHTML = `<button type="button" class="btn ghost" id="specCopy">${n ? `👁 ${n} watching` : "Watch link"}</button><small>Anyone with the room code can watch</small>`;
+  },
+};
+setTimeout(() => {
+  if (typeof Net === "undefined") return; const r0 = Net.recv;
+  Net.recv = function (m) { if (this.role === "watch") return Spec.recv(m); if (this.role === "host" && m && m.k === "watchbye") { Spec.watchers.delete(m.id || "w"); Spec.chip(); return; } if (this.role === "host" && m && m.k === "watchhello") { if (m.i) { if (this.seen && this.seen.has(m.i)) return; if (this.seen) this.seen.add(m.i); } return Spec.hostHello(m); } return r0.apply(this, arguments); };
+  setInterval(() => { try { Spec.chip(); } catch (e) { /* quiet */ } }, 1500);
+  if (typeof route === "function") { const rt = route; try { route = function (ev) { const m = /^#watch-([A-Za-z]{4})$/.exec(location.hash); if (m) { const code = m[1].toUpperCase(); history.replaceState(null, "", location.pathname + "#games"); rt.call(this, ev); setTimeout(() => Spec.start(code), 350); return; } return rt.apply(this, arguments); }; } catch (e) { /* skip */ } }
+  if (/^#watch-/.test(location.hash)) route();   /* straight away: a later route() would reset the room we are about to join */
+}, 0);
+/* read-only: while watching, nothing inside the game panel responds */
+["click", "pointerdown", "keydown", "input", "submit"].forEach((t) => document.addEventListener(t, (e) => {
+  if (Net.role !== "watch" || !e.target.closest) return; if (e.target.closest("#specBar")) return;
+  if (e.target.closest("#room")) { e.stopImmediatePropagation(); e.preventDefault(); }
+}, true));
+document.addEventListener("click", (e) => {
+  const l = e.target.closest && e.target.closest("#specLeave"); if (l) { e.stopImmediatePropagation(); Spec.stop(); try { go("games"); } catch (x) { location.hash = "games"; } return; }
+  const c = e.target.closest && e.target.closest("#specCopy"); if (c && Net.code) { e.stopImmediatePropagation(); SL_send_watch(); }
+  const w = e.target.closest && e.target.closest("#watchGo"); if (w) { e.stopImmediatePropagation(); const v = (document.getElementById("watchCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(v)) return toast("Type the 4-letter room code"); Spec.start(v); }
+}, true);
+async function SL_send_watch() { const url = Spec.link(Net.code), text = "Watch my ballknowledge match live:"; try { if (navigator.share) { await navigator.share({ title: "ballknowledge", text, url }); return; } } catch (e) { return; } try { await navigator.clipboard.writeText(`${text} ${url}`); toast("Watch link copied"); } catch (e) { prompt("Copy this link:", url); } }
+/* "Watch a match" box on the Ranked page */
+setTimeout(() => {
+  if (typeof renderRanked !== "function") return; const rr = renderRanked; try { renderRanked = function () { rr.apply(this, arguments); const room = document.getElementById("room"); if (room && !document.getElementById("watchBox") && Account.signedIn) { const card = [...room.querySelectorAll(".card")].pop(); if (card) card.insertAdjacentHTML("afterend", `<div class="card" id="watchBox" style="margin-top:14px"><h3 style="font-size:22px">👁 Watch a match</h3><p class="fine">A friend is playing online? Type their 4-letter room code to watch live, view only. Or open the watch link they send you.</p><div class="row"><input id="watchCode" maxlength="4" placeholder="Code" aria-label="Room code to watch" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="watchGo" type="button">Watch</button></div></div>`); } }; } catch (e) { /* skip */ }
+}, 0);
+(() => { const s = document.createElement("style"); s.textContent = `
+#specBar{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9600;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;background:#141b17f2;color:#f4f1ea;border:1px solid #ffffff33;box-shadow:0 12px 30px -12px #000;max-width:calc(100% - 20px)}#specBar .btn{padding:6px 12px}
+.specdot{width:10px;height:10px;border-radius:50%;background:#e8c35a}.specdot.live{background:#ff4d4d;animation:specP 1.4s infinite}@keyframes specP{70%{box-shadow:0 0 0 8px #ff4d4d00}}.specro{font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#ffffff1f}
+body[data-net=watch] #reactBar{display:none!important}.specro-room{pointer-events:none;user-select:none}.specro-room *{cursor:default!important}
+#specChip{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9000;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:14px;background:#141b17ee;border:1px solid #ffffff2a;color:#f4f1ea}#specChip small{font-size:10px;opacity:.65}#specChip .btn{padding:6px 12px}
+@media (max-width:520px){#specBar .fine{display:none}}`; document.head.appendChild(s); })();
 /* generated by src/95_site_index.py: every game and main page in all three sports, for search */
-const SITE_INDEX = [{"s":"football","k":"Game","n":"Who am I?","u":"football/#games-all-leagues-who","d":"A mystery player. Clues go from obscure to obvious. Buzz in early for more points."},{"s":"football","k":"Game","n":"Career path","u":"football/#games-all-leagues-career","d":"Every club he played for, in order. Name the player."},{"s":"football","k":"Game","n":"Name that club","u":"football/#games-all-leagues-club","d":"Goals, wins and a stadium size. Which club is it?"},{"s":"football","k":"Game","n":"Badge blur","u":"football/#games-all-leagues-blur","d":"A blurry badge that sharpens by the second."},{"s":"football","k":"Game","n":"Where did they finish?","u":"football/#games-all-leagues-finish","d":"A club, a season, a slider. How close can you get?"},{"s":"football","k":"Game","n":"Market value","u":"football/#games-all-leagues-value","d":"Who is worth more, a player or a squad? Or both of you guess a value and the closest wins."},{"s":"football","k":"Game","n":"Club roulette","u":"football/#games-all-leagues-roulette","d":"A club appears. Take turns naming players who played for it. First to blank loses."},{"s":"football","k":"Game","n":"Starting XI","u":"football/#games-all-leagues-xi","d":"Champions League and cup finals, Champions League semi-finals and the biggest league games. Name the eleven wh"},{"s":"football","k":"Game","n":"Who did it","u":"football/#games-all-leagues-iconic","d":"A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off."},{"s":"football","k":"Game","n":"Scramble","u":"football/#games-all-leagues-scramble","d":"A club, player or manager with the letters shuffled. Unscramble it before your rival does."},{"s":"football","k":"Game","n":"Football tic-tac-toe","u":"football/#games-all-leagues-ttt","d":"Name a player who fits the row and the column. Three in a row wins."},{"s":"football","k":"Game","n":"Call it","u":"football/#games-all-leagues-call","d":"One real match. Lock in your call, watch the model's match play out, then see what really happened."},{"s":"football","k":"Game","n":"Daily 5","u":"football/#games-all-leagues-daily","d":"The same five matches for everyone today. Beat the model and share your result."},{"s":"football","k":"Game","n":"Matchday","u":"football/#games-all-leagues-matchday","d":"Call a whole round at once and watch the results land one by one."},{"s":"football","k":"Game","n":"Rapid fire","u":"football/#games-all-leagues-rapid","d":"60 seconds. Call as many real matches as you can and beat the model on the same ones."},{"s":"football","k":"Game","n":"Bracket buster","u":"football/#games-all-leagues-bracket","d":"A real Champions League knockout. Pick every tie, round by round, against an Elo model."},{"s":"football","k":"Game","n":"Spot the upset","u":"football/#games-all-leagues-upset","d":"Five real results. Which one did the model think was least likely?"},{"s":"football","k":"Game","n":"Guess the table","u":"football/#games-all-leagues-table","d":"Rebuild a final table from last season's, then see you against the model."},{"s":"football","k":"Game","n":"Higher or lower","u":"football/#games-all-leagues-hol","d":"Two clubs, one number. Keep the streak alive."},{"s":"football","k":"Game","n":"Challenge a friend","u":"football/#games-all-leagues-challenge","d":"Five matches, one link. Send it and see who does better."},{"s":"basketball","k":"Game","n":"Who am I?","u":"basketball/#games-nba-who","d":"A mystery player. Clues go from obscure to obvious. Buzz in early for more points."},{"s":"basketball","k":"Game","n":"Career path","u":"basketball/#games-nba-career","d":"Every team he played for, in order. Name the player."},{"s":"basketball","k":"Game","n":"Name that team","u":"basketball/#games-nba-club","d":"Points, wins and a playoff run. Which team is it?"},{"s":"basketball","k":"Game","n":"Logo blur","u":"basketball/#games-nba-blur","d":"A blurry logo that sharpens by the second."},{"s":"basketball","k":"Game","n":"Where did they finish?","u":"basketball/#games-nba-finish","d":"A team, a season, a slider. How close can you get?"},{"s":"basketball","k":"Game","n":"Scramble","u":"basketball/#games-nba-scramble","d":"A player or team with the letters shuffled. Unscramble it before your rival does."},{"s":"basketball","k":"Game","n":"Team roulette","u":"basketball/#games-nba-roulette","d":"A team appears. Take turns naming players who played for it. First to blank loses."},{"s":"basketball","k":"Game","n":"Basketball tic-tac-toe","u":"basketball/#games-nba-ttt","d":"Name a player who fits the row and the column. Three in a row wins."},{"s":"basketball","k":"Game","n":"Who dropped it?","u":"basketball/#games-nba-dropped","d":"A real stat line with the name hidden: points, rebounds, assists. Clues get easier. Who was it?"},{"s":"basketball","k":"Game","n":"Starting five","u":"basketball/#games-nba-nbxi","d":"A Finals clincher or a Game 7. Name the five who started."},{"s":"basketball","k":"Game","n":"Higher or lower","u":"basketball/#games-nba-nbhol","d":"Two players, one stat. Who has more? Keep the streak alive."},{"s":"basketball","k":"Game","n":"Odd one out","u":"basketball/#games-nba-nbodd","d":"Four players, one does not belong. Who never played for the team, never won a title, never scored 22 a night?"},{"s":"basketball","k":"Game","n":"Rank the five","u":"basketball/#games-nba-nbrank","d":"Five players and one stat. Tap them in order, most to fewest. Closer to the truth scores more."},{"s":"basketball","k":"Game","n":"Career timeline","u":"basketball/#games-nba-nbtime","d":"A player's teams, shuffled. Slide each one to the season he joined it."},{"s":"basketball","k":"Game","n":"Call it","u":"basketball/#games-nba-nbcall","d":"Five real NBA games. Pick the winner and the margin, then see what the model said."},{"s":"basketball","k":"Game","n":"Daily 5","u":"basketball/#games-nba-nbdaily","d":"The same five games for everyone today. Beat the model and share your result."},{"s":"basketball","k":"Game","n":"Rapid fire","u":"basketball/#games-nba-nbrapid","d":"60 seconds. Tap the winner of as many real games as you can."},{"s":"basketball","k":"Game","n":"Bracket buster","u":"basketball/#games-nba-nbbracket","d":"A real NBA playoffs. Pick every series, round by round, against an Elo model."},{"s":"basketball","k":"Game","n":"Over or under","u":"basketball/#games-nba-nbou","d":"The model sets a line for a real game. Bet over or under with a bankroll that grows or shrinks."},{"s":"chess","k":"Game","n":"Call it","u":"chess/#go-call","d":"Two ratings and a time control: who wins, and how long does it last?"},{"s":"chess","k":"Game","n":"Predict who won","u":"chess/#go-elite","d":"Real games from the biggest events. Pick the result against the model."},{"s":"chess","k":"Game","n":"Guess the next move","u":"chess/#go-next","d":"A position from a real top-level game. Which move did the player choose?"},{"s":"chess","k":"Game","n":"Recognize the game","u":"chess/#go-recog","d":"The first moves of a real game. Who was playing?"},{"s":"chess","k":"Game","n":"Blunder or fine?","u":"chess/#go-blunder","d":"A move, graded by Stockfish. Blunder, mistake, inaccuracy or fine?"},{"s":"chess","k":"Game","n":"Name the opening","u":"chess/#go-open","d":"A position on the board. Sicilian, Ruy Lopez, King's Indian?"},{"s":"chess","k":"Game","n":"Pip's opening gym","u":"chess/#go-trainer","d":"Pip plays a random opening and you get a random colour. Play the best lines: slip, and Pip stops you and shows"},{"s":"chess","k":"Game","n":"Mate puzzles","u":"chess/#go-mate","d":"Real puzzles: checkmate in 1, 2 or 3."},{"s":"chess","k":"Game","n":"Estimate my Elo","u":"chess/#go-elo","d":"Puzzles that adapt to you, then an estimate of your level."},{"s":"chess","k":"Game","n":"Review a game","u":"chess/#go-review","d":"Every move graded, with an evaluation graph and the engine's preferred move."},{"s":"chess","k":"Game","n":"Play the coaches","u":"chess/#go-ai","d":"Seven levels, from Pip warming up to all three coaches thinking together. Can you beat them?"},{"s":"chess","k":"Game","n":"Who is this player?","u":"chess/#go-who","d":"Clues appear on their own. Buzz when you know the grandmaster."},{"s":"chess","k":"Game","n":"Play a friend","u":"chess/#go-online","d":"Share a room code, pick a clock and play live. Resign, offer a draw, rematch and review the game after."},{"s":"chess","k":"Game","n":"Human bar","u":"chess/#go-hbar","d":"Drag the evaluation bar to where Stockfish puts the position. The closest guess scores most."},{"s":"chess","k":"Game","n":"Spot the tactic","u":"chess/#go-tact","d":"Tap every piece you could win for free before the clock runs out."},{"s":"chess","k":"Game","n":"Endgame verdict","u":"chess/#go-endg","d":"Win, draw or lose with best play? Call it, then play it out against Stockfish."},{"s":"chess","k":"Game","n":"Blindfold memory","u":"chess/#go-blind","d":"A position flashes up, then vanishes. Rebuild every piece from memory."},{"s":"football","k":"Page","n":"Games","u":"football/#games","d":"Every football game in one place"},{"s":"football","k":"Page","n":"Leaderboard","u":"football/#games-all-leagues-boards","d":"Seasons and all-time Elo"},{"s":"football","k":"Page","n":"Ranked online","u":"football/#games-all-leagues-ranked","d":"Play real people for Elo"},{"s":"football","k":"Page","n":"Weekly tournament","u":"football/#games-all-leagues-weekly","d":"Predict this week's real scores"},{"s":"football","k":"Page","n":"Live scores","u":"football/#games-all-leagues-live","d":"Today's matches"},{"s":"football","k":"Page","n":"Our model","u":"football/#lab","d":"How the prediction model works"},{"s":"football","k":"Page","n":"Title race","u":"football/#lab-premier-league-race","d":"Who wins the league"},{"s":"football","k":"Page","n":"Time machine","u":"football/#lab-premier-league-replay","d":"A season replayed beside the model"},{"s":"football","k":"Page","n":"Profile","u":"football/#profile","d":"Your stats, badges and friends"},{"s":"football","k":"Page","n":"Sticker album","u":"football/#album","d":"Collect every club and player"},{"s":"football","k":"Page","n":"Settings","u":"football/#settings","d":"Look, sidekick and sound"},{"s":"basketball","k":"Page","n":"Games","u":"basketball/#games","d":"Every basketball game in one place"},{"s":"basketball","k":"Page","n":"Leaderboard","u":"basketball/#games-nba-boards","d":"Seasons and all-time Elo"},{"s":"basketball","k":"Page","n":"Ranked online","u":"basketball/#games-nba-ranked","d":"Play real people for Elo"},{"s":"basketball","k":"Page","n":"Our model","u":"basketball/#lab","d":"How the NBA model works"},{"s":"basketball","k":"Page","n":"Profile","u":"basketball/#profile","d":"Your stats, badges and friends"},{"s":"basketball","k":"Page","n":"Settings","u":"basketball/#settings","d":"Look, sidekick and sound"},{"s":"chess","k":"Page","n":"Games","u":"chess/#go-games","d":"Every chess game"},{"s":"chess","k":"Page","n":"Daily challenges","u":"chess/#go-daily","d":"A puzzle, a bar and a tactic every day"},{"s":"chess","k":"Page","n":"Learn","u":"chess/#go-learn","d":"Lessons, openings, endgames"},{"s":"chess","k":"Page","n":"Opening explorer","u":"chess/#go-explorer","d":"Master games for any opening"},{"s":"chess","k":"Page","n":"Endgame trainer","u":"chess/#go-et","d":"Seven endings against Stockfish"},{"s":"chess","k":"Page","n":"Guess the famous game","u":"chess/#go-famous","d":"Replay the classics move by move"},{"s":"chess","k":"Page","n":"Weekly cup","u":"chess/#go-wk","d":"Five puzzles, the same for everyone"},{"s":"chess","k":"Page","n":"World rankings","u":"chess/#go-rank","d":"The FIDE top 100"},{"s":"chess","k":"Page","n":"Championships","u":"chess/#go-champ","d":"World titles and the current match"},{"s":"chess","k":"Page","n":"Simulate a match","u":"chess/#go-sim","d":"Anyone against anyone, 1,000 games"},{"s":"chess","k":"Page","n":"Leaderboards","u":"chess/#go-board","d":"Best scores"}];
+const SITE_INDEX = [{"s":"football","k":"Game","n":"Who am I?","u":"football/#games-all-leagues-who","d":"A mystery player. Clues go from obscure to obvious. Buzz in early for more points."},{"s":"football","k":"Game","n":"Career path","u":"football/#games-all-leagues-career","d":"Every club he played for, in order. Name the player."},{"s":"football","k":"Game","n":"Name that club","u":"football/#games-all-leagues-club","d":"Goals, wins and a stadium size. Which club is it?"},{"s":"football","k":"Game","n":"Badge blur","u":"football/#games-all-leagues-blur","d":"A blurry badge that sharpens by the second."},{"s":"football","k":"Game","n":"Where did they finish?","u":"football/#games-all-leagues-finish","d":"A club, a season, a slider. How close can you get?"},{"s":"football","k":"Game","n":"Market value","u":"football/#games-all-leagues-value","d":"Who is worth more, a player or a squad? Or both of you guess a value and the closest wins."},{"s":"football","k":"Game","n":"Club roulette","u":"football/#games-all-leagues-roulette","d":"A club appears. Take turns naming players who played for it. First to blank loses."},{"s":"football","k":"Game","n":"Starting XI","u":"football/#games-all-leagues-xi","d":"Champions League and cup finals, Champions League semi-finals and the biggest league games. Name the eleven wh"},{"s":"football","k":"Game","n":"Who did it","u":"football/#games-all-leagues-iconic","d":"A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off."},{"s":"football","k":"Game","n":"Scramble","u":"football/#games-all-leagues-scramble","d":"A club, player or manager with the letters shuffled. Unscramble it before your rival does."},{"s":"football","k":"Game","n":"Football tic-tac-toe","u":"football/#games-all-leagues-ttt","d":"Name a player who fits the row and the column. Three in a row wins."},{"s":"football","k":"Game","n":"Call it","u":"football/#games-all-leagues-call","d":"One real match. Lock in your call, watch the model's match play out, then see what really happened."},{"s":"football","k":"Game","n":"Daily 5","u":"football/#games-all-leagues-daily","d":"The same five matches for everyone today. Beat the model and share your result."},{"s":"football","k":"Game","n":"Matchday","u":"football/#games-all-leagues-matchday","d":"Call a whole round at once and watch the results land one by one."},{"s":"football","k":"Game","n":"Rapid fire","u":"football/#games-all-leagues-rapid","d":"60 seconds. Call as many real matches as you can and beat the model on the same ones."},{"s":"football","k":"Game","n":"Bracket buster","u":"football/#games-all-leagues-bracket","d":"A real Champions League knockout. Pick every tie, round by round, against an Elo model."},{"s":"football","k":"Game","n":"Spot the upset","u":"football/#games-all-leagues-upset","d":"Five real results. Which one did the model think was least likely?"},{"s":"football","k":"Game","n":"Guess the table","u":"football/#games-all-leagues-table","d":"Rebuild a final table from last season's, then see you against the model."},{"s":"football","k":"Game","n":"Higher or lower","u":"football/#games-all-leagues-hol","d":"Two clubs, one number. Keep the streak alive."},{"s":"football","k":"Game","n":"Challenge a friend","u":"football/#games-all-leagues-challenge","d":"Five matches, one link. Send it and see who does better."},{"s":"basketball","k":"Game","n":"Who am I?","u":"basketball/#games-nba-who","d":"A mystery player. Clues go from obscure to obvious. Buzz in early for more points."},{"s":"basketball","k":"Game","n":"Career path","u":"basketball/#games-nba-career","d":"Every team he played for, in order. Name the player."},{"s":"basketball","k":"Game","n":"Name that team","u":"basketball/#games-nba-club","d":"Points, wins and a playoff run. Which team is it?"},{"s":"basketball","k":"Game","n":"Logo blur","u":"basketball/#games-nba-blur","d":"A blurry logo that sharpens by the second."},{"s":"basketball","k":"Game","n":"Where did they finish?","u":"basketball/#games-nba-finish","d":"A team, a season, a slider. How close can you get?"},{"s":"basketball","k":"Game","n":"Scramble","u":"basketball/#games-nba-scramble","d":"A player or team with the letters shuffled. Unscramble it before your rival does."},{"s":"basketball","k":"Game","n":"Team roulette","u":"basketball/#games-nba-roulette","d":"A team appears. Take turns naming players who played for it. First to blank loses."},{"s":"basketball","k":"Game","n":"Basketball tic-tac-toe","u":"basketball/#games-nba-ttt","d":"Name a player who fits the row and the column. Three in a row wins."},{"s":"basketball","k":"Game","n":"Who dropped it?","u":"basketball/#games-nba-dropped","d":"A real stat line with the name hidden: points, rebounds, assists. Clues get easier. Who was it?"},{"s":"basketball","k":"Game","n":"Starting five","u":"basketball/#games-nba-nbxi","d":"A Finals clincher or a Game 7. Name the five who started."},{"s":"basketball","k":"Game","n":"Higher or lower","u":"basketball/#games-nba-nbhol","d":"Two players, one stat. Who has more? Keep the streak alive."},{"s":"basketball","k":"Game","n":"Odd one out","u":"basketball/#games-nba-nbodd","d":"Four players, one does not belong. Who never played for the team, never won a title, never scored 22 a night?"},{"s":"basketball","k":"Game","n":"Rank the five","u":"basketball/#games-nba-nbrank","d":"Five players and one stat. Tap them in order, most to fewest. Closer to the truth scores more."},{"s":"basketball","k":"Game","n":"Career timeline","u":"basketball/#games-nba-nbtime","d":"A player's teams, shuffled. Slide each one to the season he joined it."},{"s":"basketball","k":"Game","n":"Call it","u":"basketball/#games-nba-nbcall","d":"Five real NBA games. Pick the winner and the margin, then see what the model said."},{"s":"basketball","k":"Game","n":"Daily 5","u":"basketball/#games-nba-nbdaily","d":"The same five games for everyone today. Beat the model and share your result."},{"s":"basketball","k":"Game","n":"Rapid fire","u":"basketball/#games-nba-nbrapid","d":"60 seconds. Tap the winner of as many real games as you can."},{"s":"basketball","k":"Game","n":"Bracket buster","u":"basketball/#games-nba-nbbracket","d":"A real NBA playoffs. Pick every series, round by round, against an Elo model."},{"s":"basketball","k":"Game","n":"Over or under","u":"basketball/#games-nba-nbou","d":"The model sets a line for a real game. Bet over or under with a bankroll that grows or shrinks."},{"s":"chess","k":"Game","n":"Call it","u":"chess/#go-call","d":"Two ratings and a time control: who wins, and how long does it last?"},{"s":"chess","k":"Game","n":"Predict who won","u":"chess/#go-elite","d":"Real games from the biggest events. Pick the result against the model."},{"s":"chess","k":"Game","n":"Guess the next move","u":"chess/#go-next","d":"A position from a real top-level game. Which move did the player choose?"},{"s":"chess","k":"Game","n":"Recognize the game","u":"chess/#go-recog","d":"The first moves of a real game. Who was playing?"},{"s":"chess","k":"Game","n":"Blunder or fine?","u":"chess/#go-blunder","d":"A move, graded by Stockfish. Blunder, mistake, inaccuracy or fine?"},{"s":"chess","k":"Game","n":"Name the opening","u":"chess/#go-open","d":"A position on the board. Sicilian, Ruy Lopez, King's Indian?"},{"s":"chess","k":"Game","n":"Pip's opening gym","u":"chess/#go-trainer","d":"Pip plays a random opening and you get a random colour. Play the best lines: slip, and Pip stops you and shows"},{"s":"chess","k":"Game","n":"Mate puzzles","u":"chess/#go-mate","d":"Real puzzles: checkmate in 1, 2 or 3."},{"s":"chess","k":"Game","n":"Estimate my Elo","u":"chess/#go-elo","d":"Puzzles that adapt to you, then an estimate of your level."},{"s":"chess","k":"Game","n":"Review a game","u":"chess/#go-review","d":"Every move graded, with an evaluation graph and the engine's preferred move."},{"s":"chess","k":"Game","n":"Play the coaches","u":"chess/#go-ai","d":"Seven levels, from Pip warming up to all three coaches thinking together. Can you beat them?"},{"s":"chess","k":"Game","n":"Who is this player?","u":"chess/#go-who","d":"Clues appear on their own. Buzz when you know the grandmaster."},{"s":"chess","k":"Game","n":"Play a friend","u":"chess/#go-online","d":"Share a room code, pick a clock and play live. Resign, offer a draw, rematch and review the game after."},{"s":"chess","k":"Game","n":"Human bar","u":"chess/#go-hbar","d":"Drag the evaluation bar to where Stockfish puts the position. The closest guess scores most."},{"s":"chess","k":"Game","n":"Spot the tactic","u":"chess/#go-tact","d":"Tap every piece you could win for free before the clock runs out."},{"s":"chess","k":"Game","n":"Endgame verdict","u":"chess/#go-endg","d":"Win, draw or lose with best play? Call it, then play it out against Stockfish."},{"s":"chess","k":"Game","n":"Blindfold memory","u":"chess/#go-blind","d":"A position flashes up, then vanishes. Rebuild every piece from memory."},{"s":"football","k":"Page","n":"Games","u":"football/#games","d":"Every football game in one place"},{"s":"football","k":"Page","n":"Leaderboard","u":"football/#games-all-leagues-boards","d":"Seasons and all-time Elo"},{"s":"football","k":"Page","n":"Ranked online","u":"football/#games-all-leagues-ranked","d":"Play real people for Elo"},{"s":"football","k":"Page","n":"Weekly tournament","u":"football/#games-all-leagues-weekly","d":"Predict this week's real scores"},{"s":"football","k":"Page","n":"Live scores","u":"football/#games-all-leagues-live","d":"Today's matches"},{"s":"football","k":"Page","n":"Our model","u":"football/#lab","d":"How the prediction model works"},{"s":"football","k":"Page","n":"Title race","u":"football/#lab-premier-league-race","d":"Who wins the league"},{"s":"football","k":"Page","n":"Time machine","u":"football/#lab-premier-league-replay","d":"A season replayed beside the model"},{"s":"football","k":"Page","n":"Profile","u":"football/#profile","d":"Your stats, badges and friends"},{"s":"football","k":"Page","n":"Sticker album","u":"football/#album","d":"Collect every club and player"},{"s":"football","k":"Page","n":"Settings","u":"football/#settings","d":"Look, sidekick and sound"},{"s":"basketball","k":"Page","n":"Games","u":"basketball/#games","d":"Every basketball game in one place"},{"s":"basketball","k":"Page","n":"Leaderboard","u":"basketball/#games-nba-boards","d":"Seasons and all-time Elo"},{"s":"basketball","k":"Page","n":"Ranked online","u":"basketball/#games-nba-ranked","d":"Play real people for Elo"},{"s":"basketball","k":"Page","n":"Our model","u":"basketball/#lab","d":"How the NBA model works"},{"s":"basketball","k":"Page","n":"Profile","u":"basketball/#profile","d":"Your stats, badges and friends"},{"s":"basketball","k":"Page","n":"Settings","u":"basketball/#settings","d":"Look, sidekick and sound"},{"s":"chess","k":"Page","n":"Games","u":"chess/#go-games","d":"Every chess game"},{"s":"chess","k":"Page","n":"Daily challenges","u":"chess/#go-daily","d":"A puzzle, a bar and a tactic every day"},{"s":"chess","k":"Page","n":"Learn","u":"chess/#go-learn","d":"Lessons, openings, endgames"},{"s":"chess","k":"Page","n":"Opening explorer","u":"chess/#go-explorer","d":"Master games for any opening"},{"s":"chess","k":"Page","n":"Endgame trainer","u":"chess/#go-et","d":"Seven endings against Stockfish"},{"s":"chess","k":"Page","n":"Guess the famous game","u":"chess/#go-famous","d":"Replay the classics move by move"},{"s":"chess","k":"Page","n":"Weekly cup","u":"chess/#go-wk","d":"Five puzzles, the same for everyone"},{"s":"chess","k":"Page","n":"Puzzle rush","u":"chess/#go-rush","d":"Three minutes, as many puzzles as you can"},{"s":"chess","k":"Page","n":"Practise my mistakes","u":"chess/#go-mypz","d":"Your own blunders as puzzles"},{"s":"chess","k":"Page","n":"Opening repertoire","u":"chess/#go-rep","d":"Drill opening lines with spaced repetition"},{"s":"chess","k":"Page","n":"World rankings","u":"chess/#go-rank","d":"The FIDE top 100"},{"s":"chess","k":"Page","n":"Championships","u":"chess/#go-champ","d":"World titles and the current match"},{"s":"chess","k":"Page","n":"Simulate a match","u":"chess/#go-sim","d":"Anyone against anyone, 1,000 games"},{"s":"chess","k":"Page","n":"Leaderboards","u":"chess/#go-board","d":"Best scores"}];
 /* Search across all three sports (each build includes this file after site_index.js).
    - Football and basketball keep their own search (games, pages, players, clubs) and now also list matching games and pages
      from the other two sports, labelled by sport.
@@ -1021,21 +1090,39 @@ paintSplashArt();
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pct = (v, d = 0) => (v * 100).toFixed(d) + "%";
-const LG = DATA.leagues, ORDER = ["NBA"];
-LG.ALL = { name: "NBA", country: "United States", tag: "Thirty franchises, every season since 2001-02.", star: null, logo: null, crests: LG.NBA.crests, seasons: LG.NBA.seasons, tables: LG.NBA.tables, race: null, scorers: null };
+const LG = DATA.leagues, ORDER = ["E0", "D1", "SP1", "I1", "F1"];
+/* Public build: seasons before 2016-17 come in their own file (DATA.oldFile), fetched as soon as the page starts, so the first screen
+   doesn't wait for them. Pages that pick matches wait for it (route below), so seeded "same for everyone" picks never change. */
+const OLDS = { ok: !DATA.oldFile, p: Promise.resolve(), tries: 0 };
+if (DATA.oldFile) OLDS.p = new Promise((res) => {
+  const load = () => { const sc = document.createElement("script"); sc.src = DATA.oldFile; sc.async = true;
+    sc.onload = () => { try { Object.entries(window.__BK_OLD || {}).forEach(([lg, ss]) => { if (LG[lg]) Object.assign(LG[lg].seasons, ss); }); window.__BK_OLD = null; } catch (e) { /* keep the recent seasons */ } OLDS.ok = true; res(); };
+    sc.onerror = () => { sc.remove(); if (++OLDS.tries < 3) setTimeout(load, 1500 * OLDS.tries); else { OLDS.ok = true; res(); } };
+    document.head.appendChild(sc); };
+  load();
+});
+LG.ALL = { name: "All five leagues", country: "Europe", tag: "Random matches from every league on one big pitch.", star: null, logo: null, crests: {}, seasons: {}, tables: {}, race: null, scorers: null };
 const lgs = (c) => (c === "ALL" ? ORDER : [c]);
-const SLUG = { NBA: "nba", ALL: "all-leagues" };
+const SLUG = { E0: "premier-league", D1: "bundesliga", SP1: "la-liga", I1: "serie-a", F1: "ligue-1", ALL: "all-leagues" };
 const BYSLUG = Object.fromEntries(Object.entries(SLUG).map(([k, v]) => [v, k]));
 const PAL = {
-  NBA: { bg: "#17100C", surface: "#261A12", ink: "#FBF1E4", muted: "#CDB49B", accent: "#FF8A3D", glow: "#E8542E", display: '"Big Shoulders Display", sans-serif', mood: "Court lights" },
-  ALL: { bg: "#17100C", surface: "#261A12", ink: "#FBF1E4", muted: "#CDB49B", accent: "#FF8A3D", glow: "#E8542E", display: '"Big Shoulders Display", sans-serif', mood: "Court lights" },
-  HOME: { bg: "#120C09", surface: "#1F150E", ink: "#FBF1E4", muted: "#C4AA90", accent: "#FF9F4A", glow: "#E8542E", display: '"Big Shoulders Display", sans-serif', mood: "Tip-off" },
+  E0: { bg: "#1B1030", surface: "#2A1A47", ink: "#F7EEDC", muted: "#B9A9D6", accent: "#7CF5C8", glow: "#A855F7", display: '"Bricolage Grotesque", sans-serif', mood: "Floodlit evening" },
+  D1: { bg: "#1F1510", surface: "#2F211A", ink: "#FBEFD9", muted: "#CDB59A", accent: "#FFB347", glow: "#FF8A3D", display: '"Big Shoulders Display", sans-serif', mood: "Lantern autumn" },
+  SP1: { bg: "#2B0F19", surface: "#3B1824", ink: "#FFF0E0", muted: "#E0B7A8", accent: "#FFC857", glow: "#FF5E5B", display: "Fraunces, serif", mood: "Sangria sunset" },
+  I1: { bg: "#0D2A2B", surface: "#153B3C", ink: "#F6EDD9", muted: "#A9CBC0", accent: "#F3D9A4", glow: "#2EC4B6", display: '"DM Serif Display", serif', mood: "Piazza at dusk" },
+  F1: { bg: "#0F1A2B", surface: "#172840", ink: "#EEF3F7", muted: "#9DB2CB", accent: "#E4F55B", glow: "#5B8CFF", display: "Syne, sans-serif", mood: "Parisian twilight" },
+  ALL: { bg: "#14121F", surface: "#211D33", ink: "#F4EFE6", muted: "#B3AEC4", accent: "#FFD166", glow: "#7C6CFF", display: '"Bricolage Grotesque", sans-serif', mood: "Five leagues, one pitch" },
+  HOME: { bg: "#0A1A12", surface: "#12281C", ink: "#F3EFE3", muted: "#A9C0B0", accent: "#F2C14E", glow: "#1FA463", display: '"Bricolage Grotesque", sans-serif', mood: "Matchday night" },
 };
 const FLAG = {
-  NBA: "linear-gradient(90deg,#C8102E 0 50%,#1D428A 50%)",
-  ALL: "linear-gradient(90deg,#C8102E 0 50%,#1D428A 50%)",
+  E0: "linear-gradient(#CE1124,#CE1124) center/100% 17% no-repeat, linear-gradient(#CE1124,#CE1124) center/11% 100% no-repeat, #ffffff",
+  D1: "linear-gradient(180deg,#111 0 33.3%,#DD0000 33.3% 66.6%,#FFCE00 66.6%)",
+  SP1: "linear-gradient(180deg,#AA151B 0 25%,#F1BF00 25% 75%,#AA151B 75%)",
+  I1: "linear-gradient(90deg,#009246 0 33.3%,#ffffff 33.3% 66.6%,#CE2B37 66.6%)",
+  F1: "linear-gradient(90deg,#0055A4 0 33.3%,#ffffff 33.3% 66.6%,#EF4135 66.6%)",
+  ALL: "linear-gradient(90deg,#CE1124 0 20%,#FFCE00 20% 40%,#AA151B 40% 60%,#009246 60% 80%,#0055A4 80%)",
 };
-const INITIALS = { NBA: "NBA", ALL: "NBA" };
+const INITIALS = { E0: "PL", D1: "BL", SP1: "LL", I1: "SA", F1: "L1", ALL: "ALL" };
 // Original emblems (not the official league logos, which are trademarked): a ring, a motif, the initials. If site/logos/<code>.* exists at build time its image is used instead.
 function emblem(c, cls = "") {
   const L = lgOf(c); if (L.logo) return `<img class="emblem ${cls}" src="${L.logo}" alt="${esc(L.name)} logo">`;
@@ -1055,7 +1142,7 @@ const REDUCED = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduc
 /* ---------- sound: small synthesised palette, three levels ---------- */
 const Snd = (() => {
   let ctx = null, master = null, level = 1;           // 0 off, 1 soft, 2 full
-  try { const v = localStorage.getItem("arena-nba-sound"); if (v != null) level = +v; } catch (e) { /* storage unavailable */ }
+  try { const v = localStorage.getItem("arena-sound"); if (v != null) level = +v; } catch (e) { /* storage unavailable */ }
   const gainFor = () => [0, 0.5, 1][level] * (window.MIXFX == null ? 1 : window.MIXFX);
   function init() {
     if (ctx) { if (ctx.state === "suspended") ctx.resume(); return true; }
@@ -1083,14 +1170,14 @@ const Snd = (() => {
     const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     s.connect(f); f.connect(g); g.connect(master); s.start(t0);
   }
-  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 3, 5, 6, 7, 10] };
-  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 57 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "triangle" };
+  const SCALES = { E0: [0, 2, 4, 6, 7, 9, 11], D1: [0, 3, 5, 7, 10], SP1: [0, 1, 4, 5, 7, 8, 10], I1: [0, 2, 4, 5, 7, 9, 11], F1: [0, 2, 3, 5, 7, 9, 10], ALL: [0, 2, 4, 7, 9] };
+  const ROOT = { E0: 60, D1: 57, SP1: 62, I1: 65, F1: 59, ALL: 64 }, WAVE = { E0: "sine", D1: "triangle", SP1: "triangle", I1: "sine", F1: "sine", ALL: "sine" };
   const run = (fn) => { if (level === 0 || !init()) return; fn(ctx.currentTime + 0.01); };
   /* Generative background music: calm lobby loop and a slightly more driven game loop. Nothing is downloaded; it is played live. */
   let mus = 1, mg = null, mode = "lobby", want = "lobby", timer = null, nextT = 0, step = 0, pend = null;
-  try { const v = localStorage.getItem("arena-nba-music"); if (v != null) mus = +v; } catch (e) { /* storage unavailable */ }
-  const LOBBY = { bpm: 84, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
-  const GAME = { bpm: 108, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
+  try { const v = localStorage.getItem("arena-music"); if (v != null) mus = +v; } catch (e) { /* storage unavailable */ }
+  const LOBBY = { bpm: 68, chords: [[48, 55, 59, 64], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]], pent: [72, 74, 76, 79, 81, 84], motif: [76, 79, 81, 79, 76, 74, 72, 74] };
+  const GAME = { bpm: 88, chords: [[45, 52, 57, 60], [41, 48, 55, 57], [48, 55, 60, 64], [43, 50, 55, 59]], pent: [69, 72, 74, 76, 79, 81], motif: [69, 72, 76, 72, 74, 72, 69, 67] };
   function mnote(n, t0, dur, type, vol, att) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(midi(n), t0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + dur + 0.05); }
   function mkick(t0, vol) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(42, t0 + 0.14); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2); o.connect(g); g.connect(mg); o.start(t0); o.stop(t0 + 0.25); }
   function mhat(t0, vol) { const len = Math.floor(ctx.sampleRate * 0.05), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len); const s = ctx.createBufferSource(); s.buffer = b; const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 6500; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(mg); s.start(t0); }
@@ -1099,8 +1186,8 @@ const Snd = (() => {
     if (!game) ch.slice(1).forEach((n, i) => mnote(n + 12, t0 + i * 0.03, beat * 4.2, "sine", 0.022, 1.1));
     else ch.slice(1).forEach((n) => mnote(n, t0, beat * 1.9, "triangle", 0.012, 0.05));
     mnote(ch[0] - 12, t0, beat * (game ? 1.6 : 3.4), "sine", game ? 0.07 : 0.06, 0.03);
-    if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.07); mkick(t0 + beat * 2, 0.05); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.012)); }
-    else { mkick(t0, 0.035); mkick(t0 + beat * 2, 0.03); [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.008)); }   // a soft arena thump under the lobby loop
+    if (game) { mnote(ch[0] - 12, t0 + beat * 2.5, beat * 0.9, "sine", 0.05, 0.03); mkick(t0, 0.09); mkick(t0 + beat, 0.09); mhat(t0 + beat * 2, 0.05); mhat(t0 + beat * 2.02, 0.035); mhat(t0 + beat * 3.5, 0.012); }
+    else [1, 3].forEach((b) => mhat(t0 + beat * (b + 0.5), 0.006));
     const eighth = beat / 2, n8 = 8;
     for (let i = 0; i < n8; i++) {
       const sw = i % 2 ? eighth * 0.12 : 0, tt = t0 + i * eighth + sw;
@@ -1122,12 +1209,12 @@ const Snd = (() => {
     get level() { return level; },
     remix() { if (master) master.gain.value = gainFor(); if (mg && timer) mg.gain.setTargetAtTime(0.9 * (window.MIXMUS == null ? 1 : window.MIXMUS), ctx.currentTime, 0.1); },
     _n: { note: (...a) => note(...a), noise: (...a) => noise(...a), run: (f) => run(f) },
-    cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-nba-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
+    cycle() { level = (level + 1) % 3; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return ["off", "soft", "full"][level]; },
     unlock() { if (level) { init(); mStart(); } },
     get music() { return mus; }, mode(m) { mSet(m); },
-    setLevel(n) { level = n; try { localStorage.setItem("arena-nba-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return level; },
-    setMusic(on) { mus = on ? 1 : 0; try { localStorage.setItem("arena-nba-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
-    toggleMusic() { mus = mus ? 0 : 1; try { localStorage.setItem("arena-nba-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
+    setLevel(n) { level = n; try { localStorage.setItem("arena-sound", String(level)); } catch (e) { /* storage unavailable */ } if (master) master.gain.value = gainFor(); if (level === 0) mStop(); else mStart(); return level; },
+    setMusic(on) { mus = on ? 1 : 0; try { localStorage.setItem("arena-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
+    toggleMusic() { mus = mus ? 0 : 1; try { localStorage.setItem("arena-music", String(mus)); } catch (e) { /* storage unavailable */ } if (mus) mStart(); else mStop(); return mus; },
     count(n) { run((t) => { if (n === 0) { [72, 76, 79, 84].forEach((x, i) => note(x, t + i * 0.025, 0.7, "triangle", 0.06)); noise(t, 0.35, 800, 5000, 0.03, 0.8); } else note(n === 1 ? 69 : 67, t, 0.22, "sine", 0.08); }); },
     tick() { run((t) => noise(t, 0.035, 2600, 1800, 0.035, 2)); },
     hover() { run((t) => { note(84, t, 0.07, "sine", 0.02); note(91, t + 0.015, 0.06, "sine", 0.01); }); },
@@ -1137,7 +1224,7 @@ const Snd = (() => {
     wrong() { vib([40, 50, 40]); run((t) => { note(64, t, 0.3, "sine", 0.07, -2); note(60, t + 0.16, 0.42, "sine", 0.06, -1); }); },
     win() { vib([30, 40, 70]); run((t) => { [76, 79, 83, 88].forEach((n, i) => note(n, t + i * 0.08, 0.55, "triangle", 0.07)); noise(t + 0.3, 0.4, 5000, 9000, 0.02, 3); noise(t + 0.1, 1.3, 500, 1700, 0.035, 0.5); }); },
     horn() { vib([60, 40, 120]); run((t) => { [55, 59, 62].forEach((n) => note(n, t, 0.9, "sawtooth", 0.035)); [67, 71, 74].forEach((n) => note(n, t + 0.02, 0.9, "square", 0.018)); noise(t + 0.15, 1.8, 450, 1500, 0.045, 0.45); }); },
-    league(code) { run((t) => { const sc = SCALES[code] || SCALES.ALL, r = ROOT[code] || ROOT.ALL; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code] || "triangle", 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
+    league(code) { run((t) => { const sc = SCALES[code], r = ROOT[code]; [0, 2, 4, 6].forEach((d, i) => note(r + sc[d % sc.length] + (d >= sc.length ? 12 : 0), t + i * 0.13, 0.9, WAVE[code], 0.075)); noise(t, 0.6, 500, 2400, 0.025, 0.7); }); },
     back() { run((t) => { note(67, t, 0.22, "sine", 0.07); note(60, t + 0.11, 0.3, "sine", 0.07); }); },
     goal() { run((t) => { noise(t, 0.5, 400, 2600, 0.07, 0.7); [67, 71, 74, 79].forEach((n, i) => note(n, t + 0.05 + i * 0.07, 0.5, "triangle", 0.07)); }); },
     whistle() { run((t) => { note(88, t, 0.16, "sine", 0.045); note(88.5, t + 0.19, 0.3, "sine", 0.045); }); },
@@ -1170,7 +1257,7 @@ function setParticleColours(code) { const p = PAL[code] || PAL.E0; glowCol = p.g
 
 /* ---------- persistence: browser first, private cloud copy when signed in ---------- */
 const store = { items: {}, coll: null, uid: null, mode: "local" };
-const LOCAL_KEY = "arena-nba-plays-v1";
+const LOCAL_KEY = "arena-plays-v1";
 function loadLocal() { try { store.items = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}"); } catch (e) { store.items = {}; } }
 function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(store.items)); } catch (e) { /* storage unavailable */ } }
 loadLocal();   /* read saved progress at once: code that runs at start-up (the login streak, the loading-screen collection) saves the profile, and saving before this point used to overwrite everything with an empty profile */
@@ -1218,7 +1305,7 @@ const formHTML = (f) => `<span class="form">${f.map((x) => `<i class="${x}">${x}
 
 /* ---------- theme + routing ---------- */
 
-/* ---------- team colours and arena backdrop ---------- */
+/* ---------- team colours and stadium backdrop ---------- */
 /* Seven clubs have only black-and-white badge files, so their colours cannot be read from the badge. Kit colours, as the owner suggested, checked against recent kit-release reports:
    Juventus black and white stripes; Swansea white; Freiburg white and red; Nottingham Forest red; Gladbach white with green. Amiens and Spezia: no reliable kit source found, so they use their
    black-and-white badge colours. White on a dark theme reads as a light accent. */
@@ -1227,20 +1314,20 @@ const TEAMCOL = { ...EXTRA_COL, ...(DATA.colors || {}) };
 function teamTheme() {
   const root = document.documentElement, p = prof(), light = root.getAttribute("data-mode") === "light", c = p.favT && p.teamTheme !== false ? TEAMCOL[p.favT] : null;
   ["--accent", "--accent2", "--glow", "--on-accent"].forEach((k) => root.style.removeProperty(k));
-  const pal = PAL[root.getAttribute("data-league") || "NBA"] || PAL.NBA, base = c || (light ? [pal.accent, pal.accent2] : null); if (!base) return;
+  const pal = PAL[root.getAttribute("data-league") || "E0"] || PAL.E0, base = c || (light ? [pal.accent, pal.accent2] : null); if (!base) return;
   const lum = (h) => { const n = parseInt(h.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); }, dark = (h) => `color-mix(in srgb, ${h} 58%, #000)`;
   const a0 = light ? dark(base[0]) : base[0], a1 = light ? dark(base[1] || base[0]) : (base[1] || base[0]);
   root.style.setProperty("--accent", a0); root.style.setProperty("--accent2", a1); root.style.setProperty("--glow", base[0]); root.style.setProperty("--on-accent", light ? "#ffffff" : lum(base[0]) > 150 ? "#101010" : "#ffffff");
 }
 function applyAppearance() {
-  try { const L = prof().look; if (L) Object.entries(L).forEach(([k, v]) => { if (!localStorage.getItem("bkn_" + k)) localStorage.setItem("bkn_" + k, v); }); } catch (e) { /* profile not ready */ }
-  const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bkn_theme") || "auto";
-  d.setAttribute("data-style", g("bkn_style") === "minimal" ? "minimal" : "classic"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
-  if (g("bkn_contrast") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
-  if (g("bkn_motion") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
-  d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bkn_text") || "m"] || 1); teamTheme();
+  try { const L = prof().look; if (L) Object.entries(L).forEach(([k, v]) => { if (!localStorage.getItem("bk_" + k)) localStorage.setItem("bk_" + k, v); }); } catch (e) { /* profile not ready */ }
+  const d = document.documentElement, g = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, th = g("bk_theme") || "auto";
+  d.setAttribute("data-style", g("bk_style") === "classic" ? "classic" : g("bk_style") === "minimal" ? "minimal" : "flood"); d.setAttribute("data-mode", th === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : th);
+  if (g("bk_contrast") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
+  if (g("bk_motion") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
+  d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[g("bk_text") || "m"] || 1); teamTheme();
 }
-try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if ((localStorage.getItem("bkn_theme") || "auto") === "auto") applyAppearance(); }); } catch (e) { /* old browser */ }
+try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if ((localStorage.getItem("bk_theme") || "auto") === "auto") applyAppearance(); }); } catch (e) { /* old browser */ }
 function paintStadium(code) {
   const el = $("#stadium"); if (!el) return; const r = mulberry(hash("stadium" + code)), W = 1200, H = 360;
   const towers = [150, 420, 780, 1050].map((x, i) => `<g><rect x="${x}" y="${70 + (i % 2) * 20}" width="8" height="${H - 90 - (i % 2) * 20}" fill="#0b0f1a"/><g class="lamp" style="animation-delay:${i * 0.7}s"><circle cx="${x + 4}" cy="${64 + (i % 2) * 20}" r="46" fill="url(#glow)"/><rect x="${x - 22}" y="${54 + (i % 2) * 20}" width="52" height="14" rx="3" fill="#fff7d6"/></g></g>`).join("");
@@ -1268,6 +1355,10 @@ function go0(slug) { try { if (location.hash !== "#" + slug) history.replaceStat
 const GAME_IDS = ["call", "daily", "matchday", "upset", "table", "hol", "challenge", "who", "club", "career", "finish", "blur", "pvalue", "cvalue", "number", "ttt", "value", "roulette", "xi", "rapid", "bracket", "scramble", "iconic"];
 function route(ev) {
   const h = location.hash.slice(1);
+  if (!OLDS.ok && !/^(|profile|settings|about|album|admin)$/.test(h)) {   /* this page picks from every season: wait for the older ones (a second or two at most) */
+    let w = document.getElementById("oldWait"); if (!w) { w = document.createElement("div"); w.id = "oldWait"; w.setAttribute("role", "status"); w.innerHTML = '<span class="spin"></span> Loading every season…'; document.body.appendChild(w); }
+    OLDS.p.then(() => { const x = document.getElementById("oldWait"); if (x) x.remove(); if (location.hash.slice(1) === h) route(ev); }); return;
+  }
   stopReplay(); stopTheatre(); resetGames(); { const pp = $("#profilePage"); if (pp) pp.hidden = true; const ap = $("#albumPage"); if (ap) ap.hidden = true; const ad = $("#adminPage"); if (ad) ad.hidden = true; const ab = $("#aboutPage"); if (ab) ab.hidden = true; const sp_ = $("#setPage"); if (sp_) sp_.hidden = true; const dp_ = $("#discPage"); if (dp_) dp_.hidden = true; }
   const cm = /^challenge-([a-z0-9]{2})-([a-z0-9]{4,10})$/.exec(h);
   if (cm && FROMSHORT[cm[1]]) { S.mode = "games"; S.room = "play"; S.game = "challenge"; S.chal = { code: cm[2] }; openLeague(FROMSHORT[cm[1]], ev); return; }
@@ -1292,7 +1383,7 @@ function route(ev) {
   if (!mode) mode = ["race", "replay", "review"].includes(tail) ? "lab" : "games";          // links from before the sections were split
   if (mode === "lab" && lg === "ALL") lg = ORDER[0];          // the model section has no all-leagues view
   S.mode = mode;
-  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" ? tail : null; S.rk = tail === "ranked"; } }
+  if (mode === "games") { if (GAME_IDS.includes(tail)) { S.room = "play"; S.game = ["pvalue", "cvalue", "number"].includes(tail) ? "value" : tail; } else { S.room = tail === "boards" ? "boards" : "play"; S.game = null; S.hubGroup = tail === "bk" || tail === "model" || tail === "ranked" || tail === "live" || tail === "weekly" ? tail : null; S.rk = tail === "ranked"; } }
   else { S.room = ["race", "replay", "review", "about"].includes(tail) ? tail : lg === "ALL" ? "review" : "race"; S.game = null; if (lg === "ALL" && S.room !== "about") S.room = "review"; }
   openLeague(lg, ev);
 }
@@ -1309,7 +1400,7 @@ function openLeague(code, ev) {
   if (changing) { S.season = poolSeasons(code).filter((x) => !lgOf(code).seasons[x].live).slice(-1)[0]; S.cur = null; S.pick = null; S.md = null; S.up = null; S.tab = null; S.hol = null; stopReplay(); Snd.league(code); setTheme(code, ev); }
   $("#home").hidden = true; $("#lobby").hidden = true; $("#league").hidden = false;
   const L = lgOf(code), p = PAL[code];
-  $("#lKicker").textContent = `${S.mode === "games" ? "Games" : "Our model"} · ${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = S.mode === "games" ? "Pick a game." : L.tag;
+  $("#lKicker").textContent = `${S.mode === "games" ? "Games" : "Our model"} · ${p.mood} · ${L.country}`; $("#lName").textContent = L.name; $("#lTag").textContent = S.mode === "games" ? "Pick a game, or switch leagues above." : L.tag;
   $("#lFlag").style.background = FLAG[code]; $("#lEmblem").innerHTML = emblem(code, "sm");
   paintScore(); renderScope(); renderRooms(); renderRoom(); renderCrumbs(); if (changing) window.scrollTo(0, 0);
 }
@@ -1325,15 +1416,50 @@ function renderHome() {
   $("#photowall").innerHTML = rows.join("");
   const sm = DATA.summary.ALL, clubs = Object.keys(CREST);
   const faces = (seed) => [0, 1, 2].map((j) => badge(clubs[hash(seed + j) % clubs.length], "md")).join("");
-  $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Call real matches against the model, then test your ball knowledge: who am I, market values, football tic-tac-toe and more. Solo or against a friend.</div><span class="dgo">Play</span></button>
-    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Our model</div><div class="dtag">See what the model predicts: title-race odds, the Time machine (any season replayed beside the model's table), how it stacks up against the bookmakers, how it works and who made it possible.</div><span class="dgo">Explore</span></button>
-    <button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">About</div><div class="dtag">Why ballknowledge exists, how the model works with two tools to play with, what the data does not cover, and a roadmap you can vote on.</div><span class="dgo">Read</span></button>
+  $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Call real matches against the model, then test your ball knowledge. Solo or with a friend.</div><span class="dgo">Play</span></button>
+    <button type="button" class="door" data-door="lab"><div class="gfaces">${faces("l")}</div><div class="dname">Our model</div><div class="dtag">Title-race odds, a time machine for any season, and how we compare with the bookmakers.</div><span class="dgo">Explore</span></button>
+    <button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">About</div><div class="dtag">Why this exists, how the model works, and what the data does not cover.</div><span class="dgo">Read</span></button>
     <button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">New here? A daily feed with one fun stat, a spotlight and a question, plus a short quiz that matches you to a club.</div><span class="dgo">Open</span></button>`;
   $("#ribbon").innerHTML = `<span><b class="num">${sm.n.toLocaleString()}</b> matches tested</span><span>model <b class="num">${pct(sm.pooled_acc, 1)}</b></span><span>bookmakers <b class="num">${pct(sm.market_acc, 1)}</b></span><span><b class="num">5</b> leagues</span><span><b class="num">10</b> seasons</span>`;
+  homeToday(); homeTilt();
+}
+/* ---------- the "Today" strip on the home screen: a game of the day (the same for everyone, picked from the date), the next real
+   kickoff of the weekly tournament, and how many ranked lobbies are open right now. Only real numbers; a part with nothing to show hides. ---------- */
+async function homeToday() {
+  let box = $("#homeToday"); if (!box) { $("#doors").insertAdjacentHTML("beforebegin", '<div id="homeToday" class="htoday"></div>'); box = $("#homeToday"); }
+  const all = [...GAMES, ...QUIZ_GAMES].filter((g) => GAME_IDS.includes(g.id)), g = all[hash("gotd-" + todayKey()) % all.length], clubs = Object.keys(CREST), faces = [0, 1, 2].map((j) => badge(clubs[hash(todayKey() + j) % clubs.length], "md")).join("");
+  box.innerHTML = `<button type="button" class="htcard htgotd" data-hgame="${g.id}"><span class="htlabel"><svg class=ic><use href=#i-star></use></svg> Game of the day</span><div class="gfaces">${g.faces ? g.faces([0, 1, 2].map((j) => clubs[hash(todayKey() + j) % clubs.length])) : faces}</div><b class="htname">${esc(g.name)}</b><span class="fine">${esc(g.tag || "")}</span><span class="htfoot"><span class="dgo">Play now</span><span class="fine num" id="htNew"></span></span></button><div class="htcol"><button type="button" class="htcard htsmall" data-group-go="weekly" id="htKick" hidden></button><button type="button" class="htcard htsmall" data-group-go="ranked" id="htLobby" hidden></button></div>`;
+  const tick = () => { const el = $("#htNew"); if (!el) return clearInterval(homeToday.t); const now = new Date(), mid = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)), ms = mid - now, h = Math.floor(ms / 3.6e6), m = Math.floor((ms % 3.6e6) / 6e4); el.textContent = `new game in ${h}h ${m}m`; };
+  clearInterval(homeToday.t); tick(); homeToday.t = setInterval(tick, 30000);
+  try { const r = await fetch("weekly.json?t=" + Math.floor(Date.now() / 6e5)); const fx = r.ok ? (await r.json()).fixtures : []; const nx = fx.map((f) => ({ ...f, at: new Date(f.kickoff) })).filter((f) => f.at > Date.now()).sort((a, b) => a.at - b.at)[0], k = $("#htKick");
+    if (nx && k) { k.hidden = false; k.innerHTML = `<span class="htlabel"><span class="livedot"></span> Next kickoff · ${esc(lgOf(nx.league).name)}</span><span class="htmatch">${badge(nx.home, "sm")}<b>${esc(nx.home)}</b><small>v</small><b>${esc(nx.away)}</b>${badge(nx.away, "sm")}</span><span class="fine" id="htKickIn">in ${countdown(nx.at - Date.now())} · predict the score</span>`; } } catch (e) { /* no forecast file: the card stays hidden */ }
+  if (Board.mode === "rest") { const rows = await Ranked.rpc("open_lobbies"), l = $("#htLobby"); if (rows && rows.length && l) { l.hidden = false; l.innerHTML = `<span class="htlabel"><svg class=ic><use href=#i-trophy></use></svg> Ranked</span><span class="htbig num">${rows.length}</span><span class="fine">open lobb${rows.length === 1 ? "y" : "ies"} right now · join one</span>`; } }
+}
+/* doors lean towards the pointer, like cards on a table */
+function homeTilt() {
+  if (typeof REDUCED !== "undefined" && REDUCED) return;
+  document.querySelectorAll("#doors .door, .htcard").forEach((d) => { if (d.dataset.tilt) return; d.dataset.tilt = 1;
+    d.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; const r = d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; d.style.transform = `perspective(700px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-3px)`; d.style.setProperty("--mx", `${(x + 0.5) * 100}%`); d.style.setProperty("--my", `${(y + 0.5) * 100}%`); });
+    d.addEventListener("pointerleave", () => { d.style.transform = ""; }); });
 }
 
+
 /* ---------- lobby ---------- */
-function renderLobby() { /* basketball has a single league: no league picker */ }
+function renderLobby() {
+  $("#worlds").innerHTML = (S.mode === "lab-pick" ? ORDER : ["ALL", ...ORDER]).map((c) => {
+    const L = lgOf(c), p = PAL[c], sm = DATA.summary[c], st = L.star;
+    return `<button type="button" class="world" data-lg="${c}" style="--c-bg:${p.bg};--c-surface:${p.surface};--c-ink:${p.ink};--c-muted:${p.muted};--c-accent:${p.accent};--c-glow:${p.glow};--c-display:${p.display}">
+      <span class="flag" style="background:${FLAG[c]}" aria-hidden="true"></span>${emblem(c)}
+      <div><div class="wk">${esc(p.mood)} · ${esc(L.country)}</div><div class="wn">${esc(L.name)}</div><div class="wt">${esc(L.tag)}</div>
+        <div class="ws"><span>${sm.n.toLocaleString()} matches tested</span><span>model ${pct(sm.pooled_acc, 1)}</span><span>bookmakers ${pct(sm.market_acc, 1)}</span></div></div>
+      ${st ? `<div class="star"><div><div class="wk">Star to watch</div><div class="sn">${esc(st.name)}</div><small>${esc(st.role)} · ${esc(st.club)}</small></div>${badge(st.club, "md")}${st.face ? `<img class="face" src="${st.face}" alt="${esc(st.name)}">` : ""}</div>` : `<div class="star"><div><div class="wk">Mix it up</div><div class="sn">Any league, any season</div><small>Every game, random across all five</small></div></div>`}</button>`;
+  }).join("") + `<div class="world soon" style="--c-bg:#141414;--c-surface:#1d1d1d;--c-ink:#eee;--c-muted:#aaa;--c-accent:#bbb;--c-glow:#666;--c-display:var(--display);grid-template-columns:1fr;min-height:120px"><div><div class="wk">Coming later</div><div class="wn">Champions League</div><div class="wt">European nights need a different data source. It is next on the list.</div></div></div>`;
+  document.querySelectorAll(".world[data-lg]").forEach((el) => {
+    el.addEventListener("pointermove", (e) => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; el.style.setProperty("--mx", x * 100 + "%"); el.style.setProperty("--my", y * 100 + "%"); if (!REDUCED) { el.style.setProperty("--ry", ((x - 0.5) * 7).toFixed(2) + "deg"); el.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg"); } });
+    el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
+    el.addEventListener("pointerenter", () => Snd.hover());
+  });
+}
 
 /* ---------- score strip ---------- */
 function streaks(plays) {
@@ -1506,7 +1632,7 @@ function renderDaily() {
   const rows = st.f.map((x, k) => { const it = st.items[k]; return `<button type="button" class="drow ${it ? "done" : ""}" data-dfix="${x.c}|${x.season}|${x.i}"><b class="num">${k + 1}</b><span class="mt">${badge(x.m[1], "sm")}${esc(x.m[1])} <span class="fine">v</span> ${badge(x.m[2], "sm")}${esc(x.m[2])}</span>${it ? `<span class="mark ${it.pick === it.res ? "y" : "n"}">${it.pick === it.res ? "✓" : "✗"}</span>` : '<span class="fine">play</span>'}</button>`; }).join("");
   let result = "";
   if (st.n === 5) { const you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length; result = `<div class="row" style="margin-top:14px"><b>You ${you}/5, model ${mod}/5: ${you > mod ? "you beat it today" : you === mod ? "a tie" : "the model wins today"}</b><button class="btn" id="shareBtn" type="button">Copy my result</button><button class="btn ghost" id="dailyCard" type="button">Make a result card</button></div><pre class="share" id="shareTxt" hidden></pre>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${esc(lgOf(c).name)} matches from 2001 on, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
+  $("#room").innerHTML = `<div class="card">${gamesBar("Daily 5")}<p class="sub">Five ${c === "ALL" ? "matches from all five leagues" : esc(lgOf(c).name) + " matches"} from 2001 on, picked from today's date, so everyone gets the same five. ${dailyDays(c)} day${dailyDays(c) === 1 ? "" : "s"} in a row so far.</p><div class="daily">${rows}</div>${result}</div>`;
 }
 async function shareDaily() {
   const c = S.code, key = dayKey(), st = dailyState(c, key), you = st.items.filter((x) => x.pick === x.res).length, mod = st.items.filter((x) => x.mpick === x.res).length;
@@ -1745,15 +1871,15 @@ function recordLine(c, id) {
 const QUIZ_GAMES = [
   { id: "who", name: "Who am I?", modes: "Solo streak · 2 players", tag: "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.", faces: () => heroFaces(3) },
   { id: "career", name: "Career path", modes: "Solo streak · 2 players", tag: "Every club he played for, in order. Name the player.", faces: () => heroFaces(3) },
-  { id: "club", name: "Name that team", modes: "Solo streak · 2 players", tag: "Goals, wins and a stadium size. Which club is it?" },
-  { id: "blur", name: "Logo blur", modes: "Solo streak · 2 players", tag: "A blurry badge that sharpens by the second." },
+  { id: "club", name: "Name that club", modes: "Solo streak · 2 players", tag: "Goals, wins and a stadium size. Which club is it?" },
+  { id: "blur", name: "Badge blur", modes: "Solo streak · 2 players", tag: "A blurry badge that sharpens by the second." },
   { id: "finish", name: "Where did they finish?", modes: "Solo streak · 2 players", tag: "A club, a season, a slider. How close can you get?" },
   { id: "value", name: "Market value", modes: "Solo higher or lower · 2 players", tag: "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.", faces: () => heroFaces(2) },
-  { id: "roulette", name: "Team roulette", modes: "2 players · one device or two", tag: "A club appears. Take turns naming players who played for it. First to blank loses.", faces: () => heroFaces(2) },
+  { id: "roulette", name: "Club roulette", modes: "2 players · one device or two", tag: "A club appears. Take turns naming players who played for it. First to blank loses.", faces: () => heroFaces(2) },
   { id: "xi", name: "Starting XI", modes: "Solo · 2 to 3 minutes", tag: "Champions League and cup finals, Champions League semi-finals and the biggest league games. Name the eleven who started.", faces: () => heroFaces(3) },
   { id: "iconic", name: "Who did it", modes: "Solo", tag: "A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off.", faces: () => heroFaces(3) },
   { id: "scramble", name: "Scramble", modes: "Solo streak · 2 players", tag: "A club, player or manager with the letters shuffled. Unscramble it before your rival does." },
-  { id: "ttt", name: "Basketball tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
+  { id: "ttt", name: "Football tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
 ];
 let heroQueue = [];
 const heroFaces = (n) => { const all = (DATA.hero || []).filter((x) => x.img && !x.photo); let out = ""; for (let i = 0; i < n && all.length; i++) { if (!heroQueue.length) heroQueue = shuffle(all); const x = heroQueue.pop(); out += `<span class="badge xl hface"><img src="${x.img}" alt="${esc(x.n)}"></span>`; } return out; };
@@ -1766,28 +1892,104 @@ function renderHub() {
   const card = (g, k) => `<button type="button" class="gcard" data-game="${g.id}" style="--d:${k * 60}ms"><div class="gfaces">${g.faces ? g.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div>${favPill(g.id)}<div class="gname">${g.name}</div><div class="gmodes">${g.modes || "Solo, against the model"}</div><div class="gtag">${g.tag}</div><div class="grec num">${esc(recordLine(c, g.id))}</div></button>`;
   const where = c === "ALL" ? "across all five leagues" : `in the ${lgOf(c).name}`, g = S.hubGroup;
   if (g === "ranked") { renderRanked(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("ranked")); return; }
+  if (g === "weekly") { renderWeekly(); return; }
   if (g === "live") { renderLive(); $("#room").insertAdjacentHTML("afterbegin", onlineTabs("live")); return; }
   if (g === "model") { $("#room").innerHTML = weeklyCardHTML() + `<h2 class="sec">Beat the Model</h2><p class="secsub">Real matches, real results, and a model that never saw them. Call them ${where} and see who does better.</p><div class="hub">${hubList(GAMES).map(card).join("")}</div>`; weeklyBoard(); weeklyChampionCheck(); return; }
   if (g === "bk") { $("#room").innerHTML = `<h2 class="sec">ballknowledge originals</h2><p class="secsub">Players, clubs, careers and market values ${where}. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${hubList(QUIZ_GAMES).map((x, k) => card(x, k)).join("")}</div>`; return; }
   $("#room").innerHTML = `<h2 class="sec">What do you want to play?</h2><p class="secsub">Four places to play, ${where}.</p>${forYouHTML()}<div class="groups">
     <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, club roulette, tic-tac-toe, market values and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">${QUIZ_GAMES.length} games</span></button>
     <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).concat(pick(2).slice(0, 1)).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real matches against a prediction model that never saw them, watch its match play out, and climb the ranks.</div><span class="dgo">${GAMES.length} games</span></button>
-    <button type="button" class="gpick" data-group="model" style="--d:120ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="gname">Weekly tournament</div><div class="gtag">The same five matches for everyone this week. Best score takes the week and the Weekly champion badge.</div><span class="dgo">${store.items["xpc_wk" + weekId()] ? "Played this week" : "Week " + (weekId() % 100)}</span></button>
+    <button type="button" class="gpick" data-group="weekly" style="--d:120ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span></div><div class="gname">Weekly tournament</div><div class="gtag">Predict the exact score of this week's real Big 5 matches. 3 points for the exact score, 2 for the winner, 1 for the goals. The model plays too.</div><span class="dgo">${store.items["xpc_wk" + weekId()] ? "Played this week" : "Week " + (weekId() % 100)}</span></button>
     <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Play online</div><div class="gtag">Ranked matches against real players for Elo and the leaderboard, plus live predictions on the next real fixtures.</div><span class="dgo">Play online</span></button></div>`;
 }
-const onlineTabs = (cur) => ""; const _onlineTabsFootball = (cur) => `<div class="scope" style="padding:2px 0;margin-bottom:10px"><button type="button" class="chip" data-group="ranked" aria-pressed="${cur === "ranked"}">Ranked</button><button type="button" class="chip" data-group="live" aria-pressed="${cur === "live"}">Live predictions</button></div>`;
+const onlineTabs = (cur) => `<div class="scope" style="padding:2px 0;margin-bottom:10px"><button type="button" class="chip" data-group="ranked" aria-pressed="${cur === "ranked"}">Ranked</button><button type="button" class="chip" data-group="live" aria-pressed="${cur === "live"}">Live scores</button></div>`;
+/* ================= Weekly tournament: predict the exact score of this week's real matches =================
+   Fixtures and the model's forecasts come from docs/football/weekly.json (src/40, refreshed twice a day); kickoffs, live scores
+   and results from ESPN's public scoreboard; predictions from the database (schema_v12.sql), stamped with the server's clock.
+   A prediction only scores if it was made before the real kickoff. Points: 3 exact score, else 2 right winner or draw, else 1 right number of goals. */
+const WK = { fx: null, res: {}, mine: {}, all: null, saving: {}, lg: "all" };
+const wkPts = (p, r) => (p == null || r == null || p.hg == null ? null : p.hg === r.hg && p.ag === r.ag ? 3 : Math.sign(p.hg - p.ag) === Math.sign(r.hg - r.ag) ? 2 : p.hg + p.ag === r.hg + r.ag ? 1 : 0);
+const wkMonday = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() - day + 1); return t; };
+const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
+/* ESPN's scoreboard takes one day at a time: ask for each day of the week in every league; returns [league code, event] pairs */
+async function wkEspn(mon) {
+  const jobs = []; for (let k = 0; k < 7; k++) { const day = ymd(new Date(mon.getTime() + k * 864e5)); ORDER.forEach((c) => jobs.push(fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${ESPN_LG[c]}/scoreboard?dates=${day}`).then((r) => (r.ok ? r.json() : null)).then((d) => (d && d.events || []).map((e) => [c, e])).catch(() => []))); }
+  return (await Promise.all(jobs)).flat();
+}
 function weeklyCardHTML() {
-  const wk = "wk" + weekId(), done = store.items[`xpc_${wk}`];
-  return `<div class="card wkcard" style="margin-bottom:14px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h3 style="margin:2px 0 4px">Five matches, the same for everyone this week</h3><div class="fine">All five leagues. Best score takes the week, and the winner earns the Weekly champion badge.</div></div><button class="btn" id="wkPlay" type="button">${done ? "See your result" : "Play"}</button></div><div id="wkBoard" class="lb" style="margin-top:10px"></div></div>`;
+  return `<div class="card wkcard" style="margin-bottom:14px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h3 style="margin:2px 0 4px">Predict this week's real matches</h3><div class="fine">Exact scores for every Big 5 match this week. 3 points for the exact score, 2 for the right winner or draw, 1 for the right number of goals. The model plays too.</div></div><button class="btn" id="wkPlay" type="button">Make your predictions</button></div><div id="wkBoard" class="lb" style="margin-top:10px"></div></div>`;
 }
-async function weeklyBoard() {
-  const rows = await Board.top("challenge", "all", "all", "wk" + weekId()), el = $("#wkBoard"); if (!el) return;
-  el.innerHTML = rows && rows.length ? rows.slice(0, 5).map((r, i) => `<div class="lbrow"><b class="num">${i + 1}</b><span>${esc(r.nick)}</span><span class="num">${Math.round(Number(r.value))}/5</span></div>`).join("") : '<div class="fine">Nobody has finished yet. Be first.</div>';
+async function wkLoad() {
+  if (!WK.fx) { try { const r = await fetch("weekly.json?t=" + Math.floor(Date.now() / 6e5)); WK.fx = r.ok ? (await r.json()).fixtures : []; } catch (e) { WK.fx = []; } }
+  const mon = wkMonday(), wk = weekId();
+  const list = WK.fx.filter((f) => weekId(new Date(f.kickoff)) === wk);
+  (await wkEspn(mon)).forEach(([lg, e]) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"), at = new Date(e.date);
+    const near = (x, hrs) => x.league === lg && Math.abs(new Date(x.kickoff) - at) < hrs * 3600e3, nm = (x, t) => lsSame(x, t.displayName) || lsSame(x, t.shortDisplayName) || lsSame(x, t.name);
+    /* both names agree within a day and a half, or one of them agrees within six hours (a club plays once around a kickoff; names are spelled differently: Nott'm Forest, Paris SG) */
+    const f = list.find((x) => near(x, 36) && nm(x.home, h.team) && nm(x.away, a.team)) || list.find((x) => near(x, 6) && (nm(x.home, h.team) || nm(x.away, a.team))); if (!f) return;
+    WK.res[f.id] = { at, state: e.status.type.state, clock: c.status.displayClock, hg: +h.score, ag: +a.score, hlogo: h.team.logo, alogo: a.team.logo }; });
+  list.forEach((f) => { const r = WK.res[f.id]; f.at = r ? r.at : new Date(f.kickoff); });   /* ESPN's kickoff wins: fixtures move */
+  return list.sort((x, y) => x.at - y.at || x.home.localeCompare(y.home));
 }
+async function renderWeekly() {
+  const room = $("#room"), signed = Account.signedIn && Board.mode === "rest";
+  room.innerHTML = `<div class="crumbs" style="margin-bottom:8px"><button class="btn ghost" data-group="model" type="button">← Beat the Model</button></div><div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="label">Weekly tournament · week ${weekId() % 100}</div><h2 style="margin:2px 0">Predict this week's matches</h2><p class="fine" style="margin:0">Exact scores. <b>3</b> for the exact score, <b>2</b> for the right winner or draw, <b>1</b> for the right number of goals. Predictions lock at kickoff and only count if made before it.</p></div><span id="wkNext" class="fine"></span></div>
+    ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to save predictions and join the table.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
+    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-wklg="${c}" aria-pressed="${WK.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="wkList" class="fxlist">${skelRows(4)}</div></div>
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-trophy></use></svg> This week's table</h3><span class="fine">The model is pinned to the top so you can compare</span></div><div id="wkTable" class="lb">${skelRows(3)}</div></div>`;
+  const list = await wkLoad(); if (!$("#wkList")) return; WK.list = list;
+  if (signed) { const mine = await Ranked.rpc("wk_mine", { p_week: weekId() }); WK.mine = {}; (mine || []).forEach((m) => { WK.mine[m.fixture_id] = m; }); WK.noDb = mine == null; }
+  wkPaintList(); wkTable(); clearInterval(WK.tick); WK.tick = setInterval(() => { if (!$("#wkList")) return clearInterval(WK.tick); wkCountdown(); }, 1000); wkCountdown();
+  clearInterval(WK.poll); WK.poll = setInterval(async () => { if (!$("#wkList")) return clearInterval(WK.poll); WK.list = await wkLoad(); wkPaintList(); wkTable(); }, 60000);
+}
+function wkCountdown() { const nx = (WK.list || []).find((f) => f.at > Date.now()), el = $("#wkNext"); if (el) el.textContent = nx ? `Next kickoff in ${countdown(nx.at - Date.now())}` : ""; document.querySelectorAll("[data-wkk]").forEach((e) => { const ms = new Date(+e.dataset.wkk) - Date.now(); if (ms <= 0 && !e.dataset.done) { e.dataset.done = 1; wkPaintList(); } }); }
+function wkPaintList() {
+  const el = $("#wkList"); if (!el) return; const now = Date.now(), list = (WK.list || []).filter((f) => WK.lg === "all" || f.league === WK.lg);
+  if (!list.length) { el.innerHTML = `<div class="fxempty"><span><svg class=ic><use href=#i-calendar></use></svg></span><b>No fixtures for this week yet</b><div class="fine">${WK.fx && WK.fx.length ? "This week's matches appear as soon as they are published." : "The forecast file could not be loaded. Try again in a moment."}</div></div>`; return; }
+  let lastDay = "";
+  el.innerHTML = list.map((f) => {
+    const r = WK.res[f.id], open = f.at > now && !(r && r.state !== "pre"), my = WK.mine[f.id], fin = r && r.state === "post", live = r && r.state === "in";
+    const day = f.at.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }), head = day !== lastDay ? `<div class="fxday">${esc(day)}</div>` : ""; lastDay = day;
+    const showModel = !open || my, mOk = new Date(f.made || 0) < f.at, pts = fin && my && new Date(my.made_at) < f.at ? wkPts(my, r) : null, mpts = fin && mOk ? wkPts({ hg: f.model_hg, ag: f.model_ag }, r) : null;
+    const box = (side) => { const v = my ? my[side] : null; return open ? `<span class="wkstep"><button type="button" class="wkb" data-wkadj="${esc(f.id)}|${side}|-1" aria-label="One fewer">−</button><b class="wkv num" id="wk-${esc(f.id)}-${side}">${v == null ? "–" : v}</b><button type="button" class="wkb" data-wkadj="${esc(f.id)}|${side}|1" aria-label="One more">+</button></span>` : `<b class="wkv num locked">${v == null ? "–" : v}</b>`; };
+    const score = r && r.state !== "pre" ? `<span class="wkreal num ${live ? "live" : ""}">${live ? '<span class="livedot"></span>' : ""}${r.hg}–${r.ag}${live ? ` <small>${esc(r.clock || "")}</small>` : ' <small>FT</small>'}</span>` : `<span class="fine" data-wkk="${f.at.getTime()}">${f.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>`;
+    return `${head}<div class="wkfx ${live ? "islive" : ""} ${pts === 3 ? "exact" : ""}"><div class="wkteams"><span class="wkh">${esc(f.home)}${badge(f.home, "sm")}</span>${box("hg")}<span class="wkdash">:</span>${box("ag")}<span class="wka">${badge(f.away, "sm")}${esc(f.away)}</span></div>
+      <div class="wkmeta"><span class="fine">${esc(lgOf(f.league).name)}</span>${score}${showModel ? `<span class="wkmodel"><svg class=ic><use href=#i-chip></use></svg> Model <b class="num">${f.model_hg}–${f.model_ag}</b>${mpts != null ? `<i class="wkpt p${mpts}">+${mpts}</i>` : !mOk && !open ? '<i class="fine">late, not scored</i>' : ""}</span>` : `<span class="fine">Predict to see the model's score</span>`}${pts != null ? `<i class="wkpt p${pts} you">You +${pts}</i>` : fin && my ? '<i class="fine">made after kickoff</i>' : ""}<span class="wksaved fine" id="wks-${esc(f.id)}">${WK.saving[f.id] || ""}</span></div></div>`;
+  }).join("");
+}
+async function wkAdj(id, side, d) {
+  const f = (WK.list || []).find((x) => x.id === id); if (!f || f.at <= Date.now()) return wkPaintList();
+  if (!(Account.signedIn && Board.mode === "rest")) { toast("Sign in to save your predictions."); return; }
+  const my = WK.mine[id] || (WK.mine[id] = { fixture_id: id, hg: 0, ag: 0, made_at: null, fresh: true }); if (my.fresh) { my.fresh = false; my.hg = my.hg ?? 0; my.ag = my.ag ?? 0; }
+  my[side] = Math.max(0, Math.min(20, (my[side] || 0) + d)); Snd.tick(); const v = $(`#wk-${CSS.escape(id)}-${side}`); if (v) { v.textContent = my[side]; v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop"); }
+  WK.saving[id] = "saving…"; const s = $(`#wks-${CSS.escape(id)}`); if (s) s.textContent = "saving…";
+  clearTimeout(WK.t && WK.t[id]); WK.t = WK.t || {}; WK.t[id] = setTimeout(async () => {
+    const r = await Ranked.rpc("wk_predict", { p_fixture: id, p_week: weekId(), p_hg: my.hg, p_ag: my.ag, p_kick: f.at.toISOString() });
+    WK.saving[id] = r === "ok" ? "✓ saved" : r === "nick" ? "pick a nickname first" : r == null ? "not saved: database update needed (schema_v12.sql)" : "not saved"; if (r === "ok") { my.made_at = new Date().toISOString(); lockIn(`xpc_wk${weekId()}`, 1); if (!prof().ach || !prof().ach.wk_play) award("wk_play"); }
+    wkPaintList();
+  }, 600);
+}
+async function wkTable(prev) {
+  const box = $(prev ? "#wkBoard" : "#wkTable"); if (!box) return; const wk = prev ? weekId(new Date(Date.now() - 7 * 864e5)) : weekId();
+  if (!WK.list) WK.list = await wkLoad();
+  const rows = (await Ranked.rpc("wk_all", { p_week: wk })) || [], byFx = {}; (WK.list || []).forEach((f) => { byFx[f.id] = f; });
+  const tally = {}; rows.forEach((x) => { const t = tally[x.nick] || (tally[x.nick] = { nick: x.nick, avatar: x.avatar, badges: x.badges, pts: 0, exact: 0, n: 0 }); const f = byFx[x.fixture_id], r = f && WK.res[f.id]; if (!f || !r || r.state !== "post" || x.hg == null || new Date(x.made_at) >= f.at) return; const p = wkPts(x, r); t.pts += p; t.exact += p === 3; t.n++; });
+  const model = { pts: 0, exact: 0, n: 0 }; (WK.list || []).forEach((f) => { const r = WK.res[f.id]; if (!r || r.state !== "post" || new Date(f.made || 0) >= f.at) return; const p = wkPts({ hg: f.model_hg, ag: f.model_ag }, r); model.pts += p; model.exact += p === 3; model.n++; });
+  const list = Object.values(tally).sort((a, b) => b.pts - a.pts || b.exact - a.exact || a.nick.localeCompare(b.nick)), me = prof().nick, mrank = list.filter((t) => t.pts > model.pts).length + 1;
+  const row = (t, i, cls = "") => `<div class="lbrow wkrow ${cls} ${t.nick === me ? "me" : ""}"><b class="wkrank num">${i}</b><span class="wkwho">${avatarHTML(t.avatar, "xs", t.nick)}<span>${esc(t.nick)}</span>${badgesHTML(t.badges)}</span><span class="fine num">${t.exact} exact · ${t.n} played</span><b class="num wkpts">${t.pts}</b></div>`;
+  const mrow = `<div class="lbrow wkrow modelrow"><b class="wkrank num" title="Where the model would rank">${mrank}</b><span class="wkwho"><span class="av xs wkmav"><svg class=ic><use href=#i-chip></use></svg></span><span>The Model</span><small class="fine">plays along</small></span><span class="fine num">${model.exact} exact · ${model.n} played</span><b class="num wkpts">${model.pts}</b></div>`;
+  box.innerHTML = `<div class="lbrow wkrow lbhead fine"><b>#</b><span>Player</span><span></span><b>Pts</b></div>` + mrow + (list.length ? (prev ? list.slice(0, 5) : list).map((t, i) => row(t, i + 1)).join("") : `<div class="fine" style="padding:8px 4px">${rows == null ? "The table needs the latest database update (schema_v12.sql)." : "Nobody has scored yet this week. Points appear as matches finish."}</div>`);
+}
+async function weeklyBoard() { wkTable(true); }
 async function weeklyChampionCheck() {
-  const last = "wk" + weekId(new Date(Date.now() - 7 * 864e5)), key = `wkchk_${last}`; if (store.items[key] || !Account.signedIn || Board.mode !== "rest") return;
-  const rows = await Board.top("challenge", "all", "all", last); if (!rows) return; lockIn(key, 1);
-  if (rows.length >= 3 && prof().nick && rows[0].nick === prof().nick) award("wk_win");
+  const last = weekId(new Date(Date.now() - 7 * 864e5)), key = `wkchk_${last}`; if (store.items[key] || !Account.signedIn || Board.mode !== "rest") return;
+  if (new Date().getUTCDay() === 0) return;   /* the week is still being played until Sunday night */
+  const rows = await Ranked.rpc("wk_all", { p_week: last }); if (!rows) return; lockIn(key, 1); const nicks = new Set(rows.map((x) => x.nick)); if (nicks.size < 3) return;
+  /* last week's points need last week's results: score from the forecast file's fixtures and ESPN, same rules */
+  const mon = wkMonday(new Date(Date.now() - 7 * 864e5)), fx = (WK.fx || []).filter((f) => weekId(new Date(f.kickoff)) === last); if (!fx.length) return;
+  const res = {}; (await wkEspn(mon)).forEach(([lg, e]) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"); const at = new Date(e.date), near = (x, hrs) => x.league === lg && Math.abs(new Date(x.kickoff) - at) < hrs * 3600e3, nm = (x, t) => lsSame(x, t.displayName) || lsSame(x, t.shortDisplayName) || lsSame(x, t.name); const f = fx.find((x) => near(x, 36) && nm(x.home, h.team) && nm(x.away, a.team)) || fx.find((x) => near(x, 6) && (nm(x.home, h.team) || nm(x.away, a.team))); if (f && e.status.type.state === "post") res[f.id] = { hg: +h.score, ag: +a.score, at: new Date(e.date) }; });
+  const tot = {}; rows.forEach((x) => { const r = res[x.fixture_id]; if (r && x.hg != null && new Date(x.made_at) < r.at) tot[x.nick] = (tot[x.nick] || 0) + wkPts(x, r); });
+  const top = Object.entries(tot).sort((a, b) => b[1] - a[1]); if (top.length && prof().nick && top[0][0] === prof().nick && (!top[1] || top[1][1] < top[0][1])) award("wk_win");
 }
 function renderCrumbs() {
   paintHowto();
@@ -1942,13 +2144,15 @@ function renderTableVerdict(d) {
 }
 
 /* ---------- Higher or lower ---------- */
-const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8]];
+const HOL_Q = [["pts", "finished with more points", 1, 5], ["gf", "scored more goals", 1, 6], ["ga", "conceded fewer goals", -1, 6], ["w", "won more matches", 1, 2], ["gd", "had the better goal difference", 1, 8],
+  /* real match counts that say little about how good a team is (2017-18 on) */
+  ["yc", "got more yellow cards", 1, 12], ["yc", "got fewer yellow cards", -1, 12], ["fl", "committed more fouls", 1, 25], ["fl", "committed fewer fouls", -1, 25], ["co", "won more corners", 1, 25], ["co", "won fewer corners", -1, 25], ["sh", "had more shots", 1, 60], ["sh", "had fewer shots", -1, 60], ["so", "had more shots on target", 1, 25], ["so", "had fewer shots on target", -1, 25]];
 function newHol(c) {
   const lg = lgs(c)[Math.floor(Math.random() * lgs(c).length)], tabs = lgOf(lg).tables, keys = Object.keys(tabs);
   for (let tries = 0; tries < 300; tries++) {
-    const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => ({ t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3] })), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
+    const sn = keys[Math.floor(Math.random() * keys.length)], rows = tabs[sn].map((r) => { const ts = ((lgOf(lg).tstats || {})[sn] || {})[r[0]]; return { t: r[0], pts: r[1], gf: r[2], ga: r[3], w: r[4], gd: r[2] - r[3], ...(ts ? { yc: ts[0], fl: ts[1], co: ts[2], sh: ts[3], so: ts[4] } : {}) }; }), [key, text, dir, gap] = HOL_Q[Math.floor(Math.random() * HOL_Q.length)];
     const a = rows[Math.floor(Math.random() * rows.length)], b = rows[Math.floor(Math.random() * rows.length)];
-    if (a === b || Math.abs(a[key] - b[key]) < gap) continue;
+    if (a === b || a[key] == null || b[key] == null || Math.abs(a[key] - b[key]) < gap) continue;
     return { c: lg, sn, key, text, a, b, win: dir * (a[key] - b[key]) > 0 ? a : b, chosen: null };
   }
   return null;
@@ -1969,7 +2173,7 @@ function answerHol(k) {
 
 
 /* ================= Progression: XP, ranks, achievements, streak calendar ================= */
-const LEVELS = [["Driveway", 0], ["Rec League", 100], ["High School", 300], ["College", 650], ["Pro", 1200], ["Captain", 2000], ["Franchise Legend", 3200], ["Hall of Famer", 5000]];
+const LEVELS = [["Sunday League", 0], ["Pub Team", 100], ["Academy", 300], ["Reserves", 650], ["First Team", 1200], ["Captain", 2000], ["Club Legend", 3200], ["World Class", 5000]];
 const ACH = [
   ["first_call", "First blood", "Make your first correct call"],
   ["giant", "Giant killer", "Beat the model on a single match"],
@@ -2075,7 +2279,7 @@ function toastNext(box) {
 function unlock(p, id) { if (p.ach[id]) return; p.ach[id] = todayKey(); const a = ACH.find((x) => x[0] === id); toast(`<b>Achievement unlocked</b><br>${esc(a[1])}: ${esc(a[2])}`, "ach"); Snd.win(); setTimeout(() => { try { Mascot.react("achieve"); } catch (e) { /* not ready */ } }, 1500); }
 const skelRows = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join("");
 const emptyState = (icon, title, text, action = "") => `<div class="fxempty"><span>${icon}</span><b>${title}</b><div class="fine">${text}</div>${action ? `<div class="fxact">${action}</div>` : ""}</div>`;   /* action: an optional button, so an empty screen says what to do next */
-const BK_LABELS = ["Who am I?", "Career path", "Name that team", "Logo blur", "Where did they finish?", "Market value", "Basketball tic-tac-toe", "Team roulette", "Starting XI", "Scramble", "Who did it"];
+const BK_LABELS = ["Who am I?", "Career path", "Name that club", "Badge blur", "Where did they finish?", "Market value", "Football tic-tac-toe", "Club roulette", "Starting XI", "Scramble", "Who did it"];
 function award(id) { const p = prof(); if (p.ach[id]) return; unlock(p, id); saveProf(p); }
 /* ---------- recommendations (Usage lives in site/usage.js) ---------- */
 const USPORT = DATA.sport === "nba" ? "bb" : "fb";
@@ -2161,23 +2365,23 @@ const HOWTO = {
   "g:challenge": ["Challenge a friend", ["What you do", "Create a challenge: five matches, the same for you and anyone with the link."], ["How", "Copy the link, send it, then compare scores when you have both finished."]],
   "g:who": ["Who am I?", ["What you do", "A mystery player. Clues start hard (where he was born) and get easier (his club). Press Buzz when you think you know, then type the name and press Enter. Small typos are fine."], ["Scoring", "Up to 1,000 points, falling as more clues appear. A wrong guess costs 150."], ["Solo or duel", "Solo: keep a streak going. Two players: the first to buzz and answer right takes the points."], ["Tip", "New to this? Choose Easy: it only asks about superstars."]],
   "g:career": ["Career path", ["What you do", "You see every club a player has played for, in order. Name the player."], ["Scoring", "Up to 1,000 points, falling over time. A wrong guess costs 150."], ["Tip", "Start with Easy for the biggest names."]],
-  "g:club": ["Name that team", ["What you do", "Guess the club from numbers: goals scored, wins and defeats, then bigger hints like stadium size."], ["Scoring", "Up to 1,000 points, falling over time. A wrong guess costs 150."]],
-  "g:blur": ["Logo blur", ["What you do", "A club badge starts very blurry and gets sharper every few seconds. Name the club."], ["Scoring", "The sharper the badge, the fewer points. Guess early to score more."]],
+  "g:club": ["Name that club", ["What you do", "Guess the club from numbers: goals scored, wins and defeats, then bigger hints like stadium size."], ["Scoring", "Up to 1,000 points, falling over time. A wrong guess costs 150."]],
+  "g:blur": ["Badge blur", ["What you do", "A club badge starts very blurry and gets sharper every few seconds. Name the club."], ["Scoring", "The sharper the badge, the fewer points. Guess early to score more."]],
   "g:finish": ["Where did they finish?", ["What you do", "A club and a season appear. Slide to where you think it finished in the league table."], ["Scoring", "The closer you are, the more you score. Solo: your run continues while you stay within a few places."], ["Two players", "You each slide in turn without seeing the other's guess. Closest wins the round."]],
   "g:value": ["Market value", ["What it is", "Transfermarkt estimates what a player or squad is worth. That is the number we use."], ["Solo", "Two players or two squads: pick the one worth more. Keep the streak alive."], ["Two players", "A player appears and you each type a value in millions of euros. The closest guess scores most."]],
-  "g:roulette": ["Team roulette", ["What you do", "A club appears. Two players take turns naming someone who has played for it."], ["You lose a round if", "you name someone who never played there, repeat a name, or run out of time."], ["Winning", "The first to win two rounds takes the match."]],
+  "g:roulette": ["Club roulette", ["What you do", "A club appears. Two players take turns naming someone who has played for it."], ["You lose a round if", "you name someone who never played there, repeat a name, or run out of time."], ["Winning", "The first to win two rounds takes the match."]],
   "g:rapid": ["Rapid fire", ["What you do", "A real match appears. Tap Home win, Draw or Away win as fast as you can for 60 seconds."], ["The model", "It calls the same matches. Whoever gets more right wins."], ["Tip", "You can use the keys H, D and A."]],
   "g:bracket": ["Bracket buster", ["What you do", "A real Champions League knockout. In every round pick who goes through in each tie, then lock the round in."], ["The model", "A plain Elo rating, computed from every match before the tie, picks the higher-rated club."], ["Scoring", "A round of 16 tie is worth 1 point, a quarter-final 2, a semi-final 3 and the final 4."]],
   "g:iconic": ["Who did it", ["What you do", "A famous match appears with its score and its highlights by minute. For each goal and red card you name the player: the scorer, the penalty taker, the player who set it up, or who was sent off."], ["Hints and scoring", "100 per right answer, minus 15 per wrong guess and 30 per hint. Skip if you are stuck; the answer is shown at the end."], ["Good to know", "Minutes are whole minutes, so added-time goals show as 91, 93 and so on. Matches with own goals or shoot-outs are left out because the source does not mark them."]],
   "g:scramble": ["Scramble", ["What you do", "A club, a footballer or a manager appears as big shuffled letters, each word shuffled on its own. Buzz in when you know it and type the real name."], ["Hints", "Hints do not arrive on their own. Press Hint when you want one; in a two-player round a hint only appears once both players have asked. Each hint takes a little off the points."], ["Two players", "Same round on one device or two. A wrong answer costs 150 points and locks you out of that round."]],
   "g:xi": ["Starting XI", ["What you do", "A big match (a final, a Champions League semi-final or quarter-final, or a clash between two top-three league teams) and one of its teams appear on a pitch. Type the surnames of the eleven players who started."], ["Clues", "Easy shows first letters and shirt numbers, Medium shirt numbers, Hard and Elite only the positions (Elite also has 2 minutes instead of 3). Hint reveals more letters for 30 points."], ["Scoring", "100 per player, a bonus for the time left on a perfect XI, minus 20 per wrong guess."]],
-  "g:ttt": ["Basketball tic-tac-toe", ["What you do", "Claim a square by naming a player who fits both its row and its column, for example 'played for Arsenal' and 'Spanish'."], ["Rules", "Nobody can be used twice, and a wrong answer loses your turn. Three in a row wins."]],
+  "g:ttt": ["Football tic-tac-toe", ["What you do", "Claim a square by naming a player who fits both its row and its column, for example 'played for Arsenal' and 'Spanish'."], ["Rules", "Nobody can be used twice, and a wrong answer loses your turn. Three in a row wins."]],
   "ranked": ["Ranked", ["What it is", "Play real people online. Create a lobby and others can join from the list."], ["Public or private", "Public lobbies change your rating. A private lobby with a code is for friends and never changes it."], ["Your rating", "Everyone starts at 1,000 Elo. Beating a higher-rated player earns more. Ranks run from Bronze up to Legend."]],
   "live": ["Live predictions", ["What you do", "Pick Home, Draw or Away for upcoming real matches before they kick off. You can change your pick until kickoff."], ["The model", "The model's pick is shown after you lock yours. The leaderboard pins its score at the top so you can compare."], ["Scoring", "One point for every right result."]],
   "replay": ["Time machine", ["What it does", "Pick any season and press play. Matches land round by round and the table builds, with the model's table next to the real one."], ["Model table", "That is the table you would get if every match went the way the model's probabilities say."]],
   "race": ["Title race", ["What it shows", "The model plays out the rest of the season thousands of times. The percentages are how often each club ends up in each place."], ["Careful", "It cannot see injuries or transfers, so treat it as a guide, not a promise."]],
 };
-const howSeen = () => { try { return JSON.parse(localStorage.getItem("bkn_howto") || "{}"); } catch (e) { return {}; } };
+const howSeen = () => { try { return JSON.parse(localStorage.getItem("bk_howto") || "{}"); } catch (e) { return {}; } };
 const howKey = () => { if (S.mode === "games") { if (S.game) return "g:" + S.game; if (S.hubGroup === "ranked" && S.room === "play") return "ranked"; if (S.hubGroup === "live" && S.room === "play") return "live"; } else if (S.mode === "lab" && (S.room === "replay" || S.room === "race")) return S.room; return null; };
 function paintHowto(force) {
   const box = $("#howto"); if (!box) return; const k = howKey(), h = k && HOWTO[k], seen = howSeen();
@@ -2191,20 +2395,19 @@ function xBars(rows, note) { return `<div class="xs xs2">${rows.map(([n, v, k, h
 function buildScenes(path, name) {
   const sm = DATA.summary.ALL, b = BL(), model = Math.round(sm.pooled_acc * 1000) / 10, books = Math.round(sm.market_acc * 1000) / 10, nn = Math.round(sm.n / 1000);
   const who = name ? `, ${name}` : "";
-  const ns = ((DATA.nbaModel || {}).summary || {}).overall || {}, nacc = Math.round((ns.acc || 0) * 1000) / 10, nh = Math.round((ns.home || 0) * 1000) / 10, ngames = ns.n || 0;
-  const welcome = { h: "Welcome", say: `Welcome${who}. This is the basketball side of ballknowledge, and it has two halves: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.`,
+  const welcome = { h: "Welcome", say: `Welcome${who}. This is the football side of ballknowledge, and it has two halves: games that test what you know, and a prediction model you can try to beat. It is free, and you do not need an account. Sign in only if you want to save your progress or play online.`,
     v: () => `<div class="xs xs1"><div class="xlogo">ball<b>knowledge</b></div><div class="xtwo"><div style="--d:.8s"><svg class=ic><use href=#i-brain></use></svg>Test your knowledge</div><div style="--d:1.4s"><svg class=ic><use href=#i-chip></use></svg>Beat the model</div></div></div>` };
   const quiz = [
-    { h: "The quiz games", say: "In the quiz games you get clues about a mystery player or team. The sooner you answer correctly, the more points you score, up to a thousand. A wrong guess costs a little, so be sure. If you are new, start on Easy: it only asks about the biggest stars.",
+    { h: "The quiz games", say: "In the quiz games you get clues about a mystery player or club. The sooner you answer correctly, the more points you score, up to a thousand. A wrong guess costs a little, so be sure. If you are new, start on Easy: it only asks about the biggest stars.",
       v: () => `<div class="xs xs4"><div class="xclues">${["Born in Madrid", "187 cm, left-footed", "Plays in La Liga", "Plays for ???"].map((c, k) => `<div style="--d:${0.6 + k * 0.9}s">${c}</div>`).join("")}</div><div class="xworth">Worth <b class="num">1000</b> points now</div><div class="xbuzz">BUZZ</div></div>` },
     { h: "Alone or together", say: "Play alone and see how long your streak lasts, or challenge a friend. Create a room, send them the link, and you play at the same time from your own phones. Short timers keep it fast.",
       v: () => `<div class="xs xs5"><div class="xphone"><i></i></div><div class="xlink"><span>ROOM  KXMP</span></div><div class="xphone"><i></i></div></div>` },
   ];
   const predict = [
-    { h: "Predict games", say: "In Beat the Model you pick the winner of a real NBA game before you see the result. Then you see what the model picked, and what really happened.",
-      v: () => `<div class="xs xs3"><div class="xmatch"><b>Lakers</b><span>at</span><b>Celtics</b></div><div class="xpicks"><i>Lakers</i><i class="sel">Celtics</i></div><div class="xnote">Then see what the model picked, and what really happened.</div></div>` },
-    { h: "How good is the model?", say: `The model is a computer program that studies past results. It never sees the game it is predicting. Flipping a coin gets half right. Always backing the home team gets ${nh} percent. The model gets ${nacc} percent. Upsets happen every night.`,
-      v: () => xBars([["Coin flip", 50, 1], ["Always the home team", nh, 2], ["The model", nacc, 3, true]], `Share of winners picked correctly, ${ngames.toLocaleString()} real games`) },
+    { h: "Predict matches", say: "In Beat the Model you pick the result of a real match before you see it: a home win, a draw, or an away win. You score a point for the right result, and two more for the exact score.",
+      v: () => `<div class="xs xs3"><div class="xmatch"><b>Arsenal</b><span>v</span><b>Chelsea</b></div><div class="xpicks"><i>Home</i><i class="sel">Draw</i><i>Away</i></div><div class="xnote">Then see what the model picked, and what really happened.</div></div>` },
+    { h: "How good is the model?", say: `The model is a computer program that studies past results. It never sees the match it is predicting. Guessing at random gets about a third right. Backing the team in better form, a fan's educated guess, gets ${b.form} percent. The professionals who set betting odds get ${books}. The model gets ${model}. Football is hard to predict: upsets are normal.`,
+      v: () => xBars([["Random guess", b.random, 1], ["Fan's educated guess", b.form, 2], ["The model", model, 3, true], ["Betting professionals", books, 4]], `Share of results predicted correctly, ${sm.n.toLocaleString()} real matches since 2001`) },
     { h: "Live predictions", say: "You can also predict upcoming real matches. Lock your pick before kickoff. The model plays along, and its score is pinned at the top of the leaderboard so you can see if you are beating it.",
       v: () => `<div class="xs xs7"><div class="xrow model"><svg class=ic><use href=#i-chip></use></svg>The Model<b class="num">31/52</b></div>${[["You", "34/52"], ["Ana", "33/52"], ["Bo", "29/52"]].map(([n, s], k) => `<div class="xrow" style="--d:${0.8 + k * 0.5}s">${n}<b class="num">${s}</b></div>`).join("")}</div>` },
   ];
@@ -2219,7 +2422,7 @@ function startTour(path) {
   closeTour(); XX.i = 0; XX.t = 0; XX.playing = true; XX.sc = buildScenes(path || "both", prof().nick || ""); XX.dur = XX.sc.map(xDur); XX.voice = XX.voice; AIVoice.preload();
   const el = document.createElement("div"); el.id = "xp"; el.className = "xp"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Guided tour"); document.body.appendChild(el); xScene(); XX.timer = setInterval(xTick, 100);
 }
-function closeTour() { clearInterval(XX.timer); XX.timer = null; AIVoice.stop(); try { speechSynthesis.cancel(); } catch (e) { /* no speech */ } const el = $("#xp"); if (el) el.remove(); try { localStorage.setItem("bkn_tour", "1"); } catch (e) { /* blocked */ } }
+function closeTour() { clearInterval(XX.timer); XX.timer = null; AIVoice.stop(); try { speechSynthesis.cancel(); } catch (e) { /* no speech */ } const el = $("#xp"); if (el) el.remove(); try { localStorage.setItem("bk_tour", "1"); } catch (e) { /* blocked */ } }
 function xSpeak() {
   try { speechSynthesis.cancel(); } catch (e) { /* no device voice */ } AIVoice.stop(); XX.spDone = !XX.voice; if (!XX.voice) { XX.spDone = true; return; }
   const i0 = XX.i; AIVoice.play(XX.sc[XX.i].say, { voice: Mascot.voice(), paused: !XX.playing, onend: () => { if (XX.i === i0) XX.spDone = true; } }).then((a) => { if (!a && XX.i === i0) xSpeakDevice(); });
@@ -2243,8 +2446,8 @@ document.addEventListener("click", (e) => { const b = e.target.closest && e.targ
 addEventListener("keydown", (e) => { if ($("#xp")) { if (e.key === "Escape") closeTour(); else if (e.key === "ArrowRight") xGo(XX.i + 1); else if (e.key === "ArrowLeft") xGo(XX.i - 1); else if (e.key === " " && !/BUTTON/.test(e.target.tagName)) { e.preventDefault(); const p = document.querySelector('[data-x="play"]'); if (p) p.click(); } } });
 function offerTour() {
   const nm = prof().nick, el = document.createElement("div"); el.id = "xoffer"; el.className = "xoffer";
-  el.innerHTML = `<div class="tcard"><b>${nm ? "Welcome back, " + esc(nm) : "Welcome to ballknowledge"}</b><p>What would you like to do first? Pick one and I'll show you around in about a minute. Every game also explains itself the first time you open it.</p><div class="xpath"><button type="button" class="btn" data-o="quiz">Test my basketball knowledge</button><button type="button" class="btn" data-o="predict">Predict games</button><button type="button" class="btn ghost" data-o="both">A bit of both</button></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost" data-o="skip">Skip, I'll explore</button></div></div>`; document.body.appendChild(el);
-  el.addEventListener("click", (e) => { const b = e.target.closest("[data-o]"); if (!b) return; el.remove(); if (b.dataset.o === "skip") { try { localStorage.setItem("bkn_tour", "1"); } catch (err) { /* blocked */ } } else startTour(b.dataset.o); });
+  el.innerHTML = `<div class="tcard"><b>${nm ? "Welcome back, " + esc(nm) : "Welcome to ballknowledge"}</b><p>What would you like to do first? Pick one and I'll show you around in about a minute. Every game also explains itself the first time you open it.</p><div class="xpath"><button type="button" class="btn" data-o="quiz">Test my football knowledge</button><button type="button" class="btn" data-o="predict">Predict matches</button><button type="button" class="btn ghost" data-o="both">A bit of both</button></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost" data-o="skip">Skip, I'll explore</button></div></div>`; document.body.appendChild(el);
+  el.addEventListener("click", (e) => { const b = e.target.closest("[data-o]"); if (!b) return; el.remove(); if (b.dataset.o === "skip") { try { localStorage.setItem("bk_tour", "1"); } catch (err) { /* blocked */ } } else startTour(b.dataset.o); });
 }
 function finishSplash() {
   paintStadium(document.documentElement.getAttribute("data-league") || "HOME"); teamTheme();
@@ -2253,7 +2456,7 @@ function finishSplash() {
   const n = cat.filter((c) => p.splashes[c.id]).length; if (fresh) { const el = $("#spNew"); if (el) el.textContent = `New! ${n} of ${cat.length}`; }
   if (cur.rar === "Secret" || (p.ach && p.ach.splash_secret)) { if (!ACH.some((a) => a[0] === "splash_secret")) { ACH.push(["splash_secret", "The Notebook", "Found the secret loading screen"]); ACH_TIER.splash_secret = 4; ACH_ICON.splash_secret = "star"; } if (cur.rar === "Secret") { unlock(p, "splash_secret"); setTimeout(() => { try { toast("<b>Secret found</b><br>The Notebook"); Snd.win(); confetti(); } catch (e) { /* ok */ } }, 1500); } }
   if (cur.rar === "Rare" || cur.rar === "Legendary") unlock(p, "splash_rare"); if (cur.rar === "Legendary") unlock(p, "splash_leg"); if (n >= 10) unlock(p, "splash_10"); if (n >= cat.length) unlock(p, "splash_all"); saveProf(p);
-  const hide = () => { sp.classList.add("out"); setTimeout(() => { sp.remove(); themePick(() => { try { if (!localStorage.getItem("bkn_tour") && !location.hash.replace("#", "")) offerTour(); else if (localStorage.getItem("bkn_tour") && localStorage.getItem("bkn_ver") !== CHANGELOG.v) showWhatsNew(); } catch (e) { /* blocked */ } }); }, 700); };
+  const hide = () => { sp.classList.add("out"); setTimeout(() => { sp.remove(); themePick(() => { try { if (!localStorage.getItem("bk_tour") && !location.hash.replace("#", "")) offerTour(); else if (localStorage.getItem("bk_tour") && localStorage.getItem("bk_ver") !== CHANGELOG.v) showWhatsNew(); } catch (e) { /* blocked */ } }); }, 700); };
   $("#spSkip").addEventListener("click", hide); sp.addEventListener("click", hide);
   setTimeout(hide, Math.max(300, (cur.rar === "Common" ? 2300 : cur.rar === "Secret" ? 10500 : 3600) - (performance.now() - (window.__spT0 || 0))));
 }
@@ -2371,7 +2574,7 @@ function recordCard() {
 const Board = {
   mode: "none", cfg: null,
   init() { if (DATA.board && DATA.board.url && DATA.board.key) { this.mode = "rest"; this.cfg = DATA.board; } },
-  headers() { return { apikey: this.cfg.key, Authorization: `Bearer ${this.cfg.key}`, "Content-Type": "application/json", "Accept-Profile": "nba", "Content-Profile": "nba" }; },
+  headers() { return { apikey: this.cfg.key, Authorization: `Bearer ${this.cfg.key}`, "Content-Type": "application/json" }; },
   async submit(e) {
     const p = prof(); if (this.mode !== "rest" || !Account.signedIn) return; if (!p.nick) await ensureNick();
     const t = await Account.token(); if (!t) return;
@@ -2383,10 +2586,10 @@ const Board = {
     try { const r = await fetch(`${this.cfg.url}/rest/v1/rpc/leaderboard`, { method: "POST", headers: this.headers(), body: JSON.stringify({ p_game: game, p_league: league, p_period: period, p_week: weekId(), p_day: todayKey(), p_code: code || "" }) }); if (!r.ok) return null; return await r.json(); } catch (err) { return null; }
   },
 };
-const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that team", "points"], ["blur", "Logo blur", "points"], ["finish", "Where did they finish?", "points"], ["pvalue", "Market value streak", "best streak"], ["number", "Write your number", "points"], ["ttt", "Tic-tac-toe", "wins"], ["scramble", "Scramble", "points"], ["xi", "Starting XI", "best score"], ["iconic", "Who did it", "best score"], ["rapid", "Rapid fire", "best run, results right"], ["bracket", "Bracket buster", "best points"]];
+const BOARD_GAMES = [["xp", "Overall XP", "XP earned"], ["call", "Call it", "points ahead of the model"], ["daily", "Daily 5", "right out of 5"], ["matchday", "Matchday", "results right"], ["upset", "Spot the upset", "best streak"], ["table", "Guess the table", "tables that beat the model"], ["hol", "Higher or lower", "best streak"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that club", "points"], ["blur", "Badge blur", "points"], ["finish", "Where did they finish?", "points"], ["pvalue", "Market value streak", "best streak"], ["number", "Write your number", "points"], ["ttt", "Tic-tac-toe", "wins"], ["scramble", "Scramble", "points"], ["xi", "Starting XI", "best score"], ["iconic", "Who did it", "best score"], ["rapid", "Rapid fire", "best run, results right"], ["bracket", "Bracket buster", "best points"]];
 
 /* ================= Ranked: Elo, public lobbies, leaderboard ================= */
-const RK_GAMES = [["who", "Who am I?"], ["career", "Career path"], ["club", "Name that team"], ["blur", "Logo blur"], ["finish", "Where did they finish?"], ["number", "Market value"], ["ttt", "Basketball tic-tac-toe"], ["roulette", "Team roulette"]];
+const RK_GAMES = [["who", "Who am I?"], ["career", "Career path"], ["club", "Name that club"], ["blur", "Badge blur"], ["finish", "Where did they finish?"], ["number", "Market value"], ["ttt", "Football tic-tac-toe"], ["roulette", "Club roulette"]];
 const rkIcon = (cls) => `<svg class='ic rk rk-${cls}'><use href='#i-rank'/></svg>`;
 const RANKS = [[1400, "Legend", rkIcon("legend")], [1250, "Diamond", rkIcon("diamond")], [1150, "Platinum", rkIcon("platinum")], [1050, "Gold", rkIcon("gold")], [950, "Silver", rkIcon("silver")], [0, "Bronze", rkIcon("bronze")]];
 const rankOf = (elo) => { const r = RANKS.find(([min]) => elo >= min) || RANKS[RANKS.length - 1]; return { name: r[1], icon: r[2] }; };
@@ -2437,7 +2640,7 @@ const Dual = {
 function dualCard() {
   const d = Dual.p2;
   if (!d) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Two accounts, one device <span class="chip2">experiment</span></h3></div><p class="fine">Hand the device to a friend: they sign in with their own account, you play a two-player game here, and both ratings move as in an online match. Their password is only sent to the sign-in and is not kept.</p><div class="row" style="margin-top:8px"><input id="d2Mail" type="email" autocomplete="off" placeholder="Player 2 email" aria-label="Player 2 email"><input id="d2Pw" type="password" autocomplete="off" placeholder="Player 2 password" aria-label="Player 2 password"><button class="btn" id="d2In" type="button">Sign in player 2</button></div><div class="fine" id="d2Msg"></div></div>`;
-  return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Two accounts, one device <span class="chip2">experiment</span></h3><button class="btn ghost" id="d2Out" type="button">Sign player 2 out</button></div><p class="fine">Player 1 is <b>${esc(prof().nick || "you")}</b> (Elo ${Ranked.elo}), player 2 is <b>${esc(d.nick)}</b> (Elo ${d.elo}). Player 1 is X and goes first.</p><div class="row" style="margin-top:8px"><select id="d2Game" aria-label="Game">${[["ttt", "Basketball tic-tac-toe"], ["who", "Who am I?"], ["career", "Career path"], ["club", "Name that team"], ["blur", "Logo blur"], ["scramble", "Scramble"]].map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><button class="btn" id="d2Go" type="button">Start rated game</button></div></div>`;
+  return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Two accounts, one device <span class="chip2">experiment</span></h3><button class="btn ghost" id="d2Out" type="button">Sign player 2 out</button></div><p class="fine">Player 1 is <b>${esc(prof().nick || "you")}</b> (Elo ${Ranked.elo}), player 2 is <b>${esc(d.nick)}</b> (Elo ${d.elo}). Player 1 is X and goes first.</p><div class="row" style="margin-top:8px"><select id="d2Game" aria-label="Game">${[["ttt", "Football tic-tac-toe"], ["who", "Who am I?"], ["career", "Career path"], ["club", "Name that club"], ["blur", "Badge blur"], ["scramble", "Scramble"]].map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select><button class="btn" id="d2Go" type="button">Start rated game</button></div></div>`;
 }
 function rankedEnd(ref, sc) {
   if (S.dual && Dual.p2) { if (Net.lastRef === ref) return; Net.lastRef = ref; Dual.finish(sc); return; }
@@ -2450,7 +2653,7 @@ async function ensureNick() {   /* one name everywhere: adopt the master (footba
   if (!Account.signedIn || Board.mode !== "rest") return; const t = await Account.token(); if (!t) return;
   Season.reward();
   const master = await NameSync.master(Board.cfg, t), p = prof();
-  if (master) { if (p.nick !== master) { p.nick = master; p.board = true; store.items.profile = p; saveLocal(); paintProfileBtn(); } const mine = await NameSync.own(Board.cfg, t, "nba"); if (mine !== master) await Account.setNick(master); return; }
+  if (master) { if (p.nick !== master) { p.nick = master; p.board = true; store.items.profile = p; saveLocal(); paintProfileBtn(); } return; }
   NameSync.ask(p.nick || NameSync.suggest(Account.session.user.email), async (n) => { const r = await Account.setNick(n); if (r && r.ok) { const q = prof(); q.nick = n; q.board = true; store.items.profile = q; saveProf(q); paintProfileBtn(); try { toast("Name saved: " + esc(n)); } catch (e) { /* no toast */ } } return r; });
 }
 
@@ -2465,8 +2668,9 @@ function renderRanked() {
     <label>Who can join<select id="rkVis"><option value="pub">Public, anyone (ranked)</option><option value="priv">Private, with a code (friendly)</option></select></label><button class="btn ghost" id="rkCreate" type="button">Create lobby</button><button class="btn qmbtn" id="rkQuick" type="button"><span class="qmpulse"></span>Quick match</button></div>
     <div class="row" style="margin-top:10px"><input id="rkCode" maxlength="4" placeholder="Code" aria-label="Private room code" style="text-transform:uppercase;width:90px;font:700 18px var(--mono);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button class="btn ghost" id="rkJoinCode" type="button">Join with a code</button></div></div>
     ${dualCard()}
+    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-handshake></use></svg> Friends</h3><button class="btn ghost" data-go="profile" type="button">Add friends</button></div><div id="rkFriends" class="lbx">${skelRows(2)}</div></div>
     <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Open lobbies</h3><span class="fine" id="rkStamp"></span></div><div id="rkList" class="lbx">${skelRows(3)}</div></div>`;
-  paintLobbies(); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); }, 4000);
+  paintLobbies(); paintFriends("#rkFriends"); Ranked.timer = setInterval(() => { if (S.hubGroup !== "ranked" || S.game || !$("#rkList")) { clearInterval(Ranked.timer); return; } paintLobbies(); if ((Ranked.ft = (Ranked.ft || 0) + 1) % 5 === 0) paintFriends("#rkFriends"); }, 4000);
   Ranked.refresh().then(() => { const b = $(".rkbadge"); if (b) b.innerHTML = `<b class="num">${Ranked.elo}</b><small>${rankOf(Ranked.elo).icon} ${rankOf(Ranked.elo).name} · ${Ranked.games} played · ${Ranked.wins} won</small>`; });
 }
 async function paintLobbies() {
@@ -2530,7 +2734,7 @@ function qmStop(found) {
   if (!found) { if (QM.mine) Vs.cancel(); else Vs.close(); Snd.tick(); }
 }
 function rankedStart(game, diff, pub) {
-  S.diff = diff; try { localStorage.setItem("bkn_diff", diff); } catch (e) { /* blocked */ }
+  S.diff = diff; try { localStorage.setItem("bk_diff", diff); } catch (e) { /* blocked */ }
   resetGames(); S.rk = true; S.game = game === "number" ? "value" : game; S.hubGroup = "ranked"; renderRoom(); openOnline(game); makeRoom(); Net.ranked = pub;
   if (pub) Ranked.startLobby(Net.code, game, diff);
   const el = $("#roomStatus"); if (el && pub) el.insertAdjacentHTML("afterend", '<div class="fine" style="margin-top:6px">Listed in Ranked lobbies. Anyone can join; the result changes both ratings.</div>');
@@ -2551,7 +2755,7 @@ async function renderBoards() {
   if (tab === "season") return Season.render(body);
   const rows = await Ranked.rpc("elo_top"); if (!$("#bBody")) return;
   if (!rows) { body.innerHTML = '<div class="fine">Could not load the leaderboard. Try again in a moment.</div>'; return; }
-  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.", '<button type="button" class="btn" data-nbgroup="ranked">Play a ranked match</button>');
+  body.innerHTML = rows.length ? rows.map((r, i) => `<div class="lbrow ${p.nick && r.nick === p.nick ? "me" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${p.nick && r.nick === p.nick ? " (you)" : ""}</span><span class="num">${rankTag(r.elo)} ${r.elo}</span><span class="fine num">${r.wins}W ${r.games - r.wins}L</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-trophy></use></svg>", "No ranked matches yet", "Play one in Ranked and be the first on the board.", '<button type="button" class="btn" data-group-go="ranked">Play a ranked match</button>');
 }
 
 
@@ -2596,13 +2800,13 @@ function renderAlbum() {
   const top = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><button type="button" class="crumb" data-alb="home|0">Sticker album</button>${a.club ? `<i>›</i><span class="crumb cur">${esc(a.club)}</span>` : ""}</div></nav>`;
   if (!a.club) {
     const clubs = albumClubs(a.lg);
-    el.innerHTML = `${top}<div class="card"><div class="row" style="justify-content:space-between"><h2><svg class=ic><use href=#i-album></use></svg> Sticker album</h2><span class="rkbadge"><b class="num">${have}</b><small>stickers collected</small></span></div><p class="sub">Every team has a page: its logo, then every player who played there, with his years. Get a player right and he fills a slot at each team he played for.</p>
+    el.innerHTML = `${top}<div class="card"><div class="row" style="justify-content:space-between"><h2><svg class=ic><use href=#i-album></use></svg> Sticker album</h2><span class="rkbadge"><b class="num">${have}</b><small>stickers collected</small></span></div><p class="sub">Every club has a page: its badge, then every player who played there, with his years. Get a player right and he fills a slot at each club he played for.</p>
     <div class="scope">${ORDER.map((c) => `<button type="button" class="chip" data-alb="lg|${c}" aria-pressed="${a.lg === c}">${esc(lgOf(c).name)}</button>`).join("")}</div>
     <div class="clubgrid">${clubs.map((n) => { const g = clubProgress(n, pr); return `<button type="button" class="clubcard ${g.have === g.total ? "done" : ""}" data-alb="club|${esc(n)}">${badge(n, "md")}<b>${esc(n)}</b><small class="num">${g.have}/${g.total}</small><i style="--w:${Math.round((g.have / g.total) * 100)}%"></i></button>`; }).join("")}</div></div>`; return;
   }
   const list = clubPlayers()[a.club] || [], shown = list.slice(0, 40 * a.more), got = list.filter((x) => st[x.p.id]).length, ts = (pr.clubStickers || {})[a.club];
   el.innerHTML = `${top}<div class="card"><div class="row" style="justify-content:space-between"><h2>${esc(a.club)}</h2><span class="fine">${got + (ts ? 1 : 0)} of ${list.length + 1} collected</span></div>
-    <div class="stickers"><div class="stk team ${ts ? "on legend" : "off"}">${ts ? badge(a.club, "xl") : '<span class="q">?</span>'}<b>${ts ? esc(a.club) : "Team badge"}</b><small>${ts ? esc(QZ.clubs[a.club].stadium || "") : "Get this club right in Name that team or Logo blur"}</small><i>team sticker</i></div>
+    <div class="stickers"><div class="stk team ${ts ? "on legend" : "off"}">${ts ? badge(a.club, "xl") : '<span class="q">?</span>'}<b>${ts ? esc(a.club) : "Team badge"}</b><small>${ts ? esc(QZ.clubs[a.club].stadium || "") : "Get this club right in Name that club or Badge blur"}</small><i>team sticker</i></div>
     ${shown.map((x, k) => { const r = FAME.get(x.p.id); return st[x.p.id] ? `<div class="stk on ${rar(r)}">${playerPic(x.p, "md")}<b>${esc(x.p.n)}</b><small>${esc(x.p.pos)}</small><span class="era">${eraOf(x.y0, x.y1)}</span><i>${rar(r)}</i></div>` : `<div class="stk off"><span class="q">?</span><b>#${k + 1}</b><small>${esc(x.p.pos)}</small><span class="era">${eraOf(x.y0, x.y1)}</span></div>`; }).join("")}</div>
     ${shown.length < list.length ? `<div class="row" style="margin-top:12px;justify-content:center"><button class="btn ghost" data-alb="more|1" type="button">Show more (${list.length - shown.length} left)</button></div>` : ""}</div>`;
 }
@@ -2614,13 +2818,23 @@ const fmtKick = (iso) => new Date(iso).toLocaleString(undefined, { weekday: "sho
 function countdown(ms) { if (ms <= 0) return "kicking off"; const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m % 60}m` : `${m}m`; }
 async function renderLive() {
   clearInterval(Live.timer); clearInterval(Live.tick); const signed = Account.signedIn && Board.mode === "rest";
-  $("#room").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live predictions</h2><span class="fine" id="lvNext"></span></div>
-    <p class="sub">Predict the next real matches before kickoff. The model plays too, and its score is pinned to the top of the board.</p>
-    ${signed ? "" : '<div class="rcard on" style="margin:10px 0"><b>Sign in to lock your picks and join the board.</b> <button class="btn" id="lvSign" type="button" style="margin-left:8px">Sign in</button></div>'}
-    <div class="scope">${["all", ...ORDER].map((c) => `<button type="button" class="chip" data-lvlg="${c}" aria-pressed="${Live.lg === c}">${c === "all" ? "All leagues" : esc(lgOf(c).name)}</button>`).join("")}</div><div id="lvList" class="fxlist">${skelRows(3)}</div></div>
-    <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="font-size:22px"><svg class=ic><use href=#i-trophy></use></svg> Leaderboard</h3><div class="scope" style="padding:0">${LIVE_PERIODS.map(([d, n]) => `<button type="button" class="chip" data-lvd="${d}" aria-pressed="${Live.days === d}">${n}</button>`).join("")}</div></div><div id="lvBoard" class="lbx">${skelRows(3)}</div></div>`;
-  await loadLive(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  $("#room").innerHTML = `<div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h2><span class="livedot"></span> Live scores</h2><span class="fine">Updates every 30 seconds</span></div><div id="lsList" class="lslist">${skelRows(2)}</div><p class="fine" style="margin:6px 0 0">Scores from ESPN's public scoreboard.</p></div><div class="card wkpromo"><div class="row" style="justify-content:space-between;align-items:center"><div><div class="label">Predictions moved</div><h3 style="margin:2px 0">Predict exact scores in the weekly tournament</h3><p class="fine" style="margin:0">This week's real Big 5 matches, 3 points for the exact score, 2 for the winner, 1 for the goals, with the model pinned to the top of the table.</p></div><button class="btn" type="button" data-group="weekly">Open the weekly</button></div></div>`;
+  liveScores(); Live.timer = setInterval(() => { if (S.hubGroup !== "live" || S.game || !$("#lvList")) { clearInterval(Live.timer); clearInterval(Live.tick); return; } loadLive(); }, 60000);
+  clearInterval(Live.ls); Live.ls = setInterval(() => { if (!$("#lsList")) return clearInterval(Live.ls); liveScores(); }, 30000);
   Live.tick = setInterval(paintCountdown, 1000);
+}
+/* ---------- Live scores (ESPN's public scoreboard feed, no key) next to your locked predictions ---------- */
+const ESPN_LG = { E0: "eng.1", D1: "ger.1", SP1: "esp.1", I1: "ita.1", F1: "fra.1" };
+const lsKey = (n) => String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\b(fc|afc|cf|ac|as|sc|ssc|club|de|the|united|city)\b/g, " ").replace(/[^a-z]/g, "");
+const lsSame = (a, b) => { const x = lsKey(a), y = lsKey(b); return !!x && !!y && (x === y || x.includes(y) || y.includes(x)); };
+async function liveScores() {
+  const el = $("#lsList"); if (!el) return; const lgs = Live.lg === "all" ? ORDER : [Live.lg];
+  const res = await Promise.all(lgs.map((c) => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${ESPN_LG[c]}/scoreboard`).then((r) => (r.ok ? r.json() : null)).catch(() => null))); if (!$("#lsList")) return;
+  const rows = []; res.forEach((d, k) => (d && d.events || []).forEach((e) => { const c = e.competitions[0], h = c.competitors.find((x) => x.homeAway === "home"), a = c.competitors.find((x) => x.homeAway === "away"), stt = e.status.type; rows.push({ lg: lgs[k], at: new Date(e.date), state: stt.state, detail: stt.shortDetail || stt.description, clock: c.status.displayClock, h: h.team.shortDisplayName || h.team.displayName, a: a.team.shortDisplayName || a.team.displayName, hl: h.team.displayName, al: a.team.displayName, hs: +h.score || 0, as: +a.score || 0, hlogo: h.team.logo, alogo: a.team.logo }); }));
+  const today = new Date().toDateString(), show = rows.filter((r) => r.state === "in" || r.at.toDateString() === today).sort((x, y) => (x.state === "in" ? -1 : 0) - (y.state === "in" ? -1 : 0) || x.at - y.at);
+  if (!show.length) { el.innerHTML = `<div class="fine">No matches today in ${Live.lg === "all" ? "the five leagues" : esc(lgOf(Live.lg).name)}.</div>`; return; }
+  el.innerHTML = show.map((r) => { const f = (Live.fx || []).find((x) => lsSame(x.home, r.hl) && lsSame(x.away, r.al)), pick = f && f.my_pick, now = r.hs > r.as ? "H" : r.hs < r.as ? "A" : "D", st = r.state === "in" ? `<span class="lsmin"><span class="livedot"></span>${esc(r.clock || r.detail)}</span>` : r.state === "post" ? `<span class="fine">FT</span>` : `<span class="fine">${r.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>`;
+    return `<div class="lsrow ${r.state}"><span class="lsl">${r.hlogo ? `<img src="${esc(r.hlogo)}" alt="" loading="lazy">` : ""}${esc(r.h)}</span><b class="lssc num">${r.state === "pre" ? "–" : `${r.hs}–${r.as}`}</b><span class="lsr">${esc(r.a)}${r.alogo ? `<img src="${esc(r.alogo)}" alt="" loading="lazy">` : ""}</span>${st}${pick ? `<span class="lspick ${r.state === "pre" ? "" : pick === now ? "ok" : "no"}">Your pick: ${OUTNAME[pick]}${r.state === "in" ? (pick === now ? " ✓ right now" : " ✗ right now") : r.state === "post" ? (pick === now ? " ✓" : " ✗") : ""}</span>` : ""}</div>`; }).join("");
 }
 function paintCountdown() {
   const nx = Live.fx.find((f) => new Date(f.kickoff) > Date.now()), el = $("#lvNext"); if (el) el.textContent = nx ? `Next kickoff in ${countdown(new Date(nx.kickoff) - Date.now())}` : "";
@@ -2656,7 +2870,7 @@ function paintLiveBoard(rows, model) {
   const mine = rows.find((r) => r.nick === me);
   const head = mine && model && model.played ? `<div class="fine" style="margin-bottom:6px">You: <b class="num">${mine.correct}/${mine.played}</b> · Model: <b class="num">${model.correct}/${model.played}</b>${mine.correct > model.correct ? " · you're ahead!" : mine.correct === model.correct ? " · level with the model" : ""}</div>` : "";
   if (mine && model && mine.played >= 3 && mine.correct > model.correct) award("beatmodel");
-  box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-fore></use></svg>", "No finished predictions yet", "Lock a pick and check back after the match.", '<button type="button" class="btn" data-nbgame="nbcall">Make a prediction</button>'));
+  box.innerHTML = head + mrow + (rows.length ? rows.map((r, i) => `<div class="lbrow ${r.nick === me ? "me" : ""}"><b class="num">${i + 1}</b><span>${avatarHTML(r.avatar, "xs", r.nick)}${esc(r.nick)}${badgesHTML(r.badges)}${r.nick === me ? " (you)" : ""}</span><span class="num">${r.correct}/${r.played}</span><span class="fine num">${pc(r.correct, r.played)}%</span></div>`).join("") : emptyState("<svg class=ic><use href=#i-fore></use></svg>", "No finished predictions yet", "Lock a pick and check back after the match.", '<button type="button" class="btn" data-hgame="call">Make a prediction</button>'));
 }
 
 
@@ -2693,7 +2907,7 @@ const CHANGELOG = { v: "2026-11-22-redesign", items: [["Every game on one page",
 function showWhatsNew() {
   const row = ([h, d]) => `<div><b>${esc(h)}</b><span>${esc(d)}</span></div>`, first = CHANGELOG.items.slice(0, 3), rest = CHANGELOG.items.slice(3);   /* the latest three; older ones behind a button, not a page-long list */
   modal(`<h2 style="font-size:26px">What's new</h2><div class="newlist">${first.map(row).join("")}</div>${rest.length ? `<details class="newold"><summary>Show older changes (${rest.length})</summary><div class="newlist">${rest.map(row).join("")}</div></details>` : ""}<div class="row" style="margin-top:14px"><button class="btn" id="modalClose" type="button">Got it</button></div>`);
-  try { localStorage.setItem("bkn_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
+  try { localStorage.setItem("bk_ver", CHANGELOG.v); } catch (e) { /* blocked */ }
 }
 function playerCard(p) {
   const era = (p.cr || []).map(([c, a, b]) => `<span class="chip2">${CREST[c] ? badge(c, "sm") : ""} ${esc(c)} <small class="num">${eraOf(a, b)}</small></span>`).join("");
@@ -2712,8 +2926,8 @@ function renderSettings() {
   const seg = (attr, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-${attr}="${v}" aria-pressed="${String(cur) === String(v)}">${n}</button>`).join("")}</div>`;
   el.innerHTML = `<div class="row" style="margin-bottom:8px"><button class="btn ghost" id="aboutBack" type="button">← Menu</button><h1 style="font-size:28px">Settings</h1></div>
     <div class="card"><h3>Appearance</h3>${appearanceV2()}</div>
-    <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, buzzers and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
-    <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during games. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
+    <div class="card"><h3>Sound</h3><p class="fine">Effects for taps, goals and results.</p>${seg("snd", [[0, "Off"], [1, "Soft"], [2, "Full"]], lv)}
+    <h3 style="margin-top:16px">Music</h3><p class="fine">A calm loop in menus and a livelier one during matches. Needs sound to be on.</p>${seg("mus", [[1, "On"], [0, "Off"]], mu)}</div>
     <div class="card"><h3>Language</h3><p class="fine">${lang === "en" ? "More of the site is translated over time; anything not translated yet stays in English." : "Teile der Seite sind noch Englisch."}</p>${seg("lang", LANGS.map(([c, n]) => [c, n]), lang)}</div>`;
   setWire(el);
 }
@@ -2725,7 +2939,7 @@ const I18N = {
     "Football, predicted and played": "Fußball, getippt und gespielt", "Games": "Spiele", "Play": "Spielen", "Our model": "Unser Modell", "Explore": "Entdecken", "About": "Über uns", "Read": "Lesen",
     "matches tested": "Spiele getestet", "model": "Modell", "bookmakers": "Wettanbieter", "leagues": "Ligen", "seasons": "Saisons", "Sign in": "Anmelden", "Built by moisback22": "Gebaut von moisback22",
     "← Menu": "← Menü", "← Back": "← Zurück", "Menu": "Menü", "Back": "Zurück", "Got it": "Verstanden", "Beta": "Beta",
-    "Pick a game.": "Such dir ein Spiel aus oder wechsle oben die Liga.", "All leagues": "Alle Ligen", "All five leagues": "Alle fünf Ligen", "Leaderboard": "Bestenliste",
+    "Pick a game, or switch leagues above.": "Such dir ein Spiel aus oder wechsle oben die Liga.", "All leagues": "Alle Ligen", "All five leagues": "Alle fünf Ligen", "Leaderboard": "Bestenliste",
     "Random matches from every league on one big pitch.": "Zufällige Spiele aus allen Ligen auf einem großen Platz.", "Mix it up": "Alles gemischt", "Any league, any season": "Jede Liga, jede Saison",
     "Premier League": "Premier League", "Bundesliga": "Bundesliga", "La Liga": "La Liga", "Serie A": "Serie A", "Ligue 1": "Ligue 1", "Star to watch": "Spieler im Fokus",
     "What do you want to play?": "Worauf hast du Lust?", "ballknowledge originals": "ballknowledge-Originale", "Beat the Model": "Schlag das Modell", "Ranked": "Rangliste", "Play online": "Online spielen",
@@ -2741,19 +2955,19 @@ const I18N = {
     "Five matches, one link. Send it and see who does better.": "Fünf Spiele, ein Link. Schick ihn los und schau, wer besser tippt.",
     "Who am I?": "Wer bin ich?", "Solo streak · 2 players": "Solo-Serie · 2 Spieler", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "Ein Mysterium im Trikot. Die Hinweise werden immer deutlicher. Wer früher drückt, bekommt mehr Punkte.",
     "Career path": "Karriereweg", "Every club he played for, in order. Name the player.": "Alle Stationen in der richtigen Reihenfolge. Wer ist es?",
-    "Name that team": "Welcher Verein?", "Goals, wins and a stadium size. Which club is it?": "Tore, Siege und eine Stadiongröße. Welcher Verein steckt dahinter?",
-    "Logo blur": "Wappen-Rätsel", "A blurry badge that sharpens by the second.": "Ein verschwommenes Wappen, das mit jeder Sekunde schärfer wird.",
+    "Name that club": "Welcher Verein?", "Goals, wins and a stadium size. Which club is it?": "Tore, Siege und eine Stadiongröße. Welcher Verein steckt dahinter?",
+    "Badge blur": "Wappen-Rätsel", "A blurry badge that sharpens by the second.": "Ein verschwommenes Wappen, das mit jeder Sekunde schärfer wird.",
     "Where did they finish?": "Wo landen sie?", "A club, a season, a slider. How close can you get?": "Ein Verein, eine Saison, ein Regler. Wie nah kommst du ran?",
     "Market value": "Marktwert", "Solo higher or lower · 2 players": "Solo höher oder tiefer · 2 Spieler", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "Wer ist mehr wert, ein Spieler oder ein Kader? Oder ihr schätzt beide einen Wert, und wer näher dran ist, gewinnt.",
-    "Team roulette": "Vereins-Roulette", "2 players · one device or two": "2 Spieler · ein Gerät oder zwei", "A club appears. Take turns naming players who played for it. First to blank loses.": "Ein Verein erscheint. Nennt abwechselnd Spieler, die dort gespielt haben. Wer zuerst nichts mehr weiß, verliert.",
+    "Club roulette": "Vereins-Roulette", "2 players · one device or two": "2 Spieler · ein Gerät oder zwei", "A club appears. Take turns naming players who played for it. First to blank loses.": "Ein Verein erscheint. Nennt abwechselnd Spieler, die dort gespielt haben. Wer zuerst nichts mehr weiß, verliert.",
     "Starting XI": "Startelf", "Solo · 2 to 3 minutes": "Solo · 2 bis 3 Minuten", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "Finals, Champions-League-K.-o.-Spiele, Derbys und Topspiele. Nenne die elf, die angefangen haben.",
     "Who did it": "Wer war's?", "Solo": "Solo", "A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off.": "Ein berühmtes Spiel und seine Höhepunkte Minute für Minute. Nenne Torschützen, Vorlagengeber, Elfmeterschützen und Platzverweise.",
     "Scramble": "Buchstabensalat", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "Ein Verein, Spieler oder Trainer mit durcheinandergewürfelten Buchstaben. Entwirr ihn vor deinem Gegner.",
-    "Basketball tic-tac-toe": "Fußball-Tic-Tac-Toe", "2 players": "2 Spieler", "Name a player who fits the row and the column. Three in a row wins.": "Nenne einen Spieler, der zu Zeile und Spalte passt. Drei in einer Reihe gewinnen.",
+    "Football tic-tac-toe": "Fußball-Tic-Tac-Toe", "2 players": "2 Spieler", "Name a player who fits the row and the column. Three in a row wins.": "Nenne einen Spieler, der zu Zeile und Spalte passt. Drei in einer Reihe gewinnen.",
     "How Ranked works": "So funktioniert die Rangliste", "Play real people online. Create a lobby and others can join from the list.": "Spiel online gegen echte Leute. Erstell eine Lobby, andere steigen aus der Liste ein.",
     "Create an account or sign in": "Konto erstellen oder anmelden", "Your rating.": "Deine Wertung.", "This week": "Diese Woche", "30 days": "30 Tage", "This season": "Diese Saison",
-    "Settings": "Einstellungen", "Sound": "Ton", "Effects for taps, buzzers and results.": "Effekte für Klicks, Tore und Ergebnisse.", "Off": "Aus", "Soft": "Leise", "Full": "Voll", "Music": "Musik",
-    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "Ein ruhiger Loop in den Menüs und ein lebhafterer im Spiel. Der Ton muss an sein.", "On": "An", "Language": "Sprache",
+    "Settings": "Einstellungen", "Sound": "Ton", "Effects for taps, goals and results.": "Effekte für Klicks, Tore und Ergebnisse.", "Off": "Aus", "Soft": "Leise", "Full": "Voll", "Music": "Musik",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Ein ruhiger Loop in den Menüs und ein lebhafterer im Spiel. Der Ton muss an sein.", "On": "An", "Language": "Sprache",
     "Appearance": "Darstellung", "Theme, text size, contrast and reduced motion are in your profile.": "Design, Textgröße, Kontrast und weniger Animationen findest du in deinem Profil.", "Open profile": "Profil öffnen",
     "About ballknowledge": "Über ballknowledge", "Our story": "Unsere Geschichte", "How the model works": "So funktioniert das Modell", "Honest limits and sources": "Ehrliche Grenzen und Quellen", "Roadmap and votes": "Fahrplan und Abstimmung",
     "How it grew": "So ist es gewachsen", "Who builds it": "Wer dahintersteckt", "Roadmap": "Fahrplan", "Shipped": "Fertig", "Next": "Als Nächstes", "Later": "Später", "Your ideas": "Deine Ideen",
@@ -2767,7 +2981,7 @@ const I18N = {
     "Football, predicted and played": "Le foot, pronostiqué et joué", "Games": "Jeux", "Play": "Jouer", "Our model": "Notre modèle", "Explore": "Explorer", "About": "À propos", "Read": "Lire",
     "matches tested": "matchs testés", "model": "modèle", "bookmakers": "bookmakers", "leagues": "championnats", "seasons": "saisons", "Sign in": "Se connecter", "Built by moisback22": "Créé par moisback22",
     "← Menu": "← Menu", "← Back": "← Retour", "Menu": "Menu", "Back": "Retour", "Got it": "Compris", "Beta": "Bêta",
-    "Pick a game.": "Choisis un jeu, ou change de championnat en haut.", "All leagues": "Tous les championnats", "All five leagues": "Les cinq grands championnats",
+    "Pick a game, or switch leagues above.": "Choisis un jeu, ou change de championnat en haut.", "All leagues": "Tous les championnats", "All five leagues": "Les cinq grands championnats",
     "Random matches from every league on one big pitch.": "Des matchs au hasard de tous les championnats, sur une seule grande pelouse.", "Mix it up": "Un peu de tout", "Any league, any season": "N'importe quel championnat, n'importe quelle saison",
     "Premier League": "Premier League", "Bundesliga": "Bundesliga", "La Liga": "Liga", "Serie A": "Serie A", "Ligue 1": "Ligue 1", "Star to watch": "Le joueur à suivre",
     "What do you want to play?": "À quoi on joue ?", "ballknowledge originals": "Les originaux ballknowledge", "Beat the Model": "Bats le modèle", "Ranked": "Classé", "Play online": "Jouer en ligne",
@@ -2783,19 +2997,19 @@ const I18N = {
     "Five matches, one link. Send it and see who does better.": "Cinq matchs, un lien. Envoie-le et vois qui pronostique le mieux.",
     "Who am I?": "Qui suis-je ?", "Solo streak · 2 players": "Série en solo · 2 joueurs", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "Un joueur mystère. Les indices passent de flous à évidents. Buzze tôt pour plus de points.",
     "Career path": "Parcours", "Every club he played for, in order. Name the player.": "Tous ses clubs, dans l'ordre. Qui est-ce ?",
-    "Name that team": "Quel club ?", "Goals, wins and a stadium size. Which club is it?": "Des buts, des victoires et la taille d'un stade. De quel club s'agit-il ?",
-    "Logo blur": "Écusson flou", "A blurry badge that sharpens by the second.": "Un écusson flou qui devient net seconde après seconde.",
+    "Name that club": "Quel club ?", "Goals, wins and a stadium size. Which club is it?": "Des buts, des victoires et la taille d'un stade. De quel club s'agit-il ?",
+    "Badge blur": "Écusson flou", "A blurry badge that sharpens by the second.": "Un écusson flou qui devient net seconde après seconde.",
     "Where did they finish?": "Où ont-ils fini ?", "A club, a season, a slider. How close can you get?": "Un club, une saison, un curseur. Jusqu'où peux-tu t'approcher ?",
     "Market value": "Valeur marchande", "Solo higher or lower · 2 players": "Plus ou moins en solo · 2 joueurs", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "Qui vaut le plus, un joueur ou un effectif ? Ou vous estimez tous les deux une valeur et le plus proche gagne.",
-    "Team roulette": "Roulette des clubs", "2 players · one device or two": "2 joueurs · un ou deux appareils", "A club appears. Take turns naming players who played for it. First to blank loses.": "Un club apparaît. À tour de rôle, citez des joueurs qui y ont joué. Le premier qui sèche a perdu.",
+    "Club roulette": "Roulette des clubs", "2 players · one device or two": "2 joueurs · un ou deux appareils", "A club appears. Take turns naming players who played for it. First to blank loses.": "Un club apparaît. À tour de rôle, citez des joueurs qui y ont joué. Le premier qui sèche a perdu.",
     "Starting XI": "Le onze de départ", "Solo · 2 to 3 minutes": "Solo · 2 à 3 minutes", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "Finales, éliminatoires de Ligue des champions, derbys et grosses affiches. Cite les onze titulaires.",
     "Who did it": "Qui l'a fait ?", "Solo": "Solo", "A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off.": "Un match mythique et ses temps forts minute par minute. Retrouve les buteurs, les passeurs, les tireurs de penalty et les cartons rouges.",
     "Scramble": "Mots mélangés", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "Un club, un joueur ou un entraîneur aux lettres mélangées. Remets-les en ordre avant ton adversaire.",
-    "Basketball tic-tac-toe": "Morpion du foot", "2 players": "2 joueurs", "Name a player who fits the row and the column. Three in a row wins.": "Cite un joueur qui correspond à la ligne et à la colonne. Trois alignés et c'est gagné.",
+    "Football tic-tac-toe": "Morpion du foot", "2 players": "2 joueurs", "Name a player who fits the row and the column. Three in a row wins.": "Cite un joueur qui correspond à la ligne et à la colonne. Trois alignés et c'est gagné.",
     "How Ranked works": "Comment marche le mode Classé", "Play real people online. Create a lobby and others can join from the list.": "Joue en ligne contre de vraies personnes. Crée un salon, les autres te rejoignent depuis la liste.",
     "Create an account or sign in": "Crée un compte ou connecte-toi", "Your rating.": "Ton classement.", "This week": "Cette semaine", "30 days": "30 jours", "This season": "Cette saison",
-    "Settings": "Réglages", "Sound": "Son", "Effects for taps, buzzers and results.": "Effets pour les clics, les buts et les résultats.", "Off": "Coupé", "Soft": "Doux", "Full": "Fort", "Music": "Musique",
-    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "Une boucle calme dans les menus et une plus rythmée pendant les matchs. Le son doit être activé.", "On": "Activée", "Language": "Langue",
+    "Settings": "Réglages", "Sound": "Son", "Effects for taps, goals and results.": "Effets pour les clics, les buts et les résultats.", "Off": "Coupé", "Soft": "Doux", "Full": "Fort", "Music": "Musique",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "Une boucle calme dans les menus et une plus rythmée pendant les matchs. Le son doit être activé.", "On": "Activée", "Language": "Langue",
     "Appearance": "Apparence", "Theme, text size, contrast and reduced motion are in your profile.": "Thème, taille du texte, contraste et animations réduites sont dans ton profil.", "Open profile": "Ouvrir le profil",
     "About ballknowledge": "À propos de ballknowledge", "Our story": "Notre histoire", "How the model works": "Comment marche le modèle", "Honest limits and sources": "Limites assumées et sources", "Roadmap and votes": "Feuille de route et votes",
     "How it grew": "Comment ça a grandi", "Who builds it": "Qui le construit", "Roadmap": "Feuille de route", "Shipped": "Livré", "Next": "Prochainement", "Later": "Plus tard", "Your ideas": "Tes idées",
@@ -2809,7 +3023,7 @@ const I18N = {
     "Football, predicted and played": "كرة القدم: توقّع وتحدَّ", "Games": "الألعاب", "Play": "العب", "Our model": "نموذجنا", "Explore": "استكشف", "About": "عن الموقع", "Read": "اقرأ",
     "matches tested": "مباراة مُختبَرة", "model": "النموذج", "bookmakers": "شركات الرهان", "leagues": "دوريات", "seasons": "مواسم", "Sign in": "تسجيل الدخول", "Built by moisback22": "من تطوير moisback22",
     "← Menu": "القائمة ←", "← Back": "رجوع ←", "Menu": "القائمة", "Back": "رجوع", "Got it": "فهمت", "Beta": "تجريبي",
-    "Pick a game.": "اختر لعبة، أو بدّل الدوري من الأعلى.", "All leagues": "كل الدوريات", "All five leagues": "الدوريات الخمسة الكبرى",
+    "Pick a game, or switch leagues above.": "اختر لعبة، أو بدّل الدوري من الأعلى.", "All leagues": "كل الدوريات", "All five leagues": "الدوريات الخمسة الكبرى",
     "Random matches from every league on one big pitch.": "مباريات عشوائية من كل الدوريات على ملعب واحد كبير.", "Mix it up": "خليط من كل شيء", "Any league, any season": "أي دوري، أي موسم",
     "Premier League": "الدوري الإنجليزي الممتاز", "Bundesliga": "الدوري الألماني", "La Liga": "الدوري الإسباني", "Serie A": "الدوري الإيطالي", "Ligue 1": "الدوري الفرنسي", "Star to watch": "نجم يستحق المتابعة",
     "What do you want to play?": "ماذا تريد أن تلعب؟", "ballknowledge originals": "ألعاب ballknowledge الأصلية", "Beat the Model": "تغلّب على النموذج", "Ranked": "التصنيف", "Play online": "العب أونلاين",
@@ -2825,19 +3039,19 @@ const I18N = {
     "Five matches, one link. Send it and see who does better.": "خمس مباريات ورابط واحد. أرسله وشاهد من يتوقع أفضل.",
     "Who am I?": "من أنا؟", "Solo streak · 2 players": "سلسلة فردية · لاعبان", "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.": "لاعب غامض. تتدرج التلميحات من الغامض إلى الواضح. اضغط الجرس مبكرًا لتحصل على نقاط أكثر.",
     "Career path": "مسيرة اللاعب", "Every club he played for, in order. Name the player.": "كل الأندية التي لعب لها بالترتيب. من هو اللاعب؟",
-    "Name that team": "أي نادٍ هذا؟", "Goals, wins and a stadium size. Which club is it?": "أهداف وانتصارات وسعة ملعب. فما هو النادي؟",
-    "Logo blur": "شعار ضبابي", "A blurry badge that sharpens by the second.": "شعار ضبابي يزداد وضوحًا مع كل ثانية.",
+    "Name that club": "أي نادٍ هذا؟", "Goals, wins and a stadium size. Which club is it?": "أهداف وانتصارات وسعة ملعب. فما هو النادي؟",
+    "Badge blur": "شعار ضبابي", "A blurry badge that sharpens by the second.": "شعار ضبابي يزداد وضوحًا مع كل ثانية.",
     "Where did they finish?": "أين أنهوا الموسم؟", "A club, a season, a slider. How close can you get?": "نادٍ وموسم ومنزلق. إلى أي حد تقترب من الصواب؟",
     "Market value": "القيمة السوقية", "Solo higher or lower · 2 players": "أعلى أم أقل فرديًا · لاعبان", "Who is worth more, a player or a squad? Or both of you guess a value and the closest wins.": "من يساوي أكثر، لاعب أم فريق؟ أو يخمّن كل منكما قيمة ويفوز الأقرب.",
-    "Team roulette": "روليت الأندية", "2 players · one device or two": "لاعبان · جهاز واحد أو جهازان", "A club appears. Take turns naming players who played for it. First to blank loses.": "يظهر نادٍ. تناوبا على ذكر لاعبين لعبوا فيه. من يتعثر أولًا يخسر.",
+    "Club roulette": "روليت الأندية", "2 players · one device or two": "لاعبان · جهاز واحد أو جهازان", "A club appears. Take turns naming players who played for it. First to blank loses.": "يظهر نادٍ. تناوبا على ذكر لاعبين لعبوا فيه. من يتعثر أولًا يخسر.",
     "Starting XI": "التشكيلة الأساسية", "Solo · 2 to 3 minutes": "فردي · من دقيقتين إلى ثلاث", "Finals, Champions League knockouts, derbies and big games. Name the eleven who started.": "نهائيات وأدوار إقصائية في دوري الأبطال وديربيات ومباريات كبرى. اذكر اللاعبين الأحد عشر الذين بدؤوا المباراة.",
     "Who did it": "من فعلها؟", "Solo": "فردي", "A big match and its highlights by minute. Name the scorers, assisters, penalty takers and who was sent off.": "مباراة شهيرة ولقطاتها دقيقة بدقيقة. اذكر المسجّلين وصنّاع الأهداف ومنفّذي ركلات الجزاء والبطاقات الحمراء.",
     "Scramble": "حروف مبعثرة", "A club, player or manager with the letters shuffled. Unscramble it before your rival does.": "اسم نادٍ أو لاعب أو مدرب بحروف مبعثرة. رتّبه قبل خصمك.",
-    "Basketball tic-tac-toe": "إكس أو كرة القدم", "2 players": "لاعبان", "Name a player who fits the row and the column. Three in a row wins.": "اذكر لاعبًا يناسب الصف والعمود. ثلاثة في خط واحد تفوز.",
+    "Football tic-tac-toe": "إكس أو كرة القدم", "2 players": "لاعبان", "Name a player who fits the row and the column. Three in a row wins.": "اذكر لاعبًا يناسب الصف والعمود. ثلاثة في خط واحد تفوز.",
     "How Ranked works": "كيف يعمل التصنيف", "Play real people online. Create a lobby and others can join from the list.": "العب أونلاين ضد أشخاص حقيقيين. أنشئ غرفة ويمكن للآخرين الانضمام من القائمة.",
     "Create an account or sign in": "أنشئ حسابًا أو سجّل الدخول", "Your rating.": "تصنيفك.", "This week": "هذا الأسبوع", "30 days": "30 يومًا", "This season": "هذا الموسم",
-    "Settings": "الإعدادات", "Sound": "الصوت", "Effects for taps, buzzers and results.": "مؤثرات للنقرات والأهداف والنتائج.", "Off": "إيقاف", "Soft": "هادئ", "Full": "كامل", "Music": "الموسيقى",
-    "A calm loop in menus and a livelier one during games. Needs sound to be on.": "لحن هادئ في القوائم وآخر أكثر حيوية أثناء المباريات. يلزم تشغيل الصوت.", "On": "تشغيل", "Language": "اللغة",
+    "Settings": "الإعدادات", "Sound": "الصوت", "Effects for taps, goals and results.": "مؤثرات للنقرات والأهداف والنتائج.", "Off": "إيقاف", "Soft": "هادئ", "Full": "كامل", "Music": "الموسيقى",
+    "A calm loop in menus and a livelier one during matches. Needs sound to be on.": "لحن هادئ في القوائم وآخر أكثر حيوية أثناء المباريات. يلزم تشغيل الصوت.", "On": "تشغيل", "Language": "اللغة",
     "Appearance": "المظهر", "Theme, text size, contrast and reduced motion are in your profile.": "المظهر وحجم الخط والتباين وتقليل الحركة في ملفك الشخصي.", "Open profile": "افتح الملف الشخصي",
     "About ballknowledge": "عن ballknowledge", "Our story": "قصتنا", "How the model works": "كيف يعمل النموذج", "Honest limits and sources": "حدود صريحة ومصادر", "Roadmap and votes": "خارطة الطريق والتصويت",
     "How it grew": "كيف كبر المشروع", "Who builds it": "من يبنيه", "Roadmap": "خارطة الطريق", "Shipped": "تم", "Next": "التالي", "Later": "لاحقًا", "Your ideas": "أفكارك",
@@ -2983,7 +3197,7 @@ function renderAboutPage() {
       <div class="tiles"><div class="tile"><b class="num">${sm.n.toLocaleString()}</b><small>matches the model was tested on</small></div><div class="tile"><b class="num">${QZ.players.length.toLocaleString()}</b><small>players in the quiz data</small></div><div class="tile"><b class="num">${XI.length}</b><small>matches with starting elevens</small></div><div class="tile"><b class="num">${au ? au.facts : "–"}</b><small>certain facts checked${au ? ` (${au.wrong} wrong, ${au.ran})` : ""}</small></div></div>
       <h3>What we do not have</h3><ul>
         <li>Managers, league titles, cup wins and "played with" cover 2012-13 onward only; the labels say so. Older careers use transfer dates.</li>
-        <li>${thin} players have fewer than two clubs on record (the transfer file has nothing for some, such as Bale), so they are left out of tic-tac-toe and Team roulette.</li>
+        <li>${thin} players have fewer than two clubs on record (the transfer file has nothing for some, such as Bale), so they are left out of tic-tac-toe and Club roulette.</li>
         <li>Some starting elevens (finals before 2013-14) come from Wikipedia and cover 2000 to 2013 only; the League Cup and Coupe de France are not covered at all.</li>
         <li>${hidden.toLocaleString()} player photos were taken before the player's latest move and show his previous club's shirt. They are still shown (an older picture beats none).</li>
         <li>Seven clubs have no theme colours; Ligue 1 2019-20 is left out because the Covid-cut season is incomplete.</li>
@@ -3018,7 +3232,7 @@ async function loadIdeas() {
   box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow idearow"><button type="button" class="vote ${r.mine ? "on" : ""}" data-vote="${r.id}" aria-pressed="${!!r.mine}" title="Vote"><b>${r.votes}</b><small>${r.mine ? "voted" : "vote"}</small></button><span><b>${esc(r.title)}</b> <span class="chip2">${esc((IDEA_KINDS.find((k) => k[0] === r.kind) || [, r.kind])[1])}</span>${r.status !== "open" ? ` <span class="rmst ${r.status === "done" ? "done" : "next"}">${esc(r.status)}</span>` : ""}${r.body ? `<div class="fine">${esc(r.body)}</div>` : ""}<div class="fine">${r.nick ? "by " + esc(r.nick) : ""}</div>${Admin.is ? `<div class="row" style="gap:6px;margin-top:4px">${["planned", "done", "declined", "open"].map((s) => `<button type="button" class="chip" data-ideast="${r.id}|${s}" style="padding:2px 8px;font-size:11px">${s}</button>`).join("")}</div>` : ""}</span></div>`).join("") : '<div class="fine">No ideas yet. Be the first.</div>';
 }
 function updateAboutOnInput(t) { if (["abRA", "abRB", "abPH", "abPA"].includes(t.id)) updateAboutTools(); }
-function curLang() { try { return localStorage.getItem("bkn_lang") || "en"; } catch (e) { return "en"; } }
+function curLang() { try { return localStorage.getItem("bk_lang") || "en"; } catch (e) { return "en"; } }
 
 /* ================= Admin (only accounts listed in the admins table) ================= */
 const Admin = { is: false, role: null, users: [], q: "" };
@@ -3069,9 +3283,9 @@ function avatarHTML(av, size = "md", nick = "") {
 }
 function syncProfile() { const p = prof(); Ranked.rpc("set_profile", { p_avatar: p.avatar || "", p_player: p.favPName || "", p_team: p.favT || "" }); syncBadges(); }
 function appearanceHTML() {
-  const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bkn_theme", "auto"), tx = g("bkn_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
-  return `<label class="pfl">Style</label>${seg("style", [["minimal", "Minimal"], ["classic", "Classic"]], g("bkn_style", "minimal") === "classic" ? "classic" : "minimal")}<div class="fine" style="margin:4px 0 0">Minimal is calm and quiet. Classic brings back the glow, effects and arena backdrop.</div><label class="pfl">Sidekick</label>${seg("mascot", Mascot.mine.map((k) => [k, MASCOTS[k].name]), Mascot.id())}${seg("mascot_mode", [["on", "On"], ["quiet", "No voice"], ["off", "Off"]], Mascot.mode())}${outfitsHTML()}<label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
-  <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bkn_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bkn_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bkn_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bkn_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
+  const g = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, th = g("bk_theme", "auto"), tx = g("bk_text", "m"), seg = (k, items, cur) => `<div class="scope" style="padding:2px 0">${items.map(([v, n]) => `<button type="button" class="chip" data-ap="${k}|${v}" aria-pressed="${cur === v}">${n}</button>`).join("")}</div>`;
+  return `<label class="pfl">Style</label>${seg("style", [["flood", "Floodlit"], ["classic", "Classic"], ["minimal", "Minimal"]], g("bk_style", "flood") === "classic" ? "classic" : g("bk_style", "flood") === "minimal" ? "minimal" : "flood")}<div class="fine" style="margin:4px 0 0">Floodlit is a night match with light beams and a flying ball. Classic is the glow and stadium backdrop. Minimal is calm and quiet.</div><label class="pfl">Sidekick</label>${seg("mascot", Mascot.mine.map((k) => [k, MASCOTS[k].name]), Mascot.id())}${seg("mascot_mode", [["on", "On"], ["quiet", "No voice"], ["off", "Off"]], Mascot.mode())}${outfitsHTML()}<label class="pfl">Theme</label>${seg("theme", [["dark", "<svg class=ic><use href=#i-moon></use></svg> Dark"], ["light", "<svg class=ic><use href=#i-sun></use></svg> Light"], ["auto", "<svg class=ic><use href=#i-monitor></use></svg> Auto"]], th)}<label class="pfl">Text size</label>${seg("text", [["s", "Small"], ["m", "Normal"], ["l", "Large"], ["xl", "Extra large"]], tx)}
+  <label class="pfl">Display</label><div class="scope" style="padding:2px 0"><button type="button" class="chip" data-ap="contrast|${g("bk_contrast", "0") === "1" ? 0 : 1}" aria-pressed="${g("bk_contrast", "0") === "1"}">High contrast</button><button type="button" class="chip" data-ap="motion|${g("bk_motion", "") === "reduced" ? "full" : "reduced"}" aria-pressed="${g("bk_motion", "") === "reduced"}">Reduce motion</button></div><div class="fine" style="margin-top:6px">Reduce motion also stops background effects after a refresh.</div>`;
 }
 const signedIn0 = () => !!(Account.signedIn || Account.claude);
 function showProfile(ev) {
@@ -3079,7 +3293,7 @@ function showProfile(ev) {
   award("curious"); renderProfilePage();
 }
 function eloChart(rows) {
-  if (!rows || rows.length < 1) return emptyState("<svg class=ic><use href=#i-trend></use></svg>", "No rating history yet", "Play a ranked match and your Elo will draw itself here.", '<button type="button" class="btn" data-nbgroup="ranked">Play a ranked match</button>');
+  if (!rows || rows.length < 1) return emptyState("<svg class=ic><use href=#i-trend></use></svg>", "No rating history yet", "Play a ranked match and your Elo will draw itself here.", '<button type="button" class="btn" data-group-go="ranked">Play a ranked match</button>');
   const pts = [1000].concat(rows.map((r) => r.elo)), lo = Math.min(...pts) - 10, hi = Math.max(...pts) + 10, W = 320, H = 110, x = (i) => (pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * (W - 20) + 10), y = (v) => H - 14 - ((v - lo) / (hi - lo || 1)) * (H - 28);
   const d = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" "), last = pts[pts.length - 1];
   return `<svg class="elochart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history"><line x1="10" x2="${W - 10}" y1="${y(1000)}" y2="${y(1000)}" stroke="currentColor" stroke-opacity=".2" stroke-dasharray="3 4"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${i === pts.length - 1 ? 5 : 3}" fill="${i === pts.length - 1 ? "var(--accent)" : "var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`).join("")}<text x="${W - 10}" y="12" text-anchor="end" font-size="11" fill="currentColor" opacity=".7">peak ${Math.max(...pts)} · now ${last}</text></svg>`;
@@ -3122,11 +3336,17 @@ function historyList(rows) {
   if (!rows || !rows.length) return ""; const ago = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? `${Math.max(1, m)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
   return `<div class="label" style="margin-top:12px">Recent matches</div><div class="lbx">${rows.slice(-8).reverse().map((r) => `<div class="lbrow hrow"><b>${r.delta > 0 ? "<svg class=ic><use href=#i-check></use></svg>" : r.delta < 0 ? "<svg class=ic><use href=#i-cross></use></svg>" : "<svg class=ic><use href=#i-minus></use></svg>"}</b><span>${r.opp_nick ? "vs " + esc(r.opp_nick) : "Ranked match"}<small class="fine"> ${r.game ? esc(rkName(r.game)) : ""}</small></span><span class="num ${r.delta >= 0 ? "up" : "down"}">${r.delta > 0 ? "+" : ""}${r.delta}</span><span class="fine">${ago(r.at)}</span></div>`).join("")}</div>`;
 }
-async function paintFriends() {
-  const rows = await Ranked.rpc("my_friends"), box = $("#pfFriends"); if (!box) return;
+async function paintFriends(sel = "#pfFriends") {
+  const box = $(sel); if (!box) return; let rows = await Ranked.rpc("my_friends_live"), live = !!rows; if (!rows) rows = await Ranked.rpc("my_friends"); if (!$(sel)) return;
   if (!rows) { box.innerHTML = '<div class="fine">Friends need the latest database update (schema_v3.sql).</div>'; return; }
-  box.innerHTML = rows.length ? rows.map((r) => `<div class="lbrow frow" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog">${avatarHTML(r.avatar, "sm", r.nick)}<div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span><div class="fine">${r.fav_player ? "<svg class=ic><use href=#i-star></use></svg> " + esc(r.fav_player) : ""} ${r.fav_team ? "· " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px"><button class="btn" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button><button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button></div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name.", sel === "#pfFriends" ? "" : '<button type="button" class="btn" data-go="profile">Add a friend</button>');
+  const on = (r) => r.last_seen && Date.now() - new Date(r.last_seen) < 3 * 60e3, ago = (t) => { const m = Math.floor((Date.now() - new Date(t)) / 60e3); return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ago` : `${Math.floor(m / 1440)}d ago`; };
+  const n = rows.filter(on).length; const head = live && rows.length ? `<div class="fine frhead"><span class="frdot on"></span> ${n} online now</div>` : "";
+  box.innerHTML = rows.length ? head + rows.map((r, k) => `<div class="lbrow frow ${on(r) ? "isonline" : ""}" data-pc="${esc(r.nick)}" tabindex="0" role="button" aria-haspopup="dialog" style="--d:${k * 50}ms"><span class="frav">${avatarHTML(r.avatar, "sm", r.nick)}${live ? `<i class="frdot ${on(r) ? "on" : ""}" title="${on(r) ? "Online" : r.last_seen ? "Seen " + ago(r.last_seen) : "Not seen yet"}"></i>` : ""}</span><div><b>${esc(r.nick)}</b>${badgesHTML(r.badges)} ${rankTag(r.elo)} <span class="fine num">Elo ${r.elo}</span>${r.mutual ? ' <span class="frmut" title="You added each other">friends</span>' : ""}<div class="fine">${r.lobby_code ? `<b class="frlob"><span class="livedot"></span> In a lobby: ${esc(rkName(r.lobby_game))}</b>` : on(r) ? "Online now" : r.last_seen ? "Seen " + ago(r.last_seen) : ""}${r.fav_team ? " · " + esc(r.fav_team) : ""}</div></div><div class="row" style="gap:6px">${r.lobby_code ? `<button class="btn" data-rkjoin="${esc(r.lobby_code)}|${esc(r.lobby_game)}" type="button">Join</button>` : ""}<button class="btn ${r.lobby_code ? "ghost" : ""}" data-chal="${esc(r.nick)}" type="button"><svg class=ic><use href=#i-swords></use></svg> Challenge</button>${sel === "#pfFriends" ? `<button class="btn ghost" data-unfriend="${esc(r.nick)}" type="button">Remove</button>` : ""}</div></div>`).join("") : emptyState("<svg class=ic><use href=#i-handshake></use></svg>", "No friends yet", "Add someone by their display name in your profile.", sel === "#pfFriends" ? "" : '<button type="button" class="btn" data-go="profile">Add a friend</button>');
 }
+/* a heartbeat while the page is open and visible, so friends can see you are online */
+setInterval(() => { try { if (Account.signedIn && Board.mode === "rest" && document.visibilityState === "visible") Ranked.rpc("touch_seen"); } catch (e) { /* offline */ } }, 60000);
+setTimeout(() => { try { if (Account.signedIn && Board.mode === "rest") Ranked.rpc("touch_seen"); } catch (e) { /* offline */ } }, 4000);
+
 
 /* ================= Challenge a friend ================= */
 const SHORT = { E0: "pl", D1: "bl", SP1: "ll", I1: "sa", F1: "l1", ALL: "al" }, FROMSHORT = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
@@ -3188,7 +3408,7 @@ const Account = {
   get claude() { return store.mode === "cloud"; },
   load() { try { const s = JSON.parse(localStorage.getItem("arena-session") || "null"); if (s && s.refresh_token) this.session = s; } catch (e) { /* storage unavailable */ } },
   persist() { try { if (this.session) localStorage.setItem("arena-session", JSON.stringify(this.session)); else localStorage.removeItem("arena-session"); } catch (e) { /* storage unavailable */ } },
-  hdr(token) { return { apikey: Board.cfg.key, Authorization: `Bearer ${token || Board.cfg.key}`, "Content-Type": "application/json", "Accept-Profile": "nba", "Content-Profile": "nba" }; },
+  hdr(token) { return { apikey: Board.cfg.key, Authorization: `Bearer ${token || Board.cfg.key}`, "Content-Type": "application/json" }; },
   take(j) { if (!j || !j.access_token) return false; this.session = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600), user: { id: j.user.id, email: j.user.email } }; this.persist(); return true; },
   async auth(path, body) { const r = await fetch(`${Board.cfg.url}/auth/v1/${path}`, { method: "POST", headers: this.hdr(), body: JSON.stringify(body) }); let j = {}; try { j = await r.json(); } catch (e) { /* empty body */ } return { ok: r.ok, j }; },
   errText(j) { return (j && (j.error_description || j.msg || j.message)) || "Something went wrong. Please try again."; },
@@ -3222,7 +3442,7 @@ const Account = {
     try { await fetch(`${Board.cfg.url}/rest/v1/progress`, { method: "POST", headers: { ...this.hdr(t), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: this.session.user.id, data: store.items, updated_at: new Date().toISOString() }) }); this.status = "Progress saved online."; } catch (e) { this.status = "Could not reach the server; your progress is safe on this device."; }
   },
   queue() { if (!this.signedIn) return; clearTimeout(this.pushTimer); this.pushTimer = setTimeout(() => { this.pushTimer = null; this.push(); }, 2500); },
-  async setNick(nick) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; const all = await NameSync.setAll(Board.cfg, t, nick), j = all["nba"]; if (j === "ok") return { ok: true }; if (j == null) return { error: "Could not reach the server." }; return { error: j === "taken" ? "That nickname is taken. Try another." : j === "invalid" ? "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." : this.errText(j) }; },   /* saved in all three sports at once */
+  async setNick(nick) { const t = await this.token(); if (!t) return { error: "Please sign in first." }; const all = await NameSync.setAll(Board.cfg, t, nick), j = all["public"]; if (j === "ok") return { ok: true }; if (j == null) return { error: "Could not reach the server." }; return { error: j === "taken" ? "That nickname is taken. Try another." : j === "invalid" ? "Use 3 to 16 letters, numbers, spaces, dots, dashes or underscores." : this.errText(j) }; },   /* saved in all three sports at once */
 };
 document.addEventListener("visibilitychange", () => { if (document.hidden) Account.flush(); });
 addEventListener("pagehide", () => { Account.flush(); });
@@ -3261,11 +3481,11 @@ async function submitAuth(mode) {
 
 /* ================= Ball knowledge: shared data helpers ================= */
 const QZ = DATA.quiz || { players: [], clubs: {} };
-const LG_OF_COMP = { NBA: "NBA" };
+const LG_OF_COMP = { GB1: "E0", L1: "D1", ES1: "SP1", IT1: "I1", FR1: "F1" };
 const TODAY_MS = Date.now();
 const qnorm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const ageOf = (p) => Math.floor((TODAY_MS - Date.parse(p.dob)) / 31557600000);
-const euro = (v) => `${Math.round(v).toLocaleString("en-US")}`;
+const euro = (v) => (v >= 1e8 ? `€${Math.round(v / 1e6)}m` : v >= 1e6 ? `€${(v / 1e6).toFixed(1).replace(/\.0$/, "")}m` : `€${Math.round(v / 1e3)}k`);
 const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 const playerPool = (scope, f) => QZ.players.filter((p) => (scope === "ALL" || LG_OF_COMP[p.comp] === scope) && (!f || f(p)));
@@ -3286,16 +3506,16 @@ const DIFFS = [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"], ["elite
 const DIFFX = { easy: 0.6, medium: 1, hard: 1.4, elite: 2 };
 const DIFFNOTE = { easy: "Superstars and the biggest clubs, slow clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and top clubs. Scores count 1x.", hard: "Regular first-teamers and mid-table clubs, faster clues, tighter margins. Scores count 1.4x.", elite: "Deep cuts: the obscure players and smaller clubs only, fast clues, almost no margin. Scores count 2x." };
 const TLIM = { easy: 30, medium: 20, hard: 14, elite: 9 };
-try { S.diff = localStorage.getItem("bkn_diff"); } catch (e) { /* storage blocked */ }
+try { S.diff = localStorage.getItem("bk_diff"); } catch (e) { /* storage blocked */ }
 if (!DIFFX[S.diff]) S.diff = "medium";
-const fameOf = (p) => p.min || 0;
+const fameOf = (p) => Math.max(p.peak || 0, p.val || 0);
 const FAME = (() => { const s = QZ.players.slice().sort((a, b) => fameOf(b) - fameOf(a)), m = new Map(); s.forEach((p, i) => m.set(p.id, i)); return m; })();
 const clubRank = (() => { const s = Object.entries(QZ.clubs).filter(([, f]) => f.value > 0).sort((a, b) => b[1].value - a[1].value), m = {}; s.forEach(([n], i) => { m[n] = i; }); return m; })();
 /* what to ask about: easy is the very famous, elite is the obscure (players ranked below 1,500 by peak value, clubs outside the top 60 by squad value) */
-const playerOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 130 : S.diff === "medium" ? r < 420 : S.diff === "hard" ? r < 900 : r >= 600; };
+const playerOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 260 : S.diff === "medium" ? r < 750 : S.diff === "hard" ? r < 1700 : r >= 1300; };
 /* what may appear as an answer or category pool: everything at least as famous as the level, and elite allows anyone */
-const poolOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 260 : S.diff === "medium" ? r < 650 : S.diff === "hard" ? r < 1100 : true; };
-const clubOK = (n) => { const r = clubRank[n]; return S.diff === "easy" ? r < 10 : S.diff === "medium" ? r < 20 : S.diff === "hard" ? r < 28 : (r === undefined || r >= 15); };
+const poolOK = (p) => { const r = FAME.get(p.id); return S.diff === "easy" ? r < 550 : S.diff === "medium" ? r < 1200 : S.diff === "hard" ? r < 2100 : true; };
+const clubOK = (n) => { const r = clubRank[n]; return S.diff === "easy" ? r < 14 : S.diff === "medium" ? r < 34 : S.diff === "hard" ? r < 75 : (r === undefined || r >= 50); };
 const clueSpeed = () => ({ easy: 1.35, medium: 1, hard: 0.8, elite: 0.6 })[S.diff];
 const finTol = () => ({ easy: 4, medium: 3, hard: 2, elite: 1 })[S.diff];
 const pickWith = (make, ok) => { let x; for (let k = 0; k < 60; k++) { x = make(); if (ok(x)) return x; } return x; };
@@ -3363,22 +3583,23 @@ function stopQuiz() { if (Q.timer) { clearInterval(Q.timer); Q.timer = null; } }
 const Q = { timer: null, s: null };
 
 /* ---------- clue ladders, hardest first ---------- */
+/* the same club under different spellings ("Villarreal" / "Villarreal CF" / "FC Villarreal C"): its words without the generic ones */
 const CLUB_GENERIC = new Set(["fc", "cf", "cd", "rcd", "sc", "ac", "as", "ssc", "afc", "club", "de", "the", "c", "b", "ii", "u19", "u21", "u23", "you", "yth", "youth", "sad", "1", "a"]);
 const clubWords = (n) => new Set(String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w && !CLUB_GENERIC.has(w)));
 const sameClub = (a, b) => { const x = clubWords(a), y = clubWords(b); if (!x.size || !y.size) return false; const [s1, s2] = x.size <= y.size ? [x, y] : [y, x]; return [...s1].every((w) => s2.has(w)); };
 function playerClues(p) {
-  const a = ageOf(p), prev = p.hist.filter((c, i, h) => !sameClub(c, p.club) && !(i > 0 && sameClub(c, h[i - 1]))).slice(-3), cl = [];
+  const a = ageOf(p), prev = p.hist.filter((c, i, h) => !sameClub(c, p.club) && !(i > 0 && sameClub(c, h[i - 1]))).slice(-3), cl = [];   /* earlier clubs never name the current one, in any spelling */
   if (p.city || p.bc) cl.push(["Birthplace", `Born in ${p.city ? p.city + ", " : ""}${p.bc || p.nat}`, flagOf(p.bc || p.nat)]);
   if (p.h) cl.push(["Build", `${p.h} cm tall${p.foot ? `, ${p.foot}-footed` : ""}`]);
   cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
   if (p.end) cl.push(["Contract", `Contract runs until ${p.end}`]);
   if ((p.aw || []).length) cl.push(["Awards", `Has won the ${p.aw.map((k) => ({ BDO: "Ballon d'Or", GS: "European Golden Shoe", PLGB: "Premier League Golden Boot", PFA: "PFA Players' Player of the Year", FIFA: "FIFA best player award", UEFA: "UEFA Player of the Year" })[k]).join(", ")}`, "<svg class=ic><use href=#i-medal></use></svg>"]);
   if ((p.hn || []).length) cl.push(["Honours", `Has won the ${p.hn.map((k) => ({ UCL: "Champions League", UEL: "Europa League", FAC: "FA Cup", EFL: "League Cup", CDR: "Copa del Rey", DFB: "DFB-Pokal", COP: "Coppa Italia", CDF: "Coupe de France" })[k]).join(", ")}`, "<svg class=ic><use href=#i-trophy></use></svg>"]);
-  if (p.val) cl.push(["Value", `Market value about ${euro(p.val)}${p.peak > p.val * 1.2 ? `, peak ${euro(p.peak)}` : ""}`]);
+  if (p.val) cl.push(["Value", `Market value about ${euro(p.val)}${QZ.valAt ? ` (${new Date(QZ.valAt + "-15").toLocaleString("en-GB", { month: "long", year: "numeric" })})` : ""}${p.peak > p.val * 1.2 ? `, peak ${euro(p.peak)}` : ""}`]);
   if (p.caps) cl.push(["Caps", `${p.caps} international caps, ${p.ig} goal${p.ig === 1 ? "" : "s"}`]);
   cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
   cl.push(["Nationality", p.nat, flagOf(p.nat)]);
-  if (prev.length) cl.push(["Earlier clubs", `Previously at ${prev.join(", ")}`, prev.map((c) => clubBadgeFor(c, "sm")).join("")]);
+  if (prev.length) cl.push(["Earlier clubs", `Previously at ${prev.map((c) => c.replace(/ (You|Yth\.?|Youth)$/, " (youth)")).join(", ")}`, prev.map((c) => clubBadgeFor(c, "sm")).join("")]);
   if (p.club) cl.push(["Club", `${p.active ? "Plays for" : "Last club:"} ${p.club}`, clubBadgeFor(p.club, "sm")]);
   cl.push(["Name", `${p.n.split(" ").length} word${p.n.split(" ").length > 1 ? "s" : ""}, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
   return cl;
@@ -3398,7 +3619,7 @@ function clubClues(e) {
   if (f.value) cl.push(["Squad value", `Squad worth about ${euro(f.value)} today`]);
   if (f.age) cl.push(["Squad age", `Average squad age ${f.age.toFixed(1)} today`]);
   cl.push(["League", `${lgOf(e.lg).name}, ${e.season}`, emblem(e.lg, "sm")]);
-  if (f.coach) cl.push(["Coach", `Coach today: ${f.coach}`]);
+  if (f.coach) cl.push(["Manager", `Manager in ${f.coachAt ? new Date(f.coachAt + "-15").toLocaleString("en-GB", { month: "long", year: "numeric" }) : "the data"}: ${f.coach}`]);   /* dated: the source runs to its last match, not today */
   if (f.stadium) cl.push(["Ground", `Plays at ${f.stadium}`]);
   cl.push(["Name", `${e.n.replace(/ /g, "").length} letters, starts with ${e.n[0]}`]);
   return cl;
@@ -3409,8 +3630,8 @@ const BLUR = [34, 26, 19, 13, 8, 4, 0];
 const QDEF = {
   who: { name: "Who am I?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.active && p.hist.length >= 2 && playerOK(p))) }), clues: (r) => playerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
   career: { name: "Career path", unit: "player", rounds: 5, clueS: 7, mk: (scope) => ({ p: rnd(playerPool(scope, (p) => p.hist.length >= 3 && playerOK(p))) }), clues: (r) => careerClues(r.p), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) },
-  club: { name: "Name that team", unit: "club", rounds: 5, clueS: 6, mk: (scope) => pickWith(() => { const lg = rnd(lgs(scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), pos = Math.floor(Math.random() * tabs[sn].length), row = tabs[sn][pos]; return { e: { n: row[0], lg, season: sn, row, pos: pos + 1 } }; }, (r) => clubOK(r.e.n)), clues: (r) => clubClues(r.e), ans: (r) => ({ kind: "club", name: r.e.n }) },
-  blur: { name: "Logo blur", unit: "club", rounds: 6, clueS: 3.2, mk: (scope) => { const names = clubList(scope).filter((c) => CREST[c.n] && clubOK(c.n)); return { e: rnd(names.length ? names : clubList(scope).filter((c) => CREST[c.n])) }; }, clues: (r) => BLUR.map((b, i) => ["Blur", i === BLUR.length - 1 ? "Fully sharp" : `Blur ${b}`]), ans: (r) => ({ kind: "club", name: r.e.n }) },
+  club: { name: "Name that club", unit: "club", rounds: 5, clueS: 6, mk: (scope) => pickWith(() => { const lg = rnd(lgs(scope)), tabs = lgOf(lg).tables, sn = rnd(Object.keys(tabs)), pos = Math.floor(Math.random() * tabs[sn].length), row = tabs[sn][pos]; return { e: { n: row[0], lg, season: sn, row, pos: pos + 1 } }; }, (r) => clubOK(r.e.n)), clues: (r) => clubClues(r.e), ans: (r) => ({ kind: "club", name: r.e.n }) },
+  blur: { name: "Badge blur", unit: "club", rounds: 6, clueS: 3.2, mk: (scope) => { const names = clubList(scope).filter((c) => CREST[c.n] && clubOK(c.n)); return { e: rnd(names.length ? names : clubList(scope).filter((c) => CREST[c.n])) }; }, clues: (r) => BLUR.map((b, i) => ["Blur", i === BLUR.length - 1 ? "Fully sharp" : `Blur ${b}`]), ans: (r) => ({ kind: "club", name: r.e.n }) },
 };
 /* ---- Scramble: a club, player or manager with the letters of every word shuffled ---- */
 const MGRCOUNT = (() => { const m = {}; QZ.players.forEach((p) => (p.mg || []).forEach((x) => { m[x] = (m[x] || 0) + 1; })); return Object.entries(m).filter(([, n]) => n >= 12).sort((a, b) => b[1] - a[1]); })();
@@ -3466,7 +3687,7 @@ function endRound(winner) {
   if (winner != null) { pts = worth(); S_.scores[winner] += pts; S_.streak++; flashEdge(true); Mascot.setCtx(((S_.r.p && S_.r.p.n) || (S_.r.e && S_.r.e.n) || "") + "!"); FX.hit(pts); Snd.win(); if (pts > 700) confetti(); FX.pop("#room .rcard, #room .rcard + *"); FX.countUp(`#room .qscore:nth-of-type(${winner + 2}) b`, S_.scores[winner] - pts, S_.scores[winner]); if (S_.mode === "solo") FX.streak(S_.streak); } else { if (S_.mode === "solo") { S_.over = true; FX.over(); } else FX.miss(""); Snd.wrong(); }
   if (S_.mode === "solo") { if (winner != null) saveResume(S_.game, S_.scope, S_.scores[0], S_.streak, S_.round); else clearResume(); } S_.result = { winner, pts }; if (S_.mode === "solo") { const rp = S_.r.p, lgx = rp ? LG_OF_COMP[rp.comp] : S_.r.e && S_.r.e.lg; track(S_.game, winner === 0, lgx || null); if (winner === 0 && rp) collectSticker(rp); if (winner === 0 && S_.r.e && (S_.game === "club" || S_.game === "blur")) collectClub(S_.r.e.n); } if (winner === 0 && S_.game === "scramble" && S_.mode === "solo") { const p0 = prof(); p0.scrSolved = (p0.scrSolved || 0) + 1; if (p0.scrSolved >= 10) unlock(p0, "scramble10"); saveProf(p0); } if (winner != null) { award("first_buzz"); if (pts >= 950) award("speed"); if (S.diff === "elite") award("elite_win"); if (S_.mode === "solo") { if (S_.streak >= 3) award("hat3"); if (S_.streak >= 10) award("streak10q"); } } S_.log.push({ round: S_.round, winner, pts }); renderQuiz();
 }
-const RESUME_KEY = "bkn_resume";
+const RESUME_KEY = "bk_resume";
 const getResume = (game, scope) => { try { const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null"); return r && r.game === game && r.scope === scope && r.diff === S.diff && Date.now() - r.at < 3 * 864e5 ? r : null; } catch (e) { return null; } };
 const saveResume = (game, scope, score, streak, round) => { try { localStorage.setItem(RESUME_KEY, JSON.stringify({ game, scope, diff: S.diff, score, streak, round, at: Date.now() })); } catch (e) { /* blocked */ } };
 const clearResume = () => { try { localStorage.removeItem(RESUME_KEY); } catch (e) { /* blocked */ } };
@@ -3517,8 +3738,8 @@ function renderQuiz() {
   const S_ = Q.s, d = QDEF[S_.game], duo = S_.mode === "duo", who = ["Player 1", "Player 2"];
   const head = gamesBar(d.name) ;
   if (S_.phase === "intro") {
-    const clue = S_.game === "blur" ? "A team logo starts blurred and sharpens." : S_.game === "scramble" ? "A player or a team with the letters shuffled. Hints only arrive when everyone agrees." : "Clues start hard and get easier.";
-    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
+    const clue = S_.game === "blur" ? "A club badge starts blurred and sharpens." : S_.game === "scramble" ? "A club, a player or a manager with the letters shuffled. Hints only arrive when everyone agrees." : "Clues start hard and get easier.";
+    $("#room").innerHTML = modeIntro(d.name, `${clue} Buzz in whenever you think you know it. The sooner you are right, the more you score (up to 1,000), and a wrong guess costs 150. ${S_.scope === "ALL" ? "All five leagues." : lgOf(S_.scope).name + "."} Change the league with the chips above.${QZ.players.length ? "" : " Quiz data is missing from this build."}`, [
       ...(getResume(S_.game, S_.scope) ? [{ id: "qResume", t: `Resume your streak (${getResume(S_.game, S_.scope).streak}, ${getResume(S_.game, S_.scope).score} pts)`, d: "Pick up where you stopped." }] : []),
       { id: "qSolo", t: "Solo streak", d: "Keep going for as long as you can. The run ends the first time a round runs out of time." },
       { id: "qDuo", t: "Two players, one device", d: "Five rounds. Race to buzz: A for player 1, L for player 2. The first right answer takes the points." },
@@ -3564,17 +3785,17 @@ function nextFinish() {
 const ordn = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function renderFinish() {
   const f = S.fin;
-  if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A team and a season appear. Slide to where you think it finished by wins. The closer you are, the more you score.", [
+  if (!f) { $("#room").innerHTML = modeIntro("Where did they finish?", "A club and a season appear. Slide to where you think it finished. The closer you are, the more you score.", [
     { id: "finStart", t: "Solo streak", d: "Keep going while you are within a few places (fewer on harder levels). The first bigger miss ends the run." },
-    { id: "finDuo", t: "Two players, one device", d: "Five teams. You each slide in turn without seeing the other's guess. Closest scores most." },
+    { id: "finDuo", t: "Two players, one device", d: "Five clubs. You each slide in turn without seeing the other's guess. Closest scores most." },
     { id: "finOnline", t: "Two players, two devices", d: "The same duel from two devices, with a four-letter room code." }]); return; }
   const duo = f.mode === "duo", who = ["Player 1", "Player 2"], c = f.cur, r = c.row;
   if (f.phase === "done") { const w = duo ? (f.scores[0] === f.scores[1] ? -1 : f.scores[0] > f.scores[1] ? 0 : 1) : 0; $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${finale({ label: duo ? "Full time" : `Run over · streak of ${f.streak}`, verdict: duo ? (w < 0 ? "A draw." : esc(who[w]) + " wins!") : f.streak >= 5 ? "You know your tables." : "Good effort.", players: f.scores.map((sc, k) => ({ name: duo ? who[k] : prof().nick || "You", score: sc, av: duo ? null : avatarHTML(prof().avatar || "", "lg", prof().nick || "You") })), winner: duo ? w : null, good: f.streak >= 5, tiles: duo ? [] : [[f.streak, "streak"]], buttons: `<button class="btn" id="finAgain" type="button">Play again</button><button class="btn ghost" id="finCard" type="button">Make a result card</button>` })}</div>`; return; }
-  const ctx = f.phase === "ask" ? `Scored ${r[2].toFixed(1)} and allowed ${r[3].toFixed(1)} points a game` : `${r[4]} wins and ${r[6]} losses`, hud = `<div class="qhud"><span class="label">${duo ? `Round ${f.round} of ${f.rounds}` : `Streak ${f.streak}`}</span>${f.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Points"}</small> <b>${s}</b></span>`).join("")}</div>`;
+  const ctx = f.phase === "ask" ? `Scored ${r[2]} and conceded ${r[3]}` : `${r[1]} points, ${r[4]} wins, ${r[5]} draws, ${r[6]} defeats`, hud = `<div class="qhud"><span class="label">${duo ? `Round ${f.round} of ${f.rounds}` : `Streak ${f.streak}`}</span>${f.scores.map((s, i) => `<span class="num qscore"><small>${duo ? who[i] : "Points"}</small> <b>${s}</b></span>`).join("")}</div>`;
   let body;
-  if (f.phase === "ask") body = `<div class="sliderbox">${duo ? `<b>${who[f.turn]}, your guess</b>` : ""}<div class="num bigpos" id="finVal">${ordn(c.guess)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${c.guess}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Best record</span><span>Worst record</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">${duo && f.turn === 0 && !Net.role ? "Lock it in, pass the device" : "Lock it in"}</button></div>`;
-  else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real ranking by wins</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than ${finTol()} place${finTol() === 1 ? "" : "s"} out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next team"}</button></div>`; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine row" style="gap:6px">${emblem(c.lg, "sm")}${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} teams</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
+  if (f.phase === "ask") body = `<div class="sliderbox">${duo ? `<b>${who[f.turn]}, your guess</b>` : ""}<div class="num bigpos" id="finVal">${ordn(c.guess)}</div><input type="range" id="finRange" min="1" max="${c.n}" value="${c.guess}" aria-label="Final position"><div class="row fine" style="justify-content:space-between"><span>Champions</span><span>Bottom</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="finLock" type="button">${duo && f.turn === 0 && !Net.role ? "Lock it in, pass the device" : "Lock it in"}</button></div>`;
+  else { const last = duo ? f.round >= f.rounds : f.over; body = `<div class="rcard on"><div class="label">The real table position</div><div class="big num">${ordn(c.pos)}</div><div class="verdicts" style="margin-top:10px">${c.guesses.slice(0, duo ? 2 : 1).map((g, i) => `<div class="vd ${c.pts[i] === Math.max(...c.pts.slice(0, duo ? 2 : 1)) ? "ok" : "no"}"><span class="label">${duo ? who[i] : "You"}</span><b class="num">${ordn(g)}</b><span class="fine">${c.diffs[i] === 0 ? "spot on" : c.diffs[i] + " off"} · +${c.pts[i]}</span></div>`).join("")}</div>${!duo && f.over ? '<div class="fine" style="margin-top:8px">More than ${finTol()} place${finTol() === 1 ? "" : "s"} out. The run is over.</div>' : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${last ? "finEnd" : "finNext"}" type="button">${last ? "See the final score" : "Next club"}</button></div>`; }
+  $("#room").innerHTML = `<div class="card">${gamesBar("Where did they finish?")}${hud}<div class="row" style="gap:14px;margin:6px 0">${badge(r[0], "xl")}<div><h3 style="font-size:30px">${esc(r[0])}</h3><div class="fine row" style="gap:6px">${emblem(c.lg, "sm")}${esc(lgOf(c.lg).name)}, ${c.sn} · ${c.n} clubs</div><div class="fine">${ctx}</div></div></div>${body}</div>`;
 }
 function lockFinish() {
   const f = S.fin, c = f.cur, duo = f.mode === "duo"; c.guesses[f.turn] = c.guess; Snd.lock();
@@ -3588,7 +3809,7 @@ function endFinish() { const f = S.fin; f.phase = "done"; if (f.mode === "duo") 
 /* ================= Market value games ================= */
 const ordinal2 = (k) => k + (["th", "st", "nd", "rd"][k % 10 > 3 || (k > 10 && k < 14) ? 0 : k % 10]);
 function pvPair(scope) {
-  const pool = playerPool(scope, (p) => p.val >= 3000 && playerOK(p)), ratio = { easy: 3, medium: 1.8, hard: 1.35, elite: 1.1 }[S.diff];
+  const pool = playerPool(scope, (p) => p.val >= 3e6 && playerOK(p)), ratio = { easy: 3, medium: 1.8, hard: 1.35, elite: 1.1 }[S.diff];
   const seen = (S.vSeen = S.vSeen || []);
   for (let t = 0; t < 300; t++) { const a = rnd(pool), b = rnd(pool); if (a.id !== b.id && Math.max(a.val, b.val) / Math.min(a.val, b.val) >= ratio && (t > 200 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.vSeen = seen.slice(-60); return { a, b, win: a.val >= b.val ? "a" : "b", chosen: null }; } }
   return null;
@@ -3621,7 +3842,7 @@ function answerVH(kind, k) {
 /* ---------- Write your number: one or two players ---------- */
 function numItem(scope) {
   const used = (S.numSeen = S.numSeen || []);
-  if (Math.random() < 0.65) { let p; for (let k = 0; k < 30; k++) { p = rnd(playerPool(scope, (x) => x.val >= 5000 && playerOK(x))); if (!used.includes(p.id)) break; } used.push(p.id); return { type: "p", e: p, actual: p.val }; }
+  if (Math.random() < 0.65) { let p; for (let k = 0; k < 30; k++) { p = rnd(playerPool(scope, (x) => x.val >= 5e6 && playerOK(x))); if (!used.includes(p.id)) break; } used.push(p.id); return { type: "p", e: p, actual: p.val }; }
   const [n, f] = rnd(Object.entries(QZ.clubs).filter(([nm, fc]) => fc.value > 0 && (scope === "ALL" || fc.lg === scope))); return { type: "c", e: { n, f }, actual: f.value };
 }
 function renderValue() { if (S.num) return renderNumber(); if (S.vsolo) { S.vk = S.vk || rnd(["p", "c"]); return renderVH(S.vk); } renderNumber(); }
@@ -3656,24 +3877,24 @@ function lockNumber(timeout) {
 function endNumber() { const g = S.num; g.phase = "done"; if (g.mode === "duo") rankedEnd(g, g.scores); if (g.mode === "solo") { reward(25, "Write your number", null); } renderNumber(); }
 
 
-/* ================= Team roulette ================= */
+/* ================= Club roulette ================= */
 function rouClub() {
   const cnt = {}; QZ.players.forEach((p) => oursSet(p).forEach((c) => { if (CREST[c] && (S.code === "ALL" || (QZ.clubs[c] || {}).lg === S.code)) cnt[c] = (cnt[c] || 0) + 1; }));
   const list = Object.entries(cnt).filter(([, n]) => n >= 15).sort((a, b) => b[1] - a[1]), th = Math.ceil(list.length / 3);
   const slice = S.diff === "easy" ? list.slice(0, th) : S.diff === "medium" ? list.slice(0, 2 * th) : S.diff === "hard" ? list.slice(th) : list.slice(2 * th);
   return rnd(slice.length ? slice : list)[0];
 }
-function newRoulette() { trackPlay("Team roulette"); S.rou = { round: 0, rounds: 3, wins: [0, 0], phase: "play", used: [], names: [], msg: "" }; nextRoulette(); }
+function newRoulette() { trackPlay("Club roulette"); S.rou = { round: 0, rounds: 3, wins: [0, 0], phase: "play", used: [], names: [], msg: "" }; nextRoulette(); }
 function nextRoulette() { const r = S.rou; r.round++; r.club = rouClub(); r.used = []; r.names = []; r.turn = (r.round - 1) % 2; r.phase = "play"; r.msg = ""; renderRoulette(); }
 function renderRoulette() {
   const r = S.rou, who = ["Player 1", "Player 2"];
-  if (!r) { $("#room").innerHTML = modeIntro("Team roulette", "A team appears. Take turns naming players who played for it since 2001-02, with no repeats. A wrong name, a repeat or a timeout loses the round. First to win two rounds takes the match.", [
+  if (!r) { $("#room").innerHTML = modeIntro("Club roulette", "A club appears. Take turns naming players who played for it, with no repeats. A wrong name, a repeat or a timeout loses the round. First to win two rounds takes the match.", [
     { id: "rDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "rOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
-  if (r.phase === "done") { const w = r.wins[0] > r.wins[1] ? 0 : 1; $("#room").innerHTML = `<div class="card">${gamesBar("Team roulette")}${finale({ label: "Match over", verdict: esc(who[w]) + " wins!", players: r.wins.map((sc, k) => ({ name: who[k], score: sc })), winner: w, buttons: `<button class="btn" id="rAgain" type="button">Play again</button>` })}</div>`; return; }
+  if (r.phase === "done") { const w = r.wins[0] > r.wins[1] ? 0 : 1; $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}<div class="rcard on"><div class="label">Match over</div><div class="verdicts" style="margin-top:8px">${r.wins.map((s, i) => `<div class="vd ${w === i ? "ok" : "no"}"><span class="label">${who[i]}</span><b class="big2 num">${s}</b></div>`).join("")}</div><div class="row" style="margin-top:12px"><b>${who[w]} wins!</b><button class="btn" id="rAgain" type="button">Play again</button></div></div></div>`; return; }
   const head = `<div class="qhud"><span class="label">Round ${r.round} of ${r.rounds}</span>${r.wins.map((s, i) => `<span class="num qscore"><small>${who[i]}</small> <b>${s}</b></span>`).join("")}</div><div class="row" style="gap:14px;margin:6px 0">${badge(r.club, "xl")}<div><h3 style="font-size:30px">${esc(r.club)}</h3><div class="fine">Players who have played for this club</div></div></div><div class="sugs" style="margin:8px 0">${r.names.map((n) => `<span class="sug">${esc(n)}</span>`).join("") || '<span class="fine">No names yet</span>'}</div>`;
-  if (r.phase === "reveal") { const left = QZ.players.filter((p) => playedFor(p, r.club) && !r.used.includes(p.id)).slice(0, 8).map((p) => p.n); $("#room").innerHTML = `<div class="card">${gamesBar("Team roulette")}${head}<div class="rcard on"><b style="font-size:20px">${who[1 - r.loser]} wins the round</b><div class="fine">${who[r.loser]}: ${esc(r.why)}. ${r.bad && /never played/.test(r.why) ? `<button class="btn ghost" style="padding:4px 10px;font-size:12px" data-report="rou|${esc(r.bad.replace(/\|/g, "/"))}|${esc(r.why.replace(/\|/g, "/"))}" type="button">Report a wrong answer</button>` : ""}</div>${left.length ? `<div class="fine" style="margin-top:6px">Still available: ${esc(left.join(", "))}</div>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "rFinish" : "rNext"}" type="button">${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "See the result" : "Next round"}</button></div></div>`; return; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Team roulette")}${head}<div class="answerbox"><div class="row"><b>${who[r.turn]}, name a player</b></div><div class="row"><input id="rIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="rGuess" type="button">Play</button></div><div id="rSug" class="sugs"></div>${r.msg ? `<div class="fine">${esc(r.msg)}</div>` : ""}</div></div>`;
+  if (r.phase === "reveal") { const left = QZ.players.filter((p) => playedFor(p, r.club) && !r.used.includes(p.id)).slice(0, 8).map((p) => p.n); $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="rcard on"><b style="font-size:20px">${who[1 - r.loser]} wins the round</b><div class="fine">${who[r.loser]}: ${esc(r.why)}. ${r.bad && /never played/.test(r.why) ? `<button class="btn ghost" style="padding:4px 10px;font-size:12px" data-report="rou|${esc(r.bad.replace(/\|/g, "/"))}|${esc(r.why.replace(/\|/g, "/"))}" type="button">Report a wrong answer</button>` : ""}</div>${left.length ? `<div class="fine" style="margin-top:6px">Still available: ${esc(left.join(", "))}</div>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn" id="${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "rFinish" : "rNext"}" type="button">${r.wins[0] >= 2 || r.wins[1] >= 2 || r.round >= r.rounds ? "See the result" : "Next round"}</button></div></div>`; return; }
+  $("#room").innerHTML = `<div class="card">${gamesBar("Club roulette")}${head}<div class="answerbox"><div class="row"><b>${who[r.turn]}, name a player</b></div><div class="row"><input id="rIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="rGuess" type="button">Play</button></div><div id="rSug" class="sugs"></div>${r.msg ? `<div class="fine">${esc(r.msg)}</div>` : ""}</div></div>`;
   const i = $("#rIn"); if (i) i.focus();
 }
 function rouSubmit(pickId) {
@@ -3830,7 +4051,7 @@ function xiGuess() {
 function editOne(a, b) { if (a === b) return true; let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1); if (a.length + 1 === b.length) return a.slice(i) === b.slice(i + 1); if (b.length + 1 === a.length) return a.slice(i + 1) === b.slice(i); return false; }
 function endXI() { const x = S.xi; if (!x || x.phase === "done") return; x.phase = "done"; clearInterval(x.timer); const n = x.found.size; if (n === 11) { Snd.win(); confetti(); } else Snd.whistle(); reward(5 + n * 3 + (n === 11 ? 20 : 0), "Starting XI", (p) => { if (n === 11) unlock(p, "xi_perfect"); }); Board.submit({ game: "xi", league: "all", score: Math.min(1000, xiScore(x)) }); renderXI(); }
 
-/* ================= Basketball tic-tac-toe ================= */
+/* ================= Football tic-tac-toe ================= */
 const POSNAME = { Goalkeeper: "Goalkeepers", Defender: "Defenders", Midfield: "Midfielders", Attack: "Attackers" };
 const LGLABEL = { E0: "Plays in the Premier League", D1: "Plays in the Bundesliga", SP1: "Plays in La Liga", I1: "Plays in Serie A", F1: "Plays in Ligue 1" };
 /* Categories come in families (club, nationality, honours, ...). Every game offers twelve categories from twelve DIFFERENT families, one version of each,
@@ -3901,7 +4122,7 @@ function tttOptions(scope) {
   return { pool, opts: shuffle(best) };
 }
 const TTT_ORDER = [0, 1, 0, 1, 0, 1];
-function newTTT(mode, series) { trackPlay("Basketball tic-tac-toe");
+function newTTT(mode, series) { trackPlay("Football tic-tac-toe");
   let o = tttOptions(S.code); const was = S.diff, order = ["easy", "medium", "hard", "elite"];
   for (let i = order.indexOf(was) + 1; !o && i < order.length; i++) { S.diff = order[i]; o = tttOptions(S.code); if (o) toast("Not enough easy players in this league, so the grid uses a wider pool."); }
   S.diff = was; if (!o) { toast("Could not build categories for this league. Try All leagues."); return; }
@@ -3921,7 +4142,7 @@ const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8],
 const tttWin = (cells) => { for (const l of LINES) { const [a, b, c] = l; if (cells[a] != null && cells[a] === cells[b] && cells[b] === cells[c]) return { who: cells[a], line: l }; } return null; };
 function catHead(c, cls = "") { return `<div class="tcat ${cls}">${c.icon || ""}<span>${esc(c.label)}</span></div>`; }
 function renderTTT() {
-  const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Basketball tic-tac-toe", "Every row and column is a basketball category. Name a player who fits both to claim the square. No repeats, and a wrong answer loses your turn. Three in a row wins.", [
+  const t = S.ttt; if (!t) { $("#room").innerHTML = modeIntro("Football tic-tac-toe", "Every row and column is a football category. Name a player who fits both to claim the square. No repeats, and a wrong answer loses your turn. Three in a row wins.", [
     { id: "ttDuo", t: "Two players, one device", d: "Take turns on the same screen." },
     { id: "ttOnline", t: "Two players, two devices", d: "Play a friend from your own device, with a four-letter room code." }]); return; }
     const who = t.mode === "solo" ? ["You", "Computer"] : ["Player 1", "Player 2"], mark = ["X", "O"];
@@ -3931,7 +4152,7 @@ function renderTTT() {
   const sr = t.series ? ` · Best of 3, game ${t.series.n}, score ${t.series.w[0]}-${t.series.w[1]}` : "", sWin = t.series ? t.series.w.findIndex((x) => x >= 2) : -1;
   const status = (t.phase === "over" ? (t.winner === "draw" ? "It's a draw." : `${who[t.winner.who !== undefined ? t.winner.who : t.winner]} wins${sWin >= 0 ? " the series" : ""}!`) : `${who[t.turn]} (${mark[t.turn]}) to play`) + sr;
   const panel = t.sel != null && t.phase === "play" ? `<div class="answerbox"><div class="row"><b>Name a player who fits both: <u>${esc(g.rows[Math.floor(t.sel / 3)].label)}</u> and <u>${esc(g.cols[t.sel % 3].label)}</u></b></div><div class="row"><input id="tIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Type a player" aria-label="Player"><button class="btn" id="tGuess" type="button">Play</button><button class="btn ghost" id="tCancel" type="button">Cancel</button></div><div id="tSug" class="sugs"></div></div>` : "";
-  $("#room").innerHTML = `<div class="card">${gamesBar("Basketball tic-tac-toe")}<div class="qhud"><span class="label">${status}</span></div>
+  $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">${status}</span></div>
     <div class="tgrid"><div class="tcorner"></div>${g.cols.map(catHead).join("")}${[0, 1, 2].map((r) => catHead(g.rows[r], "rowh") + [0, 1, 2].map((c) => cells.split("</button>").slice(0, 9)[r * 3 + c] + "</button>").join("")).join("")}</div>
     ${t.msg ? `<div class="fine" style="margin-top:8px">${esc(t.msg)}${t.rep ? ` <button class="btn ghost" style="padding:4px 10px;font-size:12px" data-report="ttt|${esc(t.rep.replace(/\|/g, "/"))}|${esc(t.repLab.replace(/\|/g, "/"))}" type="button">Report a wrong answer</button>` : ""}</div>` : ""}${panel}${t.phase === "over" ? `<div class="row" style="margin-top:12px">${t.series && sWin < 0 ? `<button class="btn" id="ttNext" type="button">${t.winner === "draw" ? "Replay this game" : "Next game"}</button>` : `<button class="btn" id="ttAgain" type="button">${t.series ? "New series" : "Rematch"}</button>`}<button class="btn ghost" id="ttCard" type="button">Make a result card</button></div>` : ""}</div>`;
   const i = $("#tIn"); if (i) i.focus();
@@ -3941,7 +4162,7 @@ function renderDraft(t, who, mark) {
   const left = 3 - t.picks[t.turn].length, role = t.turn === 0 ? "a row" : "a column";
   const tiles = t.opts.map((c) => { const d = done(c); return `<button type="button" class="tdr ${d >= 0 ? "taken " + (d ? "o" : "x") : ""}" data-dr="${esc(c.id)}" ${d >= 0 || locked ? "disabled" : ""}><span class="tdi">${c.icon || ""}</span><b>${esc(c.label)}</b><small>${esc(FAMNAME[c.fam] || "")}</small>${d >= 0 ? `<i class="tdm">${mark[d]}</i>` : ""}</button>`; }).join("");
   const chips = (i) => t.picks[i].map((c) => `<span class="chip2">${esc(c.label)}</span>`).join("") || '<span class="fine">none yet</span>';
-  $("#room").innerHTML = `<div class="card">${gamesBar("Basketball tic-tac-toe")}<div class="qhud"><span class="label">Pick the categories${t.series ? ` · Best of 3, game ${t.series.n}, score ${t.series.w[0]}-${t.series.w[1]}` : ""}</span>${t.step === 0 && !(t.series && t.series.n > 1) ? `<button type="button" class="chip" id="ttBo3" aria-pressed="${!!S.tttBo3}">Best of 3</button>` : ""}</div>
+  $("#room").innerHTML = `<div class="card">${gamesBar("Football tic-tac-toe")}<div class="qhud"><span class="label">Pick the categories${t.series ? ` · Best of 3, game ${t.series.n}, score ${t.series.w[0]}-${t.series.w[1]}` : ""}</span>${t.step === 0 && !(t.series && t.series.n > 1) ? `<button type="button" class="chip" id="ttBo3" aria-pressed="${!!S.tttBo3}">Best of 3</button>` : ""}</div>
     <p class="sub" style="margin:6px 0 12px"><b>${who[t.turn]} (${mark[t.turn]})</b>: pick ${role}${locked ? "…" : ""} (${left} left to pick). Take turns. X's three picks become the rows, O's three the columns. Every pick works with every other one, so every square can be won.</p>
     <div class="tdraft">${tiles}</div>
     <div class="tdsum"><div><span class="label">Rows (X)</span><div class="row" style="gap:6px;margin-top:4px">${chips(0)}</div></div><div><span class="label">Columns (O)</span><div class="row" style="gap:6px;margin-top:4px">${chips(1)}</div></div></div></div>`;
@@ -3969,7 +4190,7 @@ function computerMove() {
   if (miss || !valid.length) { t.msg = "The computer could not think of one. Your turn."; Snd.wrong(); t.turn = 0; renderTTT(); return; }
   const p = rnd(valid.slice(0, Math.max(3, Math.ceil(valid.length / 2)))); t.cells[move] = 1; (t.names || (t.names = {}))[move] = p.n.split(" ").slice(-1)[0]; (t.pl || (t.pl = {}))[move] = p; t.used.add(p.id); t.msg = `The computer plays ${p.n}.`; Snd.tick(); endTurn();
 }
-function finishTTT() { const t = S.ttt; if (t.mode === "duo") { const sc = t.winner === "draw" ? [0, 0] : t.winner.who === 0 ? [1, 0] : [0, 1]; setTimeout(() => duoResult(sc, "Basketball tic-tac-toe"), 900); } if (t.series && t.winner !== "draw" && t.winner) { t.series.w[t.winner.who]++; } if (t.mode === "duo") rankedEnd(t, t.winner === "draw" ? [0, 0] : t.winner.who === 0 ? [1, 0] : [0, 1]); const won = t.mode === "solo" && t.winner && t.winner.who === 0; reward(20 + (won ? 40 : 0), "Basketball tic-tac-toe", (p) => { if (won) unlock(p, "tttwin"); }); if (won) Board.submit({ game: "ttt", league: S.code === "ALL" ? "all" : S.code, score: 1 }); }
+function finishTTT() { const t = S.ttt; if (t.mode === "duo") { const sc = t.winner === "draw" ? [0, 0] : t.winner.who === 0 ? [1, 0] : [0, 1]; setTimeout(() => duoResult(sc, "Football tic-tac-toe"), 900); } if (t.series && t.winner !== "draw" && t.winner) { t.series.w[t.winner.who]++; } if (t.mode === "duo") rankedEnd(t, t.winner === "draw" ? [0, 0] : t.winner.who === 0 ? [1, 0] : [0, 1]); const won = t.mode === "solo" && t.winner && t.winner.who === 0; reward(20 + (won ? 40 : 0), "Football tic-tac-toe", (p) => { if (won) unlock(p, "tttwin"); }); if (won) Board.submit({ game: "ttt", league: S.code === "ALL" ? "all" : S.code, score: 1 }); }
 
 
 
@@ -4021,7 +4242,7 @@ const Net = {
   open(code) {
     this.close(); this.code = code; this.seen = new Set(); this.welcomed = false; this.since = Date.now();
     try { this.bc = new BroadcastChannel("btm-" + code); this.bc.onmessage = (e) => this.recv(e.data); } catch (e) { this.bc = null; }
-    this.mq = BROKERS.map((u) => mqttConnect(u, "ballknowledge/nba/v1/" + code, (m) => this.recv(m), (up) => this.onLink(up)));
+    this.mq = BROKERS.map((u) => mqttConnect(u, "ballknowledge/v1/" + code, (m) => this.recv(m), (up) => this.onLink(up)));
     this.sti = setInterval(() => this.paintStatus(), 1000);
   },
   onLink(up) { this.paintStatus(); if (up && this.role === "guest" && this.welcomed) { this.send({ k: "hello", uid: Account.signedIn ? Account.session.user.id : null, nick: prof().nick || "", card: Vs.me() }); toast("Reconnected"); } else if (!up && this.role && (this.started || this.welcomed) && !this.linked()) toast("Connection lost. Reconnecting…"); },
@@ -4228,6 +4449,8 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.id === "rkSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.id === "rkQuick") { qmStart(); return; }
+  if (b.dataset.hgame) { Snd.tick(); S.code = "ALL"; go("games-" + SLUG["ALL"] + "-" + b.dataset.hgame); return; }
+  if (b.dataset.groupGo) { Snd.tick(); S.code = "ALL"; S.hubGroup = b.dataset.groupGo; S.game = null; go("games-" + SLUG["ALL"] + "-" + b.dataset.groupGo); return; }
   if (b.id === "rkCreate") { rankedStart($("#rkGame").value, $("#rkDiff").value, $("#rkVis").value === "pub"); return; }
   if (b.id === "rkJoinCode") { const c = ($("#rkCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { toast("Type the 4-letter code"); return; } Snd.tick(); toast("Joining… the host's game appears when it connects"); resetGames(); S.rk = true; S.hubGroup = "ranked"; S.game = "ttt"; renderRoom(); openOnline("ttt"); joinRoomCode(c); return; }
   if (b.dataset.rkjoin) { const [c, g] = b.dataset.rkjoin.split("|"); Snd.tick(); rankedJoin(c, g); return; }
@@ -4247,7 +4470,7 @@ document.addEventListener("click", (e) => {
   if (b.dataset.lvd) { Live.days = +b.dataset.lvd; Snd.tick(); renderLive(); return; }
   if (b.id === "lvSign") { Account.available ? authForm("up") : openProfile(); return; }
   if (b.dataset.lvp) { const [id, k] = b.dataset.lvp.split("|"); if (!Account.signedIn) { toast("Sign in to lock your picks"); Account.available ? authForm("up") : openProfile(); return; } Snd.lock(); Ranked.rpc("predict", { p_fixture: id, p_pick: k }).then((r) => { if (r === "ok") { const f = Live.fx.find((x) => x.id === id), first = f && !f.my_pick; const p = prof(); if (first) { p.preds = (p.preds || 0) + 1; unlock(p, "pred1"); if (p.preds >= 10) unlock(p, "pred10"); saveProf(p); } loadLive(); } else toast(r === "closed" ? "Kickoff has passed" : "Could not save the pick"); }); return; }
-  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); if (k === "mascot" || (k === "mascot_mode" && v !== "off")) setTimeout(() => Mascot.hello(), 50); if (k === "outfit") setTimeout(() => { outfitPaint(); Mascot.react("achieve", true); }, 50); if (k === "mascot_mode" && v === "off") setTimeout(() => Mascot.dock(), 50); try { localStorage.setItem("bkn_" + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
+  if (b.dataset.ap) { const [k, v] = b.dataset.ap.split("|"); if (k === "mascot" || (k === "mascot_mode" && v !== "off")) setTimeout(() => Mascot.hello(), 50); if (k === "outfit") setTimeout(() => { outfitPaint(); Mascot.react("achieve", true); }, 50); if (k === "mascot_mode" && v === "off") setTimeout(() => Mascot.dock(), 50); try { localStorage.setItem("bk_" + k, v); } catch (e) { /* blocked */ } try { const pf = prof(); pf.look = { ...(pf.look || {}), [k]: v }; saveProf(pf); } catch (e) { /* profile not ready */ } applyAppearance(); Snd.tick(); renderProfilePage(); return; }
   if (b.dataset.chal) { Snd.tick(); challengeModal(b.dataset.chal); return; }
   if (b.id === "chGo") { const g = $("#chGame").value, d = $("#chDiff").value, nick = b.dataset.nick; closeModal(); rankedStart(g, d, false); const link = inviteLink(Net.code, g), msg = `${nick}, join my ballknowledge room: ${link}`; try { navigator.clipboard.writeText(msg).then(() => toast("Invite link copied. Send it to " + esc(nick))); } catch (e) { toast("Copy the link from the room screen"); } try { if (navigator.share) navigator.share({ title: "ballknowledge", text: msg, url: link }).catch(() => {}); } catch (e) { /* not supported */ } return; }
   if (b.id === "pfShare") { const p = prof(), lv = levelOf(p.xp), signed = Account.signedIn && Board.mode === "rest", fav = QZ.players.find((x) => x.id === +p.favP); showCard("record", { lg: p.favT ? (QZ.clubs[p.favT] || {}).lg || "ALL" : "ALL", title: p.nick || "My profile", big: signed ? `${Ranked.elo} Elo` : lv.name, sub: `${signed ? rankOf(Ranked.elo).name + " · " : ""}${lv.name} · ${p.xp} XP`, tiles: [[`${Object.keys(p.ach).length}/${ACH.length}`, "achievements"], [String(dayStreak(p)), "day streak"], [String(Object.keys(p.stickers || {}).length), "stickers"]], line: fav ? `Favourite player: ${fav.n}${p.favT ? " · " + p.favT : ""}` : p.favT ? `Favourite team: ${p.favT}` : "Think you know more football than me?", share: `My ballknowledge profile: ${signed ? Ranked.elo + " Elo, " : ""}${Object.keys(p.ach).length} achievements. Think you know more?` }); return; }
@@ -4261,7 +4484,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "searchBtn") { openSearch(); return; }
   if (b.id === "lvStay") { closeModal(); return; }
   if (b.id === "lvLeave") { closeModal(); const cb = window.__leaveCb; window.__leaveCb = null; resetGames(); Q.s = null; if (cb) cb(); return; }
-  if (b.dataset.how) { const s = howSeen(); s[b.dataset.how] = 1; try { localStorage.setItem("bkn_howto", JSON.stringify(s)); } catch (e) { /* blocked */ } const bx = $("#howto"); if (bx) { bx.hidden = true; bx.innerHTML = ""; } Snd.tick(); return; }
+  if (b.dataset.how) { const s = howSeen(); s[b.dataset.how] = 1; try { localStorage.setItem("bk_howto", JSON.stringify(s)); } catch (e) { /* blocked */ } const bx = $("#howto"); if (bx) { bx.hidden = true; bx.innerHTML = ""; } Snd.tick(); return; }
   if (b.id === "howBtn") { Snd.tick(); paintHowto(true); const bx = $("#howto"); if (bx) bx.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
   if (b.id === "backBtn") { goBack(); return; }
   if (b.dataset.crumb) { crumbGo(b.dataset.crumb); return; }
@@ -4275,7 +4498,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "d2In") { const m = ($("#d2Mail").value || "").trim(), pw = $("#d2Pw").value || ""; if (!m || !pw) { $("#d2Msg").textContent = "Enter the email and password."; return; } $("#d2Msg").textContent = "Signing in…"; Dual.signIn(m, pw).then((r) => { if (r.ok) { $("#d2Pw") && ($("#d2Pw").value = ""); renderRanked(); } else $("#d2Msg") && ($("#d2Msg").textContent = r.error); }); return; }
   if (b.id === "d2Out") { Dual.out(); renderRanked(); return; }
   if (b.id === "d2Go") { const g = $("#d2Game").value; resetGames(); S.dual = true; Dual.game = g; S.hubGroup = "ranked"; S.rk = true; S.game = g === "who" || g === "career" || g === "club" || g === "blur" || g === "scramble" || g === "ttt" ? g : "ttt"; Net.lastRef = null; if (g === "ttt") { renderRoom(); newTTT("duo"); } else { S.game = g; renderRoom(); newQuiz(g, "duo", S.code || "ALL"); nextRound(); } return; }
-  if (b.dataset.lang) { try { localStorage.setItem("bkn_lang", b.dataset.lang); } catch (e) { /* blocked */ } applyLang(b.dataset.lang); renderSettings(); applyLang(b.dataset.lang); Snd.tick(); return; }
+  if (b.dataset.lang) { try { localStorage.setItem("bk_lang", b.dataset.lang); } catch (e) { /* blocked */ } applyLang(b.dataset.lang); renderSettings(); applyLang(b.dataset.lang); Snd.tick(); return; }
   if (b.dataset.snd != null) { Snd.setLevel(+b.dataset.snd); renderSettings(); Snd.right(); return; }
   if (b.dataset.mus != null) { Snd.setMusic(+b.dataset.mus); renderSettings(); Snd.tick(); return; }
   if (b.id === "profileBtn" && !(Account.signedIn || Account.claude) && Account.available) { Snd.tick(); authForm("in"); return; }
@@ -4310,7 +4533,9 @@ document.addEventListener("click", (e) => {
   if (b.dataset.vote) { Ranked.rpcx("vote_idea", { p_id: +b.dataset.vote }).then((r) => { if (!r.ok) toast("Vote not saved. " + r.why); else if (r.data === "auth") toast("Sign in to vote"); else loadIdeas(); }); return; }
   if (b.dataset.ideast) { const [id, st] = b.dataset.ideast.split("|"); Ranked.rpcx("admin_set_idea", { p_id: +id, p_status: st }).then(() => loadIdeas()); return; }
   if (b.id === "vtag") { showWhatsNew(); return; }
-  if (b.id === "wkPlay") { Snd.tick(); resetGames(); S.game = "challenge"; S.hubGroup = "model"; S.cur = null; S.chal = { code: "wk" + weekId(), c: "ALL", weekly: true }; renderRoom(); return; }
+  if (b.id === "wkPlay") { Snd.tick(); S.hubGroup = "weekly"; S.game = null; go("games-" + SLUG[S.code] + "-weekly"); return; }
+  if (b.dataset.wkadj) { const [id, side, d] = b.dataset.wkadj.split("|"); return wkAdj(id, side, +d); }
+  if (b.dataset.wklg) { WK.lg = b.dataset.wklg; document.querySelectorAll("[data-wklg]").forEach((x) => x.setAttribute("aria-pressed", x === b)); return wkPaintList(); }
   if (b.id === "chNew") { S.chal = { code: newCode() }; Snd.tick(); renderChallenge(); return; }
   if (b.id === "chJoin") { const v = ($("#chCode").value || "").trim().toLowerCase(); if (/^[a-z0-9]{4,10}$/.test(v)) { S.chal = { code: v }; Snd.tick(); renderChallenge(); } return; }
   if (b.dataset.cfix) { const [lg, sn, i] = b.dataset.cfix.split("|"); Snd.tick(); open(lg, sn, +i, "chal", `x_${S.chal.code}_${lg}_${sn}_${i}`); return; }
@@ -4400,7 +4625,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "ttAgain") { newTTT(S.ttt.mode); return; }
   if (b.id === "ttNext") { const s = S.ttt.series; newTTT(S.ttt.mode, s ? { w: s.w.slice(), n: S.ttt.winner === "draw" ? s.n : s.n + 1 } : null); return; }
   if (b.id === "ttBo3") { if (Net.role === "guest") return; S.tttBo3 = !S.tttBo3; if (S.ttt && S.ttt.phase === "draft" && S.ttt.step === 0) S.ttt.series = S.tttBo3 ? { w: [0, 0], n: 1 } : null; renderTTT(); return; }
-  if (b.id === "ttCard") { const t = S.ttt, w = t.winner === "draw" ? "Draw" : (t.mode === "solo" ? (t.winner.who === 0 ? "I won" : "Computer won") : `Player ${t.winner.who + 1} won`); showCard("quiz", { lg: S.code, title: "Basketball tic-tac-toe", big: w, sub: t.mode === "solo" ? "against the computer" : "two players", line: "Name a player who fits.", share: `ballknowledge, Basketball tic-tac-toe: ${w}.`, tiles: [[String(t.used.size), "players used"], [S.code === "ALL" ? "All 5" : S.code, "league"], [t.mode, "mode"]] }); return; }
+  if (b.id === "ttCard") { const t = S.ttt, w = t.winner === "draw" ? "Draw" : (t.mode === "solo" ? (t.winner.who === 0 ? "I won" : "Computer won") : `Player ${t.winner.who + 1} won`); showCard("quiz", { lg: S.code, title: "Football tic-tac-toe", big: w, sub: t.mode === "solo" ? "against the computer" : "two players", line: "Name a player who fits.", share: `ballknowledge, Football tic-tac-toe: ${w}.`, tiles: [[String(t.used.size), "players used"], [S.code === "ALL" ? "All 5" : S.code, "league"], [t.mode, "mode"]] }); return; }
   if (b.id === "holNext") { S.hol = null; Snd.tick(); renderHol(); return; }
   if (b.id === "goStar") { const st = lgOf(S.code).star, f = freshPool(S.code).filter((r) => r.m[1] === st.club || r.m[2] === st.club); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
   if (b.id === "goRandom") { const f = freshPool(S.code); if (f.length) { const r = f[Math.floor(Math.random() * f.length)]; Snd.tick(); open(r.c, r.season, r.i); } return; }
@@ -4418,7 +4643,7 @@ document.addEventListener("click", (e) => {
   if (b.id === "lbToggle") { toggleBoard(); return; }
 });
 function resetGames() { if (Net.role) { if (Net.role === "host") Net.send({ k: "end" }); Net.close(); } stopQuiz(); Q.s = null; S.fin = null; S.pv = null; S.cv = null; S.pvStreak = 0; S.cvStreak = 0; S.num = null; S.ttt = null; S.vsolo = false; S.vStreak = 0; S.vk = null; S.vSeen = []; S.numSeen = []; S.rou = null; if (S.xi) clearInterval(S.xi.timer); S.xi = null; S.ic = null; S.dual = false; if (S.rp) clearInterval(S.rp.timer); S.rp = null; S.bb = null; }
-document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-diff]"); if (!b) return; S.diff = b.dataset.diff; try { localStorage.setItem("bkn_diff", S.diff); } catch (err) { /* storage blocked */ } document.querySelectorAll("[data-diff]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.diff === S.diff)); const n = $("#diffNote"); if (n) n.textContent = DIFFNOTE[S.diff]; Snd.tick(); });
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-diff]"); if (!b) return; S.diff = b.dataset.diff; try { localStorage.setItem("bk_diff", S.diff); } catch (err) { /* storage blocked */ } document.querySelectorAll("[data-diff]").forEach((x) => x.setAttribute("aria-pressed", x.dataset.diff === S.diff)); const n = $("#diffNote"); if (n) n.textContent = DIFFNOTE[S.diff]; Snd.tick(); });
 document.addEventListener("input", (e) => { if (e.target.id === "finRange" && S.fin && S.fin.cur) { S.fin.cur.guess = +e.target.value; const v = $("#finVal"); if (v) v.textContent = ordn(S.fin.cur.guess); } });
 document.addEventListener("input", (e) => { if (e.target.id === "admQ") { clearTimeout(window.__admT); window.__admT = setTimeout(() => { Admin.q = e.target.value; loadAdminUsers(); }, 300); } });
 document.addEventListener("input", (e) => { if (e.target.id === "pfPlayer") { const box = $("#pfPSug"), list = suggestions(e.target.value, QZ.players, (x) => x.n); box.innerHTML = list.map((x) => `<button type="button" class="sug" data-favp="${x.id}"><span>${esc(x.n)}</span><small>${esc(x.club || "")}</small></button>`).join(""); } });
@@ -4449,929 +4674,6 @@ document.addEventListener("mouseover", (e) => {
 document.addEventListener("mouseout", (e) => { if (!e.relatedTarget || !lastHov || !lastHov.contains(e.relatedTarget)) lastHov = null; });
 addEventListener("beforeunload", (e) => { if (inMatch()) { e.preventDefault(); e.returnValue = ""; } });
 addEventListener("hashchange", () => pageTo(() => route()));
-
-/* =====================================================================================================================
-   ballknowledge BASKETBALL overlay. Injected by src/63_build_nba_arena.py into site/nba_template.html just before the site boots.
-   It replaces or extends the football code above it (same single-page engine: accounts, online rooms, difficulty, buzzers).
-   Data rules: only what the box scores (2001-02 on) and Wikidata really say. Nothing is guessed.
-   ===================================================================================================================== */
-const SPORT = "nba";
-const COVER = "2001-02";                                   // the box scores start with this season, so every "career" fact says "since 2001-02"
-const ftIn = (cm) => { const i = Math.round(cm / 2.54); return `${Math.floor(i / 12)} ft ${i % 12} in`; };
-Object.assign(POSICON, { Guard: "<svg class=ic><use href=#i-gear></use></svg>", Forward: "<svg class=ic><use href=#i-shield></use></svg>", Center: "<svg class=ic><use href=#i-ball></use></svg>" });
-Object.assign(POSNAME, { Guard: "Guards", Forward: "Forwards", Center: "Centers" });
-const AWN = { MVP: "NBA MVP", FMVP: "Finals MVP", DPOY: "Defensive Player of the Year", ROY: "Rookie of the Year", "6MOY": "Sixth Man of the Year", MIP: "Most Improved Player" };
-const ordSeason = (s) => s;                                  // "2011-12" is already how fans write a season
-const POSLONG = (p) => (p.sub || p.pos || "player").toLowerCase();
-const natOf = (p) => p.nat || "";
-/* the data files every season under today's franchise name; in text that names a season, use the name the team had then
-   (Ray Allen's 2006-07 was with the Seattle SuperSonics, not the Thunder) */
-const nbEra = (team, season) => { const y = +String(season || "").slice(0, 4); if (!y) return team; if (team === "Thunder" && y < 2008) return "SuperSonics"; if (team === "Pelicans" && y < 2013) return "Hornets"; if (team === "Hornets" && y >= 2004 && y < 2014) return "Bobcats"; return team; };
-const nbSeasonOf = (d) => { const t = new Date(d); return isNaN(t) ? "" : String(t.getUTCMonth() >= 7 ? t.getUTCFullYear() : t.getUTCFullYear() - 1); };
-const nbEraSpan = (team, from, to) => { const a = nbEra(team, from), b = nbEra(team, to); return a === b ? a : `${a}/${b}`; };
-const bestLine = (b, unit) => (b ? `${b.avg} ${unit} a game in ${b.season} (${nbEra(b.team, b.season)})` : "");
-const PLAYOFF_ROUND = ["Missed the playoffs", "Lost in the first round", "Lost in the second round", "Lost in the conference finals", "Reached the NBA Finals but lost", "Won the NBA title"];
-
-/* ---------- clue ladders, hardest first ---------- */
-function playerClues(p) {
-  const a = ageOf(p), prevT = (p.cr && p.cr.length ? p.cr.filter(([t]) => !sameClub(t, p.club)).map(([t, f, to]) => ({ t, n: nbEraSpan(t, f, to) })) : p.hist.filter((c) => !sameClub(c, p.club)).map((t) => ({ t, n: t }))).filter((c, i, arr) => arr.findIndex((x) => x.n === c.n) === i).slice(-3), prev = prevT.map((x) => x.n), cl = [];
-  if (p.city || p.bc) cl.push(["Birthplace", `Born in ${p.city ? p.city + (p.bc && p.bc !== p.city ? ", " + p.bc : "") : p.bc}`, flagOf(p.bc || p.nat)]);
-  if (p.h) cl.push(["Height", `${ftIn(p.h)} tall (${Math.round(p.h)} cm)`]);
-  cl.push(["Age", `${a} years old (born ${p.dob.slice(0, 4)})`]);
-  if (p.bp && p.bp.avg >= 10) cl.push(["Scoring", `Best scoring season since ${COVER}: ${bestLine(p.bp, "points")}`]);
-  if (p.br && p.br.avg >= 6) cl.push(["Rebounding", `Best rebounding season since ${COVER}: ${bestLine(p.br, "rebounds")}`]);
-  if (p.ba && p.ba.avg >= 4.5) cl.push(["Passing", `Best passing season since ${COVER}: ${bestLine(p.ba, "assists")}`]);
-  if (p.pts >= 5000) cl.push(["Career", `${p.pts.toLocaleString("en-US")} points, ${p.reb.toLocaleString("en-US")} rebounds and ${p.ast.toLocaleString("en-US")} assists since ${COVER}`]);
-  if ((p.aw || []).length) cl.push(["Awards", `Won ${Object.entries(p.aw.reduce((m, [k, s]) => { (m[k] = m[k] || []).push(s); return m; }, {})).map(([k, v]) => `${AWN[k]} (${v.join(", ")})`).join("; ")}`, "<svg class=ic><use href=#i-medal></use></svg>"]);
-  if ((p.ti || []).length) cl.push(["Titles", `NBA champion ${p.ti.length > 1 ? p.ti.length + " times" : "once"}: ${p.ti.map((t) => `${nbEra(t.team, t.season)} ${t.season}`).join(", ")}`, "<svg class=ic><use href=#i-trophy></use></svg>"]);
-  cl.push(["Position", `${p.sub || p.pos}`, POSICON[p.pos] || ""]);
-  cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
-  if (prev.length) cl.push(["Earlier teams", `Previously with ${prev.join(", ")}`, prevT.map((x) => clubBadgeFor(x.t, "sm")).join("")]);
-  if (p.club) cl.push(["Team", `${p.active ? "Plays for" : "Last team:"} ${p.club}`, clubBadgeFor(p.club, "sm")]);
-  cl.push(["Name", `${p.n.split(" ").length} word${p.n.split(" ").length > 1 ? "s" : ""}, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
-  return cl;
-}
-function careerClues(p) {
-  const cl = [], seen = [];
-  p.cr.forEach(([team, from, to], i) => cl.push([i === 0 ? "Started" : `Move ${i}`, i === 0 ? `Career began with the ${nbEraSpan(team, from, to)}` : `Then the ${nbEraSpan(team, from, to)}`, clubBadgeFor(team, "sm")]));
-  cl.push(["Age", `${ageOf(p)} years old`]); cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]); cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
-  cl.push(["Name", `Starts with ${p.n[0]}, ${p.n.replace(/ /g, "").length} letters`]);
-  return cl;
-}
-function clubClues(e) {
-  const r = e.row, f = QZ.clubs[e.n] || {}, cl = [], po = r[7] | 0;
-  cl.push(["Defence", `Allowed ${r[3].toFixed(1)} points a game in ${e.season}`]); cl.push(["Attack", `Scored ${r[2].toFixed(1)} points a game`]); cl.push(["Record", `${r[4]} wins and ${r[6]} losses`]);
-  cl.push(["Ranking", `Ended ${ordn(e.pos)} of ${lgOf(e.lg).tables[e.season].length} teams by wins`]);
-  cl.push(["Playoffs", PLAYOFF_ROUND[po] || PLAYOFF_ROUND[0], "<svg class=ic><use href=#i-trophy></use></svg>"]);
-  if (f.titles) cl.push(["Titles", `${f.titles} NBA title${f.titles === 1 ? "" : "s"} since ${COVER}`]);
-  if (f.loc) cl.push(["City", `Based in ${f.loc}`]);
-  cl.push(["Name", `${e.n.replace(/ /g, "").length} letters, starts with ${e.n[0]}`]);
-  return cl;
-}
-function scrambleClues(r) {
-  const name = r.kind === "player" ? r.p.n : r.e.n, words = name.split(/\s+/), kindWord = r.kind === "player" ? "an NBA player" : "an NBA team";
-  const pattern = words.map((w) => [...w.replace(/[^\p{L}'-]/gu, "")].map(() => "_").join(" ")).join("    "), first = words.map((w) => w[0].toUpperCase()).join(" ");
-  const extra = r.kind === "player" ? `${r.p.nat ? r.p.nat + " " : ""}${POSLONG(r.p)}` : `based in ${(QZ.clubs[r.e.n] || {}).loc || "the USA"}`;
-  return [["Letters", r.scr], ["It is…", kindWord], ["Shape", pattern], ["Starts with", first], ["Extra hint", extra]];
-}
-QDEF.scramble.mk = (scope) => {
-  const kind = rnd(["player", "player", "club"]);
-  if (kind === "player") { const p = rnd(playerPool(scope, (q) => q.hist.length >= 2 && playerOK(q))); return { kind, p, scr: scrambleName(p.n) }; }
-  const names = clubList(scope).filter((c) => clubOK(c.n)), c = rnd(names.length ? names : clubList(scope)); return { kind, e: { n: c.n, lg: c.lg }, scr: scrambleName(c.n) };
-};
-QDEF.career.mk = (scope) => ({ p: rnd(playerPool(scope, (p) => !p.partial && p.cr.length >= 3 && playerOK(p))) });
-QDEF.who.mk = (scope) => ({ p: rnd(playerPool(scope, (p) => p.hist.length >= 2 && playerOK(p))) });   // legends count too, otherwise Easy had only 30 players
-QDEF.club.name = "Name that team"; QDEF.blur.name = "Logo blur";
-
-/* ---------- tic-tac-toe categories: only facts the data really holds ---------- */
-const NBA_TEAMS_FULL = () => Object.keys(QZ.clubs);
-function tttCategories(pool, scope) {
-  const F = {}, add = (c) => { (F[c.fam] || (F[c.fam] = [])).push(c); }, count = (f) => pool.filter(f).length;
-  const teams = {}, nats = {}; pool.forEach((p) => { new Set(p.hist).forEach((c) => { teams[c] = (teams[c] || 0) + 1; }); if (p.nat) nats[p.nat] = (nats[p.nat] || 0) + 1; });
-  Object.entries(teams).filter(([c, n]) => n >= 25 && CREST[c]).forEach(([c]) => add({ id: "club:" + c, fam: "club", label: `Played for the ${c}${({ Thunder: " (or SuperSonics)", Pelicans: " (or New Orleans Hornets)", Hornets: " (or Bobcats)" })[c] || ""}`, icon: badge(c, "md"), test: (p) => p.hist.includes(c) }));   /* the franchise counts under its old names too, and the label says so */
-  Object.entries(nats).filter(([n, v]) => v >= 8 && n !== "United States").forEach(([n]) => add({ id: "nat:" + n, fam: "nat", label: `${n} players`, icon: `<span class="cflag">${flagOf(n) || "<svg class=ic><use href=#i-globe></use></svg>"}</span>`, test: (p) => p.nat === n }));
-  const usa = (p) => p.nat === "United States", abroad = (p) => p.nat && p.nat !== "United States";
-  if (count(usa) >= 60) add({ id: "nat:usa", fam: "nat", label: "American players", icon: `<span class="cflag">${flagOf("United States")}</span>`, test: usa });
-  if (count(abroad) >= 40) add({ id: "nat:abroad", fam: "nat", label: "Born outside the USA", icon: ico("globe"), test: abroad });
-  /* titles: a player counts if he played in the playoffs for the champion (box scores, 2001-02 on) */
-  const anyT = (p) => (p.ti || []).length > 0; if (count(anyT) >= 30) add({ id: "ti:any", fam: "trophy", label: `NBA champion (${COVER} on)`, icon: ico("trophy"), test: anyT });
-  const two = (p) => (p.ti || []).length >= 2; if (count(two) >= 18) add({ id: "ti:two", fam: "trophy", label: `Won 2 or more titles (${COVER} on)`, icon: ico("trophy"), test: two });
-  const champTeams = {}; pool.forEach((p) => (p.ti || []).forEach((t) => { champTeams[t.team] = champTeams[t.team] || new Set(); champTeams[t.team].add(p.id); }));
-  Object.entries(champTeams).filter(([, s]) => s.size >= 9).forEach(([team]) => add({ id: "ti:" + team, fam: "trophy", label: `Won a title with the ${team}`, icon: badge(team, "md"), test: (p) => (p.ti || []).some((t) => t.team === team) }));
-  /* teammates: stars and everyone who shared a team with them for a season (30+ games each) */
-  const starCount = {}; pool.forEach((p) => (p.tm || []).forEach((id) => { starCount[id] = (starCount[id] || 0) + 1; }));
-  Object.entries(starCount).filter(([, n]) => n >= 20).forEach(([id]) => { const st = QZ.players.find((x) => x.id === +id); if (st) add({ id: "tm:" + id, fam: "mate", label: `Teammate of ${st.n} (30+ games in a season)`, icon: faceOf(st.n) ? `<span class="badge md hface"><img src="${faceOf(st.n)}" alt=""></span>` : ico("handshake"), test: (p) => (p.tm || []).includes(+id) }); });
-  /* career shape */
-  [["t4", "Played for 4 or more teams", (p) => new Set(p.hist).size >= 4, "suitcase"], ["t6", "Played for 6 or more teams", (p) => new Set(p.hist).size >= 6, "suitcase"], ["one", "Spent 8+ seasons with one team", (p) => p.cr.some(([, a, b]) => +b.slice(0, 4) - +a.slice(0, 4) >= 7) && new Set(p.hist).size === 1, "anchor"]]
-    .forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "cr:" + id, fam: "career", label, icon: ico(ic), test: f }); });
-  /* stats: best season since 2001-02 (the label says so) */
-  [["p25", "Averaged 25+ points in a season", (p) => p.bp && p.bp.avg >= 25, "ball"], ["p20", "Averaged 20+ points in a season", (p) => p.bp && p.bp.avg >= 20, "ball"], ["r10", "Averaged 10+ rebounds in a season", (p) => p.br && p.br.avg >= 10, "gear"], ["a8", "Averaged 8+ assists in a season", (p) => p.ba && p.ba.avg >= 8, "handshake"], ["s2", "Averaged 1.8+ steals in a season", (p) => p.bs && p.bs.avg >= 1.8, "bolt"], ["b2", "Averaged 1.8+ blocks in a season", (p) => p.bb && p.bb.avg >= 1.8, "shield"], ["k20", "20,000+ career points", (p) => p.pts >= 20000, "gem"]]
-    .forEach(([id, label, f, ic]) => { if (count(f) >= 15) add({ id: "st:" + id, fam: "stat", label: label + (id === "k20" ? ` (since ${COVER})` : ` (${COVER} on)`), icon: ico(ic), test: f }); });
-  [["age30", "Aged 30 or over", (p) => ageOf(p) >= 30, "hourglass"], ["age25", "Aged 25 or under", (p) => ageOf(p) <= 25, "sprout"], ["b80", "Born in the 1980s", (p) => p.dob >= "1980" && p.dob < "1990", "calendar"], ["b90", "Born in the 1990s", (p) => p.dob >= "1990" && p.dob < "2000", "calendar"], ["b00", "Born in the 2000s", (p) => p.dob >= "2000" && p.dob < "2010", "calendar"], ["act", "Currently in the NBA", (p) => p.active, "bolt"]]
-    .forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "age:" + id, fam: "age", label, icon: ico(ic), test: f }); });
-  [["h7", "6 ft 10 in or taller", (p) => p.h >= 208, "ruler"], ["h6", "6 ft 4 in or shorter", (p) => p.h > 0 && p.h <= 193, "ruler"], ["h5", "6 ft 1 in or shorter", (p) => p.h > 0 && p.h <= 186, "ruler"]]
-    .forEach(([id, label, f, ic]) => { if (count(f) >= 25) add({ id: "h:" + id, fam: "height", label, icon: ico(ic), test: f }); });
-  const ln = {}; pool.forEach((p) => { const L = qnorm(p.n)[0]; if (L) ln[L] = (ln[L] || 0) + 1; });
-  Object.entries(ln).filter(([L, n]) => /[a-z]/.test(L) && n >= 45).forEach(([L]) => add({ id: "L:" + L, fam: "letter", label: `Name starts with ${L.toUpperCase()}`, icon: `<span class="cflag"><b>${L.toUpperCase()}</b></span>`, test: (p) => qnorm(p.n)[0] === L }));
-  ["Guard", "Forward", "Center"].forEach((k) => add({ id: "pos:" + k, fam: "pos", label: POSNAME[k], icon: `<span class="cflag">${POSICON[k]}</span>`, test: (p) => p.pos === k }));
-  ["Point Guard", "Shooting Guard", "Small Forward", "Power Forward"].forEach((s) => { if (count((p) => p.sub === s) >= 40) add({ id: "sub:" + s, fam: "pos", label: s + "s", icon: ico(/Guard/.test(s) ? "gear" : "shield"), test: (p) => p.sub === s }); });
-  Object.keys(AWN).forEach((k) => { const f = (p) => (p.aw || []).some((x) => x[0] === k); if (count(f) >= 5) add({ id: "aw:" + k, fam: "award", label: `Won ${AWN[k]} (${COVER} on)`, icon: ico("medal"), test: f }); });
-  const anyA = (p) => (p.aw || []).length > 0; if (count(anyA) >= 10) add({ id: "aw:any", fam: "award", label: `Won a major award (${COVER} on)`, icon: ico("medal"), test: anyA });
-  return F;
-}
-function factsOf(p) { return [p.nat, p.sub || p.pos, p.club ? (p.active ? "now with the " : "last with the ") + p.club : "", `${new Set(p.hist).size} team${new Set(p.hist).size === 1 ? "" : "s"} since ${COVER}`].filter(Boolean).join(" · "); }
-Object.keys(LGLABEL).forEach((k) => delete LGLABEL[k]);
-
-/* ---------- front page ---------- */
-function renderHome() {
-  const hero = (DATA.hero || []).filter((x) => x.img);
-  const tiles = hero.map((x) => `<div class="wtile"><img src="${x.img}" alt="${esc(x.n)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"><span>${esc(x.n)}</span></div>`);
-  const rows = [0, 1, 2].map((r) => { const list = tiles.filter((_, i) => i % 3 === r); const run = list.concat(list); return `<div class="wrow ${r === 1 ? "rev" : ""}" style="--sp:${70 + r * 18}s">${run.join("")}</div>`; });
-  $("#photowall").innerHTML = rows.join("");
-  const clubs = Object.keys(CREST), faces = (seed) => [0, 1, 2].map((j) => badge(clubs[hash(seed + j) % clubs.length], "md")).join("");
-  $("#doors").innerHTML = `<button type="button" class="door" data-door="games"><div class="gfaces">${faces("g")}</div><div class="dname">Games</div><div class="dtag">Who am I, career paths, team roulette, tic-tac-toe and more, with real NBA careers. Solo or against a friend.</div><span class="dgo">Play</span></button>`;
-  $("#ribbon").innerHTML = `<span><b class="num">${QZ.players.length.toLocaleString()}</b> players</span><span><b class="num">30</b> teams</span><span><b class="num">${Object.keys(LG.NBA.tables).length}</b> seasons of box scores</span>`;
-}
-function renderHub() {
-  heroQueue = [];
-  const g = S.hubGroup, clubs = Object.keys(CREST), pick = (k) => [0, 1, 2].map((j) => clubs[hash(`nba-${k}-${j}`) % clubs.length]);
-  const card = (x, k) => `<button type="button" class="gcard" data-game="${x.id}" style="--d:${k * 60}ms"><div class="gfaces">${x.faces ? x.faces(pick(k)) : pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes || "Solo"}</div><div class="gtag">${x.tag}</div><div class="grec">${recordLine(S.code, x.id)}</div></button>`;
-  if (g === "ranked") { renderRanked(); return; }
-  if (g === "bk") { $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-ball></use></svg> ballknowledge originals</h2><p class="secsub">Players, teams and careers from 25 seasons of NBA box scores. Pick a difficulty, then play solo or against a friend.</p><div class="hub">${QUIZ_GAMES.map((x, k) => card(x, k)).join("")}</div>`; return; }
-  $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-compass></use></svg> What do you want to play?</h2><p class="secsub">Pick a place to play.</p><div class="groups">
-    <button type="button" class="gpick" data-group="bk" style="--d:0ms"><div class="gfaces">${heroFaces(4)}</div><div class="gname">ballknowledge originals</div><div class="gtag">Who am I?, career paths, team roulette, tic-tac-toe and more. Four difficulty levels, solo streaks or two-player duels.</div><span class="dgo">Play</span></button>
-    <button type="button" class="gpick" data-group="model" style="--d:80ms"><div class="gfaces">${pick(1).map((x) => badge(x, "md")).join("")}</div><div class="gname">Beat the Model</div><div class="gtag">Call real NBA games against a prediction model that never saw them: winners and margins, a daily five, rapid fire and a playoff bracket.</div><span class="dgo">Play</span></button>
-    <button type="button" class="gpick" data-group="ranked" style="--d:160ms"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-trophy></use></svg></span><span class="rkbig"><svg class=ic><use href=#i-live></use></svg></span></div><div class="gname">Play online</div><div class="gtag">Ranked matches against real people, a public lobby and a leaderboard.</div><span class="dgo">Play</span></button></div>`;
-}
-/* the NBA has one league: no league chips, and the football-only sections are not offered */
-function renderScope() { $("#scope").innerHTML = ""; }
-QUIZ_GAMES.length = 0;
-QUIZ_GAMES.push(
-  { id: "who", name: "Who am I?", modes: "Solo streak · 2 players", tag: "A mystery player. Clues go from obscure to obvious. Buzz in early for more points.", faces: () => heroFaces(3) },
-  { id: "career", name: "Career path", modes: "Solo streak · 2 players", tag: "Every team he played for, in order. Name the player.", faces: () => heroFaces(3) },
-  { id: "club", name: "Name that team", modes: "Solo streak · 2 players", tag: "Points, wins and a playoff run. Which team is it?" },
-  { id: "blur", name: "Logo blur", modes: "Solo streak · 2 players", tag: "A blurry logo that sharpens by the second." },
-  { id: "finish", name: "Where did they finish?", modes: "Solo streak · 2 players", tag: "A team, a season, a slider. How close can you get?" },
-  { id: "scramble", name: "Scramble", modes: "Solo streak · 2 players", tag: "A player or team with the letters shuffled. Unscramble it before your rival does." },
-  { id: "roulette", name: "Team roulette", modes: "2 players · one device or two", tag: "A team appears. Take turns naming players who played for it. First to blank loses.", faces: () => heroFaces(2) },
-  { id: "ttt", name: "Basketball tic-tac-toe", modes: "2 players · one device or two", tag: "Name a player who fits the row and the column. Three in a row wins.", faces: () => heroFaces(2) },
-);
-GAMES.length = 0;
-
-/* ---------- wording: how-to cards, tips, difficulty notes, leaderboards, achievements ---------- */
-["g:call", "g:daily", "g:matchday", "g:upset", "g:table", "g:hol", "g:challenge", "g:value", "g:rapid", "g:bracket", "g:iconic", "g:xi", "live", "replay", "race"].forEach((k) => delete HOWTO[k]);
-Object.assign(HOWTO, {
-  "g:who": ["Who am I?", ["What you do", "A mystery NBA player. Clues start hard (where he was born, his height) and get easier (his team). Press Buzz when you think you know, then type the name and press Enter. A last name or a small typo is fine."], ["Scoring", "Up to 1,000 points, falling as more clues appear. A wrong guess costs 150."], ["Solo or duel", "Solo: keep a streak going. Two players: the first to buzz and answer right takes the points."], ["Good to know", `Stats and titles come from real box scores and only count from ${COVER} on, and the clues say so.`], ["Tip", "New to this? Choose Easy: it only asks about superstars."]],
-  "g:career": ["Career path", ["What you do", "You see every team a player has played for, in order. Name the player."], ["Scoring", "Up to 1,000 points, falling over time. A wrong guess costs 150."], ["Good to know", `Only players whose whole career is covered by the data (they started in 2002-03 or later) are asked, so no team is ever missing.`]],
-  "g:club": ["Name that team", ["What you do", "Guess the team from one real season: points scored and allowed, wins and losses, how far they went in the playoffs, then bigger hints like the city."], ["Scoring", "Up to 1,000 points, falling over time. A wrong guess costs 150."]],
-  "g:blur": ["Logo blur", ["What you do", "A team logo starts very blurry and gets sharper every few seconds. Name the team."], ["Scoring", "The sharper the logo, the fewer points. Guess early to score more."]],
-  "g:finish": ["Where did they finish?", ["What you do", "A team and a season appear. Slide to where you think it finished among the 30 teams, ranked by wins."], ["Scoring", "The closer you are, the more you score. Solo: your run continues while you stay within a few places."], ["Two players", "You each slide in turn without seeing the other's guess. Closest wins the round."]],
-  "g:roulette": ["Team roulette", ["What you do", "A team appears. Two players take turns naming someone who has played for it since 2001-02."], ["You lose a round if", "you name someone who never played there, repeat a name, or run out of time."], ["Winning", "The first to win two rounds takes the match."]],
-  "g:scramble": ["Scramble", ["What you do", "A player or a team appears as big shuffled letters, each word shuffled on its own. Buzz in when you know it and type the real name."], ["Hints", "Hints do not arrive on their own. Press Hint when you want one; in a two-player round a hint only appears once both players have asked. Each hint takes a little off the points."], ["Two players", "Same round on one device or two. A wrong answer costs 150 points and locks you out of that round."]],
-  "g:ttt": ["Basketball tic-tac-toe", ["What you do", "Claim a square by naming a player who fits both its row and its column, for example 'played for the Lakers' and 'Spanish'."], ["Rules", "Nobody can be used twice, and a wrong answer loses your turn. Three in a row wins."], ["Good to know", `Stat and title categories only count from ${COVER} on, and say so.`]],
-  "ranked": ["Ranked", ["What it is", "Play real people online. Create a lobby and others can join from the list."], ["Public or private", "Public lobbies change your rating. A private lobby with a code is for friends and never changes it."], ["Your rating", "Everyone starts at 1,000 Elo. Beating a higher-rated player earns more. Ranks run from Bronze up to Legend."], ["Separate from football", "Your basketball rating, badges and friends are their own, apart from your football ones."]],
-});
-SPLASH_TIPS.length = 0;
-SPLASH_TIPS.push("Buzz early in a quiz: points fall from 1,000 toward 100 as the clues arrive.", "Hard counts 1.4x and Elite ball knowledge counts 2x on your solo scores.", "In two-player mode, player 1 buzzes with A and player 2 with L.", "Public Ranked lobbies change your Elo; private code rooms never do.", "Press Enter to submit: a last name or a small typo is accepted.", "Elite asks only about the obscure players and the smaller teams.", "Team roulette: a wrong name, a repeat or a timeout loses the round.", "Tic-tac-toe has categories for titles, teammates, stats and nationalities.", "Your progress saves to your account automatically after every round.", "Every stat on this site comes from real box scores, 2001-02 on.", "Where did they finish? gets harder fast on Elite: you get one place of margin.", "Invite a friend with a link: create a room and copy it.", "Friends see your Elo and your favourite player and team.", "Come back every day: streaks fill the calendar on your profile.", "Easy only asks about superstars and the biggest teams.", "A wrong buzz costs 150 points, so be sure.");
-Object.assign(DIFFNOTE, { easy: "Superstars and the biggest teams, slow clues, forgiving margins. Scores count 0.6x.", medium: "Well-known players and top teams. Scores count 1x.", hard: "Rotation players and mid-table teams, faster clues, tighter margins. Scores count 1.4x.", elite: "Deep cuts: the obscure players and smaller teams only, fast clues, almost no margin. Scores count 2x." });
-const NBA_BOARD = [["xp", "Overall XP", "XP earned"], ["who", "Who am I?", "points"], ["career", "Career path", "points"], ["club", "Name that team", "points"], ["blur", "Logo blur", "points"], ["finish", "Where did they finish?", "points"], ["scramble", "Scramble", "points"], ["ttt", "Tic-tac-toe", "wins"]];
-BOARD_GAMES.length = 0; BOARD_GAMES.push(...NBA_BOARD);
-RK_GAMES.length = 0; RK_GAMES.push(["who", "Who am I?"], ["career", "Career path"], ["club", "Name that team"], ["blur", "Logo blur"], ["finish", "Where did they finish?"], ["scramble", "Scramble"], ["ttt", "Basketball tic-tac-toe"], ["roulette", "Team roulette"]);
-BK_LABELS.length = 0; BK_LABELS.push("Who am I?", "Career path", "Name that team", "Logo blur", "Where did they finish?", "Basketball tic-tac-toe", "Team roulette", "Scramble");
-{ const keep = new Set(["flame3", "flame7", "captain", "quizmaster", "tttwin", "splash_all", "splash_10", "splash_rare", "splash_leg", "first_buzz", "speed", "elite_win", "hat3", "streak10q", "night", "early", "social", "avatar", "fav", "ranked_first", "ranked_win", "ranked5", "elo1200", "alldiff", "rounds100", "squad", "curious", "scramble10", "login7", "login30"]);
-  const rest = ACH.filter((a) => keep.has(a[0])); ACH.length = 0; ACH.push(...rest);
-  ACH.forEach((a) => { if (a[0] === "squad") a[1] = "Full roster"; if (a[0] === "tttwin") a[2] = "Beat the computer at basketball tic-tac-toe"; if (a[0] === "squad") a[2] = `Play all ${QUIZ_GAMES.length} ballknowledge originals`; if (a[0] === "captain") a[2] = "Reach the Captain rank"; }); }
-CHANGELOG.v = "2026-12-03"; CHANGELOG.items.length = 0;
-CHANGELOG.items.push(["Basketball", "ballknowledge now has an NBA side: players, teams and careers from 25 seasons of real box scores. Your football and basketball profiles, ratings and leaderboards are completely separate."], ["Honest limits", `Stats, titles and teammates only count from ${COVER} on. Careers that began earlier are left out of Career path.`]);
-
-/* =====================================================================================================================
-   Beat the Model, basketball edition. The model is an Elo rating (with margin-of-victory, home court and back-to-back rest)
-   that only ever saw games played BEFORE the one you are calling (src/65_nba_model.py). Row: [date, home, away, hs, as, pHome, expMargin, recH, recA, type, season]
-   ===================================================================================================================== */
-const NM = DATA.nbaModel || { games: [], summary: { overall: {} }, series: {}, po_elo: {} };
-const NBO = NM.summary.overall || {};
-const nbDate = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-const seasonLab = (y) => `${y - 1}-${String(y).slice(2)}`;
-const nbModelPick = (g) => (g[5] >= 0.5 ? "h" : "a");
-const nbModelMargin = (g) => Math.max(1, Math.round(Math.abs(g[6])));
-const nbReal = (g) => ({ win: g[3] > g[4] ? "h" : "a", margin: Math.abs(g[3] - g[4]) });
-const nbPts = (ok, err) => (ok ? 2 + (err <= 3 ? 2 : err <= 7 ? 1 : 0) : 0);
-const nbTeamName = (t) => (QZ.clubs[t] ? QZ.clubs[t].full : t);
-const nbLogo = (t, c = "xl") => badge(t, c);
-Object.assign(HOWTO, {
-  "g:nbcall": ["Call it", ["What you do", "A real NBA game from the past appears with both teams' records going in. Pick the winner, then say by how many points. You can't see the score."], ["Scoring", "2 points for the right winner, plus up to 2 more if your margin is close (within 3 points: 2, within 7: 1). The model plays the same games and scores the same way."], ["Good to know", "Teams appear under today's names, so the 2009 Hornets show as the Pelicans and the Sonics as the Thunder."], ["The model", `An Elo rating that only ever saw games played before this one. It picks the right winner about ${Math.round((NBO.acc || 0.66) * 100)} times in 100; always picking the home team gets about ${Math.round((NBO.home || 0.586) * 100)}.`]],
-  "g:nbdaily": ["Daily 5", ["What you do", "Five real games, the same for everyone today. Pick the winner and the margin for each."], ["Scoring", "Same as Call it. Come back tomorrow for a fresh five."], ["Tip", "Share your score with a friend and see who did better."]],
-  "g:nbrapid": ["Rapid fire", ["What you do", "A real game appears. Tap the team you think won, as fast as you can, for 60 seconds."], ["The model", "It calls the same games. Whoever gets more right wins."], ["Tip", "You can use the left and right arrow keys: left for the away team, right for the home team."]],
-  "g:nbbracket": ["Bracket buster", ["What you do", "A real NBA playoffs. In every round pick who wins each series, then lock the round in. The next round uses the real winners."], ["The model", "A plain Elo rating, from every game before the playoffs, picks the higher-rated team."], ["Scoring", "A first-round series is worth 1 point, the second round 2, the conference finals 3 and the Finals 4."]],
-});
-["nbcall", "nbdaily", "nbrapid", "nbbracket"].forEach((id) => { GAME_IDS.push(id); MODEL_IDS.push(id); });
-GAMES.push(
-  { id: "nbcall", name: "Call it", modes: "Solo, against the model", tag: "Five real NBA games. Pick the winner and the margin, then see what the model said." },
-  { id: "nbdaily", name: "Daily 5", modes: "Solo, against the model", tag: "The same five games for everyone today. Beat the model and share your result." },
-  { id: "nbrapid", name: "Rapid fire", modes: "Solo, against the model", tag: "60 seconds. Tap the winner of as many real games as you can." },
-  { id: "nbbracket", name: "Bracket buster", modes: "Solo, against the model", tag: "A real NBA playoffs. Pick every series, round by round, against an Elo model." },
-);
-BOARD_GAMES.push(["nbcall", "Call it", "points (of 20)"], ["nbdaily", "Daily 5", "points (of 20)"], ["nbrapid", "Rapid fire", "best run, winners right"], ["nbbracket", "Bracket buster", "best points"]);
-BK_LABELS.push("Call it", "Daily 5", "Rapid fire", "Bracket buster");
-const NB_TITLE = { nbcall: "Call it", nbdaily: "Daily 5", nbrapid: "Rapid fire", nbbracket: "Bracket buster" };
-const nbGames = () => NM.games;
-function nbItems(n, rng) { const all = nbGames(), out = [], seen = new Set(); let guard = 0; while (out.length < n && guard++ < 500) { const g = all[Math.floor(rng() * all.length)]; if (!g || seen.has(g[0] + g[1])) continue; if (g[9] === 3 && rng() > 0.35) continue; seen.add(g[0] + g[1]); out.push(g); } return out; }
-const nbSide = (g, k, rev, pick) => { const t = k === "h" ? g[1] : g[2], rec = k === "h" ? g[7] : g[8], real = rev ? nbReal(g).win : null, cls = rev ? (real === k ? "ans" : pick === k ? "wrong" : "") : pick === k ? "sel" : "";
-  return `<button type="button" class="holc ${cls}" data-nbteam="${k}" ${rev ? "disabled" : ""}>${nbLogo(t)}<b>${esc(t)}</b><span class="fine">${k === "h" ? "Home" : "Away"} · ${esc(rec)}</span>${rev ? `<span class="num holv">${k === "h" ? g[3] : g[4]}</span>` : ""}</button>`; };
-function nbStart(game) {
-  const daily = game === "nbdaily", key = "nbd_" + todayKey();
-  if (daily && store.items[key]) { S.nb = { game, phase: "done", ...store.items[key], again: false }; return; }
-  const rng = daily ? mulberry(hash("nbd" + todayKey())) : Math.random;
-  S.nb = { game, round: 0, rounds: game === "nbrapid" ? 999 : 5, items: nbItems(game === "nbrapid" ? 400 : 5, rng), you: 0, mod: 0, ypts: 0, mpts: 0, phase: game === "nbrapid" ? "intro" : "ask", pick: null, margin: 8, log: [], streak: 0, best: 0, n: 0, left: 60 };
-  if (game === "nbbracket") S.nb = nbBracketNew(); else if (game !== "nbrapid") S.nb.round = 1;
-}
-function renderNB() {
-  const g = S.game;
-  if (!S.nb || S.nb.game !== g) { if (S.nb && S.nb.timer) clearInterval(S.nb.timer); nbStart(g); }
-  const s = S.nb; if (g === "nbrapid") return renderNBRapid(); if (g === "nbbracket") return renderNBBracket();
-  if (s.phase === "done") return renderNBDone();
-  const it = s.items[s.round - 1], hud = `<div class="qhud"><span class="label">Game ${s.round} of ${s.rounds}</span><span class="num qscore"><small>You</small> <b>${s.ypts}</b></span><span class="num qscore"><small>Model</small> <b>${s.mpts}</b></span></div>`;
-  const ctx = `<div class="fine" style="text-align:center">${esc(nbDate(it[0]))} · ${seasonLab(it[10])} ${it[9] === 3 ? "· Playoffs" : "· Regular season"}</div>`;
-  if (s.phase === "reveal") {
-    const real = nbReal(it), mp = nbModelPick(it), mm = nbModelMargin(it), you = s.last.you, mod = s.last.mod, pwin = Math.round(100 * (mp === "h" ? it[5] : 1 - it[5]));
-    $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}<div class="holpair">${nbSide(it, "a", true, s.pick)}<span class="vs">at</span>${nbSide(it, "h", true, s.pick)}</div>
-      <div class="rcard on" style="margin-top:12px"><div class="label">${esc(real.win === "h" ? it[1] : it[2])} won by ${real.margin}</div><div class="verdicts" style="margin-top:10px">
-        <div class="vd ${you > 0 ? "ok" : "no"}"><span class="label">You</span><b class="num">${esc(s.pick === "h" ? it[1] : it[2])} by ${s.margin}</b><span class="fine">+${you} point${you === 1 ? "" : "s"}</span></div>
-        <div class="vd ${mod > 0 ? "ok" : "no"}"><span class="label">Model (${pwin}% ${esc(mp === "h" ? it[1] : it[2])})</span><b class="num">${esc(mp === "h" ? it[1] : it[2])} by ${mm}</b><span class="fine">+${mod} point${mod === 1 ? "" : "s"}</span></div></div></div>
-      <div class="row" style="margin-top:12px"><button class="btn" id="nbNext" type="button">${s.round >= s.rounds ? "See the final score" : "Next game"}</button></div></div>`; return;
-  }
-  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}<div class="holpair">${nbSide(it, "a", false, s.pick)}<span class="vs">at</span>${nbSide(it, "h", false, s.pick)}</div>
-    ${s.pick ? `<div class="sliderbox" style="margin-top:12px"><b>${esc(s.pick === "h" ? it[1] : it[2])} win by <span class="num" id="nbMv">${s.margin}</span> points</b><input type="range" id="nbMargin" min="1" max="35" value="${s.margin}" aria-label="Winning margin"><div class="row fine" style="justify-content:space-between"><span>1</span><span>35</span></div></div><div class="row" style="margin-top:12px"><button class="btn" id="nbLock" type="button">Lock it in</button></div>` : `<p class="fine" style="text-align:center;margin-top:12px">Tap the team you think won.</p>`}</div>`;
-}
-function nbLock() {
-  const s = S.nb, it = s.items[s.round - 1]; if (!s.pick) return; const real = nbReal(it), mp = nbModelPick(it), mm = nbModelMargin(it);
-  const you = nbPts(s.pick === real.win, Math.abs(s.margin - real.margin)), mod = nbPts(mp === real.win, Math.abs(mm - real.margin));
-  s.ypts += you; s.mpts += mod; s.last = { you, mod }; s.log.push([it[0], it[1], it[2], s.pick === "h" ? it[1] : it[2], s.margin, you, mod]); s.phase = "reveal"; Snd.lock(); renderNB();
-  setTimeout(() => { you >= 4 ? (Snd.win(), confetti()) : you > 0 ? Snd.right() : Snd.wrong(); }, 350);
-}
-function nbNext() { const s = S.nb; if (s.round >= s.rounds) return nbFinish(); s.round++; s.pick = null; s.margin = 8; s.phase = "ask"; renderNB(); }
-function nbFinish() {
-  const s = S.nb, g = s.game, label = NB_TITLE[g]; s.phase = "done"; s.final = { ypts: s.ypts, mpts: s.mpts, log: s.log };
-  if (g === "nbdaily") lockIn("nbd_" + todayKey(), s.final);
-  const bk = `nbbest_${g}`, cur = store.items[bk] || { best: 0 }; if (s.ypts > cur.best) lockIn(bk, { best: s.ypts });
-  reward(10 + s.ypts * 2 + (s.ypts > s.mpts ? 10 : 0), label, null); Board.submit({ game: g, league: "all", score: s.ypts }); renderNB();
-  if (s.ypts > s.mpts) { Snd.win(); confetti(); }
-}
-function renderNBDone() {
-  const s = S.nb, f = s.final || s, win = f.ypts > f.mpts, tie = f.ypts === f.mpts;
-  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[s.game])}<div class="rcard on"><div class="label">Final score</div><b style="font-size:26px">${win ? "You beat the model" : tie ? "A tie with the model" : "The model won"}</b>
-    <div class="tiles" style="margin-top:10px"><div class="tile"><b class="num">${f.ypts}</b><small>you, of 20</small></div><div class="tile"><b class="num">${f.mpts}</b><small>model</small></div></div>
-    <div class="lb" style="margin-top:10px">${(f.log || []).map((r) => `<div class="lbrow"><span class="fine">${esc(nbDate(r[0]))}</span><span>${esc(r[2])} at ${esc(r[1])}</span><span class="fine">You: ${esc(r[3])} by ${r[4]} (+${r[5]}) · Model +${r[6]}</span></div>`).join("")}</div></div>
-    <div class="row" style="margin-top:12px">${s.game === "nbdaily" ? '<span class="fine">Come back tomorrow for a fresh five.</span>' : '<button class="btn" id="nbAgain" type="button">Play again</button>'}<button class="btn ghost" id="nbShare" type="button">Copy my result</button></div></div>`;
-}
-/* ---- Rapid fire ---- */
-function renderNBRapid() {
-  const s = S.nb;
-  if (s.phase === "intro") { $("#room").innerHTML = `<div class="card">${gamesBar("Rapid fire")}<h2 style="margin-top:6px">Rapid fire</h2><p class="sub">60 seconds. A real game appears: tap the team you think won, as fast as you can. The model calls the same games. Whoever is right more often wins.</p><div class="row" style="margin-top:14px"><button class="btn" id="nbRpStart" type="button">Start</button></div></div>`; return; }
-  if (s.phase === "done") { const win = s.you > s.mod, tie = s.you === s.mod; $("#room").innerHTML = `<div class="card">${gamesBar("Rapid fire")}<div class="rcard on"><div class="label">Time</div><b style="font-size:26px">${win ? "You beat the model" : tie ? "A tie with the model" : "The model won"}</b><div class="tiles" style="margin-top:10px"><div class="tile"><b class="num">${s.you}</b><small>you right of ${s.n}</small></div><div class="tile"><b class="num">${s.mod}</b><small>model right</small></div><div class="tile"><b class="num">${s.best}</b><small>best streak</small></div><div class="tile"><b class="num">${s.n ? Math.round((100 * s.you) / s.n) : 0}%</b><small>your accuracy</small></div></div></div><div class="row" style="margin-top:12px"><button class="btn" id="nbRpStart" type="button">Go again</button></div></div>`; return; }
-  const it = s.items[s.n % s.items.length];
-  $("#room").innerHTML = `<div class="card">${gamesBar("Rapid fire")}<div class="qhud"><span class="label">You ${s.you} · Model ${s.mod}${s.streak > 1 ? ` · streak ${s.streak}` : ""}</span><b class="num" id="nbRpTime">${s.left}</b></div>
-    ${s.lastMsg ? `<div class="rplast ${s.lastOk ? "ok" : "bad"}">${esc(s.lastMsg)}</div>` : '<div class="rplast">&nbsp;</div>'}
-    <div class="fine" style="text-align:center">${esc(nbDate(it[0]))} · ${seasonLab(it[10])}</div><div class="holpair">${nbSide(it, "a", false, null)}<span class="vs">at</span>${nbSide(it, "h", false, null)}</div><p class="fine" style="text-align:center;margin-top:8px">Keys: left arrow for away, right arrow for home</p></div>`;
-}
-function nbRapidStart() { const s = S.nb; s.items = nbItems(400, Math.random); Object.assign(s, { phase: "play", you: 0, mod: 0, n: 0, streak: 0, best: 0, left: 60, lastMsg: "" }); renderNB(); clearInterval(s.timer); s.timer = setInterval(() => { if (S.nb !== s || S.game !== "nbrapid") { clearInterval(s.timer); return; } s.left--; const el = $("#nbRpTime"); if (el) el.textContent = s.left; if (s.left <= 0) { clearInterval(s.timer); s.phase = "done"; const k = "nbbest_nbrapid", cur = store.items[k] || { best: 0 }; if (s.you > cur.best) lockIn(k, { best: s.you }); reward(10 + s.you, "Rapid fire", null); Board.submit({ game: "nbrapid", league: "all", score: s.you }); renderNB(); s.you > s.mod ? (Snd.win(), confetti()) : Snd.lock(); } }, 1000); }
-function nbRapidPick(k) { const s = S.nb; if (!s || s.phase !== "play") return; const it = s.items[s.n % s.items.length], real = nbReal(it).win, ok = real === k, mo = nbModelPick(it) === real; s.n++; if (ok) { s.you++; s.streak++; s.best = Math.max(s.best, s.streak); Snd.tick(); } else { s.streak = 0; Snd.wrong(); } if (mo) s.mod++; s.lastOk = ok; s.lastMsg = `${ok ? "Right" : "Wrong"}: ${real === "h" ? it[1] : it[2]} won ${Math.max(it[3], it[4])}-${Math.min(it[3], it[4])}`; renderNB(); }
-/* ---- Bracket buster ---- */
-function nbBracketNew() {
-  const seasons = Object.keys(NM.series).filter((y) => NM.series[y] && NM.series[y].length === 15), y = rnd(seasons), list = NM.series[y], r1 = list.filter((x) => x.round === 1);
-  return { game: "nbbracket", season: +y, list, round: 1, picks: {}, phase: "ask", you: 0, mod: 0, log: [], matchups: r1.map((x) => [x.a, x.b]) };
-}
-function renderNBBracket() {
-  const s = S.nb, pe = (NM.po_elo || {})[s.season] || {}, names = s.round <= 4 ? ["First round", "Second round", "Conference finals", "NBA Finals"][s.round - 1] : "";
-  const hud = `<div class="qhud"><span class="label">${seasonLab(s.season)} playoffs · ${names}</span><span class="num qscore"><small>You</small> <b>${s.you}</b></span><span class="num qscore"><small>Model</small> <b>${s.mod}</b></span></div>`;
-  if (s.phase === "done") { const win = s.you > s.mod, tie = s.you === s.mod; $("#room").innerHTML = `<div class="card">${gamesBar("Bracket buster")}${hud}<div class="rcard on"><div class="label">Final score</div><b style="font-size:26px">${win ? "You beat the model" : tie ? "A tie with the model" : "The model won"}</b><div class="tiles" style="margin-top:10px"><div class="tile"><b class="num">${s.you}</b><small>you, of 26</small></div><div class="tile"><b class="num">${s.mod}</b><small>model</small></div></div></div><div class="row" style="margin-top:12px"><button class="btn" id="nbAgain" type="button">Another year</button></div></div>`; return; }
-  const rows = s.matchups.map(([a, b], i) => { const ta = teamById(a), tb = teamById(b), pk = s.picks[i], real = s.phase === "reveal" ? s.cur[i].win : null, mpk = (pe[ta] || 1500) >= (pe[tb] || 1500) ? ta : tb;
-    const btn = (t) => { const cls = real ? (real === t ? "ans" : pk === t ? "wrong" : "") : pk === t ? "sel" : ""; return `<button type="button" class="holc ${cls}" data-nbser="${i}|${esc(t)}" ${real ? "disabled" : ""}>${nbLogo(t, "md")}<b>${esc(t)}</b>${real ? '<span class="fine">' + (t === mpk ? "model pick" : "") + "</span>" : `<span class="fine">Elo ${pe[t] || ""}</span>`}</button>`; };
-    return `<div class="holpair" style="margin-bottom:8px">${btn(ta)}<span class="vs">v</span>${btn(tb)}</div>`; }).join("");
-  const all = Object.keys(s.picks).length === s.matchups.length;
-  $("#room").innerHTML = `<div class="card">${gamesBar("Bracket buster")}${hud}${rows}<div class="row" style="margin-top:12px">${s.phase === "reveal" ? `<button class="btn" id="nbRound" type="button">${s.round >= 4 ? "See the final score" : "Next round"}</button>` : `<button class="btn" id="nbRoundLock" type="button" ${all ? "" : "disabled"}>Lock the round in</button>`}</div></div>`;
-}
-const teamById = (id) => (QZ.byId || (QZ.byId = Object.fromEntries(Object.entries(QZ.clubs).map(([n, f]) => [f.cid, n]))))[id];
-function nbRoundLock() {
-  const s = S.nb, pe = (NM.po_elo || {})[s.season] || {}; s.cur = s.matchups.map(([a, b]) => { const x = s.list.find((z) => z.round === s.round && ((z.a === a && z.b === b) || (z.a === b && z.b === a))); return { win: teamById(x.win) }; });
-  s.matchups.forEach(([a, b], i) => { const ta = teamById(a), tb = teamById(b), real = s.cur[i].win, mpk = (pe[ta] || 1500) >= (pe[tb] || 1500) ? ta : tb; if (s.picks[i] === real) s.you += s.round; if (mpk === real) s.mod += s.round; });
-  s.phase = "reveal"; Snd.lock(); renderNB(); setTimeout(() => Snd.right(), 300);
-}
-function nbRoundNext() {
-  const s = S.nb; if (s.round >= 4) { s.phase = "done"; const k = "nbbest_nbbracket", cur = store.items[k] || { best: 0 }; if (s.you > cur.best) lockIn(k, { best: s.you }); reward(15 + s.you * 2 + (s.you > s.mod ? 10 : 0), "Bracket buster", null); Board.submit({ game: "nbbracket", league: "all", score: s.you }); renderNB(); if (s.you > s.mod) { Snd.win(); confetti(); } return; }
-  const next = s.list.filter((x) => x.round === s.round + 1).map((x) => [x.a, x.b]);   // the real pairings for the next round
-  s.round++; s.matchups = next; s.picks = {}; s.phase = "ask"; renderNB();
-}
-document.addEventListener("click", (e) => {
-  const t = e.target.closest && e.target.closest("[data-nbteam],[data-nbser],#nbLock,#nbNext,#nbAgain,#nbShare,#nbRpStart,#nbRound,#nbRoundLock"); if (!t || !NB_TITLE[S.game]) return;
-  const s = S.nb; if (!s) return;
-  if (t.dataset.nbteam) { if (S.game === "nbrapid") return nbRapidPick(t.dataset.nbteam); if (s.phase !== "ask") return; s.pick = t.dataset.nbteam; Snd.tick(); return renderNB(); }
-  if (t.dataset.nbser) { const [i, name] = t.dataset.nbser.split("|"); if (s.phase !== "ask") return; s.picks[+i] = name; Snd.tick(); return renderNB(); }
-  if (t.id === "nbLock") return nbLock(); if (t.id === "nbNext") return nbNext(); if (t.id === "nbRpStart") return nbRapidStart();
-  if (t.id === "nbRoundLock") return nbRoundLock(); if (t.id === "nbRound") return nbRoundNext();
-  if (t.id === "nbAgain") { S.nb = null; return renderNB(); }
-  if (t.id === "nbShare") { const f = s.final || s, txt = `ballknowledge basketball · ${NB_TITLE[s.game]}: me ${f.ypts} vs model ${f.mpts}. Can you beat it?`; try { navigator.clipboard.writeText(txt + " " + location.href.split("#")[0]).then(() => toast("Copied")); } catch (err) { toast(txt); } }
-});
-document.addEventListener("input", (e) => { if (e.target.id === "nbMargin" && S.nb) { S.nb.margin = +e.target.value; const v = $("#nbMv"); if (v) v.textContent = S.nb.margin; } });
-document.addEventListener("keydown", (e) => { if (S.game === "nbrapid" && S.nb && S.nb.phase === "play" && !/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ""))) { if (e.key === "ArrowLeft") { e.preventDefault(); nbRapidPick("a"); } else if (e.key === "ArrowRight") { e.preventDefault(); nbRapidPick("h"); } } });
-addEventListener("hashchange", () => { if (S.nb && S.nb.timer && S.game !== "nbrapid") clearInterval(S.nb.timer); });
-
-/* ---------- hub, play room and record lines with the model games ---------- */
-function renderPlayRoom() {
-  stopTheatre();
-  if (S.game) S.hubGroup = S.rk ? "ranked" : MODEL_IDS.includes(S.game) ? "model" : "bk";
-  if (!S.game) return renderHub();
-  stopQuiz();
-  if (NB_TITLE[S.game]) return renderNB();
-  if (QDEF[S.game]) { if (!Q.s || Q.s.game !== S.game || Q.s.scope !== S.code) newQuiz(S.game, "solo", S.code); else renderQuiz(); return; }
-  ({ finish: renderFinish, roulette: renderRoulette, ttt: renderTTT })[S.game]();
-}
-function recordLine(c, id) {
-  if (id === "who" || id === "career" || id === "club" || id === "blur" || id === "finish" || id === "scramble" || id === "dropped") { const b = store.items[`best_${id}_${c}_${S.diff}`]; return b ? `best ${b.best} (${S.diff})` : "not played yet"; }
-  if (NB_TITLE[id]) { const b = store.items[`nbbest_${id}`]; return b ? `best ${b.best}` : "not played yet"; }
-  return "";
-}
-{ const hubOld = renderHub;
-  renderHub = function () {
-    if (S.hubGroup === "model") { const clubs = Object.keys(CREST), pick = (k) => [0, 1, 2].map((j) => clubs[hash(`nbm-${k}-${j}`) % clubs.length]);
-      $("#room").innerHTML = `<h2 class="sec"><svg class=ic><use href=#i-trophy></use></svg> Beat the Model</h2><p class="secsub">Real NBA games and a model that never saw them. Over ${(NBO.n || 0).toLocaleString()} games it picked ${Math.round((NBO.acc || 0) * 1000) / 10}% of winners right (always picking the home team: ${Math.round((NBO.home || 0) * 1000) / 10}%).</p><div class="hub">${GAMES.map((x, k) => `<button type="button" class="gcard" data-game="${x.id}" style="--d:${k * 60}ms"><div class="gfaces">${pick(k).map((t) => badge(t, "md")).join("")}</div><div class="gname">${x.name}</div><div class="gmodes">${x.modes}</div><div class="gtag">${x.tag}</div><div class="grec">${recordLine(S.code, x.id)}</div></button>`).join("")}</div>`; return; }
-    hubOld();
-  };
-}
-
-/* =====================================================================================================================
-   Call it, version 2: predict the final score and who wins each quarter (real quarter scores exist from about 2019-20 on).
-   Points: right winner 2, each quarter right 1 (a tied quarter scores nobody), score error (both teams added up) <=8: 3, <=16: 2, <=28: 1. Max 9 a game.
-   ===================================================================================================================== */
-const NBQ = NM.quarters || {};
-const nbScorePts = (hs, as_, gh, ga, qp, real) => {
-  const win = hs > as_ ? "h" : as_ > hs ? "a" : null, rw = real.hs > real.as ? "h" : "a", err = Math.abs(hs - real.hs) + Math.abs(as_ - real.as);
-  let q = 0; qp.forEach((k, i) => { const a = real.q[0][i], b = real.q[1][i]; if (a !== b && k === (a > b ? "h" : "a")) q++; });
-  const w = win === rw ? 2 : 0, sc = err <= 8 ? 3 : err <= 16 ? 2 : err <= 28 ? 1 : 0;
-  return { total: w + q + sc, w, q, sc, err };
-};
-const nbRealOf = (g) => ({ hs: g[3], as: g[4], q: g[13] });
-Object.assign(HOWTO, {
-  "g:nbcall": ["Call it", ["What you do", "A real NBA game from the past appears with both teams' records going in. Predict the final score and tap who wins each quarter. You can't see the result."], ["Scoring", "Up to 9 points a game: 2 for the right winner, 1 for each quarter you get right (a tied quarter scores nobody), and up to 3 for how close your score is (both teams' points added up: within 8 points: 3, within 16: 2, within 28: 1). The model plays the same games and scores the same way."], ["Good to know", `Quarter scores exist only from ${seasonLab(NBQ.from || 2020)} on, so older games aren't used. Teams appear under today's names.`], ["The model", `A rating that only ever saw games before this one. Over ${(NBQ.n || 0).toLocaleString()} games its scores were off by ${NBQ.score_err || "?"} points (both teams added up) and it picked ${Math.round((NBQ.q_acc || 0) * 1000) / 10}% of quarter winners.`]],
-  "g:nbdaily": ["Daily 5", ["What you do", "Five real games, the same for everyone today. Predict each score and quarter winners."], ["Scoring", "Same as Call it: up to 9 a game, 45 in all."], ["Tip", "Share your score with a friend and see who did better."]],
-});
-HOWTO["g:nbbracket"][3] = ["Good to know", "Teams appear under today's names, so the 2009 Hornets show as the Pelicans."];
-GAMES.find((x) => x.id === "nbcall").tag = "Five real NBA games. Predict the score and who wins each quarter, then see what the model said.";
-GAMES.find((x) => x.id === "nbdaily").tag = "The same five games for everyone today: score and quarters. Beat the model and share your result.";
-BOARD_GAMES.forEach((b) => { if (b[0] === "nbcall" || b[0] === "nbdaily") b[2] = "points (of 45)"; });
-function nbStart(game) {
-  const daily = game === "nbdaily", key = "nbd_" + todayKey();
-  if (daily && store.items[key]) { S.nb = { game, phase: "done", ...store.items[key] }; return; }
-  if (game === "nbbracket") { S.nb = nbBracketNew(); return; }
-  const rng = daily ? mulberry(hash("nbd" + todayKey())) : Math.random;
-  S.nb = { game, round: 1, rounds: game === "nbrapid" ? 999 : 5, items: nbItems(game === "nbrapid" ? 400 : 5, rng), ypts: 0, mpts: 0, phase: game === "nbrapid" ? "intro" : "ask", log: [], you: 0, mod: 0, n: 0, streak: 0, best: 0, left: 60 };
-  nbResetGuess(S.nb);
-}
-const nbResetGuess = (s) => { s.gh = 110; s.ga = 108; s.qp = [null, null, null, null]; };
-function renderNB() {
-  const g = S.game;
-  if (!S.nb || S.nb.game !== g) { if (S.nb && S.nb.timer) clearInterval(S.nb.timer); nbStart(g); }
-  const s = S.nb; if (g === "nbrapid") return renderNBRapid(); if (g === "nbbracket") return renderNBBracket();
-  if (s.phase === "done") return renderNBDone();
-  const it = s.items[s.round - 1], H = it[1], A = it[2], hud = `<div class="qhud"><span class="label">Game ${s.round} of ${s.rounds}</span><span class="num qscore"><small>You</small> <b>${s.ypts}</b></span><span class="num qscore"><small>Model</small> <b>${s.mpts}</b></span></div>`;
-  const ctx = `<div class="fine" style="text-align:center">${esc(nbDate(it[0]))} · ${seasonLab(it[10])} ${it[9] === 3 ? "· Playoffs" : "· Regular season"}</div>`;
-  const head = (rev) => `<div class="nbscore"><div class="nbtm">${nbLogo(A, "xl")}<b>${esc(A)}</b><span class="fine">Away · ${esc(it[8])}</span></div><div class="nbvs">at</div><div class="nbtm">${nbLogo(H, "xl")}<b>${esc(H)}</b><span class="fine">Home · ${esc(it[7])}</span></div></div>`;
-  if (s.phase === "reveal") {
-    const r = s.last, real = nbRealOf(it), mp = s.mpred;
-    const qrow = (i) => { const a = real.q[1][i], h = real.q[0][i], w = h > a ? "h" : a > h ? "a" : "t"; const mark = (k) => (k === "t" || w === "t" ? "–" : k === w ? "✓" : "✗"); return `<tr><td>Q${i + 1}</td><td class="num">${a}</td><td class="num">${h}</td><td>${w === "t" ? "tie" : esc(w === "h" ? H : A)}</td><td>${s.qp[i] === "h" ? esc(H) : esc(A)} ${mark(s.qp[i])}</td><td>${mp.q[i] === "h" ? esc(H) : esc(A)} ${mark(mp.q[i])}</td></tr>`; };
-    $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}${head()}
-      <div class="rcard on" style="margin-top:12px"><div class="label">Final: ${esc(A)} ${real.as} – ${real.hs} ${esc(H)}${(real.q[0].reduce((a, b) => a + b, 0) !== real.hs) ? " (overtime)" : ""}</div>
-      <div class="nbtable"><table><thead><tr><th></th><th>${esc(A)}</th><th>${esc(H)}</th><th>Won by</th><th>You</th><th>Model</th></tr></thead><tbody>${[0, 1, 2, 3].map(qrow).join("")}</tbody></table></div>
-      <div class="verdicts" style="margin-top:10px"><div class="vd ${r.you.total >= r.mod.total ? "ok" : "no"}"><span class="label">You: ${esc(A)} ${s.ga} – ${s.gh} ${esc(H)}</span><b class="num">+${r.you.total}</b><span class="fine">winner ${r.you.w}, quarters ${r.you.q}, score ${r.you.sc} (off by ${r.you.err})</span></div>
-      <div class="vd ${r.mod.total >= r.you.total ? "ok" : "no"}"><span class="label">Model: ${esc(A)} ${Math.round(it[12])} – ${Math.round(it[11])} ${esc(H)}</span><b class="num">+${r.mod.total}</b><span class="fine">winner ${r.mod.w}, quarters ${r.mod.q}, score ${r.mod.sc} (off by ${r.mod.err})</span></div></div></div>
-      <div class="row" style="margin-top:12px"><button class="btn" id="nbNext" type="button">${s.round >= s.rounds ? "See the final score" : "Next game"}</button></div></div>`; return;
-  }
-  const step = (k, v) => `<div class="nbstep"><button type="button" class="btn ghost" data-nbstep="${k}|-1" aria-label="minus one">−</button><input class="num" id="nbS${k}" inputmode="numeric" value="${v}" aria-label="${k === "h" ? H : A} points"><button type="button" class="btn ghost" data-nbstep="${k}|1" aria-label="plus one">+</button></div>`;
-  const qbtn = (i, k) => `<button type="button" class="holc nbq ${s.qp[i] === k ? "sel" : ""}" data-nbq="${i}|${k}">${nbLogo(k === "h" ? H : A, "sm")}<b>${esc(k === "h" ? H : A)}</b></button>`;
-  const ready = s.qp.every(Boolean) && s.gh !== s.ga;
-  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[g])}${hud}${ctx}${head()}
-    <div class="label" style="margin:12px 0 6px">Final score</div><div class="nbscore"><div class="nbtm">${step("a", s.ga)}</div><div class="nbvs">–</div><div class="nbtm">${step("h", s.gh)}</div></div>
-    <div class="label" style="margin:12px 0 6px">Who wins each quarter?</div>${[0, 1, 2, 3].map((i) => `<div class="nbqrow"><span class="num">Q${i + 1}</span>${qbtn(i, "a")}${qbtn(i, "h")}</div>`).join("")}
-    <div class="row" style="margin-top:12px"><button class="btn" id="nbLock" type="button" ${ready ? "" : "disabled"}>Lock it in</button>${ready ? "" : `<span class="fine">${s.gh === s.ga ? "Someone has to win: change a score. " : ""}${s.qp.every(Boolean) ? "" : "Pick all four quarters."}</span>`}</div></div>`;
-}
-function nbLock() {
-  const s = S.nb, it = s.items[s.round - 1]; if (!s.qp.every(Boolean) || s.gh === s.ga) return; const real = nbRealOf(it);
-  const mp = { gh: Math.round(it[11]), ga: Math.round(it[12]), q: [0, 1, 2, 3].map(() => (it[6] > 0 ? "h" : "a")) }; if (mp.gh === mp.ga) it[6] > 0 ? mp.gh++ : mp.ga++;
-  const you = nbScorePts(s.gh, s.ga, s.gh, s.ga, s.qp, real), mod = nbScorePts(mp.gh, mp.ga, mp.gh, mp.ga, mp.q, real);
-  s.ypts += you.total; s.mpts += mod.total; s.last = { you, mod }; s.mpred = mp; s.log.push([it[0], it[1], it[2], `${s.ga}-${s.gh}`, you.err, you.total, mod.total, `${real.as}-${real.hs}`]); s.phase = "reveal"; Snd.lock(); renderNB();
-  setTimeout(() => { you.total >= 7 ? (Snd.win(), confetti()) : you.total > 0 ? Snd.right() : Snd.wrong(); }, 350);
-}
-function nbNext() { const s = S.nb; if (s.round >= s.rounds) return nbFinish(); s.round++; nbResetGuess(s); s.phase = "ask"; renderNB(); }
-function renderNBDone() {
-  const s = S.nb, f = s.final || s, win = f.ypts > f.mpts, tie = f.ypts === f.mpts;
-  $("#room").innerHTML = `<div class="card">${gamesBar(NB_TITLE[s.game])}<div class="rcard on"><div class="label">Final score</div><b style="font-size:26px">${win ? "You beat the model" : tie ? "A tie with the model" : "The model won"}</b>
-    <div class="tiles" style="margin-top:10px"><div class="tile"><b class="num">${f.ypts}</b><small>you, of 45</small></div><div class="tile"><b class="num">${f.mpts}</b><small>model</small></div></div>
-    <div class="lb" style="margin-top:10px">${(f.log || []).map((r) => `<div class="lbrow"><span class="fine">${esc(nbDate(r[0]))}</span><span>${esc(r[2])} at ${esc(r[1])}: real ${esc(r[7])}</span><span class="fine">You ${esc(r[3])} (+${r[5]}) · Model +${r[6]}</span></div>`).join("")}</div></div>
-    <div class="row" style="margin-top:12px">${s.game === "nbdaily" ? '<span class="fine">Come back tomorrow for a fresh five.</span>' : '<button class="btn" id="nbAgain" type="button">Play again</button>'}<button class="btn ghost" id="nbShare" type="button">Copy my result</button></div></div>`;
-}
-document.addEventListener("click", (e) => {
-  const t = e.target.closest && e.target.closest("[data-nbstep],[data-nbq]"); if (!t || !S.nb || S.nb.phase !== "ask" || !NB_TITLE[S.game]) return; const s = S.nb;
-  if (t.dataset.nbstep) { const [k, d] = t.dataset.nbstep.split("|"), key = k === "h" ? "gh" : "ga"; s[key] = Math.max(60, Math.min(170, s[key] + +d)); Snd.tick(); return renderNB(); }
-  if (t.dataset.nbq) { const [i, k] = t.dataset.nbq.split("|"); s.qp[+i] = k; Snd.tick(); return renderNB(); }
-});
-document.addEventListener("change", (e) => { const m = /^nbS([ha])$/.exec(e.target.id || ""); if (m && S.nb) { const v = Math.max(60, Math.min(170, parseInt(e.target.value, 10) || 100)); S.nb[m[1] === "h" ? "gh" : "ga"] = v; renderNB(); } });
-
-/* =====================================================================================================================
-   The basketball look: hardwood, a hoop that swishes, jersey type, scoreboard numbers. (Football keeps its floodlit stadium.)
-   ===================================================================================================================== */
-{ const css = document.createElement("style"); css.textContent = `
-:root{--display:"Anton","Barlow Condensed",Impact,sans-serif}
-:root[data-league]{--display:"Anton","Barlow Condensed",Impact,sans-serif}
-body{background:var(--bg)}
-body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,170,90,.035) 0 2px,transparent 2px 64px),radial-gradient(1100px 520px at 50% -8%,rgba(255,138,61,.16),transparent 70%);transform:translateZ(0)}
-.stadium{contain:strict;will-change:transform}
-h1,h2,h3,.dname,.gname,.name,.big,.big2,.bigpos{font-family:var(--display);letter-spacing:.015em;text-transform:uppercase;font-weight:400}
-h1{font-size:clamp(54px,11vw,110px);line-height:.95}
-h1 em{font-style:normal;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,.35)}
-.label,.gmodes,.qhud .label{font-family:"Barlow Condensed",var(--body);letter-spacing:.12em;text-transform:uppercase}
-.num{font-family:"Barlow Condensed",var(--mono);font-weight:700;letter-spacing:.02em}
-.card,.gcard,.door,.gpick,.rcard,.howcard{border-radius:14px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 92%,#fff 3%),var(--surface))}
-.gcard,.door,.gpick{position:relative;overflow:hidden;transition:transform .28s cubic-bezier(.3,1.6,.5,1),border-color .2s,box-shadow .2s}
-.gcard::after,.door::after,.gpick::after{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:repeating-linear-gradient(90deg,var(--accent) 0 14px,transparent 14px 20px);opacity:.85}
-.gcard:hover,.door:hover,.gpick:hover{transform:translateY(-6px) scale(1.015);border-color:var(--accent);box-shadow:0 18px 40px -18px var(--accent)}
-.gcard:active,.door:active,.gpick:active{transform:translateY(2px) scale(.985)}
-.btn{border-radius:10px;font-family:"Barlow Condensed",var(--body);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:1.02em;transition:transform .2s cubic-bezier(.3,1.7,.5,1)}
-.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(2px) scale(.97)}
-.chip[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
-.badge.hface img{object-fit:cover}
-.photowall .wtile{border-radius:12px}
-#scorebox{display:none}
-.homehero h1{animation:nbdrop .9s cubic-bezier(.3,1.5,.5,1) both}
-@keyframes nbdrop{0%{transform:translateY(-60px) scaleY(1.15);opacity:0}55%{transform:translateY(0) scaleY(.9)}75%{transform:translateY(-12px) scaleY(1.04)}100%{transform:none;opacity:1}}
-.gcard:hover .gfaces .badge,.door:hover .gfaces .badge,.gpick:hover .gfaces .badge{animation:nbhop 1.1s ease-in-out infinite}.gcard:hover .gfaces .badge:nth-child(2){animation-delay:.12s}.gcard:hover .gfaces .badge:nth-child(3){animation-delay:.24s}
-@keyframes nbhop{0%,100%{transform:translateY(0)}12%{transform:translateY(-8px)}24%{transform:translateY(0) scale(1.04,.94)}30%{transform:none}}
-.nbscore{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:#0a0603;border:2px solid color-mix(in srgb,var(--accent) 50%,#000);border-radius:12px;padding:12px}
-.nbtm{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.nbtm b{font-family:var(--display);text-transform:uppercase;font-weight:400;letter-spacing:.03em;font-size:20px}
-.nbvs{font:700 22px "Barlow Condensed",sans-serif;color:var(--muted)}
-.nbstep{display:flex;align-items:center;gap:6px}.nbstep input{width:88px;text-align:center;font-size:44px;line-height:1;background:transparent;border:0;border-bottom:3px solid var(--accent);color:#ffd23f;text-shadow:0 0 14px rgba(255,138,61,.55)}
-.nbstep .btn{width:38px;height:38px;padding:0;font-size:22px}
-@media (max-width:480px){.nbstep{gap:3px}.nbstep input{width:58px;font-size:32px}.nbstep .btn{width:30px;height:30px;font-size:18px}.nbscore{gap:6px}}
-.nbqrow{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
-.nbq{flex-direction:row;gap:8px;padding:8px 10px;min-height:0}.nbq b{font-size:15px}.nbq.sel{outline:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
-.nbtable{overflow-x:auto}.nbtable table{width:100%;border-collapse:collapse;font-size:14px}.nbtable th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 6px}.nbtable td{padding:6px;border-top:1px solid var(--line)}
-.nbbars{display:grid;gap:6px}.nbbar{display:grid;grid-template-columns:78px 1fr 56px;gap:8px;align-items:center;font-size:14px}.nbbar i{display:block;height:12px;border-radius:3px;background:var(--line);overflow:hidden}.nbbar b{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:var(--w);transform-origin:left;animation:nbgrow .9s cubic-bezier(.2,.9,.3,1) both}
-@keyframes nbgrow{from{transform:scaleX(0)}}
-.nbrate{display:grid;grid-template-columns:28px 40px 1fr 60px;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
-.court-rim{animation:none}.nbnet{transform-origin:50% 0;animation:nbswish 2.4s ease-in-out infinite}
-@keyframes nbswish{0%,52%,100%{transform:scaleY(1) scaleX(1)}58%{transform:scaleY(1.22) scaleX(.9)}66%{transform:scaleY(.92) scaleX(1.06)}74%{transform:none}}
-.nbball{animation:nbball 2.4s cubic-bezier(.35,.1,.55,1) infinite}
-@keyframes nbball{0%{transform:translate(-340px,150px)}30%{transform:translate(-170px,-60px)}52%{transform:translate(0,40px)}58%{transform:translate(0,95px)}74%{transform:translate(-28px,215px)}84%{transform:translate(-48px,150px)}100%{transform:translate(-340px,150px)}}
-@media(prefers-reduced-motion:reduce){.nbball,.nbnet,.gfaces .badge,.homehero h1{animation:none}}
-:root[data-motion=reduced] .nbball,:root[data-motion=reduced] .nbnet,:root[data-motion=reduced] .gfaces .badge{animation:none}
-`; document.head.appendChild(css); }
-function paintStadium(code) {
-  const el = $("#stadium"); if (!el) return; const r = mulberry(hash("court" + code)), W = 1200, H = 360;
-  let crowd = ""; for (let k = 0; k < 56; k++) { const x = r() * W, y = 150 + r() * 70, col = r() < 0.3 ? "var(--accent)" : r() < 0.5 ? "var(--accent2)" : "#fff"; crowd += `<circle class="fan" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.6 + r() * 2).toFixed(1)}" fill="${col}" style="animation-delay:${(r() * 3).toFixed(2)}s;animation-duration:${(1.4 + r() * 2).toFixed(2)}s"/>`; }
-  const net = [0, 1, 2, 3, 4].map((i) => `<path d="M${960 + i * 20} 156 L${970 + i * 15} 205" stroke="#fff" stroke-opacity=".8" stroke-width="2" fill="none"/>`).join("") + `<path d="M964 172h72M968 188h64" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none"/>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="floor" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8a5a2b"/><stop offset="1" stop-color="#4a2c12"/></linearGradient></defs>
-    ${crowd}
-    <path d="M0 ${H} L0 250 L${W} 250 L${W} ${H}Z" fill="url(#floor)" opacity=".9"/>
-    <g stroke="#ffe9c9" stroke-opacity=".55" stroke-width="3" fill="none"><path d="M0 252H${W}"/><ellipse cx="420" cy="300" rx="120" ry="30"/><path d="M60 ${H}L180 252M${W - 60} ${H}L${W - 180} 252"/><path d="M860 252L820 ${H}M1140 252L1180 ${H}"/><ellipse cx="1000" cy="300" rx="90" ry="22"/></g>
-    <rect x="996" y="96" width="8" height="160" fill="#2b2b2b"/><rect x="940" y="70" width="120" height="76" rx="6" fill="#f5f5f5" fill-opacity=".92" stroke="#bbb" stroke-width="3"/><rect x="975" y="108" width="50" height="34" fill="none" stroke="#e8542e" stroke-width="3"/>
-    <g class="nbnet">${net}</g><ellipse cx="1000" cy="156" rx="42" ry="7" fill="none" stroke="#ff6a1a" stroke-width="5"/>
-    <g transform="translate(1000 0)"><g class="nbball"><circle r="17" fill="#ff7a1a" stroke="#6b2f08" stroke-width="2"/><path d="M-17 0H17M0-17V17M-12-12Q0 0 -12 12M12-12Q0 0 12 12" stroke="#6b2f08" stroke-width="1.6" fill="none"/></g></g></svg>`;
-}
-
-/* ---------- Our model (replaces the football About page) ---------- */
-ABOUT_TABS.length = 0; ABOUT_TABS.push(["how", "How the model works"], ["acc", "How good is it?"], ["rate", "Team ratings"], ["limits", "Honest limits and sources"], ["road", "Roadmap and votes"]);
-ROADMAP.length = 0; ROADMAP.push(["done", "Basketball beta", "Players, teams and careers from 25 seasons of box scores, plus Beat the Model."], ["next", "Starting five", "Name the five who started a Finals game."], ["next", "Who did it", "Who led the scoring in a famous game?"], ["next", "NBA awards", "Needs a complete source for MVPs, Finals MVPs and more."], ["later", "Higher or lower", "Two players, one stat."]);
-{ const aboutOld = renderAboutPage;
-  renderAboutPage = function () {
-    if (!ABOUT_TABS.some((t) => t[0] === S.abTab)) S.abTab = "how";
-    if (S.abTab === "road") return aboutOld();
-    const el = $("#aboutPage"), tab = S.abTab, per = NM.summary.perSeason || {}, o = NBO;
-    const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${tab === k}">${n}</button>`).join("")}</div>`;
-    let body = "";
-    if (tab === "how") body = `${String((DATA.about || {}).why || "").trim() ? `<div class="card abx"><h2><svg class=ic><use href=#i-ball></use></svg> Why this exists</h2><div class="abwhy">${esc(String(DATA.about.why).trim()).split(/\n\s*\n/).map((p) => `<p>${p}</p>`).join("")}<div class="fine">In the owner's words.</div></div></div>` : ""}<div class="card abx"><h2><svg class=ic><use href=#i-gear></use></svg> How the model works</h2>
-      <p>Every team has a <b>rating</b>, a single number that says how good it is. Everyone starts at 1,500. After each game the winner's rating goes up and the loser's goes down. Beat a strong team, or win by a lot, and it moves more. This is called an <b>Elo rating</b>.</p>
-      <h3>What it adds</h3><ul><li><b>Home court.</b> The home team gets a boost worth about 70 rating points.</li><li><b>Tired legs.</b> A team playing the second night of a back-to-back gets a small penalty.</li><li><b>New seasons.</b> Ratings slide a quarter of the way back toward average each summer, because rosters change.</li></ul>
-      <h3>From a rating to a score</h3><p>The rating gap gives a predicted <b>margin</b>. Each team's recent scoring and defence give a predicted <b>total</b>. Together they make a predicted score for both teams. To call a <b>quarter</b>, the model picks the team it expects to lead: a quarter is about a quarter of the game, so it mostly follows the favourite.</p>
-      <h3>The rule that keeps it honest</h3><p>When the model predicts a game it only uses games played <b>before</b> it. It never sees the result, so beating it means something.</p></div>`;
-    else if (tab === "acc") {
-      const seasons = Object.keys(per).filter((y) => +y >= 2003 && +y <= 2026).sort(), pct = (v) => Math.round(v * 1000) / 10;
-      body = `<div class="card abx"><h2><svg class=ic><use href=#i-trophy></use></svg> How good is it?</h2><div class="tiles"><div class="tile"><b class="num">${pct(o.acc || 0)}%</b><small>winners right, ${(o.n || 0).toLocaleString()} games</small></div><div class="tile"><b class="num">${pct(o.home || 0)}%</b><small>always pick the home team</small></div><div class="tile"><b class="num">${NBQ.score_err || "?"}</b><small>points off, both teams added up</small></div><div class="tile"><b class="num">${pct(NBQ.q_acc || 0)}%</b><small>quarter winners right</small></div></div>
-      <p class="fine" style="margin-top:10px">Every number is from games the model had never seen. Basketball has a lot of luck in it, so even good models are wrong about one winner in three. A season here is named by the year it ends, and the model uses earlier seasons only.</p>
-      <h3>Winners right, by season</h3><div class="nbbars">${seasons.map((y) => `<div class="nbbar"><span class="fine">${seasonLab(+y)}</span><i><b style="--w:${pct(per[y].acc) * 1.3}%"></b></i><em class="num">${pct(per[y].acc)}%</em></div>`).join("")}</div></div>`;
-    } else if (tab === "rate") {
-      const list = Object.entries(NM.elo || {}).sort((a, b) => b[1] - a[1]), top = list[0] ? list[0][1] : 1700, lo = list.length ? list[list.length - 1][1] : 1300;
-      body = `<div class="card abx"><h2><svg class=ic><use href=#i-rank></use></svg> Team ratings</h2><p class="fine">The model's rating for every team after the latest game in the data. Higher means stronger.</p>${list.map(([t, v], i) => `<div class="nbrate"><span class="num">${i + 1}</span>${badge(t, "sm")}<span>${esc(t)}</span><b class="num">${v}</b></div>`).join("")}</div>`;
-    } else body = `<div class="card abx"><h2><svg class=ic><use href=#i-shield></use></svg> Honest limits and sources</h2><ul>
-      <li><b>Box scores.</b> Players, teams, scores and titles come from ESPN box scores (via the sportsdataverse project), from the 2001-02 season on. Nothing earlier is used, so career totals say "since 2001-02", and careers that began earlier are left out of Career path.</li>
-      <li><b>Bios.</b> Birth dates, heights, birthplaces and nationalities come from Wikidata. If a player has none, he is left out of games that need them.</li>
-      <li><b>Quarters.</b> Real quarter scores exist from about ${seasonLab(NBQ.from || 2020)} on, so score and quarter games use those seasons only.</li>
-      <li><b>Titles.</b> A player counts as a champion if he played in the playoffs for the title team.</li>
-      <li><b>Awards.</b> MVP, Finals MVP, Defensive Player, Rookie, Sixth Man and Most Improved winners for 2001-02 on come from Wikipedia's winner lists and are matched to players by name; any it could not match are left out, never guessed.</li>
-      <li><b>Names.</b> Teams appear under today's names, so the Sonics show as the Thunder.</li>
-      <li><b>Not affiliated.</b> Team logos and player photos belong to their owners. This is an independent student project, not endorsed by the NBA, any team or any player.</li></ul>
-      <p class="fine">Built by moisback22. The model is simple on purpose: it can be explained in a minute, and its accuracy is shown above, not hidden.</p></div>`;
-    el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}${body}`;
-  };
-}
-{ const homeOld = renderHome;
-  renderHome = function () { homeOld(); const d = $("#doors"); if (d && !d.querySelector('[data-door="about"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="about"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-bulb></use></svg></span></div><div class="dname">Our model</div><div class="dtag">How the prediction model works, how good it really is, team ratings, and what the data does not cover.</div><span class="dgo">Read</span></button>`); };
-}
-
-/* =====================================================================================================================
-   More NBA games: Who dropped it? (a hidden stat line), Starting five, Higher or lower.  All from real box scores.
-   ===================================================================================================================== */
-const NBX = DATA.nbaXI || [], NBPERF = DATA.nbaPerf || [];
-const PBYID = Object.fromEntries(QZ.players.map((p) => [p.id, p]));
-const espnFace = (id) => `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${id}.png&w=112&h=82`;
-/* ---- Who dropped it? (runs on the shared quiz engine: solo, two players, online) ---- */
-function droppedClues(r) {
-  const g = r.g, p = r.p, cl = [];
-  cl.push(["Stat line", `${g.pts} points, ${g.reb} rebounds and ${g.ast} assists`]);
-  cl.push(["Shooting", `${g.fg[0]} of ${g.fg[1]} from the field, ${g.tp[0]} of ${g.tp[1]} from three, in ${g.min} minutes`]);
-  if (g.stl >= 3 || g.blk >= 3) cl.push(["Defence", `${g.stl} steal${g.stl === 1 ? "" : "s"} and ${g.blk} block${g.blk === 1 ? "" : "s"}`]);
-  cl.push(["Game", `${g.home ? "At home against" : "On the road at"} the ${nbEra(g.opp, nbSeasonOf(g.date))}${g.po ? " in the playoffs" : ""}, ${nbDate(g.date)}`]);
-  cl.push(["Result", `${g.won ? "Won" : "Lost"} ${Math.max(...g.score)}-${Math.min(...g.score)}`]);
-  if (p.h) cl.push(["Height", `${ftIn(p.h)} tall`]);
-  cl.push(["Position", p.sub || p.pos, POSICON[p.pos] || ""]);
-  cl.push(["Nationality", p.nat || p.bc, flagOf(p.nat || p.bc)]);
-  cl.push(["Team", `Played for the ${nbEra(g.team, nbSeasonOf(g.date))}`, clubBadgeFor(g.team, "sm")]);
-  cl.push(["Name", `${p.n.split(" ").length} words, ${p.n.replace(/ /g, "").length} letters, starts with ${p.n[0]}`]);
-  return cl;
-}
-QDEF.dropped = { name: "Who dropped it?", unit: "player", rounds: 5, clueS: 6, mk: (scope) => { const pool = NBPERF.filter((g) => PBYID[g.pid] && playerOK(PBYID[g.pid])); const g = rnd(pool.length >= 150 ? pool : NBPERF.filter((x) => PBYID[x.pid] && poolOK(PBYID[x.pid]))); /* Elite alone has few big games, so it also draws from the wider pool */ return { p: PBYID[g.pid], g }; }, clues: (r) => droppedClues(r), ans: (r) => ({ kind: "player", id: r.p.id, name: r.p.n }) };
-/* ---- Starting five ---- */
-function nbxStart() {
-  const row = rnd(NBX), t = rnd(row.teams), o = row.teams.find((x) => x !== t);
-  S.nbx = { row, t, o, slots: t.starters.map(() => null), wrong: 0, hints: 0, phase: "play", score: 0 };
-}
-function renderXI5() {
-  if (!S.nbx) nbxStart(); const s = S.nbx, r = s.row, t = s.t, o = s.o, filled = s.slots.filter(Boolean).length;
-  const slot = (st, i) => { const f = s.slots[i], hint = s.hints > 0 || s.phase === "done"; return `<div class="nbslot ${f ? "got" : s.phase === "done" ? "miss" : ""}"><span class="fine">${esc(st.pos || "")}</span>${f || s.phase === "done" ? `<img src="${espnFace(st.id)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()"><b>${esc(st.n)}</b>` : `<span class="num nbq">${hint ? esc(st.n[0]) + " " + "_ ".repeat(Math.max(1, st.n.split(" ").slice(-1)[0].length - 1)) : "?"}</span>`}</div>`; };
-  $("#room").innerHTML = `<div class="card">${gamesBar("Starting five")}<div class="qhud"><span class="label">${esc(r.label)} · ${esc(r.season)}</span><span class="num qscore"><small>Score</small> <b>${Math.max(0, filled * 100 - s.wrong * 20 - s.hints * 30)}</b></span></div>
-    <div class="nbscore"><div class="nbtm">${nbLogo(t.team, "xl")}<b>${esc(t.team)}</b><span class="fine">${t.side === "home" ? "Home" : "Away"} · ${t.score}</span></div><div class="nbvs">${t.won ? "beat" : "lost to"}</div><div class="nbtm">${nbLogo(o.team, "xl")}<b>${esc(o.team)}</b><span class="fine">${o.score}</span></div></div>
-    <p class="sub" style="margin-top:10px">${nbDate(r.date)}. Name the five players who started for the ${esc(t.team)}.</p><div class="nbslots">${t.starters.map(slot).join("")}</div>
-    ${s.phase === "done" ? `<div class="row" style="margin-top:12px"><b>${filled === 5 ? "All five!" : filled + " of 5"}</b><button class="btn" id="nbxNext" type="button">Next game</button></div>` : `<div class="row" style="margin-top:12px"><input id="nbxIn" autocomplete="off" placeholder="Type a surname and press Enter" aria-label="Player name" style="flex:1"><button class="btn" id="nbxGo" type="button">Guess</button><button class="btn ghost" id="nbxHint" type="button">Hint (−30)</button><button class="btn ghost" id="nbxGive" type="button">Give up</button></div><p class="fine" id="nbxMsg">${s.msg || "&nbsp;"}</p>`}</div>`;
-  const i = $("#nbxIn"); if (i) i.focus();
-}
-function nbxGuess() {
-  const s = S.nbx, i = $("#nbxIn"); if (!s || s.phase !== "play" || !i || !i.value.trim()) return; const v = i.value.trim(), idx = s.t.starters.findIndex((st, k) => !s.slots[k] && nameMatch(v, st.n));
-  if (idx >= 0) { s.slots[idx] = s.t.starters[idx].n; s.msg = ""; Snd.right(); } else { s.wrong++; s.msg = `Not a starter in this game (−20).`; Snd.wrong(); }
-  if (s.slots.every(Boolean)) nbxEnd(); else renderXI5();
-}
-function nbxEnd() { const s = S.nbx; s.phase = "done"; const sc = Math.max(0, s.slots.filter(Boolean).length * 100 - s.wrong * 20 - s.hints * 30); s.score = sc; const k = "nbbest_nbxi", cur = store.items[k] || { best: 0 }; if (sc > cur.best) lockIn(k, { best: sc }); reward(10 + Math.round(sc / 25), "Starting five", null); Board.submit({ game: "nbxi", league: "all", score: sc }); if (sc >= 500) { Snd.win(); confetti(); } renderXI5(); }
-/* ---- Higher or lower ---- */
-const NBH = [["pts", "career points since 2001-02", (p) => p.pts], ["reb", "career rebounds since 2001-02", (p) => p.reb], ["ast", "career assists since 2001-02", (p) => p.ast], ["gp", "regular-season games played since 2001-02", (p) => p.gp], ["bp", "best scoring season since 2001-02 (points a game)", (p) => (p.bp ? p.bp.avg : 0)]];
-function nbhPair() {
-  const m = rnd(NBH), pool = playerPool("ALL", (p) => playerOK(p) && m[2](p) > 0), ratio = { easy: 1.6, medium: 1.3, hard: 1.12, elite: 1.04 }[S.diff] || 1.3, seen = S.nbhSeen = S.nbhSeen || [];
-  for (let t = 0; t < 400; t++) { const a = rnd(pool), b = rnd(pool), va = m[2](a), vb = m[2](b); if (a.id !== b.id && va !== vb && Math.max(va, vb) / Math.min(va, vb) >= ratio && (t > 250 || (!seen.includes(a.id) && !seen.includes(b.id)))) { seen.push(a.id, b.id); S.nbhSeen = seen.slice(-60); return { m, a, b, va, vb, win: va > vb ? "a" : "b", chosen: null }; } }
-  return null;
-}
-function renderHOL2() {
-  const s = S.nbh = S.nbh || { streak: 0, q: nbhPair() }; if (!s.q) s.q = nbhPair(); const q = s.q, best = (store.items["nbbest_nbhol"] || { best: 0 }).best;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Not enough players at this level.</p></div>`; return; }
-  const side = (p, k, v) => { const rev = q.chosen != null, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : ""; return `<button type="button" class="holc ${cls}" data-nbh="${k}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)} · ${esc(p.club || "")}</span><span class="num holv" data-v="${v}">${rev ? Math.round(v * 10) / 10 : "?"}</span></button>`; };
-  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Who has more: <b>${q.m[1]}</b>?</p><div class="holpair">${side(q.a, "a", q.va)}<span class="vs">or</span>${side(q.b, "b", q.vb)}</div>
-    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${s.streak}</b><button class="btn" id="nbhNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
-}
-function nbhAnswer(k) {
-  const s = S.nbh, q = s.q; if (!q || q.chosen != null) return; q.chosen = k; const ok = k === q.win; s.streak = ok ? s.streak + 1 : 0;
-  const cur = store.items["nbbest_nbhol"] || { best: 0 }; if (s.streak > cur.best) lockIn("nbbest_nbhol", { best: s.streak });
-  reward(5 + (ok ? 5 + 2 * Math.min(s.streak, 10) : 0), "Higher or lower", null); if (ok) Board.submit({ game: "nbhol", league: "all", score: s.streak });
-  Snd.flip(); renderHOL2(); setTimeout(() => { ok ? (s.streak >= 5 ? Snd.win() : Snd.right()) : Snd.wrong(); if (ok && s.streak >= 5 && s.streak % 5 === 0) confetti(); }, 450);
-}
-document.addEventListener("click", (e) => {
-  const t = e.target.closest && e.target.closest("[data-nbh],#nbhNext,#nbxGo,#nbxHint,#nbxGive,#nbxNext"); if (!t) return;
-  if (S.game === "nbhol") { if (t.dataset.nbh) return nbhAnswer(t.dataset.nbh); if (t.id === "nbhNext") { S.nbh.q = null; return renderHOL2(); } }
-  if (S.game === "nbxi" && S.nbx) { if (t.id === "nbxGo") return nbxGuess(); if (t.id === "nbxHint") { S.nbx.hints = Math.min(3, S.nbx.hints + 1); return renderXI5(); } if (t.id === "nbxGive") return nbxEnd(); if (t.id === "nbxNext") { S.nbx = null; return renderXI5(); } }
-});
-document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "nbxIn") { e.preventDefault(); nbxGuess(); } });
-{ const old = renderNB; renderNB = function () { if (S.game === "nbxi") return renderXI5(); if (S.game === "nbhol") return renderHOL2(); old(); }; }
-{ const css = document.createElement("style"); css.textContent = `.nbslots{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}.nbslot{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:12px;border:1px dashed var(--line);min-height:128px;justify-content:center;text-align:center}.nbslot.got{border-style:solid;border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}.nbslot.miss{border-color:var(--bad)}.nbslot img{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top;background:var(--surface2)}.nbslot b{font-size:13px}`; document.head.appendChild(css); }
-Object.assign(NB_TITLE, { nbxi: "Starting five", nbhol: "Higher or lower" });
-["dropped", "nbxi", "nbhol"].forEach((id) => GAME_IDS.push(id));
-QUIZ_GAMES.push(
-  { id: "dropped", name: "Who dropped it?", modes: "Solo streak · 2 players", tag: "A real stat line with the name hidden: points, rebounds, assists. Clues get easier. Who was it?", faces: () => heroFaces(2) },
-  { id: "nbxi", name: "Starting five", modes: "Solo", tag: "A Finals clincher or a Game 7. Name the five who started.", faces: () => heroFaces(3) },
-  { id: "nbhol", name: "Higher or lower", modes: "Solo streak", tag: "Two players, one stat. Who has more? Keep the streak alive.", faces: () => heroFaces(2) },
-);
-Object.assign(HOWTO, {
-  "g:dropped": ["Who dropped it?", ["What you do", "A real box-score line from a real game, with the player hidden. The first clue is the stat line; later clues add the game, his height, his team and more. Buzz when you know it and type the name."], ["Scoring", "Up to 1,000 points, falling as clues appear. A wrong guess costs 150."], ["Good to know", `Only big games count: 45+ points, triple-doubles, 24+ rebounds, 20+ assists and similar, from ${COVER} on.`]],
-  "g:nbxi": ["Starting five", ["What you do", "A Game 7 or a conference finals or Finals clincher, and one of its teams. Type the surnames of the five players who started."], ["Scoring", "100 per player, minus 20 per wrong guess and 30 per hint. A hint shows each missing player's first letter."], ["Good to know", `Starters come from the real box score. Games are from ${COVER} on.`]],
-  "g:nbhol": ["Higher or lower", ["What you do", "Two players and one stat. Pick the one with more. Easy compares superstars with big gaps; Elite compares close numbers."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Career numbers count games since ${COVER} only, for both players.`]],
-});
-BOARD_GAMES.push(["dropped", "Who dropped it?", "points"], ["nbxi", "Starting five", "best score"], ["nbhol", "Higher or lower", "best streak"]);
-RK_GAMES.push(["dropped", "Who dropped it?"]);
-BK_LABELS.push("Who dropped it?", "Starting five", "Higher or lower");
-
-/* =====================================================================================================================
-   Higher or lower, version 2: many kinds of question, and "fewer" as often as "more", so the famous or the better team
-   is not always the answer. Players, seasons, titles, height, age and whole teams.
-   ===================================================================================================================== */
-const NBH_DIFF = (a, b, c, d) => ({ easy: a, medium: b, hard: c, elite: d })[S.diff] || b;
-const nbhSeasons = () => Object.keys(LG.NBA.tables).filter((s) => s >= "2003-04");
-function nbhFind(pool, val, minRatio, minAbs, tries = 500) {
-  const seen = (S.nbhSeen = S.nbhSeen || []);
-  for (let t = 0; t < tries; t++) { const a = rnd(pool), b = rnd(pool); if (a === b) continue; const va = val(a), vb = val(b), hi = Math.max(va, vb), lo = Math.min(va, vb); if (va === vb) continue; if (lo > 0 && hi / lo < minRatio) continue; if (hi - lo < minAbs) continue; const ka = a.id || a[0], kb = b.id || b[0]; if (t < 300 && (seen.includes(ka + "|" + kb) || seen.includes(kb + "|" + ka))) continue; seen.push(ka + "|" + kb); S.nbhSeen = seen.slice(-80); return { a, b, va, vb }; }
-  return null;
-}
-const NBH_KINDS = [
-  () => { const m = rnd([["pts", "career points", (p) => p.pts], ["reb", "career rebounds", (p) => p.reb], ["ast", "career assists", (p) => p.ast], ["gp", "regular-season games played", (p) => p.gp]]), more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && m[2](p) > 0), r = nbhFind(pool, m[2], NBH_DIFF(1.7, 1.35, 1.15, 1.05), 0); return r && { ...r, text: `Who has ${more ? "more" : "fewer"} ${m[1]} since ${COVER}?`, more, fmt: (v) => Math.round(v).toLocaleString("en-US") }; },
-  () => { const m = rnd([["points", 1, 1.5], ["rebounds", 2, 1], ["assists", 3, 1], ["steals", 4, 0.3], ["blocks", 5, 0.3]]), s = rnd(nbhSeasons()), more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && p.ss && p.ss[s] && p.ss[s][m[1]] > 0), r = nbhFind(pool, (p) => p.ss[s][m[1]], NBH_DIFF(1.6, 1.3, 1.15, 1.07), m[2]); return r && { ...r, text: `Who averaged ${more ? "more" : "fewer"} ${m[0]} a game in ${s}?`, more, fmt: (v) => v.toFixed(1), ctx: (x) => `${x.club ? "" : ""}` }; },
-  () => { const more = Math.random() < 0.7, pool = playerPool("ALL", (p) => poolOK(p)), r = nbhFind(pool, (p) => (p.ti || []).length, 1, 1); return r && Math.max(r.va, r.vb) >= 1 && { ...r, text: `Who has won ${more ? "more" : "fewer"} NBA titles since ${COVER}?`, more, fmt: (v) => String(Math.round(v)) }; },
-  () => { const more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p) && p.h), r = nbhFind(pool, (p) => p.h, 1, NBH_DIFF(12, 8, 5, 3)); return r && { ...r, text: `Who is ${more ? "taller" : "shorter"}?`, more, fmt: (v) => `${ftIn(v)} (${Math.round(v)} cm)` }; },
-  () => { const more = Math.random() < 0.5, pool = playerPool("ALL", (p) => playerOK(p)), r = nbhFind(pool, (p) => Date.parse(p.dob) / 31557600000 + 1970, 1, NBH_DIFF(8, 5, 3, 1)); return r && { ...r, text: `Who is ${more ? "younger" : "older"}?`, more: more, fmt: (v) => `born ${Math.floor(v)}`, flip: true }; },
-  () => { const s = rnd(nbhSeasons()), rows = LG.NBA.tables[s], m = rnd([["won", "won", 1, (r) => r[4], NBH_DIFF(14, 9, 5, 3), "games"], ["scored", "scored", 2, (r) => r[2], NBH_DIFF(6, 4, 2.5, 1.5), "points a game"], ["allowed", "allowed", 3, (r) => r[3], NBH_DIFF(6, 4, 2.5, 1.5), "points a game"]]), more = Math.random() < 0.5, r = nbhFind(rows.filter((x) => clubOK(x[0])), m[3], 1, m[4]); return r && { ...r, team: true, text: `Which team ${m[1]} ${more ? "more" : "fewer"} ${m[5]} in ${s}?`, more, fmt: (v) => (m[2] === 1 ? String(v) : v.toFixed(1)) }; },
-];
-const NBH_W = [3, 6, 1, 2, 2, 4];
-function nbhPair() {
-  for (let t = 0; t < 40; t++) { let k = Math.random() * NBH_W.reduce((a, b) => a + b, 0), i = 0; while ((k -= NBH_W[i]) > 0) i++; if (i === S.nbhLast && t < 20) continue; const q = NBH_KINDS[i](); if (q) { S.nbhLast = i; const better = q.va > q.vb ? "a" : "b", worse = better === "a" ? "b" : "a"; q.win = q.more ? better : worse; q.chosen = null; return q; } }
-  return null;
-}
-function renderHOL2() {
-  const s = S.nbh = S.nbh || { streak: 0, q: null }; if (!s.q) s.q = nbhPair(); const q = s.q, best = (store.items["nbbest_nbhol"] || { best: 0 }).best;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub">Not enough players at this level.</p></div>`; return; }
-  const side = (x, k, v) => { const rev = q.chosen != null, cls = rev ? (q.win === k ? "ans" : q.chosen === k ? "wrong" : "") : "", pic = q.team ? badge(x[0], "xl") : playerPic(x, "xl"), nm = q.team ? x[0] : x.n, sub = q.team ? "" : `${esc(x.sub || x.pos)} · ${esc(x.club || "")}`;
-    return `<button type="button" class="holc ${cls}" data-nbh="${k}" ${rev ? "disabled" : ""}>${pic}<b>${esc(nm)}</b><span class="fine">${sub}</span><span class="num holv">${rev ? q.fmt(v) : "?"}</span></button>`; };
-  $("#room").innerHTML = `<div class="card">${gamesBar("Higher or lower")}<p class="sub" style="font-size:18px"><b>${esc(q.text)}</b></p><div class="holpair">${side(q.a, "a", q.va)}<span class="vs">or</span>${side(q.b, "b", q.vb)}</div>
-    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.win ? "up" : "down"}">${q.chosen === q.win ? "Right!" : "Wrong."} Streak ${s.streak}</b><button class="btn" id="nbhNext" type="button">${q.chosen === q.win ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
-}
-HOWTO["g:nbhol"] = ["Higher or lower", ["What you do", "Two players or two teams and one question. It changes every round: more or fewer points in a season, career totals, titles, height, age, or a team's wins. Read the question, it can ask for the lower one."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Career numbers count games since ${COVER} only, for both players.`]];
-
-/* =====================================================================================================================
-   Discover (basketball): one fun fact, one spotlight player and one question a day, the same for everyone. All computed from the data.
-   ===================================================================================================================== */
-function nbFacts() {
-  const P = QZ.players, top = (f, n = 1) => P.slice().sort((a, b) => f(b) - f(a)).slice(0, n), rows = [];
-  Object.entries(LG.NBA.tables).forEach(([s, t]) => t.forEach((r) => rows.push({ s, r })));
-  const f = [], c = top((p) => p.pts)[0], r = top((p) => p.reb)[0], a = top((p) => p.ast)[0], m = top((p) => new Set(p.hist).size)[0], w = rows.slice().sort((x, y) => y.r[4] - x.r[4])[0], hs = rows.slice().sort((x, y) => y.r[2] - x.r[2])[0], ds = rows.slice().sort((x, y) => x.r[3] - y.r[3])[0];
-  f.push(`${c.n} has scored the most points since ${COVER}: ${c.pts.toLocaleString("en-US")}.`, `${r.n} leads the rebounding since ${COVER} with ${r.reb.toLocaleString("en-US")}.`, `${a.n} has the most assists since ${COVER}: ${a.ast.toLocaleString("en-US")}.`, `${m.n} has played for ${new Set(m.hist).size} different teams since ${COVER}, more than anyone else in the data.`,
-    `The best regular season since ${COVER} by wins: the ${w.r[0]} in ${w.s} with ${w.r[4]}.`, `The highest-scoring team season since ${COVER}: the ${hs.r[0]} in ${hs.s}, ${hs.r[2].toFixed(1)} points a game.`, `The stingiest defence since ${COVER}: the ${ds.r[0]} in ${ds.s}, allowing ${ds.r[3].toFixed(1)} points a game.`);
-  const tall = top((p) => p.h || 0)[0]; f.push(`${tall.n} is the tallest player in the data at ${ftIn(tall.h)}.`);
-  const ti = top((p) => (p.ti || []).length)[0]; if (ti && (ti.ti || []).length) f.push(`${ti.n} has won the most titles since ${COVER}: ${ti.ti.length}.`);
-  return f;
-}
-function renderDiscover() {
-  const day = todayKey(), rng = mulberry(hash("nbdisc" + day)), el = $("#discPage"), facts = nbFacts(), fact = facts[Math.floor(rng() * facts.length)];
-  const spot = QZ.players.filter((p) => playerOK({ ...p }) || true).filter((p) => FAME.get(p.id) < 400)[Math.floor(rng() * 400)] || QZ.players[0];
-  const seasons = Object.keys(NM.series || {}).filter((y) => +y >= 2003).sort(), y = seasons[Math.floor(rng() * seasons.length)], champ = ((NM.series[y] || []).slice(-1)[0] || {}).win, champName = champ ? teamById(champ) : null;
-  const opts = champName ? shuffle([champName, ...shuffle(Object.keys(QZ.clubs).filter((n) => n !== champName)).slice(0, 3)]) : [], saved = store.items["dq_" + day];
-  const sline = [spot.sub || spot.pos, spot.nat ? "from " + spot.nat : "", spot.active ? `plays for the ${spot.club}` : `last played for the ${spot.club}`, spot.bp ? `best scoring season: ${spot.bp.avg} points a game (${spot.bp.season})` : ""].filter(Boolean).join(" · ");
-  el.innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Discover</span></div></nav>
-    <div class="card abx"><div class="label">Today</div><h2><svg class=ic><use href=#i-bulb></use></svg> Fun fact</h2><p style="font-size:18px">${esc(fact)}</p></div>
-    <div class="card abx"><div class="label">Spotlight</div><div class="row" style="gap:14px">${playerPic(spot, "xl")}<div><h3 style="font-size:28px">${esc(spot.n)}</h3><div class="fine">${esc(sline)}</div></div></div></div>
-    ${champName ? `<div class="card abx"><div class="label">Question of the day</div><h3>Who won the NBA title in ${seasonLab(+y)}?</h3><div class="holpair" style="flex-wrap:wrap">${opts.map((n) => `<button type="button" class="holc ${saved ? (n === champName ? "ans" : saved.pick === n ? "wrong" : "") : ""}" data-nbdq="${esc(n)}" ${saved ? "disabled" : ""}>${badge(n, "md")}<b>${esc(n)}</b></button>`).join("")}</div>${saved ? `<p class="fine" style="margin-top:8px">${saved.pick === champName ? "Right!" : "Not quite."} It was the ${esc(champName)}. Come back tomorrow.</p>` : ""}</div>` : ""}`;
-  el._champ = champName;
-}
-document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbdq]"); if (!b) return; const day = todayKey(), el = $("#discPage"); if (store.items["dq_" + day]) return; const pick = b.dataset.nbdq, ok = pick === el._champ; lockIn("dq_" + day, { pick }); reward(ok ? 15 : 5, "Daily question", null); ok ? (Snd.win(), confetti()) : Snd.wrong(); renderDiscover(); });
-{ const homeOld2 = renderHome; renderHome = function () { homeOld2(); const d = $("#doors"); if (d && !d.querySelector('[data-door="discover"]')) d.insertAdjacentHTML("beforeend", `<button type="button" class="door" data-door="discover"><div class="gfaces"><span class="rkbig"><svg class=ic><use href=#i-compass></use></svg></span></div><div class="dname">Discover</div><div class="dtag">A fun fact, a spotlight player and a question, new every day.</div><span class="dgo">Open</span></button>`); }; }
-/* basketball text is English only for now, so the football-only language picker is hidden */
-{ const css = document.createElement("style"); css.textContent = `[data-lang],#langRow{display:none!important}`; document.head.appendChild(css); }
-
-/* ---------- Odd one out: three of these four fit, one does not ---------- */
-function nboNew() {
-  const kinds = [
-    () => { const teams = Object.keys(QZ.clubs).filter((t) => clubOK(t)), t = rnd(teams), pool = playerPool("ALL", (p) => playerOK(p)), yes = shuffle(pool.filter((p) => p.hist.includes(t))).slice(0, 3), no = rnd(pool.filter((p) => !p.hist.includes(t) && !p.partial)); return yes.length === 3 && no && { text: `Which of these players never played for the ${t} (since ${COVER})?`, yes, no, why: `${no.n} never played for the ${t}.` }; },
-    () => { const pool = playerPool("ALL", (p) => playerOK(p)), yes = shuffle(pool.filter((p) => (p.ti || []).length)).slice(0, 3), no = rnd(pool.filter((p) => !(p.ti || []).length && p.gp > 700)); return yes.length === 3 && no && { text: `Which of these players has never won an NBA title (since ${COVER})?`, yes, no, why: `${no.n} has no title since ${COVER}.` }; },
-    () => { const pool = playerPool("ALL", (p) => playerOK(p) && p.bp), yes = shuffle(pool.filter((p) => p.bp.avg >= 22)).slice(0, 3), no = rnd(pool.filter((p) => p.bp.avg < 14)); return yes.length === 3 && no && { text: `Which of these players never averaged 22+ points in a season (since ${COVER})?`, yes, no, why: `${no.n}'s best was ${no.bp.avg}.` }; },
-  ];
-  for (let t = 0; t < 40; t++) { const q = rnd(kinds)(); if (q) { q.opts = shuffle([...q.yes, q.no]); q.chosen = null; return q; } }
-  return null;
-}
-function renderODD() {
-  const s = S.nbo = S.nbo || { streak: 0, q: null }; if (!s.q) s.q = nboNew(); const q = s.q, best = (store.items["nbbest_nbodd"] || { best: 0 }).best;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Odd one out")}<p class="sub">Not enough players at this level.</p></div>`; return; }
-  $("#room").innerHTML = `<div class="card">${gamesBar("Odd one out")}<p class="sub" style="font-size:18px"><b>${esc(q.text)}</b></p><div class="holpair" style="flex-wrap:wrap">${q.opts.map((p) => { const rev = q.chosen != null, cls = rev ? (p === q.no ? "ans" : p === q.chosen ? "wrong" : "") : ""; return `<button type="button" class="holc ${cls}" data-nbo="${p.id}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)}</span></button>`; }).join("")}</div>
-    ${q.chosen != null ? `<div class="row" style="margin-top:14px"><b class="${q.chosen === q.no ? "up" : "down"}">${q.chosen === q.no ? "Right!" : "Wrong."} ${esc(q.why)} Streak ${s.streak}</b><button class="btn" id="nboNext" type="button">${q.chosen === q.no ? "Next" : "Try again"}</button></div>` : `<p class="fine" style="margin-top:10px">Streak ${s.streak} · best ${best}</p>`}</div>`;
-}
-document.addEventListener("click", (e) => { if (S.game !== "nbodd") return; const t = e.target.closest && e.target.closest("[data-nbo],#nboNext"); if (!t) return; const s = S.nbo;
-  if (t.id === "nboNext") { s.q = null; return renderODD(); }
-  const q = s.q; if (q.chosen != null) return; q.chosen = q.opts.find((p) => String(p.id) === t.dataset.nbo); const ok = q.chosen === q.no; s.streak = ok ? s.streak + 1 : 0;
-  const cur = store.items["nbbest_nbodd"] || { best: 0 }; if (s.streak > cur.best) lockIn("nbbest_nbodd", { best: s.streak }); reward(5 + (ok ? 5 + 2 * Math.min(s.streak, 10) : 0), "Odd one out", null); if (ok) Board.submit({ game: "nbodd", league: "all", score: s.streak });
-  Snd.flip(); renderODD(); setTimeout(() => { ok ? Snd.right() : Snd.wrong(); if (ok && s.streak % 5 === 0) confetti(); }, 400); });
-{ const old2 = renderNB; renderNB = function () { if (S.game === "nbodd") return renderODD(); old2(); }; }
-NB_TITLE.nbodd = "Odd one out"; GAME_IDS.push("nbodd");
-QUIZ_GAMES.push({ id: "nbodd", name: "Odd one out", modes: "Solo streak", tag: "Four players, one does not belong. Who never played for the team, never won a title, never scored 22 a night?", faces: () => heroFaces(3) });
-HOWTO["g:nbodd"] = ["Odd one out", ["What you do", "Three of the four players fit the question and one does not. Tap the odd one out."], ["Scoring", "Each right answer grows your streak. One wrong answer ends it."], ["Good to know", `Everything counts from ${COVER} on only, and the question says so.`]];
-BOARD_GAMES.push(["nbodd", "Odd one out", "best streak"]); BK_LABELS.push("Odd one out");
-
-/* =====================================================================================================================
-   Speed: lighter visuals on slow devices, scoreboard look, team colours, more motion.
-   ===================================================================================================================== */
-{ const css = document.createElement("style"); css.textContent = `
-:root[data-perf=low] .stadium,:root[data-perf=low] #fx,:root[data-perf=low] .photowall,:root[data-perf=low] body::before{display:none!important}
-:root[data-perf=low] *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;backdrop-filter:none!important}
-.nbstep input,.nbvs,.qhud .qscore b,#nbRpTime,.nbtable td.num,.nbscore .nbpts{font-family:"Orbitron","Barlow Condensed",monospace;font-weight:900;letter-spacing:.04em}
-.nbstep input{color:#ffb21f;text-shadow:0 0 10px rgba(255,150,20,.7)}
-.nbscore{box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 10px 30px -14px #000}
-.nbpts{font-size:34px;color:#ffb21f;text-shadow:0 0 12px rgba(255,150,20,.65);line-height:1}
-#nbRpTime{display:inline-block;min-width:64px;text-align:center;font-size:34px;color:#ff5a2a;background:#0a0603;border:2px solid #3a1d0e;border-radius:10px;padding:2px 10px;text-shadow:0 0 12px rgba(255,90,40,.8)}
-.nbq.sel{box-shadow:0 0 0 3px var(--accent),0 0 22px -4px var(--accent)}
-#room>.card,#room .gcard{animation:nbin .45s cubic-bezier(.2,.9,.3,1) both}
-@keyframes nbin{from{opacity:0;transform:translateY(14px) scale(.985)}}
-.holc.ans{animation:nbwin .6s cubic-bezier(.3,1.6,.5,1)}.holc.wrong{animation:nbshake .4s}
-@keyframes nbwin{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}@keyframes nbshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-`; document.head.appendChild(css); }
-/* team colours: the matchup scoreboard glows in both teams' colours, and favourite-team themes use real team colours */
-const nbLum = (h) => { const n = parseInt(String(h).replace("#", ""), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); };
-const nbCol = (team) => { const c = (DATA.colors || {})[team]; if (!c) return "#ff8a3d"; return nbLum(c[0]) < 70 && c[1] ? c[1] : c[0]; };
-const nbBoard = (away, home) => `background:linear-gradient(90deg,color-mix(in srgb,${nbCol(away)} 38%,#0a0603),#0a0603 38%,#0a0603 62%,color-mix(in srgb,${nbCol(home)} 38%,#0a0603));border-color:color-mix(in srgb,${nbCol(home)} 60%,#000)`;
-{ const old = renderNB; renderNB = function () { old(); const s = S.nb; if (!s || !s.items) { if (S.game === "nbxi" && S.nbx) tint(S.nbx.t.team, S.nbx.o.team); return; } const it = s.items[s.round - 1]; if (it && S.game !== "nbrapid") tint(it[2], it[1]); else if (it && S.game === "nbrapid") tint(it[2], it[1]); };
-  function tint(a, h) { const el = document.querySelector("#room .nbscore"); if (el) el.setAttribute("style", nbBoard(a, h)); const r = document.documentElement; r.style.setProperty("--accent", nbCol(h)); }
-}
-/* count-up on the revealed final score */
-{ const old2 = renderNB; renderNB = function () { old2(); document.querySelectorAll("#room .rcard .label").forEach((l) => { if (!/^Final:/.test(l.textContent)) return; }); const t = $("#nbRpTime"); if (t) t.classList.add("nbclock"); }; }
-/* slow device? measure the frame rate for two seconds while the page is in view, and only switch to lighter visuals if it is clearly low (under 30 fps). A hidden tab is never measured, because browsers slow those down on purpose. */
-setTimeout(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) return; let n = 0, t0 = performance.now(), aborted = false; const vis = () => { if (document.hidden) aborted = true; }; document.addEventListener("visibilitychange", vis);
-  const f = (t) => { n++; if (aborted) return; if (t - t0 < 2500) requestAnimationFrame(f); else { document.removeEventListener("visibilitychange", vis); const fps = n * 1000 / (t - t0); if (fps < 30 && !document.documentElement.dataset.perf) { document.documentElement.dataset.perf = "low"; try { toast("Switched to lighter visuals to keep things smooth"); } catch (e) { /* ok */ } } } }; requestAnimationFrame(f); }, 3500);
-{ const css = document.createElement("style"); css.textContent = `.lhead .flag,#lFlag{display:none!important}.bar a.pill{color:var(--muted);text-decoration:none;white-space:nowrap}.bar a.pill:hover{color:var(--ink)}`; document.head.appendChild(css); }
-
-const _icss = document.createElement("style"); _icss.textContent = `h2 svg.ic,h3 svg.ic,.sec svg.ic{color:var(--accent);width:1.1em;height:1.1em;vertical-align:-.15em}`; document.head.appendChild(_icss);
-
-/* =====================================================================================================================
-   Our model > Look up: a player's season-by-season history, or a team's seasons and how each ended.
-   ===================================================================================================================== */
-ABOUT_TABS.unshift(["look", "Look up a player or team"]);
-const nbSeasonsLeft = (cr, s) => { const hit = (cr || []).find(([, a, b]) => a <= s && s <= b); return hit ? hit[0] : ""; };
-function nbLkSearch(q) { const n = qnorm(q); if (n.length < 2) return []; const out = [];
-  Object.keys(QZ.clubs).forEach((t) => { const f = QZ.clubs[t]; if (qnorm(t + " " + (f.full || "") + " " + (f.loc || "")).includes(n)) out.push({ k: "t|" + t, label: f.full || t, sub: "team", s: 0 }); });
-  QZ.players.forEach((p) => { const nm = qnorm(p.n); if (nm.includes(n)) out.push({ k: "p|" + p.id, label: p.n, sub: `${p.club || ""} · ${p.first.slice(0, 4)}-${p.last.slice(0, 4)}`, s: nm.startsWith(n) || qnorm(p.n.split(" ").slice(-1)[0]).startsWith(n) ? 0 : 1, f: p.rk }); });
-  return out.sort((a, b) => a.s - b.s || (a.f || 0) - (b.f || 0)).slice(0, 8); }
-function nbLkPlayer(id) {
-  const p = PBYID[id]; if (!p) return ""; const seasons = Object.keys(p.ss || {}).sort(), row = (s) => { const v = p.ss[s]; return `<tr><td>${s}</td><td>${esc(nbSeasonsLeft(p.cr, s))}</td><td>${v[0]}</td><td><b>${v[1]}</b></td><td>${v[2]}</td><td>${v[3]}</td><td>${v[4]}</td><td>${v[5]}</td></tr>`; };
-  const aw = (p.aw || []).reduce((m, [k, s]) => { (m[k] = m[k] || []).push(s); return m; }, {}), best = seasons.slice().sort((a, b) => p.ss[b][1] - p.ss[a][1])[0];
-  return `<div class="card abx" style="margin-top:12px"><div class="row" style="gap:14px">${playerPic(p, "xl")}<div><h3 style="font-size:28px;margin:0">${esc(p.n)}</h3><div class="fine">${[p.sub || p.pos, p.nat, p.h ? ftIn(p.h) : "", "born " + p.dob.slice(0, 4), p.active ? "plays for the " + p.club : "last team: " + p.club].filter(Boolean).join(" · ")}</div></div></div>
-  <div class="tiles"><div class="tile"><b class="num">${p.gp.toLocaleString("en-US")}</b><small>games since ${COVER}</small></div><div class="tile"><b class="num">${p.pts.toLocaleString("en-US")}</b><small>points</small></div><div class="tile"><b class="num">${p.reb.toLocaleString("en-US")}</b><small>rebounds</small></div><div class="tile"><b class="num">${p.ast.toLocaleString("en-US")}</b><small>assists</small></div>${(p.ti || []).length ? `<div class="tile"><b class="num">${p.ti.length}</b><small>titles</small></div>` : ""}${best ? `<div class="tile"><b class="num">${p.ss[best][1]}</b><small>best scoring season (${best})</small></div>` : ""}</div>
-  ${(p.ti || []).length ? `<p><b>Champion:</b> ${p.ti.map((t) => `${esc(t.team)} ${t.season}`).join(", ")}</p>` : ""}${Object.keys(aw).length ? `<p><b>Awards:</b> ${Object.entries(aw).map(([k, v]) => `${AWN[k]} (${v.join(", ")})`).join("; ")}</p>` : ""}
-  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Team</th><th>GP</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th></tr>${seasons.map(row).join("")}</table></div>
-  <p class="fine" style="margin-top:8px">Per-game averages for seasons with 20+ games, ${COVER} on. Anything before ${COVER} is not in the data${p.partial ? ", so this career is only partly shown" : ""}.</p></div>`;
-}
-const NB_EXP = (() => { const m = {}; (NM.games || []).forEach((g) => { if (g[9] !== 2) return; const s = seasonLab(g[10]); [[g[1], g[5]], [g[2], 1 - g[5]]].forEach(([t, e]) => { const k = s + "|" + t; (m[k] = m[k] || { e: 0, n: 0 }); m[k].e += e; m[k].n++; }); }); return m; })();
-function nbLkTeam(t) {
-  const f = QZ.clubs[t]; if (!f) return ""; const rows = Object.entries(LG.NBA.tables).map(([s, tb]) => { const i = tb.findIndex((r) => r[0] === t); return i < 0 ? null : { s, r: tb[i], pos: i + 1 }; }).filter(Boolean);
-  const champs = rows.filter((x) => (x.r[7] | 0) === 5).map((x) => x.s), best = rows.slice().sort((a, b) => b.r[4] - a.r[4])[0];
-  return `<div class="card abx" style="margin-top:12px"><div class="row" style="gap:14px">${badge(t, "xl")}<div><h3 style="font-size:28px;margin:0">${esc(f.full || t)}</h3><div class="fine">${esc(f.loc || "")} · ${rows.length} seasons in the data</div></div></div>
-  <div class="tiles"><div class="tile"><b class="num">${champs.length}</b><small>titles since ${COVER}</small></div>${best ? `<div class="tile"><b class="num">${best.r[4]}-${best.r[6]}</b><small>best record (${best.s})</small></div>` : ""}<div class="tile"><b class="num">${rows.filter((x) => (x.r[7] | 0) > 0).length}</b><small>playoff seasons</small></div></div>${champs.length ? `<p><b>Champions:</b> ${champs.join(", ")}</p>` : ""}
-  <div style="overflow-x:auto"><table class="nbtb"><tr><th>Season</th><th>Record</th><th>Model expected wins</th><th>Rank</th><th>PPG</th><th>Opp PPG</th><th>How it ended</th></tr>${rows.map((x) => { const ex = NB_EXP[x.s + "|" + t]; const full = ex && ex.n === x.r[4] + x.r[6]; return `<tr><td>${x.s}</td><td><b>${x.r[4]}-${x.r[6]}</b></td><td>${full ? ex.e.toFixed(1) : ""}</td><td>${ordn(x.pos)}</td><td>${x.r[2].toFixed(1)}</td><td>${x.r[3].toFixed(1)}</td><td>${PLAYOFF_ROUND[x.r[7] | 0]}</td></tr>`; }).join("")}</table></div>
-  <p class="fine" style="margin-top:8px">Rank is by wins among the 30 teams. Seasons with fewer than 60 games in the data are left out. "Model expected wins" is the sum of the model\'s win chances for the season, shown only where our data holds every game of it (2019-20 on). ${f.old && f.old.length ? "Earlier names: " + esc(f.old.join(", ")) + "." : ""}</p></div>`;
-}
-{ const css = document.createElement("style"); css.textContent = `.nbtb{width:100%;border-collapse:collapse;font-size:14px}.nbtb th{font:600 12px "Barlow Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px}.nbtb td{padding:6px;border-top:1px solid var(--line);white-space:nowrap}`; document.head.appendChild(css); }
-{ const old = renderAboutPage; renderAboutPage = function () {
-    if (S.abTab !== "look") return old();
-    const nav = `<div class="scope" style="padding:2px 0">${ABOUT_TABS.map(([k, n]) => `<button type="button" class="chip" data-abtab="${k}" aria-pressed="${S.abTab === k}">${n}</button>`).join("")}</div>`;
-    $("#aboutPage").innerHTML = `<nav class="crumbs"><button class="back" data-crumb="menu" type="button">← Menu</button><div class="trail"><span class="crumb cur">Our model</span></div></nav>${nav}<div class="card abx"><h2><svg class=ic><use href=#i-search></use></svg> Look up a player or team</h2><p class="sub">Type a name. You get a player's season-by-season numbers, titles and awards, or a team's seasons and how each one ended.</p><input class="t" id="nbLk" aria-label="Look up a player or team" placeholder="e.g. LeBron, Curry, Celtics, Spurs" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit"><div class="hub" id="nbLkSug" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px"></div></div><div id="nbLkRes"></div>`;
-  }; }
-S.abTab = "look";
-document.addEventListener("input", (e) => { if (e.target.id !== "nbLk") return; $("#nbLkSug").innerHTML = nbLkSearch(e.target.value).map((x) => `<button type="button" class="chip" data-nbl="${esc(x.k)}">${esc(x.label)} <span class="fine">${esc(x.sub)}</span></button>`).join(""); });
-document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-nbl]"); if (!b) return; const [k, v] = b.dataset.nbl.split("|"); $("#nbLkRes").innerHTML = k === "p" ? nbLkPlayer(+v) : nbLkTeam(v); $("#nbLkRes").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
-
-/* ---------- basketball sound effects: a swish for a right answer, a buzzer for a wrong one, a crowd swell for a win ---------- */
-{ const n = Snd._n;
-  Snd.swish = () => n.run((t) => { n.noise(t, 0.28, 2500, 7000, 0.05, 1.5); n.note(96, t + 0.02, 0.16, "sine", 0.025); n.note(103, t + 0.06, 0.16, "sine", 0.02); });
-  Snd.buzzer = () => n.run((t) => { n.note(43, t, 0.5, "sawtooth", 0.07); n.note(43.2, t, 0.5, "square", 0.03); n.noise(t, 0.5, 200, 400, 0.03, 0.5); });
-  Snd.crowd = () => n.run((t) => { n.noise(t, 1.6, 400, 1400, 0.045, 0.4); n.noise(t + 0.4, 1.4, 900, 2400, 0.025, 0.4); });
-  const r = Snd.right, w = Snd.wrong, wi = Snd.win; Snd.right = function () { r.apply(Snd, arguments); Snd.swish(); }; Snd.wrong = function () { w.apply(Snd, arguments); Snd.buzzer(); }; Snd.win = function () { wi.apply(Snd, arguments); Snd.crowd(); };
-}
-
-/* =====================================================================================================================
-   Three more games with three different mechanics:
-   Rank the five (put five players in order), Career timeline (place each stint on a line of seasons),
-   Over or under (bet against the model's line with a bankroll).
-   ===================================================================================================================== */
-{ const css = document.createElement("style"); css.textContent = `.holc{position:relative}.rkn{position:absolute;top:8px;left:8px;min-width:30px;height:30px;border-radius:50%;background:var(--accent,#ff7a1a);color:#111;font:800 16px/30px Inter,sans-serif;text-align:center;box-shadow:0 4px 12px #0008;animation:rkpop .25s cubic-bezier(.3,1.6,.5,1)}@keyframes rkpop{from{transform:scale(.2)}}.holc.rkok{outline:3px solid #5ee6a8}.holc.rkno{outline:3px solid #ff6b7f}.tlrow{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line,#ffffff22)}.tlrow input[type=range]{width:100%;grid-column:1/-1}.tlrow .tv{font:700 15px Inter,sans-serif}.tlrow .tn{display:flex;gap:10px;align-items:center}.ouline{font:800 44px/1 Inter,sans-serif;letter-spacing:-.03em}.oubank{font:800 26px Inter,sans-serif}`; document.head.appendChild(css); }
-const nbEnd = (title, score, outOf, key, rows, again) => { const cur = store.items["nbbest_" + key] || { best: 0 }; if (score > cur.best) lockIn("nbbest_" + key, { best: score }); Board.submit({ game: key, league: "all", score }); reward(15 + Math.round(score / 10), title, null);
-  return `<div class="card">${gamesBar(title)}<div class="tiles"><div class="tile"><small>Score</small><b>${score}</b><span class="fine">of ${outOf}</span></div><div class="tile"><small>Best</small><b>${Math.max(score, cur.best)}</b></div></div>${rows}<div class="row" style="margin-top:12px"><button class="btn" id="nbAgain" type="button">Play again</button></div></div>`; };
-
-/* ---------- Rank the five ---------- */
-const NBR_KINDS = [
-  ["career points", (p) => p.pts, (v) => v.toLocaleString("en-US")], ["career rebounds", (p) => p.reb, (v) => v.toLocaleString("en-US")], ["career assists", (p) => p.ast, (v) => v.toLocaleString("en-US")],
-  ["regular-season games played", (p) => p.gp, (v) => v.toLocaleString("en-US")], ["best scoring season, in points a game", (p) => p.bp && p.bp.avg, (v) => v.toFixed(1)], ["height", (p) => p.h, (v) => `${ftIn(v)} (${Math.round(v)} cm)`],
-];
-function nbrNew() {
-  const gap = NBH_DIFF(1.4, 1.18, 1.07, 1.02), span = NBH_DIFF(1, .5, .2, .08);
-  for (let t = 0; t < 160; t++) {
-    const k = rnd(NBR_KINDS), pool = playerPool("ALL", (p) => playerOK(p) && k[1](p) > 0).sort((a, b) => k[1](a) - k[1](b)); if (pool.length < 12) continue;
-    const w = Math.max(5, Math.floor(pool.length * span)), start = Math.floor(Math.random() * (pool.length - w + 1)), pick = shuffle(pool.slice(start, start + w)).slice(0, 5).sort((a, b) => k[1](a) - k[1](b)); let ok = true;
-    for (let i = 1; i < 5; i++) if (k[1](pick[i]) / k[1](pick[i - 1]) < (t > 100 ? 1.01 : gap)) ok = false;
-    if (ok) return { k, items: shuffle(pick), truth: pick.slice().reverse(), order: [], done: false };
-  }
-  return null;
-}
-function renderRANK() {
-  const s = S.nbr = S.nbr || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbrNew(); s.round++; } const q = s.q;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<p class="sub">Not enough players at this level.</p></div>`; return; }
-  const cards = q.items.map((p) => { const n = q.order.indexOf(p) + 1, tr = q.truth.indexOf(p), rev = q.done; return `<button type="button" class="holc ${rev ? (tr === q.order.indexOf(p) ? "rkok" : "rkno") : ""}" data-nbr="${p.id}" ${rev ? "disabled" : ""}>${playerPic(p, "xl")}<b>${esc(p.n)}</b><span class="fine">${esc(p.sub || p.pos)} · ${esc(p.club || "")}</span>${rev ? `<span class="num holv">${q.k[2](q.k[1](p))}</span><span class="fine">#${tr + 1}</span>` : ""}${n ? `<span class="rkn">${n}</span>` : ""}</button>`; }).join("");
-  const pts = q.done ? q.pts : 0;
-  $("#room").innerHTML = `<div class="card">${gamesBar("Rank the five")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><p class="sub" style="font-size:18px"><b>Tap the players from the most to the fewest: ${esc(q.k[0])}.</b></p><div class="holpair" style="flex-wrap:wrap">${cards}</div>
-    <div class="row" style="margin-top:14px">${q.done ? `<b>+${pts} points</b><button class="btn" id="nbrNext" type="button">${s.round >= 5 ? "See results" : "Next round"}</button>` : `<button class="btn ghost" id="nbrReset" type="button">Start over</button><button class="btn" id="nbrCheck" type="button" ${q.order.length < 5 ? "disabled" : ""}>Check my order</button>`}</div></div>`;
-}
-document.addEventListener("click", (e) => {
-  if (S.game !== "nbrank") return; const t = e.target.closest && e.target.closest("[data-nbr],#nbrReset,#nbrCheck,#nbrNext,#nbAgain"); if (!t) return; const s = S.nbr, q = s && s.q;
-  if (t.id === "nbAgain") { S.nbr = null; return renderRANK(); }
-  if (t.id === "nbrNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Rank the five", s.score, 500, "nbrank", `<table class="tb"><tr><th>Round</th><th>Stat</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderRANK(); }
-  if (!q) return; if (t.id === "nbrReset") { q.order = []; return renderRANK(); }
-  if (t.id === "nbrCheck") { const off = q.order.reduce((a, p, i) => a + Math.abs(i - q.truth.indexOf(p)), 0); q.pts = Math.round(100 * (1 - off / 12)); q.done = true; s.score += q.pts; s.log.push([q.k[0], q.pts]); Snd.flip(); renderRANK(); setTimeout(() => { q.pts >= 80 ? Snd.right() : Snd.wrong(); if (q.pts === 100) confetti(); }, 350); return; }
-  if (q.done) return; const p = q.items.find((x) => String(x.id) === t.dataset.nbr), i = q.order.indexOf(p); if (i >= 0) q.order.splice(i, 1); else q.order.push(p); Snd.tick && Snd.tick(); renderRANK();
-});
-
-/* ---------- Career timeline ---------- */
-const nbtYear = (s) => +String(s).slice(0, 4);
-function nbtNew() {
-  const mn = NBH_DIFF(3, 4, 5, 5); let pool = playerPool("ALL", (p) => playerOK(p) && !p.partial && p.cr && p.cr.length >= mn && p.cr.length <= 8); if (pool.length < 6) pool = playerPool("ALL", (p) => !p.partial && p.cr && p.cr.length >= 3 && p.cr.length <= 8);
-  if (!pool.length) return null; const p = rnd(pool), stints = p.cr.map(([team, from, to]) => ({ team, from: nbtYear(from), to: nbtYear(to) })), y0 = stints[0].from, y1 = stints[stints.length - 1].from;
-  const lo = NBH_DIFF(y0, y0, 2001, 2001), hi = NBH_DIFF(y1, y1, 2026, 2026), tol = NBH_DIFF(5, 4, 3, 2);
-  return { p, stints, lo, hi, tol, guess: stints.map((s, i) => (i === 0 && S.diff === "easy" ? s.from : Math.round((lo + hi) / 2))), done: false };
-}
-function renderTIME() {
-  const s = S.nbt = S.nbt || { round: 0, score: 0, log: [], q: null }; if (!s.q) { s.q = nbtNew(); s.round++; } const q = s.q;
-  if (!q) { $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<p class="sub">Not enough players at this level.</p></div>`; return; }
-  const rows = q.stints.map((x, i) => { const locked = i === 0 && S.diff === "easy", g = q.guess[i], er = q.done ? Math.abs(g - x.from) : 0; return `<div class="tlrow"><span class="tn">${clubBadgeFor(x.team, "sm")}<b>${esc(x.team)}</b></span><span class="tv" id="tlv${i}">${q.done ? `<span class="${er === 0 ? "up" : er <= 1 ? "" : "down"}">you ${seasonLab(g + 1)} · actual ${seasonLab(x.from + 1)}</span>` : `joined ${seasonLab(g + 1)}${locked ? " (given)" : ""}`}</span>${q.done ? "" : `<input type="range" data-tl="${i}" min="${q.lo}" max="${q.hi}" value="${g}" ${locked ? "disabled" : ""}>`}</div>`; }).join("");
-  $("#room").innerHTML = `<div class="card">${gamesBar("Career timeline")}<div class="row" style="justify-content:space-between"><span class="fine">Round ${s.round} of 5</span><span class="fine num">${s.score} points</span></div><div class="row" style="gap:14px;margin:8px 0">${playerPic(q.p, "xl")}<div><h3 style="font-size:26px">${esc(q.p.n)}</h3><div class="fine">${esc(q.p.sub || q.p.pos)} · ${q.stints.length} stints with teams</div></div></div><p class="sub">Slide each team to the season he joined it. Within ${q.tol - 1} seasons still earns points.</p>${rows}
-    <div class="row" style="margin-top:12px">${q.done ? `<b>+${q.pts} points</b><button class="btn" id="nbtNext" type="button">${s.round >= 5 ? "See results" : "Next player"}</button>` : `<span class="fine">Closer is better.</span><button class="btn" id="nbtLock" type="button">Lock it in</button>`}</div></div>`;
-}
-document.addEventListener("input", (e) => { const r = e.target.closest && e.target.closest("[data-tl]"); if (!r || S.game !== "nbtime" || !S.nbt || !S.nbt.q) return; const i = +r.dataset.tl; S.nbt.q.guess[i] = +r.value; const l = document.getElementById("tlv" + i); if (l) l.textContent = "joined " + seasonLab(+r.value + 1); });
-document.addEventListener("click", (e) => {
-  if (S.game !== "nbtime") return; const t = e.target.closest && e.target.closest("#nbtLock,#nbtNext,#nbAgain"); if (!t) return; const s = S.nbt, q = s && s.q;
-  if (t.id === "nbAgain") { S.nbt = null; return renderTIME(); }
-  if (t.id === "nbtNext") { if (s.round >= 5) { $("#room").innerHTML = nbEnd("Career timeline", s.score, 500, "nbtime", `<table class="tb"><tr><th>Round</th><th>Player</th><th>Points</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table>`); return; } s.q = null; return renderTIME(); }
-  if (t.id === "nbtLock" && q && !q.done) { const sc = q.stints.map((x, i) => Math.max(0, 1 - Math.abs(q.guess[i] - x.from) / q.tol)); q.pts = Math.round(100 * sc.reduce((a, b) => a + b, 0) / sc.length); q.done = true; s.score += q.pts; s.log.push([q.p.n, q.pts]); Snd.flip(); renderTIME(); setTimeout(() => { q.pts >= 70 ? Snd.right() : Snd.wrong(); if (q.pts >= 95) confetti(); }, 350); }
-});
-
-/* ---------- Over or under: bet against the model's line ---------- */
-const nbuGames = () => NM.games.filter((g) => typeof g[11] === "number" && typeof g[12] === "number" && g[3] > 0);
-function nbuNew() {
-  const pool = nbuGames(), spread = Math.random() < 0.45, tight = S.diff === "elite", wide = 7;
-  for (let t = 0; t < 300; t++) {
-    const g = rnd(pool), line = spread ? Math.floor(g[11] - g[12]) + 0.5 : Math.floor(g[11] + g[12]) + 0.5, real = spread ? g[3] - g[4] : g[3] + g[4], d = Math.abs(real - line); if (tight ? d > 4 : t < 200 && S.diff === "hard" && d < 2) continue;
-    return { g, spread, line, real, over: real > line, pick: null, stake: 100 };
-  }
-  return null;
-}
-function renderOU() {
-  const s = S.nbu = S.nbu || { round: 0, bank: 1000, log: [], q: null }; if (!s.q) { s.q = nbuNew(); s.round++; } const q = s.q, g = q.g, ctx = S.diff === "easy" || S.diff === "medium";
-  const tbl = (LG.NBA.tables[seasonLab(g[10])] || []), row = (n) => tbl.find((r) => r[0] === n), line = (n) => { const r = row(n); return r ? `${esc(n)}: scores ${r[2].toFixed(1)}, allows ${r[3].toFixed(1)} a game` : esc(n); };
-  const stakes = [100, 250, 500].filter((v) => v <= s.bank || v === 100), sign = q.line > 0 ? "-" : "+";
-  const ask = q.spread ? `Do the <b>${esc(g[1])}</b> win by more than <b>${Math.abs(q.line)}</b>?` : `Will the two teams score more than <b>${q.line}</b> points together?`, yes = q.spread ? "Cover" : "Over", no = q.spread ? "Don't cover" : "Under";
-  const resTxt = q.pick ? `${esc(g[1])} ${g[3]}, ${esc(g[2])} ${g[4]} · ${q.spread ? "margin " + (g[3] - g[4] > 0 ? "+" : "") + (g[3] - g[4]) : "total " + (g[3] + g[4])}` : "";
-  $("#room").innerHTML = `<div class="card">${gamesBar("Over or under")}<div class="row" style="justify-content:space-between"><span class="fine">Game ${s.round} of 10</span><span class="oubank num">${s.bank} coins</span></div>
-    <div class="row" style="gap:14px;justify-content:center;margin:10px 0">${badge(g[1], "xl")}<span class="vs">at home vs</span>${badge(g[2], "xl")}</div><div class="fine" style="text-align:center">${esc(nbDate(g[0]))} · ${esc(g[1])} vs ${esc(g[2])}</div>
-    <div style="text-align:center;margin:10px 0"><div class="label">The model's line</div><div class="ouline">${q.spread ? `${esc(g[1])} ${sign}${Math.abs(q.line)}` : q.line}</div></div><p class="sub" style="text-align:center">${ask}</p>
-    ${ctx ? `<p class="fine" style="text-align:center">${line(g[1])}<br>${line(g[2])} <span>(season averages)</span></p>` : ""}
-    ${q.pick ? `<div class="rcard on" style="text-align:center"><b class="${q.pick === (q.over ? "y" : "n") ? "up" : "down"}">${q.pick === (q.over ? "y" : "n") ? "+" : "-"}${q.stake} coins</b> · it was ${q.over ? yes : no}<br><span class="fine">${resTxt}</span></div><div class="row" style="margin-top:12px;justify-content:center"><button class="btn" id="nbuNext" type="button">${s.round >= 10 || s.bank < 100 ? "See results" : "Next game"}</button></div>`
-    : `<div class="row" style="justify-content:center;margin:8px 0"><span class="fine">Stake</span>${stakes.map((v) => `<button type="button" class="chip" data-nbustake="${v}" aria-pressed="${q.stake === v}">${v}</button>`).join("")}</div><div class="row" style="justify-content:center;gap:12px"><button class="btn" data-nbu="y" type="button">${yes}</button><button class="btn" data-nbu="n" type="button">${no}</button></div>`}</div>`;
-}
-document.addEventListener("click", (e) => {
-  if (S.game !== "nbou") return; const t = e.target.closest && e.target.closest("[data-nbu],[data-nbustake],#nbuNext,#nbAgain"); if (!t) return; const s = S.nbu, q = s && s.q;
-  if (t.id === "nbAgain") { S.nbu = null; return renderOU(); }
-  if (t.id === "nbuNext") { if (s.round >= 10 || s.bank < 100) { $("#room").innerHTML = nbEnd("Over or under", s.bank, 3000, "nbou", `<table class="tb"><tr><th>Game</th><th>Bet</th><th>Result</th></tr>${s.log.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join("")}</table><p class="fine" style="margin-top:8px">The line is our model's own predicted score for each real game, so on average it is fair: no edge either way.</p>`); return; } s.q = null; return renderOU(); }
-  if (!q || q.pick) return; if (t.dataset.nbustake) { q.stake = Math.min(+t.dataset.nbustake, Math.max(100, s.bank)); return renderOU(); }
-  if (t.dataset.nbu) { q.pick = t.dataset.nbu; q.stake = Math.min(q.stake, Math.max(100, s.bank)); const win = q.pick === (q.over ? "y" : "n"); s.bank += win ? q.stake : -q.stake; if (s.bank < 0) s.bank = 0; s.log.push([`${q.pick === "y" ? (q.spread ? "Cover" : "Over") : (q.spread ? "Don't cover" : "Under")} ${q.stake}`, `${win ? "+" : "-"}${q.stake}`]); Snd.flip(); renderOU(); setTimeout(() => { win ? Snd.right() : Snd.wrong(); }, 350); }
-});
-{ const old3 = renderNB; renderNB = function () { if (S.game === "nbrank") return renderRANK(); if (S.game === "nbtime") return renderTIME(); if (S.game === "nbou") return renderOU(); old3(); }; }
-Object.assign(NB_TITLE, { nbrank: "Rank the five", nbtime: "Career timeline", nbou: "Over or under" }); ["nbrank", "nbtime", "nbou"].forEach((id) => GAME_IDS.push(id)); MODEL_IDS.push("nbou");
-QUIZ_GAMES.push({ id: "nbrank", name: "Rank the five", modes: "Solo · 5 rounds", tag: "Five players and one stat. Tap them in order, most to fewest. Closer to the truth scores more.", faces: () => heroFaces(3) },
-  { id: "nbtime", name: "Career timeline", modes: "Solo · 5 players", tag: "A player's teams, shuffled. Slide each one to the season he joined it.", faces: () => heroFaces(2) });
-GAMES.push({ id: "nbou", name: "Over or under", modes: "Solo, against the model", tag: "The model sets a line for a real game. Bet over or under with a bankroll that grows or shrinks." });
-Object.assign(HOWTO, {
-  "g:nbrank": ["Rank the five", ["What you do", "Five players and one stat, like career points or height. Tap them from the highest to the lowest, then check."], ["Scoring", "Up to 100 a round. Every place you are off costs points. Five rounds."], ["Difficulty", "Easy has big gaps between the players. Elite picks players whose numbers are almost the same."]],
-  "g:nbtime": ["Career timeline", ["What you do", "A player and the teams he played for, out of order. Slide each team to the season he joined it."], ["Scoring", "Exactly right is full points for that team. Each season you are off loses some, and easy is more forgiving."], ["Good to know", "Careers before 2001-02 are only partly in the data, so those players are left out."]],
-  "g:nbou": ["Over or under", ["What you do", "A real past game and a line from our model: its predicted total points, or the predicted margin. Choose over or under (cover or don't cover) and a stake."], ["Scoring", "You start with 1,000 coins and play 10 games. A right call wins your stake, a wrong one loses it."], ["Good to know", "The line is the model's own prediction, so it is fair on average. Easy and medium show each team's season averages. Elite only uses close calls."]],
-});
-BOARD_GAMES.push(["nbrank", "Rank the five", "best score (of 500)"], ["nbtime", "Career timeline", "best score (of 500)"], ["nbou", "Over or under", "best bankroll"]); BK_LABELS.push("Rank the five", "Career timeline", "Over or under");
-/* Basketball front page glow-up (appended after the basketball overlay, so it wraps the final renderHome).
-   The same "Today" strip football has, in basketball terms:
-   - Game of the day: one game for everyone, picked from the date, with a countdown to tomorrow's.
-   - Tonight in the NBA: today's real games from ESPN's public scoreboard (live scores while they're on, tip-off times before,
-     finals after), with the team logos. If ESPN can't be reached, or there are no games today, the card hides.
-   - Ranked: how many lobbies are open right now (hidden when there are none).
-   And the section cards lean towards the pointer, like football's. */
-{
-  const homePrev = renderHome;
-  renderHome = function () { homePrev(); nbToday(); nbTilt(); };
-}
-async function nbToday() {
-  let box = $("#homeToday"); if (!box) { const d = $("#doors"); if (!d) return; d.insertAdjacentHTML("beforebegin", '<div id="homeToday" class="htoday"></div>'); box = $("#homeToday"); }
-  const all = [...GAMES, ...QUIZ_GAMES].filter((g) => GAME_IDS.includes(g.id)); if (!all.length) return;
-  const g = all[hash("gotd-" + todayKey()) % all.length], teams = Object.keys(CREST), faces = [0, 1, 2].map((j) => badge(teams[hash(todayKey() + j) % teams.length], "md")).join("");
-  box.innerHTML = `<button type="button" class="htcard htgotd" data-nbgame="${esc(g.id)}"><span class="htlabel"><svg class=ic><use href=#i-star></use></svg> Game of the day</span><div class="gfaces">${faces}</div><b class="htname">${esc(g.name)}</b><span class="fine">${esc(g.tag || "")}</span><span class="htfoot"><span class="dgo">Play now</span><span class="fine num" id="htNew"></span></span></button>
-    <div class="htcol"><button type="button" class="htcard htsmall" id="htNba" hidden data-nbgroup="live"></button><button type="button" class="htcard htsmall" id="htLobby" hidden data-nbgroup="ranked"></button></div>`;
-  const tick = () => { const el = $("#htNew"); if (!el) return clearInterval(nbToday.t); const now = new Date(), mid = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)), ms = mid - now; el.textContent = `new game in ${Math.floor(ms / 3.6e6)}h ${Math.floor((ms % 3.6e6) / 6e4)}m`; };
-  clearInterval(nbToday.t); tick(); nbToday.t = setInterval(tick, 30000);
-  try {
-    const r = await fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"), j = r.ok ? await r.json() : null, ev = (j && j.events) || [], el = $("#htNba");
-    if (el && ev.length) {
-      const live = ev.filter((e) => e.status.type.state === "in"), pre = ev.filter((e) => e.status.type.state === "pre"), done = ev.filter((e) => e.status.type.state === "post");
-      const pick = live[0] || pre[0] || done[done.length - 1], cs = pick.competitions[0].competitors, away = cs.find((c) => c.homeAway === "away"), home = cs.find((c) => c.homeAway === "home"), state = pick.status.type.state;
-      const logo = (c) => (c.team.logo ? `<img class="htlogo" src="${esc(c.team.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : "");
-      const mid = state === "pre" ? `<small>at</small>` : `<b class="num">${esc(away.score)}</b><small>–</small><b class="num">${esc(home.score)}</b>`;
-      el.hidden = false;
-      el.innerHTML = `<span class="htlabel">${live.length ? '<span class="livedot"></span> Live now' : "Tonight in the NBA"} · ${ev.length} game${ev.length === 1 ? "" : "s"}</span><span class="htmatch">${logo(away)}<b>${esc(away.team.abbreviation)}</b>${mid}<b>${esc(home.team.abbreviation)}</b>${logo(home)}</span><span class="fine">${esc(pick.status.type.shortDetail || "")}${live.length > 1 ? ` · ${live.length} games on` : pre.length && state !== "pre" ? ` · ${pre.length} still to come` : ""}</span>`;
-    }
-  } catch (e) { /* ESPN unreachable: the card stays hidden */ }
-  if (Board.mode === "rest") { const rows = await Ranked.rpc("open_lobbies"), l = $("#htLobby"); if (rows && rows.length && l) { l.hidden = false; l.innerHTML = `<span class="htlabel"><svg class=ic><use href=#i-trophy></use></svg> Ranked</span><span class="htbig num">${rows.length}</span><span class="fine">open lobb${rows.length === 1 ? "y" : "ies"} right now · join one</span>`; } }
-}
-function nbTilt() {
-  if (typeof REDUCED !== "undefined" && REDUCED) return;
-  document.querySelectorAll("#doors .door, .htcard").forEach((d) => { if (d.dataset.tilt) return; d.dataset.tilt = 1;
-    d.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; const r = d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; d.style.transform = `perspective(700px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-3px)`; d.style.setProperty("--mx", `${(x + 0.5) * 100}%`); d.style.setProperty("--my", `${(y + 0.5) * 100}%`); });
-    d.addEventListener("pointerleave", () => { d.style.transform = ""; }); });
-}
-document.addEventListener("click", (e) => {
-  const b = e.target.closest && e.target.closest("[data-nbgame],[data-nbgroup]"); if (!b) return;
-  try { Snd.tick(); } catch (x) { /* quiet */ } const slug = Object.keys(BYSLUG).find((k) => k !== "all-leagues") || "nba";
-  if (b.dataset.nbgame) { go("games-" + slug + "-" + b.dataset.nbgame); return; }
-  S.hubGroup = b.dataset.nbgroup; S.game = null; go("games-" + slug + "-" + b.dataset.nbgroup);
-});
-(() => { const s = document.createElement("style"); s.textContent = `
-.htoday{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;margin:0 0 14px}@media(max-width:720px){.htoday{grid-template-columns:1fr}}.htcol{display:flex;flex-direction:column;gap:14px}
-.htcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:16px 18px;border-radius:20px;border:1px solid var(--line);background:radial-gradient(circle at var(--mx,80%) var(--my,0%),color-mix(in srgb,var(--accent) 18%,transparent),transparent 55%),var(--surface);color:var(--ink);font:inherit;cursor:pointer;transition:transform .25s cubic-bezier(.2,1.2,.4,1),box-shadow .25s,border-color .25s;animation:htIn .6s cubic-bezier(.2,1.2,.4,1) both;overflow:hidden}
-.htcard:hover{border-color:var(--accent);box-shadow:0 16px 40px -18px var(--accent)}.htgotd{min-height:190px}
-.htgotd::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 80%,color-mix(in srgb,var(--accent) 35%,transparent) 90%,transparent 100%);animation:htSweep 6s linear infinite;pointer-events:none;opacity:.5}
-.htcol .htcard:nth-child(1){animation-delay:.08s}.htcol .htcard:nth-child(2){animation-delay:.16s}@keyframes htIn{from{transform:translateY(14px);opacity:0}}@keyframes htSweep{to{transform:rotate(360deg)}}
-.htlabel{display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.htname{font:400 30px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
-.htfoot{display:flex;align-items:center;gap:12px;margin-top:auto;width:100%;justify-content:space-between;position:relative;z-index:1}.htmatch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:18px}.htmatch small{opacity:.6}.htmatch .num{font-family:"Orbitron",var(--mono);font-size:22px;color:#ffb21f}
-.htlogo{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 3px #0006)}.htbig{font:800 40px/1 var(--display)}
-.livedot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 0 0 #ff4d4d;animation:nbLive 1.4s infinite}@keyframes nbLive{70%{box-shadow:0 0 0 8px #ff4d4d00}}
-#doors .door{transition:transform .25s cubic-bezier(.2,1.2,.4,1),box-shadow .25s}#doors .door::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none}#doors .door:hover::before{opacity:1}
-@media (prefers-reduced-motion: reduce){.htgotd::after,.livedot{animation:none}}`; document.head.appendChild(s); })();
 
 /* ===== two players on one device can type their own names (shared by football and basketball) ===== */
 const PN = ["Player 1", "Player 2"];
@@ -5570,4 +4872,4 @@ ${on} #tsw{background:linear-gradient(90deg,transparent,rgba(255,244,205,.20) 38
 })();
 
 renderLobby(); paintSound(); recordLogin(); applyLang(curLang()); Board.init(); Account.load(); paintProfileBtn(); if (Account.signedIn) { Account.pull().then(() => ensureNick()); Ranked.refresh(); checkAdmin(); } initStore().then(() => { paintProfileBtn(); paintScore(); });
- route(); setTimeout(finishSplash, 300);
+try { fetch(ASSET_BASE + "data/photos.json").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.p) { QZ.players.forEach((p) => { const x = j.p[p.id]; if (x) { p.ph = x[0]; p.pq = x[1]; p.pd = x[2]; } }); window.__photosV = j.v; } }).catch(() => {}); } catch (e) { /* offline or blocked */ } route(); setTimeout(finishSplash, 300);

@@ -3113,6 +3113,77 @@ const OLH = { key: "olhist", load() { return store.get(this.key, []); }, save(a)
 document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-olreplay]"); if (!b) return; e.stopPropagation(); const g = OLH.load()[+b.dataset.olreplay]; if (!g) return;
   const white = g.me === "w", result = g.res === "draw" ? "1/2-1/2" : (g.res === "win") === white ? "1-0" : "0-1"; try { Snd.tick(); } catch (x) { /* quiet */ } reviewStart(g.moves, g.me, { from: "online", names: g.names, result }); }, true);
 
+/* ---------- 5. Watch a friend's online game live ----------
+   A spectator joins the same room as a third, view-only party: it asks the host for the game so far (names, moves, clocks), then
+   applies every move, resignation, draw and flag it hears, with ticking clocks. It never sends a move. The host gets a "Watch link"
+   chip while a game is on, and "Play a friend" has a "Watch a game" box for a room code. Like every room, the 4-letter code is the only
+   secret. */
+const CW = {
+  c: null, names: ["White", "Black"], ms: { w: 0, b: 0 }, last: 0, over: null, hostColor: "w", tc: 1, tm: null, n: 0, seen: new Set(),
+  link(code) { return `${location.origin}${location.pathname}#watch-${code}`; },
+  start(code) {
+    rvStop(); clearInterval(st.timer); olClose(); this.stop(true); live = null; st = { game: "watch" }; this.over = null; this.c = null; this.got = false;
+    olOpen("watch", code); OL.welcomed = true; this.id = Math.random().toString(36).slice(2, 8); $("#app").className = "fresh";
+    $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="card" style="max-width:640px"><h2>${ic("eye")}Watching room ${esc(code)}</h2><p class="sub" id="cwMsg">Looking for the game…</p><p class="fine">View only. You can't move or message.</p></div>`;
+    const say = () => { if (OL && OL.role === "watch") olSend({ k: "watchhello", id: this.id }); }; say(); this.hi = setInterval(() => { if (!OL || OL.role !== "watch") return clearInterval(this.hi); if (!this.got) { say(); const m = document.getElementById("cwMsg"), secs = Math.round((Date.now() - OL.since) / 1000); if (m) m.textContent = !olLinked() ? (secs > 12 ? "Could not reach the room server. Check your connection." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${code}. Check the code, and that the game is still on.` : "Looking for the game…"; } else say(); }, 3000);
+  },
+  stop(quiet) { clearInterval(this.hi); clearInterval(this.tm); if (!quiet && OL && OL.role === "watch") { olSend({ k: "watchbye", id: this.id }); olClose(); } },
+  sync(m) {
+    this.got = true; this.names = m.names || this.names; this.hostColor = m.hostColor || "w"; this.tc = m.tc != null ? m.tc : 1; this.c = new Chess(); (m.sans || []).forEach((s) => this.c.move(s)); this.ms = m.ms || { w: OL_TC[this.tc][1] * 1000, b: OL_TC[this.tc][1] * 1000 }; this.last = performance.now(); this.over = null;
+    if (m.over) { const hn = this.names[m.me === "w" ? 0 : 1], gn = this.names[m.me === "w" ? 1 : 0], why = String(m.over.why || "").replace(/^You\b/, hn).replace(/^Your (opponent|friend)\b/, gn);   /* the host wrote it as "you": say who */
+      this.finish(m.over.res === "win" ? m.me : m.over.res === "loss" ? (m.me === "w" ? "b" : "w") : null, why); } else if (this.c.game_over()) this.endCheck();
+    live = { c: this.c, color: "w", sel: null, targets: [], caps: [], last: null, lock: true, refresh: () => CW.paint(), onMove() {} }; st = { game: "watch" }; clearInterval(this.tm); this.tm = setInterval(() => CW.tick(), 200); this.paint();
+  },
+  who(role) { return role === "host" ? this.hostColor : this.hostColor === "w" ? "b" : "w"; },
+  finish(winner, why) { if (this.over) return; this.over = { winner, why }; clearInterval(this.tm); try { Snd.end(true); } catch (e) { /* quiet */ } this.paint(); },
+  endCheck() { const c = this.c; if (!c.game_over()) return; if (c.in_checkmate()) this.finish(c.turn() === "w" ? "b" : "w", "Checkmate"); else this.finish(null, c.in_stalemate() ? "Stalemate" : c.insufficient_material() ? "Insufficient material" : c.in_threefold_repetition() ? "Repetition" : "The 50-move rule"); },
+  recv(m) {
+    if (!m || m.from === "watch") return; if (m.i) { if (this.seen.has(m.i)) return; this.seen.add(m.i); if (this.seen.size > 300) this.seen = new Set([...this.seen].slice(-100)); }
+    if (m.k === "watchsync") return this.sync(m);
+    if (!this.got || !this.c) return;
+    if (m.k === "move") { if (m.ply !== this.c.history().length + 1) return; const mv = this.c.move({ from: m.a, to: m.b, promotion: m.promo || "q" }); if (!mv) return; if (m.ms != null) this.ms[mv.color] = m.ms; this.last = performance.now(); live.last = [mv.from, mv.to]; try { Snd.move(mv, this.c); } catch (e) { /* quiet */ } this.paint(); this.endCheck(); }
+    else if (m.k === "resign") this.finish(this.who(m.from) === "w" ? "b" : "w", "Resignation");
+    else if (m.k === "flag") this.finish(this.who(m.from) === "w" ? "b" : "w", "Ran out of time");
+    else if (m.k === "leave") this.finish(this.who(m.from) === "w" ? "b" : "w", "The other player left");
+    else if (m.k === "drawyes") this.finish(null, "Draw agreed");
+  },
+  tick() {
+    if (!this.c || this.over || this.c.history().length < 2) return; const now = performance.now(), dt = now - this.last; this.last = now; const t = this.c.turn(); this.ms[t] = Math.max(0, this.ms[t] - dt);
+    document.querySelectorAll("[data-clk-side]").forEach((el) => { const v = this.ms[el.dataset.clkSide]; el.textContent = fmtClk(Math.max(0, v)); el.classList.toggle("low", v < 20000); });
+  },
+  paint() {
+    if (st.game !== "watch" || !this.c || !live) return; const c = this.c, o = this.over, nm = (s) => esc(this.names[s === "w" ? 0 : 1]);
+    const bars = { top: pbar("user", nm("b"), "Black", c, "b", Math.max(1, this.ms.b)), bottom: pbar("user", nm("w"), "White", c, "w", Math.max(1, this.ms.w)) };
+    const over = o ? `<div class="endov ${o.winner ? "win" : "draw"}"><h3>${o.winner ? esc(this.names[o.winner === "w" ? 0 : 1]) + " wins" : "A draw"}</h3><p class="fine" style="color:#ddd">${esc(o.why)}</p><div class="row" style="justify-content:center"><button class="btn" data-go="online">Leave</button></div></div>` : "";
+    liveRender(`<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="row" style="justify-content:space-between"><h2>${ic("eye")}Watching live</h2><span class="fine">Room ${OL ? OL.code : ""} · ${OL_TC[this.tc][0]} · view only</span></div>`, `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${o ? "" : c.in_check() ? "Check!" : (c.turn() === "w" ? nm("w") : nm("b")) + " to move"}</span></div>`, bars, { over });
+  },
+  /* host side */
+  syncMsg() { const g = OG; return { k: "watchsync", names: g.names, hostColor: OL.hostColor, tc: g.tc, sans: g.c.history(), ms: g.ms, me: g.me, over: g.over }; },
+  hostHello(m) { this.w = this.w || new Map(); this.w.set(m.id || "w", Date.now()); if (OG) olSend(this.syncMsg()); else olSend({ k: "waiting" }); this.chip(); },
+  count() { const now = Date.now(); (this.w || new Map()).forEach((t, k) => { if (now - t > 70000) this.w.delete(k); }); return this.w ? this.w.size : 0; },
+  chip() {
+    const show = OL && OL.role === "host" && OG && !OG.over; let c = document.getElementById("cwChip"); if (!show) { if (c) c.remove(); return; }
+    if (!c) { c = document.createElement("div"); c.id = "cwChip"; c.className = "cwchip"; document.body.appendChild(c); }
+    const n = this.count(); c.innerHTML = `<button type="button" class="btn ghost" id="cwCopy">${n ? "👁 " + n + " watching" : "Watch link"}</button><small>Anyone with the room code can watch</small>`;
+  },
+};
+{ const or = olRecv; olRecv = function (m) {
+    if (OL && OL.role === "watch") return CW.recv(m);
+    if (OL && OL.role === "host" && m && (m.k === "watchhello" || m.k === "watchbye")) { if (m.i) { if (OL.seen.has(m.i)) return; OL.seen.add(m.i); } if (m.k === "watchbye") { if (CW.w) CW.w.delete(m.id || "w"); return CW.chip(); } return CW.hostHello(m); }
+    return or.apply(this, arguments); }; }
+{ const ob = olBegin; olBegin = function () { const r = ob.apply(this, arguments); try { if (OL && OL.role === "host" && CW.count()) olSend(CW.syncMsg()); } catch (e) { /* no watchers */ } return r; }; }
+setInterval(() => { try { CW.chip(); } catch (e) { /* quiet */ } }, 1500);
+GO.watch = () => { olMenu(); };
+{ const om2 = olMenu; olMenu = function () { const out = om2.apply(this, arguments); try { if (!document.getElementById("cwBox")) document.getElementById("app").insertAdjacentHTML("beforeend", `<div class="card" id="cwBox" style="max-width:640px;margin-top:12px"><h3>${ic("eye")}Watch a game</h3><p class="fine">A friend is playing online? Type their room code to watch live, view only. Or open the watch link they send you.</p><div class="row"><input id="cwCode" maxlength="4" placeholder="Room code" autocapitalize="characters" aria-label="Room code to watch" style="text-transform:uppercase;width:150px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px 12px;font:700 18px Inter;letter-spacing:.2em"><button class="btn ghost" id="cwGo" type="button">Watch</button></div></div>`); } catch (e) { /* no box */ } return out; }; GO.online = olMenu; }
+document.addEventListener("click", (e) => {
+  const g = e.target.closest && e.target.closest("#cwGo,#cwCopy"); if (!g) return; e.stopPropagation();
+  if (g.id === "cwGo") { const v = (document.getElementById("cwCode").value || "").trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(v)) { return; } return CW.start(v); }
+  if (g.id === "cwCopy" && OL) { const url = CW.link(OL.code); (async () => { try { if (navigator.share) { await navigator.share({ title: "ballknowledge chess", text: "Watch my chess game live:", url }); return; } } catch (x) { return; } try { await navigator.clipboard.writeText(url); } catch (x) { prompt("Copy this link:", url); } })(); }
+}, true);
+const cwDeep = () => { const m = /^#watch-([A-Za-z]{4})$/.exec(location.hash); if (!m) return; const code = m[1].toUpperCase(); history.replaceState(null, "", location.pathname); CW.start(code); };
+setTimeout(cwDeep, 900); addEventListener("hashchange", cwDeep);
+(() => { const s = document.createElement("style"); s.textContent = `.cwchip{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9000;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:14px;background:#141b17ee;border:1px solid #ffffff2a;color:#f4f1ea}.cwchip small{font-size:10px;opacity:.65}.cwchip .btn{padding:6px 12px}`; document.head.appendChild(s); })();
+
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }
   const sq = e.target.closest && e.target.closest("[data-sq]"); if (sq && live && document.querySelector(".board.play")) return liveClick(sq.dataset.sq);

@@ -325,6 +325,15 @@ After the tic-tac-toe fix, played each online game as two players in two tabs. F
 ### 23 Nov 2026: Daily missions
 From the new-ideas poll. Three small goals a day for football and basketball (site/missions.js), the same for everyone, picked from the date out of eight kinds (play rounds, get answers right, play different games, try a new game, a streak of right answers, win a ranked match, lock in predictions, play on Hard or Elite). Finishing one pays bonus XP, finishing all three pays +100, and five perfect days in a week open a weekly chest (+400 XP). A card on the home page shows progress bars and the week's dots. Progress is counted from the same calls that already pay XP, play the right/wrong sounds and report ranked results, so it only moves when you really play. Stored in your profile, last 14 days. Tested: progress, payouts, no double payment and the all-three bonus in both sports.
 
+### 23 Nov 2026: Play next, share links, head-to-head, three chess trainers, game replay
+More from the new-ideas poll:
+- **Play next** (site/playnext.js, football and basketball): one suggestion on the home page with its reason, taken from what you've really done: the game that finishes an open daily mission, then your weakest game (below 60% right with at least 8 answers), then a game you've never played, then your favourite.
+- **Empty states with actions**: "No ranked matches yet", "No finished predictions", "No rating history", "No friends yet" and the empty season now have a button for what to do next (play ranked, make a prediction, add a friend).
+- **Share a result as a link** (site/sharelink.js): player links (`#player-Name`) open that player's card, with Add friend and Challenge; "Copy my profile link" on your profile; "Copy result link" on end screens (solo results use the beat-this link, duels and ranked share your player link).
+- **Head-to-head records** (online/schema_v15.sql, also run_now_v15.sql; needs one SQL paste): a player's card shows your lifetime ranked record against them, per game. Until the SQL is pasted the card just doesn't show it.
+- **Chess** (site/chess_more.js): **Puzzle rush** (three minutes, three strikes, difficulty follows you, best score on the leaderboards); **Practise my mistakes** (in Game review a button turns your mistakes and blunders into puzzles with the engine's better move; solved ones leave the deck); **Opening repertoire** (pick lines as White or Black from the opening stories and drill them with five spaced-repetition boxes, with a due count); **Replay finished online games** (the last 20 are kept and open in the game review).
+- Not done: watching a friend's ranked match live (spectating), and replaying football or basketball matches. Those need a new live channel and stored match records.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

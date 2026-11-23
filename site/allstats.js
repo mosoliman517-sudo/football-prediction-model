@@ -47,7 +47,17 @@ const PCard = {
       <div class="asG">${AllStats.tile(r.games, "ranked games")}${AllStats.tile(AllStats.pct(r.wins, r.games), "won")}${AllStats.tile(r.season_pts != null ? r.season_pts : "–", "season points")}${AllStats.tile(r.season_place ? ord(r.season_place) : "–", "this season")}</div>
       ${form.length ? `<div class="pcForm"><span class="fine">Last ${form.length}</span>${form.map((d) => `<i class="${d > 0 ? "w" : d < 0 ? "l" : "d"}" title="${d > 0 ? "+" : ""}${d}">${d > 0 ? "W" : d < 0 ? "L" : "D"}</i>`).join("")}</div>` : ""}
       ${r.fav_player || r.fav_team ? `<div class="fine" style="margin-top:8px">${r.fav_player ? "Favourite player: <b>" + esc(r.fav_player) + "</b>" : ""}${r.fav_player && r.fav_team ? " · " : ""}${r.fav_team ? "Supports <b>" + esc(r.fav_team) + "</b>" : ""}</div>` : ""}
+      <div id="pcH2H" class="pcH2H"></div>
       <div class="row" style="margin-top:14px">${r.nick !== prof().nick && Account.signedIn ? `<button class="btn" data-pcadd="${esc(r.nick)}" type="button">Add friend</button><button class="btn ghost" data-pcchal="${esc(r.nick)}" type="button">Challenge</button>` : ""}<button class="btn ghost" id="modalClose" type="button">Close</button></div>`;
+    if (Account.signedIn && r.nick !== prof().nick) PCard.h2h(r.nick);
+  },
+  /* your lifetime ranked record against this player, per game (online/schema_v15.sql) */
+  async h2h(nick) {
+    const rows = await Ranked.rpc("head_to_head", { p_nick: nick }), el = document.getElementById("pcH2H"); if (!el) return;
+    if (rows === null) return;   /* the function is not installed yet: show nothing rather than an error */
+    if (!rows.length) { el.innerHTML = `<div class="fine">You haven't played ${esc(nick)} in ranked yet.</div>`; return; }
+    const w = rows.reduce((a, x) => a + x.wins, 0), l = rows.reduce((a, x) => a + x.losses, 0), d = rows.reduce((a, x) => a + x.draws, 0), lead = w > l ? "You lead" : w < l ? esc(nick) + " leads" : "All square";
+    el.innerHTML = `<div class="pcVs"><b>You vs ${esc(nick)}</b><span class="num pcVsN">${w}W ${l}L${d ? " " + d + "D" : ""}</span><small>${lead}</small></div>${rows.length > 1 || rows[0].game !== "any" ? `<div class="pcVsG">${rows.slice(0, 5).map((x) => `<span>${esc(typeof rkName === "function" ? rkName(x.game) : x.game)} <b class="num">${x.wins}-${x.losses}${x.draws ? "-" + x.draws : ""}</b></span>`).join("")}</div>` : ""}`;
   },
 };
 document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-pc]")) { e.preventDefault(); PCard.open(e.target.dataset.pc); } });
@@ -64,6 +74,7 @@ document.addEventListener("click", (e) => {
 .pcBox h2{margin:0;font-size:26px}.pcTop{display:flex;gap:14px;align-items:center;margin:-6px -6px 12px;padding:14px;border-radius:18px;background:radial-gradient(circle at 15% 30%,color-mix(in srgb,var(--accent,#f2c14e) 38%,transparent),transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--accent,#f2c14e) 18%,transparent),transparent)}.pcAv{position:relative}.pcAv.on::after{content:"";position:absolute;right:4px;bottom:4px;width:14px;height:14px;border-radius:50%;background:#3ddc84;border:3px solid var(--card,#141b17)}
 .pcDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ddc84;margin-right:6px;animation:snPulse 1.6s infinite}.pcRank{margin-top:4px}.pcBox .asG{grid-template-columns:repeat(4,1fr)}
 .pcForm{display:flex;gap:4px;align-items:center;margin-top:10px;flex-wrap:wrap}.pcForm i{font:800 11px var(--mono,monospace);font-style:normal;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#111}.pcForm i.w{background:#3ddc84}.pcForm i.l{background:#ff7a7a}.pcForm i.d{background:#c9d1e0}
+.pcVs{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--accent,#f2c14e) 14%,transparent)}.pcVsN{font-size:22px}.pcVsG{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:12px}.pcVsG span{padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink) 8%,transparent)}
 [data-pc]{cursor:pointer}[data-pc]:hover{filter:brightness(1.08)}[data-pc]:focus-visible{outline:3px solid var(--accent,#f2c14e);outline-offset:2px;border-radius:12px}
 @media (max-width:640px){.asW{grid-template-columns:1fr}.pcBox .asG{grid-template-columns:repeat(2,1fr)}}`; document.head.appendChild(s); })();
 /* ---------- profile hero: the top of the profile page, shared by football and basketball ----------

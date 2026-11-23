@@ -339,6 +339,9 @@ You can watch a friend's online match live, view only (site/spectate.js for foot
 Tested with three tabs each: host, guest and spectator. Football (Club roulette: live updates through a round change, all clicks blocked), basketball (tic-tac-toe draft followed live) and chess (a game joined after two moves, live moves, clocks, a resignation).
 Honest limits: rooms are not private. Like joining as a player, the 4-letter code is the only secret, because the rooms run over public relay servers, and the chip says so. There's no "live matches" list: you need the code or the link. That would need a new database table and a paste from you. Replaying football and basketball matches after they end isn't built.
 
+### 23 Nov 2026: Head-to-head is live
+The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

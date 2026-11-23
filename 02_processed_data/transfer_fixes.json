@@ -927,7 +927,7 @@
   "club": "Newcastle United",
   "club_id": 762,
   "since": "2026-08-26",
-  "was": "Manchester City"
+  "was": "Juventus FC"
  },
  "Yvan Neyou": {
   "club": "Volos N.F.C.",
@@ -1695,7 +1695,7 @@
   "club": "Al-Rayyan",
   "club_id": null,
   "since": "2026-09-04",
-  "was": "Al-Qadsiah Saudi Football Club"
+  "was": "Paris FC"
  },
  "Ángel Correa": {
   "club": "Club Atlético River Plate",
@@ -1828,5 +1828,17 @@
   "club_id": null,
   "since": "2026-11-01",
   "was": "AS Monaco"
+ },
+ "Hamed Traoré": {
+  "club": "Olympique Marseille",
+  "club_id": 244,
+  "since": "2026-07-01",
+  "was": "Genoa CFC"
+ },
+ "Facundo Medina": {
+  "club": "Olympique Marseille",
+  "club_id": 244,
+  "since": "2026-07-01",
+  "was": "Bayer 04 Leverkusen"
  }
 }

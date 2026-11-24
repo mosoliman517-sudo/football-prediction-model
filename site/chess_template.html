@@ -1267,7 +1267,21 @@ function rvSacInfo(i) {
     c.undo();
   }
   const drop = m0 - Math.min(worst, matOf(new Chess(rv.fen[i]), col) - (piece ? SACV[piece] : 0) + (mate ? 0 : 0));
-  return { drop, piece, take, mate };
+  if (piece) return { drop, piece, take, mate };
+  /* a poisoned offer: a piece of ours (a knight or more) that can be taken and leaves us two or more points down at that moment, but
+     where every such capture runs into a reply that wins it all back and more (Bxf7+ Kxf7?? Qxd8). Declining it is just a win. */
+  const c2 = new Chess(rv.fen[i]); let bait = null, ok = true;
+  for (const m of c2.moves({ verbose: true })) {
+    if (!m.captured || SACV[m.captured] < 3) continue; if (rv.mv[i - 3] && rv.mv[i - 3].to === m.to) continue;   /* the piece offered last move is still hanging: not a new sacrifice */
+    c2.move(m); const def = m0 - matOf(c2, col);
+    if (def >= 2) {
+      let top = -99; for (const r of c2.moves({ verbose: true })) { c2.move(r); let v = matOf(c2, col); for (const o of c2.moves({ verbose: true })) if (o.captured) { c2.move(o); v = Math.min(v, matOf(c2, col)); c2.undo(); } top = Math.max(top, v); c2.undo(); }
+      const L = (rv.pos[i] && rv.pos[i].lines) || [], ln = L.find((x) => x.pv[0] === m.from + m.to + (m.promotion || "")), mine = ln ? (col === "w" ? ln.w : 100 - ln.w) : null;   /* engine view of their capture */
+      if (top >= m0 + 2 || (L.length && (ln ? mine >= 60 : true))) bait = bait || { piece: m.captured, take: m.san, drop: def }; else ok = false;
+    }
+    c2.undo();
+  }
+  return ok && bait ? { drop: bait.drop, piece: bait.piece, take: bait.take, mate: null, bait: true } : { drop, piece, take, mate };
 }
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w), prev = rv.data[i - 2];
@@ -1283,7 +1297,7 @@ function rvDerive(i) {
     if (prev && prev.loss >= 10 && (prev.cls === "mistake" || prev.cls === "blunder" || prev.cls === "miss") && (cls === "inaccuracy" || cls === "mistake" || (cls === "blunder" && loss < 30))) cls = "miss";   // they slipped and you let them off
     if (cls === "best" && second != null && pov(L[0].w) - second >= 10 && after >= 30 && after <= 97 && !recapture) cls = "great";   // the only move that holds
     const mates = b.ev.mate != null && pov(b.ev.w) >= 99.9, sac = rvSacInfo(i), good = cls === "best" || cls === "great" || loss <= 2;
-    if (good && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates) && !recapture) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
+    if (good && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates) && !recapture && (before < 92 || sac.bait)) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
     if (good && mv.promotion && mv.promotion !== "q" && nLegal > 1) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = { under: mv.promotion }; }   // the right underpromotion
   }
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
@@ -1298,7 +1312,7 @@ function rvExplain(d) {
   const mateFor = (e, white) => e.mate != null && (white ? e.mate > 0 : e.mate < 0);
   let t;
   if (d.cls === "book") t = `A known opening move${rv.openName[i] ? ": " + rv.openName[i] : ""}.`;
-  else if (d.cls === "brilliant") { const sc = (rv.sac || {})[i] || {}; t = sc.under ? `Promoting to a ${nm[sc.under]} instead of a queen, and it is the right call. Underpromotions like this are rare and beautiful.` : sc.piece ? `${san} offers your ${nm[sc.piece]}${sc.take ? ` (${sc.take} takes it)` : ""}, ${sc.mate ? `but then ${sc.mate} is checkmate` : `yet Stockfish says you are still ${pct(d.after)} to win`}. A real sacrifice.` : `${san} gives up material, yet the position stays sound (${pct(d.after)} winning chances).`; }
+  else if (d.cls === "brilliant") { const sc = (rv.sac || {})[i] || {}; t = sc.under ? `Promoting to a ${nm[sc.under]} instead of a queen, and it is the right call. Underpromotions like this are rare and beautiful.` : sc.piece ? `${san} offers your ${nm[sc.piece]}${sc.take ? ` (${sc.take} takes it)` : ""}, ${sc.bait ? `but taking it loses: they get punished and you win back more than you gave` : sc.mate ? `but then ${sc.mate} is checkmate` : `yet Stockfish says you are still ${pct(d.after)} to win`}. A real sacrifice.` : `${san} gives up material, yet the position stays sound (${pct(d.after)} winning chances).`; }
   else if (d.cls === "great") t = `The only move that keeps your advantage. The next best option drops your winning chances from ${pct(d.before)} to ${pct(d.second)}.`;
   else if (d.cls === "best") t = `The engine's top choice${mv.captured ? `, taking the ${nm[mv.captured]}` : ""}${san.endsWith("#") ? " and checkmating." : san.endsWith("+") ? " with check." : "."}${b.ev.mate != null && mateFor(b.ev, d.white) ? ` It forces checkmate in ${Math.abs(b.ev.mate)}.` : ""}`;
   else if (d.cls === "forced") t = "The only legal move, so there was nothing to choose.";

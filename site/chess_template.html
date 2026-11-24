@@ -1301,7 +1301,7 @@ function rvDerive(i) {
     if (prev && prev.loss >= 10 && (prev.cls === "mistake" || prev.cls === "blunder" || prev.cls === "miss") && (cls === "inaccuracy" || cls === "mistake" || (cls === "blunder" && loss < 30))) cls = "miss";   // they slipped and you let them off
     if (cls === "best" && second != null && pov(L[0].w) - second >= 10 && after >= 30 && after <= 97 && !recapture) cls = "great";   // the only move that holds
     const mates = b.ev.mate != null && pov(b.ev.w) >= 99.9, sac = rvSacInfo(i), good = cls === "best" || cls === "great" || loss <= 2;
-    if (good && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates) && !recapture && (before < 92 || sac.bait)) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
+    if ((good || (loss <= 8 && after >= 70)) && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates) && !recapture && (before < 92 || sac.bait)) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
     if (good && mv.promotion && mv.promotion !== "q" && nLegal > 1) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = { under: mv.promotion }; }   // the right underpromotion
   }
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));

@@ -1273,7 +1273,8 @@ function rvSacInfo(i) {
   const c2 = new Chess(rv.fen[i]); let bait = null, ok = true;
   for (const m of c2.moves({ verbose: true })) {
     if (!m.captured || SACV[m.captured] < 3) continue; if (rv.mv[i - 3] && rv.mv[i - 3].to === m.to) continue;   /* the piece offered last move is still hanging: not a new sacrifice */
-    c2.move(m); const def = m0 - matOf(c2, col);
+    c2.move(m); if (c2.moves({ verbose: true }).some((r) => r.captured && r.to === m.to)) { c2.undo(); continue; }   /* we can simply take back on that square: a defended piece, an exchange, not a sacrifice */
+    const def = m0 - matOf(c2, col);
     if (def >= 2) {
       let top = -99; for (const r of c2.moves({ verbose: true })) { c2.move(r); let v = matOf(c2, col); for (const o of c2.moves({ verbose: true })) if (o.captured) { c2.move(o); v = Math.min(v, matOf(c2, col)); c2.undo(); } top = Math.max(top, v); c2.undo(); }
       const L = (rv.pos[i] && rv.pos[i].lines) || [], ln = L.find((x) => x.pv[0] === m.from + m.to + (m.promotion || "")), mine = ln ? (col === "w" ? ln.w : 100 - ln.w) : null;   /* engine view of their capture */

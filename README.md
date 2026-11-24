@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - Brilliant check: defended pieces are not sacrifices
+
+Bxd5 in the same game was wrongly Brilliant: Qxd5 Qxd5 just wins the queen back on the same square, so the bishop was defended, a free pawn. A piece you can simply retake on its square no longer counts as offered. Now only 15.Bxf7+ is Brilliant (13.Bxd5 is Great).
+
 ### 2026-11-24 - Game review now spots poisoned-piece brilliants
 
 A real game (8.Bxf7+ Kxf7?? Qxd8, a bishop offered that loses the queen if taken) was graded "great", not Brilliant. The review only counted a sacrifice when the opponent's best capture really cost material; here the capture is a mistake, so nothing was "lost". Now a knight-or-better piece that can be taken, leaves you two points down at that moment, and where the engine says taking it is bad for them (or a plain material check wins it all back) is marked Brilliant, as long as the move itself is best and you are not already winning by a mile. A piece left hanging from the previous move is not counted twice (17.Qxc2 stays Great). The coach says "taking it loses". Checked on that game: 15.Bxf7+ is now Brilliant.

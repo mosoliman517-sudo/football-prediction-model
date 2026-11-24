@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - Brilliant also for saving a bad position
+
+A sacrifice that rescues you counts too: when you were worse (40% or less) and the engine's move gives up a piece of a knight or more yet lifts you to about level (38%+), it is Brilliant, with its own wording ("it rescues the game"). Perpetual-check and fortress sacrifices land here. Not re-run on a real game yet; I have no such game to test with.
+
 ### 2026-11-24 - Brilliant for a near-best sacrifice (11...Bg4)
 
 In the second game 11...Bg4 (offering the bishop: Qxg4 Nxc2+ forks king and rook) was only an Inaccuracy because the engine liked 11...Qd5 slightly more (82% vs 75%). A real sacrifice of a knight or more that keeps a big edge (70%+ winning) and costs at most 8 points of win chance now counts as Brilliant, not only the engine's exact top move. The sacrifice itself still has to be real (two points down if taken, not a retake, not already won). Checked by hand against that game's numbers; not re-run through the full engine.

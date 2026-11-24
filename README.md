@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - World Championship hub (Gukesh vs Sindarov)
+
+The match going on now (Geneva, 24 Nov to 11 Dec, 14 classical games) has a full hub in Chess > Championships (site/chess_wcc.js). A header shows both players, the live score and the status. Six tabs: Live board (moves, clocks, Stockfish eval, Pip; buttons for Analyse this position, Play from here vs Stockfish, Full review, and the current opening's name), Schedule (all 14 games in your time zone with Geneva time, who has White, rest days, add to calendar .ics), Score (game by game, first to 7.5, tiebreak rules), Players (ratings side by side, rating-based expectation with honest caveats, profiles, head to head), Openings (each game's opening and theory length, Explore in the master-game explorer) and Games (replay, review or play off any finished game). All data is the Lichess broadcast, refreshed every 15 to 30 seconds, nothing invented. Checked against Game 1 (drawn, Berlin, 38 moves): every tab renders and Analyse opens the review's explore mode at the right move. Also confirmed all three public sites (football, basketball, chess) are rebuilt and pushed.
+
 ### 2026-11-24 - Second batch: 290 more sidekick lines (Kokoro)
 
 Another 290 lines: about 32 more for each of the six football and basketball sidekicks (answers, streaks, early buzzes, game over, deep thoughts, plus first lines for rank-ups, achievements and agreeing with the model) and about 98 for the three chess coaches (every move grade, wins, losses, draws, mates, review start, whole-game verdicts, forced moves). All voiced with Kokoro at low priority, so the Mac stays cool. Every line now has a clip. Lines per sidekick are roughly double what they were this morning.

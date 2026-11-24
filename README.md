@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - Second batch: 290 more sidekick lines (Kokoro)
+
+Another 290 lines: about 32 more for each of the six football and basketball sidekicks (answers, streaks, early buzzes, game over, deep thoughts, plus first lines for rank-ups, achievements and agreeing with the model) and about 98 for the three chess coaches (every move grade, wins, losses, draws, mates, review start, whole-game verdicts, forced moves). All voiced with Kokoro at low priority, so the Mac stays cool. Every line now has a clip. Lines per sidekick are roughly double what they were this morning.
+
 ### 2026-11-24 - New lines voiced with the light voice, no more hot Mac
 
 The heavy Chatterbox recording was stopped (it heated the Mac). The new sidekick lines were voiced with Kokoro instead: each character keeps their own voice, it runs cool in under a minute, and every line now has a clip (302 new Kokoro clips; about 40 had already been done in Chatterbox before it stopped). Rule going forward: new lines use Kokoro only, no Chatterbox runs unless asked.

@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - 342 new sidekick lines, all sports (voices recording)
+
+Every sidekick gets many more lines so they repeat far less: the six football and basketball sidekicks (Old Boot, Rita, Bench, Rim, Shot Clock, Sneak) each got about 36 more across right and wrong answers, streaks, early buzzes, game over, the "deep" thoughts and welcomes (216 total); the chess coaches (Pip, Queen Vera, Bishop Bea) got about 126 across every move grade, wins, losses, draws and mates. Lines sit in site/mascot_lines.js, site/coach_lines.js and PIP in the chess page; src/add_lines.py applied them. The voices are being recorded with Chatterbox (about 40 minutes); a line without its clip stays silent rather than using a device voice, and the clips are added in a follow-up commit.
+
 ### 2026-11-24 - Brilliant also for saving a bad position
 
 A sacrifice that rescues you counts too: when you were worse (40% or less) and the engine's move gives up a piece of a knight or more yet lifts you to about level (38%+), it is Brilliant, with its own wording ("it rescues the game"). Perpetual-check and fortress sacrifices land here. Not re-run on a real game yet; I have no such game to test with.

@@ -948,7 +948,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button><span class="rbsep"></span><button type="button" class="rbsk" data-sk="cheer" aria-label="Your sidekick cheers">📣 Cheer</button><button type="button" class="rbsk" data-sk="tease" aria-label="Your sidekick teases">😏 Tease</button><button type="button" class="rbsk" data-sk="gg" aria-label="Your sidekick says good game">🤝 GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 23 Nov 2026 06:38 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 24 Nov 2026 07:05 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>
@@ -956,7 +956,7 @@ function paintSplashArt() {
 
 <script>
 (function () {
-  var files = ["data.82e431acfc.js", "app.865f7863fe.js"], size = 4426788, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false, got = 0;
+  var files = ["data.82e431acfc.js", "app.8b09dba729.js"], size = 4439548, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false, got = 0;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show() { if (bar) bar.style.width = (3 + 94 * Math.min(1, got / size)).toFixed(1) + "%"; }
   function run(codes) { if (done) return; done = true; codes.forEach(function (code) { var s = document.createElement("script"); s.text = code; document.body.appendChild(s); }); if (bar) bar.style.width = "100%"; }

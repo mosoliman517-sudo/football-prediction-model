@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - New lines voiced with the light voice, no more hot Mac
+
+The heavy Chatterbox recording was stopped (it heated the Mac). The new sidekick lines were voiced with Kokoro instead: each character keeps their own voice, it runs cool in under a minute, and every line now has a clip (302 new Kokoro clips; about 40 had already been done in Chatterbox before it stopped). Rule going forward: new lines use Kokoro only, no Chatterbox runs unless asked.
+
 ### 2026-11-24 - 342 new sidekick lines, all sports (voices recording)
 
 Every sidekick gets many more lines so they repeat far less: the six football and basketball sidekicks (Old Boot, Rita, Bench, Rim, Shot Clock, Sneak) each got about 36 more across right and wrong answers, streaks, early buzzes, game over, the "deep" thoughts and welcomes (216 total); the chess coaches (Pip, Queen Vera, Bishop Bea) got about 126 across every move grade, wins, losses, draws and mates. Lines sit in site/mascot_lines.js, site/coach_lines.js and PIP in the chess page; src/add_lines.py applied them. The voices are being recorded with Chatterbox (about 40 minutes); a line without its clip stays silent rather than using a device voice, and the clips are added in a follow-up commit.

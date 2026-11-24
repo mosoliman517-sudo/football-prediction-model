@@ -342,6 +342,10 @@ Honest limits: rooms are not private. Like joining as a player, the 4-letter cod
 ### 23 Nov 2026: Head-to-head is live
 The owner ran online/run_now_v15.sql. Checked from outside the site: head_to_head answers on both the football and basketball schemas. (The function needs a signed-in player, so a full result still needs a real ranked match between two accounts.)
 
+### 2026-11-24 - Review: both players rated, tighter ranges, tougher accuracy, board opens from your side
+
+From a real game (user was Black): the report gave only one player an Elo and a 950 to 2200 range. Causes and fixes: (1) moves in already-decided positions were ignored, so a one-sided game left one side with 4 moves or none; now when fewer than 12 balanced moves exist the decided ones count too, so both players get a rating. (2) The likely range is capped at 900 points wide (it was up to 1,250); the example game now reads 1300-2200 and 1400-2300. (3) Accuracy is now the Lichess blend of a volatility-weighted and a harmonic mean, so big mistakes weigh more (example: 89 White / 95 Black; chess.com showed 80 / 92, whose formula is private, so ours can still differ a little). (4) A pasted game opens from your side: flip once with the new labelled "Flip" button and the site remembers the name, or it uses your saved import username. 7.Bg5 in that game is graded Best, not Brilliant (a plain pin, nothing offered).
+
 ### 2026-11-24 - Brilliant check: defended pieces are not sacrifices
 
 Bxd5 in the same game was wrongly Brilliant: Qxd5 Qxd5 just wins the queen back on the same square, so the bishop was defended, a free pawn. A piece you can simply retake on its square no longer counts as offered. Now only 15.Bxf7+ is Brilliant (13.Bxd5 is Great).

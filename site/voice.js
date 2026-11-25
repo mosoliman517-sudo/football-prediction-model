@@ -5,7 +5,7 @@
 const AIVoice = (() => {
   const BASE = "../voice/";
   let map = null, cur = null;
-  const load = () => map || (map = fetch(BASE + "index.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
+  const load = () => map || (map = fetch(BASE + "index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
   const norm = (t) => String(t).replace(/\s+/g, " ").trim();
   const generic = (t) => norm(t).replace(/^Welcome[^.]*\./, "Welcome.");   // the tour greets you by name; the clip does not
   function stop() { if (cur) { try { cur.pause(); } catch (e) { /* gone */ } cur = null; } }

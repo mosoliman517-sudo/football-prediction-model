@@ -80,6 +80,15 @@ def jobs():
         texts = [origin, "The idea: " + idea if idea else None] + [f if f.startswith("Fun fact") else "Fun fact: " + f for f in facts] + [games.get(gk)]
         for c in SPORT_CHARS["ch"]:
             J += [(CHAR_VOICE[c], t, c, "story") for t in texts if t]
+    bl = json.load(open("src/bot_lines.json", encoding="utf-8"))   # the playable characters: site/bot_lines.js
+    BV = {"arteta": "bm_daniel", "berserker": "am_adam", "trader": "am_onyx", "escaped": "bm_fable", "pip": "am_liam", "bea": "bf_alice", "vera": "bf_isabella"}
+    for bid, kinds in bl.items():
+        for kind, ls in kinds.items():
+            for t in ls:
+                if isinstance(t, list):
+                    J.append((CHAR_VOICE[t[0]], t[1], t[0], kind))
+                else:
+                    J.append((BV[bid], t, bid, kind))
     seen, out = set(), []
     for v, t, c, k in J:
         t = " ".join(t.replace('\\"', '"').split())

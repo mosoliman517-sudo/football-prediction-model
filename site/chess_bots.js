@@ -104,6 +104,43 @@ aiThink = function () {
     L.last = [m.from, m.to]; Snd.move(m, L.c); st.think = false; L.lock = false; if (!aiEnd()) aiPaint();
   }).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
 };
+
+/* ---------- the characters talk: a bubble and a recorded voice (Kokoro clips from src/bot_lines.json), never the device voice ---------- */
+function botPick(kind) {
+  const B = botOf(st.level), L = BOT_LINES[B.id]; if (!L || !L[kind] || !L[kind].length) return null; st.botPk = st.botPk || {};
+  if (kind === "trait" || !st.botPk[kind]) { const pick = L[kind][Math.floor(Math.random() * L[kind].length)], who = Array.isArray(pick) ? pick[0] : B.id; st.botPk[kind] = { who, text: Array.isArray(pick) ? pick[1] : pick, name: B.id === "council" ? `${COACHES[who].name} of the Council` : B.name, face: oppFace(who, "calm") }; }
+  return st.botPk[kind];
+}
+/* the end-of-game card in a game against a character shows what that character says, not the coach */
+function botEnd(res) {
+  if (!st || st.game !== "ai" || !BOT_LINES[botOf(st.level).id]) return null; const p = botPick(res === "win" ? "lose" : res === "loss" ? "win" : "draw"); if (!p) return null;
+  return `<div class="endcoach"><span class="botbf sm">${p.face}</span><span><b>${esc(p.name)}</b>${esc(p.text)}</span></div>`;
+}
+function botSay(kind) {
+  if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face;
+  let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
+  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(10000, 3600 + text.length * 55));
+  try { if (PIPV.on && !(Snd && Snd.on === false)) AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95 }); } catch (e) { /* silent */ }
+}
+{
+  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); setTimeout(() => botSay("start"), 900); return r; };
+  const _aiEnd = aiEnd; aiEnd = function () { const r = _aiEnd.apply(this, arguments); if (r && st && st.over && !st.botEnd) { st.botEnd = true; setTimeout(() => botSay(st.over.won ? "lose" : st.over.lost ? "win" : "draw"), 800); } return r; };
+  const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
+  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { botWatch(); } catch (e) { /* never block the board */ } return r; };
+}
+/* a line when the character does the thing it is known for: the Escaped gives a piece away, the Berserker checks, the Trader trades, Arteta declines a capture */
+function botWatch() {
+  if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history({ verbose: true }), n = h.length; if (st.botN === n) return; st.botN = n;
+  const m = h[n - 1]; if (!m || m.color === live.color) return; const id = botOf(st.level).id, L = BOT_LINES[id]; if (!L || !L.trait) return;
+  const T = st.botT = st.botT || { n: 0, last: -9 }; if (T.n >= 4 || n - T.last < 6) return;
+  const pre = new Chess(); h.slice(0, -1).forEach((x) => pre.move({ from: x.from, to: x.to, promotion: x.promotion })); let hit = false;
+  if (id === "escaped") { const mv = pre.moves({ verbose: true }).find((z) => z.from === m.from && z.to === m.to && z.promotion === m.promotion); hit = !!mv && botSac(pre, mv) >= 2; }
+  else if (id === "berserker") hit = /[+#]/.test(m.san);
+  else if (id === "trader") hit = m.captured === "q" || (!!m.captured && m.captured !== "p" && n > 8);
+  else if (id === "arteta") hit = n >= 8 && !m.captured && !/[+#]/.test(m.san) && pre.moves({ verbose: true }).some((z) => z.captured && BV[z.captured] >= 3);
+  else if (id === "council") hit = n >= 12 && Math.random() < 0.12;
+  if (hit) { T.n++; T.last = n; setTimeout(() => botSay("trait"), 500); }
+}
 const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {
   clearInterval(st.timer); live = null; st = { game: "ai", level: Math.min(8, store.get("ai_level", 2)), color: store.get("ai_color", "w"), clock: store.get("ai_clock", 0) };
@@ -132,5 +169,6 @@ async function botCalib(id, n = 60) {
 .hbots{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity}.hbot{flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;cursor:pointer;scroll-snap-align:start;transition:transform .25s,border-color .25s}.hbot:hover{transform:translateY(-4px);border-color:var(--gold)}.hbf{width:56px;height:56px;display:block}.hbf svg{width:100%;height:100%}.hbot b{font-size:12px;text-align:center}.hbot small{color:var(--gold);font-weight:800;font-size:14px}
 .botgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important}.botcard{display:flex!important;flex-direction:column;align-items:center;gap:6px;text-align:center}.botcard .oppface{width:84px!important;height:84px!important}.botcard .oppface svg{width:100%;height:100%}
 .council{position:relative;display:block;width:100%;height:100%}.council .cf{position:absolute;width:62%;height:62%;border-radius:50%;background:var(--panel);box-shadow:0 0 0 2px var(--gold),0 3px 8px #0006;overflow:hidden}.council .cf svg{width:100%!important;height:100%!important;display:block}.council .cf0{left:0;bottom:2%;z-index:1}.council .cf2{right:0;bottom:2%;z-index:1}.council .cf1{left:19%;top:0;z-index:2}
+.botbf.sm{width:48px;height:48px;flex:none;display:inline-block}.botbf.sm svg{width:100%;height:100%}#pipc .botbf{width:96px;height:96px;flex:none;filter:drop-shadow(0 10px 18px #0007)}#pipc .botbf svg{width:100%;height:100%}#pipc .botbf .council{width:96px;height:96px}
 .botelo{font:800 30px/1 var(--mono);color:var(--gold)}.botelo small{display:block;font:700 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-top:2px}.bottag{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.85}
 .botst{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.botst i{font-style:normal;font:700 10px var(--mono);padding:3px 8px;border-radius:99px;background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line))}`; document.head.appendChild(s); })();

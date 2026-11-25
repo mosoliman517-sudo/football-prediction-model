@@ -402,6 +402,12 @@ Checked on the Opera Game, Immortal Game, Evergreen Game, Kasparov-Topalov 1999 
 
 Three new move badges in the game review, each with its own icon and colour: Forced (arrow into a wall, grey; it had only a square), Desperado (lightning bolt, orange: a piece that is already lost takes something before it goes) and Zugzwang (hourglass, purple: the same position with the opponent allowed to pass is at least 20 points better for them than with them to move, checked with a separate Stockfish search). They only replace a Best, Excellent or Good grade, never Brilliant, and count as normal moves for accuracy. Tested on a real zugzwang position (Kd6 with pawn on e6 against a king on d8: 98% with them to move, 50% if they could pass) and on a desperado position with a negative control; not yet seen in a full real game.
 
+### 2026-11-25 - Every playable character talks, new badge icons
+
+Audit: the three coaches (Pip, Bea, Vera) already had their own lines (153, 184 and 185, no overlap) and their own Kokoro voices (am_liam, bf_alice, bf_isabella), every line has a clip, and the review bubble and the spoken line are the same line. The gap was the playable characters: they said nothing. Now all eight talk in a bubble and a recorded voice: Arteta (bm_daniel), the Berserker (am_adam), the Trader (am_onyx) and the Escaped (bm_fable) are new; Pip, Bea and Vera use their own voices; the Council is voiced by its three members in turn. Lines (src/bot_lines.json, generated into site/bot_lines.js) cover the start, the end (win, loss, draw, shown on the result card too) and one trait line when they do their thing: the Escaped sacrifices, the Berserker gives check, the Trader trades, Arteta declines a capture. 90 new clips, made with Kokoro at low priority. The voice index is now revalidated on load so new clips show up straight away.
+
+Badges redesigned: Desperado is a creeper-style face in green; Zugzwang is a piece boxed in by a stop bar on all four sides.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

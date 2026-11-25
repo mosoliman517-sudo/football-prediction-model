@@ -398,6 +398,10 @@ Brilliant detection was rebuilt around the brief that brilliance is not only a s
 
 Checked on the Opera Game, Immortal Game, Evergreen Game, Kasparov-Topalov 1999 and World Championship Game 1: Nxf5+ is Brilliant, Rxe7+ and Re7+ are Brilliant, and no quiet Brilliants appeared in the elite game. Not verified: a real positive quiet-move example, and the Ding Liren 2023 pawn move (I have not confirmed which move it is, so it is not in the tests).
 
+### 2026-11-25 - Review badges: forced, desperado, zugzwang
+
+Three new move badges in the game review, each with its own icon and colour: Forced (arrow into a wall, grey; it had only a square), Desperado (lightning bolt, orange: a piece that is already lost takes something before it goes) and Zugzwang (hourglass, purple: the same position with the opponent allowed to pass is at least 20 points better for them than with them to move, checked with a separate Stockfish search). They only replace a Best, Excellent or Good grade, never Brilliant, and count as normal moves for accuracy. Tested on a real zugzwang position (Kd6 with pawn on e6 against a king on d8: 98% with them to move, 50% if they could pass) and on a desperado position with a negative control; not yet seen in a full real game.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

@@ -918,8 +918,8 @@ const MATE_CP = 100000;
 const wpct = (cp) => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * Math.max(-1000, Math.min(1000, cp)))) - 1);
 const lineW = (ln, turn) => { const sg = turn === "w" ? 1 : -1; if (ln.mate != null) { const m = sg * ln.mate; return { mate: m, cp: m > 0 ? MATE_CP - m : -MATE_CP - m, w: m > 0 ? 100 : 0, pv: ln.pv, depth: ln.depth }; } const cp = sg * ln.cp; return { mate: null, cp, w: wpct(cp), pv: ln.pv, depth: ln.depth }; };
 const fmtEv = (e) => (!e ? "…" : e.term ? e.term : e.mate != null ? (e.mate > 0 ? "M" : "-M") + Math.abs(e.mate) : (e.cp > 0 ? "+" : e.cp < 0 ? "-" : "") + Math.abs(e.cp / 100).toFixed(1));
-const RVC = { brilliant: ["Brilliant", "!!", "a brilliant move"], great: ["Great move", "!", "a great move"], best: ["Best", "★", "the best move"], excellent: ["Excellent", "✓", "an excellent move"], good: ["Good", "✓", "a good move"], book: ["Book", `<svg class="bkic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2V5.5Z" fill="currentColor"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2V5.5Z" fill="currentColor" opacity=".8"/></svg>`, "a book move"], inaccuracy: ["Inaccuracy", "?!", "an inaccuracy"], mistake: ["Mistake", "?", "a mistake"], miss: ["Miss", "✗", "a miss"], blunder: ["Blunder", "??", "a blunder"], forced: ["Forced", "□", "the only legal move"] };
-const RVORDER = ["brilliant", "great", "best", "excellent", "good", "book", "forced", "inaccuracy", "mistake", "miss", "blunder"];
+const RVC = { brilliant: ["Brilliant", "!!", "a brilliant move"], great: ["Great move", "!", "a great move"], best: ["Best", "★", "the best move"], excellent: ["Excellent", "✓", "an excellent move"], good: ["Good", "✓", "a good move"], book: ["Book", `<svg class="bkic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2V5.5Z" fill="currentColor"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2V5.5Z" fill="currentColor" opacity=".8"/></svg>`, "a book move"], inaccuracy: ["Inaccuracy", "?!", "an inaccuracy"], mistake: ["Mistake", "?", "a mistake"], miss: ["Miss", "✗", "a miss"], blunder: ["Blunder", "??", "a blunder"], forced: ["Forced", `<svg class="bkic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.5 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`, "the only legal move"], desperado: ["Desperado", `<svg class="bkic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 5 13.5h6L9.5 22 19 9.5h-6.2z" fill="currentColor"/></svg>`, "a desperado: a doomed piece grabbing something on its way out"], zugzwang: ["Zugzwang", `<svg class="bkic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12M6 21h12M7 3c0 5 4 6 5 9-1 3-5 4-5 9M17 3c0 5-4 6-5 9 1 3 5 4 5 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`, "a zugzwang: every move the opponent has makes their position worse"] };
+const RVORDER = ["brilliant", "great", "zugzwang", "desperado", "best", "excellent", "good", "book", "forced", "inaccuracy", "mistake", "miss", "blunder"];
 const uciMv = (u) => ({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] });
 const uciSan = (fen, u) => { const m = new Chess(fen).move(uciMv(u)); return m ? m.san : u; };
 const matOf = (c, col) => { let s = 0; c.board().forEach((r) => r.forEach((p) => { if (p && p.type !== "k") s += (p.color === col ? 1 : -1) * PV[p.type]; })); return s; };
@@ -1029,8 +1029,8 @@ function rvFact(i) {   /* book moves walk through the opening's story: the name,
   rv.storyK = rv.storyK || {}; const key = S ? S.name : nm, k = rv.storyK[key] || 0; rv.storyK[key] = k + 1;
   return (rv.storyAt[i] = items[k] || null);
 }
-const rvLineKey = (d) => { if (d.san.endsWith("#")) return "mate"; if (d.cls !== "brilliant") return d.cls; const sc = (rv.sac || {})[d.i] || {}; return sc.under ? "underpromo" : sc.piece === "q" ? "brilliant_q" : sc.piece === "r" ? "brilliant_r" : sc.piece ? "brilliant_minor" : "brilliant"; };
-const PIP_MOOD = { brilliant: "wow", great: "wow", best: "happy", excellent: "happy", good: "calm", book: "calm", inaccuracy: "hmm", mistake: "sad", miss: "hmm", blunder: "shock", start: "happy", mate: "wow", great_game: "wow", ok_game: "calm", rough_game: "sad" };
+const rvLineKey = (d) => { if (d.san.endsWith("#")) return "mate"; if (d.cls === "desperado" || d.cls === "zugzwang") return "great"; if (d.cls !== "brilliant") return d.cls; const sc = (rv.sac || {})[d.i] || {}; return sc.under ? "underpromo" : sc.piece === "q" ? "brilliant_q" : sc.piece === "r" ? "brilliant_r" : sc.piece ? "brilliant_minor" : "brilliant"; };
+const PIP_MOOD = { desperado: "wow", zugzwang: "wow", forced: "calm", brilliant: "wow", great: "wow", best: "happy", excellent: "happy", good: "calm", book: "calm", inaccuracy: "hmm", mistake: "sad", miss: "hmm", blunder: "shock", start: "happy", mate: "wow", great_game: "wow", ok_game: "calm", rough_game: "sad" };
 function coachFace(mood, cx, cy) { const ink = "#2a1a08", e = { happy: `<path d="M${cx - 12} ${cy}q4 -5 8 0M${cx + 4} ${cy}q4 -5 8 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`, wow: `<circle cx="${cx - 8}" cy="${cy}" r="4.5" fill="${ink}"/><circle cx="${cx + 8}" cy="${cy}" r="4.5" fill="${ink}"/>`, shock: `<circle cx="${cx - 8}" cy="${cy}" r="5" fill="#fff" stroke="${ink}" stroke-width="2"/><circle cx="${cx + 8}" cy="${cy}" r="5" fill="#fff" stroke="${ink}" stroke-width="2"/>`, sad: `<path d="M${cx - 12} ${cy - 1}q4 3 8 1M${cx + 4} ${cy}q4 2 8 -1" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`, hmm: `<circle cx="${cx - 8}" cy="${cy}" r="3" fill="${ink}"/><circle cx="${cx + 8}" cy="${cy}" r="3" fill="${ink}"/><path d="M${cx + 4} ${cy - 8}l9 -2" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`, calm: `<circle cx="${cx - 8}" cy="${cy}" r="3" fill="${ink}"/><circle cx="${cx + 8}" cy="${cy}" r="3" fill="${ink}"/>` }[mood] || "", m = { happy: `<path d="M${cx - 8} ${cy + 10}q8 8 16 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`, wow: `<ellipse cx="${cx}" cy="${cy + 12}" rx="5" ry="6" fill="${ink}"/>`, shock: `<ellipse cx="${cx}" cy="${cy + 13}" rx="4" ry="5" fill="${ink}"/>`, sad: `<path d="M${cx - 7} ${cy + 15}q7 -6 14 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`, hmm: `<path d="M${cx - 6} ${cy + 12}h11" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`, calm: `<path d="M${cx - 6} ${cy + 11}q6 4 12 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>` }[mood] || ""; return e + m; }
 const COACH_SVG = {
   vera: (md) => `<svg class="pip ${md}" viewBox="0 0 100 120" aria-hidden="true"><defs><linearGradient id="vrg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6e7ff"/><stop offset="1" stop-color="#b48be0"/></linearGradient></defs><ellipse cx="50" cy="114" rx="30" ry="5" fill="#000" opacity=".18"/><path d="M20 108h60l-6-14H26z" fill="url(#vrg)" stroke="#4b2a6e" stroke-width="2.5"/><path d="M28 94c2-14 8-22 10-30h24c2 8 8 16 10 30z" fill="url(#vrg)" stroke="#4b2a6e" stroke-width="2.5"/><circle cx="50" cy="50" r="24" fill="url(#vrg)" stroke="#4b2a6e" stroke-width="2.5"/><path d="M26 34l6-18 9 12 9-16 9 16 9-12 6 18z" fill="#f2c14e" stroke="#7a5a10" stroke-width="2.5" stroke-linejoin="round"/>${[32, 41, 50, 59, 68].map((x, k) => `<circle cx="${x}" cy="${k % 2 ? 22 : 16}" r="3" fill="#e84a5f"/>`).join("")}${coachFace(md, 50, 50)}</svg>`,
@@ -1397,6 +1397,18 @@ function rvBrilliance(i, F, H, x) {
   return out;
 }
 /* run after the main pass: a shallow search for how findable each candidate is, a deeper one for whether it holds up */
+/* zugzwang: the same position with the opponent allowed to pass is clearly better for them than with them to move */
+async function rvZug(tok) {
+  rv.zug = rv.zug || {}; let changed = false;
+  for (let i = 1; i <= rv.N; i++) {
+    if (!rv || rv.tok !== tok) return false; const d = rv.data[i - 1]; if (!d || !d.zcand || i in rv.zug) continue;
+    const f = rv.fen[i].split(" "); f[1] = i % 2 === 1 ? "w" : "b"; f[3] = "-"; let nf; try { nf = new Chess(f.join(" ")); if (!nf.fen()) { rv.zug[i] = false; continue; } } catch (e) { rv.zug[i] = false; continue; }
+    try { const ln = await Sf.analyse(f.join(" "), { multipv: 1, depth: 18, ms: 2500 }); if (!rv || rv.tok !== tok) return false; const w = lineW(ln[0], nf.turn()).w, passPov = i % 2 === 1 ? w : 100 - w;
+      rv.zug[i] = d.after >= 60 && passPov <= d.after - 20 && !nf.in_check(); if (rv.zug[i]) { (rv.zugd = rv.zugd || {})[i] = { pass: Math.round(passPov), now: Math.round(d.after) }; } } catch (e) { rv.zug[i] = false; }
+    if (rv.zug[i]) { rv.data[i - 1] = rvDerive(i); rvList(i); changed = true; }
+  }
+  return changed;
+}
 async function rvDeepen(tok) {
   rv.hard = rv.hard || {}; let changed = false;
   for (let i = 1; i <= rv.N; i++) {
@@ -1412,7 +1424,18 @@ async function rvDeepen(tok) {
     } catch (e) { rv.hard[i] = { hidden: false, rank: 0, gap: 0, stable: true }; }
     const nd = rvDerive(i); if (nd.cls !== d.cls) changed = true; rv.data[i - 1] = nd; rvList(i);
   }
+  const zc = await rvZug(tok); if (zc) changed = true;
   if (!rv || rv.tok !== tok) return; rv.deepDone = true; rvSummary(); rvGraph(); if (changed) { const co = rvEl("rvCoach"); if (co) co._h = null; rvPaint(); if (rv.done) rvReport(); }
+}
+/* the position before move i with the opponent to move: what they could already take */
+function rvPassFen(i) { const col = i % 2 === 1 ? "w" : "b", f = rv.fen[i - 1].split(" "); f[1] = col === "w" ? "b" : "w"; f[3] = "-"; return new Chess(f.join(" ")); }
+/* desperado: a piece that is already lost (attacked by something cheaper, or by anything while undefended) takes something before it goes */
+function rvDesperado(i) {
+  const mv = rv.mv[i - 1]; if (!mv.captured || mv.piece === "k" || PV[mv.piece] < 3) return null;
+  if (!new Chess(rv.fen[i]).moves({ verbose: true }).some((m) => m.captured && m.to === mv.to)) return null;   /* it can still be taken where it lands */
+  const fl = rvPassFen(i); let lost = null;
+  for (const m of fl.moves({ verbose: true })) { if (m.to !== mv.from || !m.captured) continue; const av = m.piece === "k" ? 99 : PV[m.piece]; fl.move(m); const defended = fl.moves({ verbose: true }).some((r) => r.captured && r.to === mv.from); fl.undo(); if (!defended || av < PV[mv.piece]) lost = m.san; }
+  return lost ? { attacker: lost, taken: mv.captured, piece: mv.piece } : null;
 }
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w), prev = rv.data[i - 2];
@@ -1422,7 +1445,7 @@ function rvDerive(i) {
   const loss = Math.max(0, before - after), isBest = played === bestUci || loss < 0.6, second = L[1] ? pov(L[1].w) : null, nLegal = new Chess(rv.fen[i - 1]).moves().length;
   let cls = isBest ? "best" : loss <= 2 ? "excellent" : loss <= 5 ? "good" : loss <= 10 ? "inaccuracy" : loss <= 20 ? "mistake" : "blunder";
   const recapture = rv.mv[i - 2] && rv.mv[i - 2].captured && mv.to === rv.mv[i - 2].to;
-  let cand = false, bscore = 0;
+  let cand = false, bscore = 0, zcand = false;
   if (nLegal === 1) cls = "forced";
   else if (rv.book[i] && loss <= 6) cls = "book";
   else {
@@ -1432,9 +1455,14 @@ function rvDerive(i) {
     const F = rvFeat(i, { after, L, played, recapture, nLegal, sac, pov }), br = rvBrilliance(i, F, (rv.hard || {})[i] || null, { before, after, loss, good, mates, pov });
     if (br.ok) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = br.info; }
     cand = br.cand; bscore = br.score;
+    if (cls === "best" || cls === "excellent" || cls === "good") {
+      const ds = loss <= 3 ? rvDesperado(i) : null, zg = (rv.zug || {})[i];
+      if (ds) { cls = "desperado"; (rv.des = rv.des || {})[i] = ds; } else if (zg) cls = "zugzwang";
+      else if (loss <= 2 && F.quiet && after >= 60 && !b.ev.term) { const nb = new Chess(rv.fen[i]); if (!nb.in_check() && nb.moves().length <= 14 && !(rv.zug && i in rv.zug)) zcand = true; }
+    }
   }
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
-  return { i, white, san: mv.san, cls, cand, bscore, playedUci: played, loss, pawns, cpl, cpb, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
+  return { i, white, san: mv.san, cls, cand, zcand, bscore, playedUci: played, loss, pawns, cpl, cpb, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
 }
 function rvTab(t) { const r = document.querySelector(".rvright"); if (!r) return; r.dataset.tab = t; document.querySelectorAll("[data-rvtab].chip").forEach((x) => x.classList.toggle("on", x.dataset.rvtab === t)); }
 document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-rvtab]"); if (!t || !rvActive()) return; rvTab(t.dataset.rvtab); if (t.classList.contains("rvstart") && rv.i === 0) rvGo(1); });
@@ -1454,9 +1482,11 @@ function rvExplain(d) {
       : `${san} gives up material, yet the position stays sound (${pct(d.after)} winning chances).`;
     t = brill + (kinds ? ` (${kinds})` : "");
   }
+  else if (d.cls === "desperado") { const ds = (rv.des || {})[i] || {}; t = `Your ${nm[ds.piece] || "piece"} was already lost${ds.attacker ? ` (${ds.attacker} would take it)` : ""}, so ${san} grabs the ${nm[ds.taken] || "piece"} first. That is a desperado: if a piece is going to be taken anyway, make it take something with it.`; }
+  else if (d.cls === "zugzwang") { const z = (rv.zugd || {})[i] || {}; t = `Zugzwang. Every move your opponent has now makes their position worse: if they could simply pass you would be at ${z.pass}% winning chances, but with them to move you are at ${z.now}%.`; }
   else if (d.cls === "great") t = `The only move that keeps your advantage. The next best option drops your winning chances from ${pct(d.before)} to ${pct(d.second)}.`;
   else if (d.cls === "best") t = `The engine's top choice${mv.captured ? `, taking the ${nm[mv.captured]}` : ""}${san.endsWith("#") ? " and checkmating." : san.endsWith("+") ? " with check." : "."}${b.ev.mate != null && mateFor(b.ev, d.white) ? ` It forces checkmate in ${Math.abs(b.ev.mate)}.` : ""}`;
-  else if (d.cls === "forced") t = "The only legal move, so there was nothing to choose.";
+  else if (d.cls === "forced") t = "The only legal move, so there was nothing to choose. The game was already deciding for you.";
   else if (d.cls === "excellent" || d.cls === "good") t = `${d.cls === "excellent" ? "Very close to the best" : "A reasonable move"}, giving up ${d.pawns.toFixed(1)} of a pawn. ${bs} was stronger.`;
   else {
     const why = [];

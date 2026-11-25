@@ -412,6 +412,14 @@ Badges redesigned: Desperado is a creeper-style face in green; Zugzwang is a pie
 
 The boxed-in crosshair still read badly, so Zugzwang is now a white king with a gold padlock on it: a locked king, a side that cannot move without harm. Seen at badge, large and 90px sizes.
 
+### 2026-11-25 - Review: doomed pieces, motifs, only-move and blunder kinds
+
+Audit: the old Desperado test only asked "is the piece attacked and can it be taken where it lands", so it missed trapped pieces whose fate was sealed earlier and counted pieces that could simply step away. Zugzwang had one verdict and no kinds. "Great" meant only "the second-best line is 10 points worse", with no idea why. Blunders were a number with no cause.
+
+Now: a piece is doomed when it is attacked, would lose material, and no single move saves it (step away, defend, take the attacker); a Desperado is a doomed piece that takes something or checks, with tags for a multi-move trap (doomed two moves earlier too), a desperado check and an exchange of doomed pieces. A motif detector tags pins, skewers, forks and discovered attacks the move newly creates, and a best move that creates one with clearly worse alternatives is promoted to Great. Only-move tags say what it keeps: the win, the draw, or avoiding a mate. Mistakes and blunders say what kind: allows a mate, loses material at once, allows a multi-move tactic, throws away a win, loses the balance, or positional. Zugzwang says reciprocal, endgame or positional, and tactical. Explanations list tags, a likely continuation and a confidence.
+
+Unit-tested on built positions (trapped knight takes a rook: desperado; free knight: none; fork, pin, skewer, no motif; a three-ply trapped-piece case flagged multi-move) and on the Opera Game and World Championship Game 1 (no false Desperado or Zugzwang). Not done: tracing forced sequences several moves back, distant zugzwang creation, deflection, overload and zwischenzug detectors, tablebases, and a measured precision and recall.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

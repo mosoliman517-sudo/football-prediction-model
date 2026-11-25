@@ -1353,7 +1353,11 @@ async function rvZug(tok) {
     if (!rv || rv.tok !== tok) return false; const d = rv.data[i - 1]; if (!d || !d.zcand || i in rv.zug) continue;
     const f = rv.fen[i].split(" "); f[1] = i % 2 === 1 ? "w" : "b"; f[3] = "-"; let nf; try { nf = new Chess(f.join(" ")); if (!nf.fen()) { rv.zug[i] = false; continue; } } catch (e) { rv.zug[i] = false; continue; }
     try { const ln = await Sf.analyse(f.join(" "), { multipv: 1, depth: 18, ms: 2500 }); if (!rv || rv.tok !== tok) return false; const w = lineW(ln[0], nf.turn()).w, passPov = i % 2 === 1 ? w : 100 - w;
-      rv.zug[i] = d.after >= 60 && passPov <= d.after - 20 && !nf.in_check(); if (rv.zug[i]) { (rv.zugd = rv.zugd || {})[i] = { pass: Math.round(passPov), now: Math.round(d.after) }; } } catch (e) { rv.zug[i] = false; }
+      rv.zug[i] = d.after >= 60 && passPov <= d.after - 20 && !nf.in_check();
+      if (rv.zug[i]) { const kind = ["zugzwang"], oppCol = i % 2 === 1 ? "b" : "w", pc = new Chess(rv.fen[i]); let pcs = 0; for (const r of pc.board()) for (const q of r) if (q && "nbrq".includes(q.type)) pcs += PV[q.type];
+        if (passPov <= 55) kind.push("reciprocal: they would also like you to move"); kind.push(pcs <= 20 ? "endgame zugzwang" : "positional zugzwang");
+        const ln0 = rv.pos[i] && rv.pos[i].lines[0]; if (ln0 && rvGain(rv.fen[i], ln0.pv, 4, oppCol) <= -2) kind.push("tactical: the forced move loses material");
+        (rv.zugd = rv.zugd || {})[i] = { pass: Math.round(passPov), now: Math.round(d.after), kind }; } } catch (e) { rv.zug[i] = false; }
     if (rv.zug[i]) { rv.data[i - 1] = rvDerive(i); rvList(i); changed = true; }
   }
   return changed;
@@ -1378,13 +1382,55 @@ async function rvDeepen(tok) {
 }
 /* the position before move i with the opponent to move: what they could already take */
 function rvPassFen(i) { const col = i % 2 === 1 ? "w" : "b", f = rv.fen[i - 1].split(" "); f[1] = col === "w" ? "b" : "w"; f[3] = "-"; return new Chess(f.join(" ")); }
-/* desperado: a piece that is already lost (attacked by something cheaper, or by anything while undefended) takes something before it goes */
+/* ---------- Doomed pieces and desperados ----------
+   A piece is doomed when it is attacked, would lose material if taken (undefended, or taken by something cheaper), and NO single move
+   of ours saves it (step away, defend, take the attacker, block). That is checked on the position itself, so it also finds pieces
+   that were trapped two or more moves ago. A desperado is a doomed piece that takes something or gives check before it goes. */
+function rvLostAt(fen, sq, col, type) {   /* with the opponent to move: what would take the piece on sq for a gain? returns the SAN or null */
+  const f = fen.split(" "); f[1] = col === "w" ? "b" : "w"; f[3] = "-"; let ch; try { ch = new Chess(f.join(" ")); } catch (e) { return null; } if (!ch || !ch.fen()) return null;
+  for (const m of ch.moves({ verbose: true })) { if (m.to !== sq || !m.captured) continue; const av = m.piece === "k" ? 99 : PV[m.piece]; ch.move(m); const defended = ch.moves({ verbose: true }).some((r) => r.captured && r.to === sq); ch.undo(); if (!defended || av < PV[type]) return m.san; }
+  return null;
+}
+function rvDoomed(fen, sq) {   /* { attacker } when the piece on sq (side to move's) is lost whatever the side to move does */
+  let c; try { c = new Chess(fen); } catch (e) { return null; } const p = c.get(sq); if (!p || p.type === "k" || p.type === "p") return null;
+  const attacker = rvLostAt(fen, sq, p.color, p.type); if (!attacker) return null;
+  for (const m of c.moves({ verbose: true })) { c.move(m); const at = m.from === sq ? m.to : sq; const saved = !rvLostAt(c.fen(), at, p.color, p.type); c.undo(); if (saved) return null; }
+  return { attacker, piece: p.type };
+}
 function rvDesperado(i) {
-  const mv = rv.mv[i - 1]; if (!mv.captured || mv.piece === "k" || PV[mv.piece] < 3) return null;
-  if (!new Chess(rv.fen[i]).moves({ verbose: true }).some((m) => m.captured && m.to === mv.to)) return null;   /* it can still be taken where it lands */
-  const fl = rvPassFen(i); let lost = null;
-  for (const m of fl.moves({ verbose: true })) { if (m.to !== mv.from || !m.captured) continue; const av = m.piece === "k" ? 99 : PV[m.piece]; fl.move(m); const defended = fl.moves({ verbose: true }).some((r) => r.captured && r.to === mv.from); fl.undo(); if (!defended || av < PV[mv.piece]) lost = m.san; }
-  return lost ? { attacker: lost, taken: mv.captured, piece: mv.piece } : null;
+  const mv = rv.mv[i - 1]; if (mv.piece === "k" || PV[mv.piece] < 3) return null; const check = /[+#]/.test(mv.san); if (!mv.captured && !check) return null;
+  const d0 = rvDoomed(rv.fen[i - 1], mv.from); if (!d0) return null;
+  const multi = i >= 3 && !!rv.mv[i - 3] && rv.mv[i - 3].to !== mv.from && !!rvDoomed(rv.fen[i - 3], mv.from);
+  let others = 0; const c = new Chess(rv.fen[i - 1]); for (const r of c.board()) for (const q of r) if (q && q.color === mv.color && q.type !== "k" && q.type !== "p" && q.square !== mv.from && rvDoomed(rv.fen[i - 1], q.square)) others++;
+  const kind = [multi ? "multi-move desperado" : "desperado"]; if (check) kind.push("desperado check"); if (others) kind.push("exchange of doomed pieces");
+  return { attacker: d0.attacker, taken: mv.captured || null, piece: mv.piece, check, multi, others, kind };
+}
+/* ---------- Tactical motifs: pins, skewers, forks, discovered attacks ---------- */
+const MD = { n: [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]], k: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] };
+const MR = { b: [[1, 1], [1, -1], [-1, 1], [-1, -1]], r: [[1, 0], [-1, 0], [0, 1], [0, -1]] }; MR.q = [...MR.b, ...MR.r];
+function rvRel(fen, col) {   /* relations our pieces have on the enemy: pins, skewers (sliders) and attacks on valuable pieces, as strings */
+  const c = new Chess(fen), B = c.board(), out = new Set(), at = (f, r) => (f < 0 || f > 7 || r < 0 || r > 7 ? null : B[r][f]), sq = (f, r) => "abcdefgh"[f] + (8 - r), val = (p) => (p.type === "k" ? 100 : PV[p.type]);
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+    const p = B[r][f]; if (!p || p.color !== col) continue;
+    if (MR[p.type]) for (const [df, dr] of MR[p.type]) {
+      let x = f + df, y = r + dr, first = null;
+      while (x >= 0 && x < 8 && y >= 0 && y < 8) {
+        const q = B[y][x];
+        if (q) { if (q.color === col) break; if (!first) { first = [q, x, y]; if (val(q) >= 3) out.add(`att:${sq(f, r)}:${sq(x, y)}`); } else { const Av = val(first[0]), Bv = val(q); if (Bv > Av && Bv >= 3) out.add(`pin:${sq(f, r)}:${sq(first[1], first[2])}:${sq(x, y)}`); else if (Av > Bv && Av >= 5 && Bv >= 1) out.add(`skew:${sq(f, r)}:${sq(first[1], first[2])}:${sq(x, y)}`); break; } }
+        x += df; y += dr;
+      }
+    } else { const steps = p.type === "n" ? MD.n : p.type === "k" ? MD.k : [[1, p.color === "w" ? -1 : 1], [-1, p.color === "w" ? -1 : 1]]; for (const [df, dr] of steps) { const q = at(f + df, r + dr); if (q && q.color !== col && val(q) >= 3) out.add(`att:${sq(f, r)}:${sq(f + df, r + dr)}`); } }
+  }
+  return out;
+}
+function rvMotifs(i) {
+  const mv = rv.mv[i - 1], col = mv.color, A = rvRel(rv.fen[i - 1], col), Bset = rvRel(rv.fen[i], col), tags = [];
+  const fresh = [...Bset].filter((k) => !A.has(k)), ours = (k) => k.split(":")[1] === mv.to;
+  if (fresh.some((k) => k.startsWith("pin:"))) tags.push("pin");
+  if (fresh.some((k) => k.startsWith("skew:"))) tags.push("skewer");
+  const forks = fresh.filter((k) => k.startsWith("att:") && ours(k)).length; if (forks >= 2) tags.push("fork");
+  if (fresh.some((k) => k.startsWith("att:") && !ours(k))) tags.push("discovered attack");
+  return tags;
 }
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w), prev = rv.data[i - 2];
@@ -1394,7 +1440,7 @@ function rvDerive(i) {
   const loss = Math.max(0, before - after), isBest = played === bestUci || loss < 0.6, second = L[1] ? pov(L[1].w) : null, nLegal = new Chess(rv.fen[i - 1]).moves().length;
   let cls = isBest ? "best" : loss <= 2 ? "excellent" : loss <= 5 ? "good" : loss <= 10 ? "inaccuracy" : loss <= 20 ? "mistake" : "blunder";
   const recapture = rv.mv[i - 2] && rv.mv[i - 2].captured && mv.to === rv.mv[i - 2].to;
-  let cand = false, bscore = 0, zcand = false;
+  let cand = false, bscore = 0, zcand = false; const tags = [];
   if (nLegal === 1) cls = "forced";
   else if (rv.book[i] && loss <= 6) cls = "book";
   else {
@@ -1404,14 +1450,29 @@ function rvDerive(i) {
     const F = rvFeat(i, { after, L, played, recapture, nLegal, sac, pov }), br = rvBrilliance(i, F, (rv.hard || {})[i] || null, { before, after, loss, good, mates, pov });
     if (br.ok) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = br.info; }
     cand = br.cand; bscore = br.score;
-    if (cls === "best" || cls === "excellent" || cls === "good") {
-      const ds = loss <= 3 ? rvDesperado(i) : null, zg = (rv.zug || {})[i];
-      if (ds) { cls = "desperado"; (rv.des = rv.des || {})[i] = ds; } else if (zg) cls = "zugzwang";
-      else if (loss <= 2 && F.quiet && after >= 60 && !b.ev.term) { const nb = new Chess(rv.fen[i]); if (!nb.in_check() && nb.moves().length <= 14 && !(rv.zug && i in rv.zug)) zcand = true; }
+    const mover = white ? "w" : "b", dsn = loss <= 3 && cls !== "brilliant" && (cls === "best" || cls === "excellent" || cls === "good" || cls === "great") ? rvDesperado(i) : null;
+    if (dsn) { tags.push(...dsn.kind); (rv.des = rv.des || {})[i] = dsn; if (cls !== "great") cls = "desperado"; }
+    if (loss <= 2 && (cls === "best" || cls === "great" || cls === "excellent" || cls === "good" || cls === "desperado" || cls === "brilliant")) {
+      const mt = rvMotifs(i); tags.push(...mt);
+      if (cls === "best" && mt.length && second != null && pov(L[0].w) - second >= 6 && !recapture && after >= 30 && after <= 97) cls = "great";   // exploits a pin, fork, skewer or discovered attack and the alternatives are clearly worse
     }
+    if (isBest && L.length >= 2 && !recapture) {   /* only-move kinds, from how far the second-best line falls */
+      const l1 = L[1], mateAgainst = l1.mate != null && pov(l1.w) < 1;
+      if (mateAgainst) tags.push("only move: avoids a forced mate"); else if (before >= 70 && second <= 55) tags.push("only move: keeps the win"); else if (before >= 35 && before <= 65 && second <= 25) tags.push("only move: keeps the draw");
+    }
+    if ((cls === "mistake" || cls === "blunder" || cls === "miss") && b.lines && b.lines[0]) {   /* what kind of error: judged against the position, not only the number */
+      const g2 = rvGain(rv.fen[i], b.lines[0].pv, 2, mover), g6 = rvGain(rv.fen[i], b.lines[0].pv, 6, mover);
+      if (b.ev.mate != null && pov(b.ev.w) < 1) tags.push("allows a forced mate"); else if (g2 <= -2.5) tags.push("loses material at once"); else if (g6 <= -2.5) tags.push("allows a multi-move tactic");
+      if (before >= 75 && after < 60) tags.push("throws away a winning position"); else if (before >= 35 && before <= 65 && after < before - 20) tags.push("loses the balance");
+      if (!tags.length) tags.push("positional error");
+    }
+    const zg = (rv.zug || {})[i];
+    if (zg && (cls === "best" || cls === "excellent" || cls === "good" || cls === "great")) { cls = cls === "great" ? "great" : "zugzwang"; tags.push(...(((rv.zugd || {})[i] || {}).kind || ["zugzwang"])); }
+    else if (loss <= 2 && F.quiet && after >= 60 && !b.ev.term && (cls === "best" || cls === "excellent" || cls === "good")) { const nb = new Chess(rv.fen[i]); if (!nb.in_check() && nb.moves().length <= 14 && !(rv.zug && i in rv.zug)) zcand = true; }
   }
+  if (nLegal === 1) tags.push(new Chess(rv.fen[i - 1]).in_check() ? "forced: the only legal reply to check" : "forced: the only legal move");
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
-  return { i, white, san: mv.san, cls, cand, zcand, bscore, playedUci: played, loss, pawns, cpl, cpb, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
+  return { i, white, san: mv.san, cls, tags: [...new Set(tags)], cand, zcand, bscore, playedUci: played, loss, pawns, cpl, cpb, acc, before, after, second, best: bestUci, isBest, bestSan: uciSan(rv.fen[i - 1], bestUci) };
 }
 function rvTab(t) { const r = document.querySelector(".rvright"); if (!r) return; r.dataset.tab = t; document.querySelectorAll("[data-rvtab].chip").forEach((x) => x.classList.toggle("on", x.dataset.rvtab === t)); }
 document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-rvtab]"); if (!t || !rvActive()) return; rvTab(t.dataset.rvtab); if (t.classList.contains("rvstart") && rv.i === 0) rvGo(1); });
@@ -1431,7 +1492,7 @@ function rvExplain(d) {
       : `${san} gives up material, yet the position stays sound (${pct(d.after)} winning chances).`;
     t = brill + (kinds ? ` (${kinds})` : "");
   }
-  else if (d.cls === "desperado") { const ds = (rv.des || {})[i] || {}; t = `Your ${nm[ds.piece] || "piece"} was already lost${ds.attacker ? ` (${ds.attacker} would take it)` : ""}, so ${san} grabs the ${nm[ds.taken] || "piece"} first. That is a desperado: if a piece is going to be taken anyway, make it take something with it.`; }
+  else if (d.cls === "desperado") { const ds = (rv.des || {})[i] || {}; t = `Your ${nm[ds.piece] || "piece"} was already lost: ${ds.attacker ? `${ds.attacker} wins it` : "it is attacked"} and no single move saves it${ds.multi ? ", and it has been stuck like this for a couple of moves" : ""}. So ${san} ${ds.taken ? `takes the ${nm[ds.taken]}` : "gives check"}${ds.taken && ds.check ? " with check" : ""} before it goes. That is a desperado: a doomed piece collects what it can.${ds.others ? " Another of your pieces is also in trouble, so this is an exchange of doomed pieces." : ""}`; }
   else if (d.cls === "zugzwang") { const z = (rv.zugd || {})[i] || {}; t = `Zugzwang. Every move your opponent has now makes their position worse: if they could simply pass you would be at ${z.pass}% winning chances, but with them to move you are at ${z.now}%.`; }
   else if (d.cls === "great") t = `The only move that keeps your advantage. The next best option drops your winning chances from ${pct(d.before)} to ${pct(d.second)}.`;
   else if (d.cls === "best") t = `The engine's top choice${mv.captured ? `, taking the ${nm[mv.captured]}` : ""}${san.endsWith("#") ? " and checkmating." : san.endsWith("+") ? " with check." : "."}${b.ev.mate != null && mateFor(b.ev, d.white) ? ` It forces checkmate in ${Math.abs(b.ev.mate)}.` : ""}`;
@@ -1451,6 +1512,9 @@ function rvExplain(d) {
     t = (d.cls === "miss" ? "Your opponent had just slipped, and this lets them off the hook. " : "") + why[0];
   }
   if ((d.cls === "best" || d.cls === "great" || d.cls === "brilliant") && b.lines && b.lines[0] && !(b.ev.mate != null)) { const opp = b.lines[0].pv, g = rvGain(fenB, opp, 4, mover); if (g >= 2) t += ` It wins material: ${pvLine(fenB, opp, 4)}.`; }
+  if (["desperado", "zugzwang", "great", "brilliant"].includes(d.cls) && b.lines && b.lines[0] && b.ev.mate == null && !b.ev.term) { const pl = pvLine(fenB, b.lines[0].pv, 5); if (pl) t += ` Likely continuation: ${pl}.`; }
+  if (d.tags && d.tags.length) t += ` Tags: ${d.tags.join("; ")}.`;
+  if (["desperado", "zugzwang", "great", "brilliant"].includes(d.cls)) { const H = (rv.hard || {})[i], conf = d.cls === "zugzwang" ? "high (checked with a separate search)" : d.cls === "brilliant" ? (H && H.stable ? "high (held up at depth 22)" : "medium") : "medium"; t += ` Confidence: ${conf}.`; }
   return (d.why = t);
 }
 const rvEl = (id) => document.getElementById(id);

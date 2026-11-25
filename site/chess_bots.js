@@ -108,7 +108,8 @@ aiThink = function () {
 /* ---------- the characters talk: a bubble and a recorded voice (Kokoro clips from src/bot_lines.json), never the device voice ---------- */
 function botPick(kind) {
   const B = botOf(st.level), L = BOT_LINES[B.id]; if (!L || !L[kind] || !L[kind].length) return null; st.botPk = st.botPk || {};
-  if (kind === "trait" || !st.botPk[kind]) { const pick = L[kind][Math.floor(Math.random() * L[kind].length)], who = Array.isArray(pick) ? pick[0] : B.id; st.botPk[kind] = { who, text: Array.isArray(pick) ? pick[1] : pick, name: B.id === "council" ? `${COACHES[who].name} of the Council` : B.name, face: oppFace(who, "calm") }; }
+  const mid = ["trait", "taunt", "story", "ouch", "check"].includes(kind);
+  if (mid || !st.botPk[kind]) { const used = (st.botUsed = st.botUsed || new Set()), key = (x) => (Array.isArray(x) ? x[1] : x), fresh = L[kind].filter((x) => !used.has(key(x))), pool = fresh.length ? fresh : L[kind], pick = pool[Math.floor(Math.random() * pool.length)]; used.add(key(pick)); const who = Array.isArray(pick) ? pick[0] : B.id; st.botPk[kind] = { who, text: Array.isArray(pick) ? pick[1] : pick, name: B.id === "council" ? `${COACHES[who].name} of the Council` : B.name, face: oppFace(who, "calm") }; }
   return st.botPk[kind];
 }
 /* the end-of-game card in a game against a character shows what that character says, not the coach */
@@ -119,7 +120,7 @@ function botEnd(res) {
 function botSay(kind) {
   if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face;
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
-  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(10000, 3600 + text.length * 55));
+  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
   try { if (PIPV.on && !(Snd && Snd.on === false)) AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95 }); } catch (e) { /* silent */ }
 }
 {
@@ -128,24 +129,26 @@ function botSay(kind) {
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
   const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { botWatch(); openTalk(); } catch (e) { /* never block the board */ } return r; };
 }
-/* a line when the character does the thing it is known for: the Escaped gives a piece away, the Berserker checks, the Trader trades, Arteta declines a capture */
-/* while you are still in a known opening, your coach drops a fun fact about it (at most two a game) */
-function openTalk() {
-  if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history(), n = h.length; if (n < 3 || n > 18 || (st.openN || 0) >= 2 || n - (st.openAt == null ? -9 : st.openAt) < 5) return;
-  const S = openStory(bookMap().get(h.join(" "))); if (!S) return; st.openSaid = st.openSaid || {}; const left = S.facts.map(storyFact).filter((f) => !st.openSaid[f]); if (!left.length) return;
-  const f = left[Math.floor(Math.random() * left.length)], me = st; st.openSaid[f] = 1; st.openN = (st.openN || 0) + 1; st.openAt = n; setTimeout(() => { if (st === me && !st.over) { pipPop(f, "happy"); pipSay(f); } }, 1500);
-}
+/* Mid-game talk. In order of interest: you check them, you take one of their pieces, they do the thing they are known for
+   (the Escaped gives a piece away, the Berserker checks, the Trader trades, Arteta declines a capture), and otherwise every few
+   moves a bit of trash talk or one of their stories, turn and turn about. At least four half-moves apart, twelve lines a game. */
 function botWatch() {
   if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history({ verbose: true }), n = h.length; if (st.botN === n) return; st.botN = n;
-  const m = h[n - 1]; if (!m || m.color === live.color) return; const id = botOf(st.level).id, L = BOT_LINES[id]; if (!L || !L.trait) return;
-  const T = st.botT = st.botT || { n: 0, last: -9 }; if (T.n >= 4 || n - T.last < 6) return;
-  const pre = new Chess(); h.slice(0, -1).forEach((x) => pre.move({ from: x.from, to: x.to, promotion: x.promotion })); let hit = false;
-  if (id === "escaped") { const mv = pre.moves({ verbose: true }).find((z) => z.from === m.from && z.to === m.to && z.promotion === m.promotion); hit = !!mv && botSac(pre, mv) >= 2; }
-  else if (id === "berserker") hit = /[+#]/.test(m.san);
-  else if (id === "trader") hit = m.captured === "q" || (!!m.captured && m.captured !== "p" && n > 8);
-  else if (id === "arteta") hit = n >= 8 && !m.captured && !/[+#]/.test(m.san) && pre.moves({ verbose: true }).some((z) => z.captured && BV[z.captured] >= 3);
-  else if (id === "council") hit = n >= 12 && Math.random() < 0.12;
-  if (hit) { T.n++; T.last = n; setTimeout(() => botSay("trait"), 500); }
+  const m = h[n - 1]; if (!m) return; const id = botOf(st.level).id, L = BOT_LINES[id]; if (!L) return;
+  const T = st.botT = st.botT || { n: 0, last: -9, chat: 0 }; if (n < T.last) { T.last = -9; } if (T.n >= 12 || n - T.last < 4) return;
+  if (st.openAt != null && n - st.openAt < 3) return;   /* the coach has just told an opening fact */
+  const mine = m.color !== live.color; let kind = null;
+  if (!mine) { if (/[+#]/.test(m.san) && Math.random() < 0.8) kind = "check"; else if (m.captured && m.captured !== "p" && Math.random() < 0.75) kind = "ouch"; }
+  else {
+    const pre = new Chess(); h.slice(0, -1).forEach((x) => pre.move({ from: x.from, to: x.to, promotion: x.promotion })); let hit = false;
+    if (id === "escaped") { const mv = pre.moves({ verbose: true }).find((z) => z.from === m.from && z.to === m.to && z.promotion === m.promotion); hit = !!mv && botSac(pre, mv) >= 2; }
+    else if (id === "berserker") hit = /[+#]/.test(m.san);
+    else if (id === "trader") hit = m.captured === "q" || (!!m.captured && m.captured !== "p" && n > 8);
+    else if (id === "arteta") hit = n >= 8 && !m.captured && !/[+#]/.test(m.san) && pre.moves({ verbose: true }).some((z) => z.captured && BV[z.captured] >= 3);
+    if (hit && (id === "escaped" || Math.random() < 0.6)) kind = "trait";
+    else if (n >= 6 && n - T.last >= 7) { kind = T.chat % 2 ? "story" : "taunt"; T.chat++; }
+  }
+  if (kind && L[kind] && L[kind].length) { T.n++; T.last = n; const me = st; setTimeout(() => { if (st === me && !st.over) botSay(kind); }, mine ? 500 : 250); }
 }
 const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {

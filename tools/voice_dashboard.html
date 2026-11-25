@@ -25,7 +25,9 @@ li div{min-width:0;flex:1}li b{font-size:12px;color:var(--dim)}li span{display:b
 <main>
 <header><div><h1>Voice recording</h1><div class="sub">updates every 4 seconds</div></div><div class="pill" id="state"><i class="dot"></i><span id="stateT">connecting</span></div></header>
 
-<section class="card c8"><h2>This run</h2><div class="ringwrap">
+<section class="card c12" id="allCard" hidden><h2>Everything left · both websites</h2><div class="row num" style="align-items:baseline;gap:28px"><div><div class="big" id="bothN">…</div><div class="sub" id="bothSplit"></div></div><div><div class="big" id="bothEta" style="color:var(--teal)">…</div><div class="sub" id="bothAt"></div></div></div></section>
+
+<section class="card c8"><h2>This run · ballknowledge only</h2><div class="ringwrap">
 <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Run progress"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--track)" style="stroke:var(--track)" stroke-width="11"/><circle id="arc" cx="60" cy="60" r="50" fill="none" style="stroke:var(--teal);transition:stroke-dasharray .8s" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 315" transform="rotate(-90 60 60)"/><text id="pct" x="60" y="63" text-anchor="middle" font-size="22" font-weight="800">…</text><text x="60" y="79" text-anchor="middle" font-size="8" style="fill:var(--dim)">THIS RUN</text></svg>
 <div><div class="big num" id="runN">…</div><div class="sub">lines recorded this run</div><div class="big num" id="eta" style="margin-top:14px;color:var(--teal)">…</div><div class="sub" id="etaS">time left</div></div></div></section>
 
@@ -40,6 +42,7 @@ li div{min-width:0;flex:1}li b{font-size:12px;color:var(--dim)}li span{display:b
 
 <section class="card c12"><h2>Every voice line · <span id="allN"></span></h2><div class="bar" style="margin-bottom:16px"><i id="allBar"></i></div><div class="chars num" id="chars"></div></section>
 
+<section class="card c12" id="qCard" hidden><h2>Next in the queue · ultimateball · <span id="qN"></span></h2><div class="sub" id="qState" style="margin-bottom:8px"></div><div class="bar" style="margin-bottom:16px"><i id="qBar"></i></div><div class="chars num" id="qChars"></div><div class="sub" id="qRecent" style="margin-top:10px"></div></section>
 <section class="card c12"><h2>Just recorded · press to listen</h2><ul id="recent"></ul></section>
 </main>
 <script>
@@ -68,6 +71,19 @@ async function tick() {
     $("pow").textContent = `${s.battery ?? "?"}% ${s.ac ? "⚡" : "on battery"}`; $("cpu").textContent = s.proc ? `${Math.round(s.proc.cpu)}%` : "–"; $("mem").textContent = s.proc ? `${s.proc.mem} GB` : "–"; $("up").textContent = s.proc ? dur(s.proc.up) : "–";
     $("allN").textContent = `${s.done} of ${s.total} in Chatterbox`; $("allBar").style.width = `${(100 * s.done) / s.total}%`;
     $("chars").innerHTML = s.chars.map(([n, d, tot]) => `<div><div><span>${esc(n)}</span><span class="sub">${d}/${tot}</span></div><div class="bar"><i style="width:${(100 * d) / tot}%"></i></div></div>`).join("");
+    const q = s.queue; $("qCard").hidden = !q; $("allCard").hidden = !q;
+    if (q) {
+      const qLeft = q.total - q.done, per = q.perLine || s.perLine, bkSecs = s.left ? s.eta : 0, secs = s.left && bkSecs == null ? null : per ? bkSecs + qLeft * per : null;
+      $("bothN").textContent = `${(s.left + qLeft).toLocaleString()} lines`; $("bothSplit").textContent = `${s.left.toLocaleString()} ballknowledge, then ${qLeft.toLocaleString()} ultimateball`;
+      $("bothEta").textContent = secs == null ? "…" : dur(secs); $("bothAt").textContent = secs == null ? "estimating" : `finishes about ${new Date(Date.now() + secs * 1000).toLocaleString([], { weekday: "long", hour: "2-digit", minute: "2-digit" })}, if the Mac stays awake`;
+    }
+    if (q) {
+      const mins = q.eta ? Math.round(q.eta / 60) : null;
+      $("qN").textContent = `${q.done} of ${q.total}`; $("qBar").style.width = (100 * q.done) / q.total + "%";
+      $("qState").textContent = q.state === "finished" ? "Finished" : !q.running ? "Not running" : q.state === "queued" ? `Waiting for ${q.waiting || "its turn"}` : `Recording${q.perLine ? ` · ${q.perLine.toFixed(1)}s a line` : ""}${mins != null ? ` · about ${Math.floor(mins / 60)}h ${mins % 60}m left` : ""}`;
+      $("qChars").innerHTML = q.chars.map(([n, d, tot]) => `<div><div><span>${esc(n)}</span><span class="sub">${d}/${tot}</span></div><div class="bar"><i style="width:${(100 * d) / tot}%"></i></div></div>`).join("");
+      $("qRecent").textContent = (q.recent || []).slice(0, 3).join("  ·  ");
+    }
     const key = s.recent.map((r) => r.file).join();
     if (key !== recentKey) { recentKey = key; $("recent").innerHTML = s.recent.map((r) => `<li><button type="button" data-f="${r.file}" aria-label="Play this line">▶</button><div><b>${esc(r.who)}</b><span title="${esc(r.text)}">${esc(r.text)}</span></div></li>`).join(""); }
   } catch (e) { document.body.classList.add("off"); $("stateT").textContent = "dashboard server not reachable"; }

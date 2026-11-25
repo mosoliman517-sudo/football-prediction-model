@@ -64,6 +64,18 @@ def process():
     return None
 
 
+def other_queue():
+    """The ultimateball queue (pipelines/make_voices_cb.py in ~/games-platform), which waits for this job and records after it."""
+    try:
+        q = json.load(open(os.path.expanduser("~/games-platform/voice_cb_status.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    q["running"] = subprocess.run(["pgrep", "-f", "make_voices_cb.py"], capture_output=True).returncode == 0
+    names = {"bongi": "Bongi", "mic": "Maknae Mic", "pocha": "Pocha", "neko": "Neko", "pin": "Pin", "tock": "Tock", "dumpling": "Dumpling", "dogear": "Dog-ear"}
+    q["chars"] = sorted(([names.get(c, NAMES.get(c, c)), d, t] for c, (d, t) in q.get("chars", {}).items()), key=lambda x: (x[1] / x[2], -x[2]))
+    return q
+
+
 def stats():
     now = time.time()
     have, missing = [], []
@@ -99,7 +111,7 @@ def stats():
     pct = re.search(r"(\d+)%", batt)
     state = sh("tools/thermalstate").strip()
     return {
-        "total": len(J), "done": len(have), "left": len(missing), "runTotal": run_total, "runDone": max(0, run_total - len(missing)),
+        "queue": other_queue(), "total": len(J), "done": len(have), "left": len(missing), "runTotal": run_total, "runDone": max(0, run_total - len(missing)),
         "running": bool(proc), "proc": proc, "perLine": per_line, "eta": eta, "speeds": [round(g[0], 1) for g in gaps[-90:]],
         "temps": tm, "tempHist": list(TEMPS)[-180:], "thermal": int(state) if state.isdigit() else None,
         "battery": int(pct.group(1)) if pct else None, "ac": "AC Power" in batt,

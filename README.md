@@ -442,6 +442,10 @@ Swept every route of the three sports at phone width, probed the live database r
 
 Online games showed HTML sent through a public relay without cleaning it, so someone with a room code could have run script in another player's browser. The panel is now sanitised (site/spectate.js, safeFill) and match scores are forced to numbers. online/schema_v16.sql narrows the basketball and chess table rights and fixes the score rate limit, which never counted anything; it was run on Supabase the same day and anonymous table reads are now refused.
 
+### 2026-11-25 - The characters talk all game
+
+161 new lines (251 for the playable characters now), each voiced with Kokoro: trash talk, their own stories and chess facts, and reactions when you check them or take a piece. Arteta talks about the 2026 title (checked: Arsenal were 2025-26 champions, first since 2004, then lost the Champions League final to Paris on penalties), the Escaped about the ward and his sacrifices. During a game a character speaks at most twelve times, at least four half-moves apart, without repeating itself while unused lines remain. The new lines get Chatterbox takes on the next run of src/83_make_voice_cb.py.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

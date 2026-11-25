@@ -126,9 +126,15 @@ function botSay(kind) {
   const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); setTimeout(() => botSay("start"), 900); return r; };
   const _aiEnd = aiEnd; aiEnd = function () { const r = _aiEnd.apply(this, arguments); if (r && st && st.over && !st.botEnd) { st.botEnd = true; setTimeout(() => botSay(st.over.won ? "lose" : st.over.lost ? "win" : "draw"), 800); } return r; };
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
-  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { botWatch(); } catch (e) { /* never block the board */ } return r; };
+  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { botWatch(); openTalk(); } catch (e) { /* never block the board */ } return r; };
 }
 /* a line when the character does the thing it is known for: the Escaped gives a piece away, the Berserker checks, the Trader trades, Arteta declines a capture */
+/* while you are still in a known opening, your coach drops a fun fact about it (at most two a game) */
+function openTalk() {
+  if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history(), n = h.length; if (n < 3 || n > 18 || (st.openN || 0) >= 2 || n - (st.openAt == null ? -9 : st.openAt) < 5) return;
+  const S = openStory(bookMap().get(h.join(" "))); if (!S) return; st.openSaid = st.openSaid || {}; const left = S.facts.map(storyFact).filter((f) => !st.openSaid[f]); if (!left.length) return;
+  const f = left[Math.floor(Math.random() * left.length)], me = st; st.openSaid[f] = 1; st.openN = (st.openN || 0) + 1; st.openAt = n; setTimeout(() => { if (st === me && !st.over) { pipPop(f, "happy"); pipSay(f); } }, 1500);
+}
 function botWatch() {
   if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history({ verbose: true }), n = h.length; if (st.botN === n) return; st.botN = n;
   const m = h[n - 1]; if (!m || m.color === live.color) return; const id = botOf(st.level).id, L = BOT_LINES[id]; if (!L || !L.trait) return;

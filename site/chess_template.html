@@ -976,7 +976,9 @@ function rvFact(i) {   /* book moves walk through the opening's story: the name,
   if (S) { const G = S.game && OPEN_GAMES[S.game]; items = [S.origin, "The idea: " + S.idea, ...S.facts.map(storyFact), ...(G ? [`A famous game in this opening: ${G.title}, ${G.who}, ${G.when}. ${G.note}`] : [])]; }
   else { const f = openFact(nm); items = f ? [f] : []; }
   rv.storyK = rv.storyK || {}; const key = S ? S.name : nm, k = rv.storyK[key] || 0; rv.storyK[key] = k + 1;
-  return (rv.storyAt[i] = items[k] || null);
+  if (items[k]) return (rv.storyAt[i] = items[k]);
+  rv.genK = rv.genK == null ? (rv.N * 5 + 3) % CHESS_FACTS.length : rv.genK; const used = (rv.genN = (rv.genN || 0) + 1);   /* the opening story has run out: a general fact, at most three per game */
+  return (rv.storyAt[i] = used <= 3 ? "Fun fact: " + CHESS_FACTS[(rv.genK + used) % CHESS_FACTS.length] : null);
 }
 const rvLineKey = (d) => { if (d.san.endsWith("#")) return "mate"; if (d.cls === "desperado" || d.cls === "zugzwang") return "great"; if (d.cls !== "brilliant") return d.cls; const sc = (rv.sac || {})[d.i] || {}; return sc.under ? "underpromo" : sc.piece === "q" ? "brilliant_q" : sc.piece === "r" ? "brilliant_r" : sc.piece ? "brilliant_minor" : "brilliant"; };
 const PIP_MOOD = { desperado: "wow", zugzwang: "wow", forced: "calm", brilliant: "wow", great: "wow", best: "happy", excellent: "happy", good: "calm", book: "calm", inaccuracy: "hmm", mistake: "sad", miss: "hmm", blunder: "shock", start: "happy", mate: "wow", great_game: "wow", ok_game: "calm", rough_game: "sad" };

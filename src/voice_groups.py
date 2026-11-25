@@ -80,6 +80,10 @@ def jobs():
         texts = [origin, "The idea: " + idea if idea else None] + [f if f.startswith("Fun fact") else "Fun fact: " + f for f in facts] + [games.get(gk)]
         for c in SPORT_CHARS["ch"]:
             J += [(CHAR_VOICE[c], t, c, "story") for t in texts if t]
+    gm = re.search(r"const CHESS_FACTS = (\[.*?\]);", st, re.S)   # general facts, told when an opening story has run out
+    for t in json.loads(gm.group(1)):
+        for c in SPORT_CHARS["ch"]:
+            J.append((CHAR_VOICE[c], "Fun fact: " + t, c, "story"))
     bl = json.load(open("src/bot_lines.json", encoding="utf-8"))   # the playable characters: site/bot_lines.js
     BV = {"arteta": "bm_daniel", "berserker": "am_adam", "trader": "am_onyx", "escaped": "bm_fable", "pip": "am_liam", "bea": "bf_alice", "vera": "bf_isabella"}
     for bid, kinds in bl.items():

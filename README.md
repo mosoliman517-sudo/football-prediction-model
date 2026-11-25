@@ -426,6 +426,10 @@ Added tags for zwischenzug, forced sequences (chains of replies with one or two 
 
 tests/review_detectors.js holds 16 labelled positions. Fork, pin, skewer, discovered attack, desperado and zwischenzug scored 100% precision and recall on them. That is a small set of easy hand-built positions, not a measure of real games. Not tested with a positive case: deflection, decoy, overload, forced sequence, practically forced, zugzwang preparation, tablebase downgrade and the sacrifice tags. Still not built: clearance, interference and attraction detectors.
 
+### 2026-11-25 - More opening fun facts, also while you play
+
+Thirty new opening facts and thirteen general chess facts, voiced for Pip, Bea and Vera (129 new Kokoro clips, made at low priority; all 318 fact-and-coach combinations have a clip). In the game review, once an opening's own story runs out, a general fact follows on later book moves (at most three per game). New: while you play one of the characters and are still in a known opening, your coach drops a fact about it, at most twice a game. The facts come from general chess history and were written from memory, not checked against a source one by one.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

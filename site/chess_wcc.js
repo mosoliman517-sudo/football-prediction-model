@@ -42,7 +42,7 @@ function whRing(frac, size, inner, cls = "") {
 }
 function whHero(info) {
   const gk = cpP(CP_ID.gukesh), sn = cpP(CP_ID.sindarov), live = info.rounds.find((x) => x.live), rs = WH.d ? WH.d.rounds : [], now = Date.now(), next = rs.find((r) => !r.finished && !r.ongoing && r.startsAt > now), nextI = next ? rs.indexOf(next) : -1;
-  const face = (p, k, role) => `<button class="whplayer ${k}" type="button" data-cpp="${CP_ID[k === "g" ? "gukesh" : "sindarov"]}"><span class="whrole">${role}</span><span class="whface">${cpFace(p, "big")}</span><b>${esc(cpName(p))}</b><span class="cpmeta">${cpFed(p)}</span>${p && p.std ? `<span class="whelo"><b class="num" data-count="${p.std}">${p.std}</b><small>classical</small></span>` : ""}</button>`;
+  const face = (p, k, role) => `<button class="whplayer ${k}" type="button" data-cpp="${CP_ID[k === "g" ? "gukesh" : "sindarov"]}"><span class="whrole">${role}</span><span class="whpic" style="--img:url(img/${k === "g" ? "gukesh" : "sindarov"}.jpg)">${cpFace(p, "big")}</span><b>${esc(cpName(p))}</b><span class="cpmeta">${cpFed(p)}</span>${p && p.std ? `<span class="whelo"><b class="num" data-count="${p.std}">${p.std}</b><small>classical</small></span>` : ""}</button>`;
   const seg = info.rounds.length ? info.rounds : Array.from({ length: 14 }, (_, i) => ({ i: i + 1, r: { id: "", name: "Game " + (i + 1) } }));
   const strip = seg.map((x) => { const g = x.white === "g", cl = x.res ? (x.res === "1/2-1/2" ? "d" : (x.res === "1-0") === g ? "wg" : "ws") : x.live ? "live" : x.r.id && nextI === x.i - 1 ? "next" : ""; return `<button type="button" class="whseg ${cl}" ${x.done || x.live ? `data-whround="${x.r.id}"` : "disabled"} title="${esc(x.r.name)}${x.res ? ": " + whRes(x.res) : x.live ? ": live" : ""}"><small>${x.i}</small></button>`; }).join("");
   let status;
@@ -52,12 +52,12 @@ function whHero(info) {
   else status = "";
   const sc = info.played || live ? `<span class="whscore num"><b data-count="${info.pts.g}" data-dec="1">${info.pts.g}</b><i>:</i><b data-count="${info.pts.s}" data-dec="1">${info.pts.s}</b></span>` : `<span class="whvs">VS</span>`;
   return `<section class="whhero" aria-label="World Championship match">
-    <div class="whbg" aria-hidden="true"><i class="p p1">♔</i><i class="p p2">♞</i><i class="p p3">♛</i><i class="p p4">♝</i><i class="p p5">♜</i><i class="p p6">♟</i></div>
+    <i class="whcity" aria-hidden="true"></i><div class="whbg" aria-hidden="true"><i class="p p1">♔</i><i class="p p2">♞</i><i class="p p3">♛</i><i class="p p4">♝</i><i class="p p5">♜</i><i class="p p6">♟</i></div>
     <p class="whkick">FIDE · Geneva · 24 Nov – 11 Dec 2026</p><h2 class="whtitle">World Chess Championship</h2>
     <div class="whface-off">${face(gk, "g", "Defending champion")}<div class="whmid">${sc}<small class="whfirst">first to 7½</small></div>${face(sn, "s", "Challenger")}</div>
     <div class="whstrip" role="group" aria-label="The 14 games">${strip}</div><div class="whstat">${status}</div>
     <div class="whticker" aria-hidden="true"><div><span>14 classical games</span><span>120 min + 30 min after move 40, +30 s a move from move 41</span><span>First to 7½ points</span><span>Level at 7–7: rapid, blitz, then Armageddon</span><span>Live from Lichess every 15 seconds</span><span>14 classical games</span><span>120 min + 30 min after move 40, +30 s a move from move 41</span><span>First to 7½ points</span><span>Level at 7–7: rapid, blitz, then Armageddon</span><span>Live from Lichess every 15 seconds</span></div></div>
-  </section>`;
+  <p class="whcred">Photos via Wikimedia Commons: Gukesh by Frans Peeters (CC BY-SA 2.0), Sindarov by Stefan64 (CC BY-SA 3.0), Lake Geneva by karlheinz klingbeil (CC BY 4.0).</p></section>`;
 }
 const WH_TABS = [["live", "Live board", "bolt"], ["sched", "Schedule", "clock"], ["score", "Score", "trophy"], ["players", "Players", "crown"], ["open", "Openings", "book"], ["games", "Games", "chart"]];
 function whAnimate(root) {
@@ -84,7 +84,7 @@ function whGraph() {
   const box = document.getElementById("whGraph"); if (!box || !WL || !WL.g) return; const G = WL.g, S = whSeries(G).map((v, i, a) => (v == null ? (i ? a[i - 1] : 50) : v)), N = S.length;
   if (N < 4) { box.innerHTML = ""; return; } const ply = WL.ply == null ? N : WL.ply, swings = S.map((v, i) => [i + 1, Math.abs(v - (i ? S[i - 1] : 50))]).sort((a, b) => b[1] - a[1]).slice(0, 3).filter((x) => x[1] >= 8).sort((a, b) => a[0] - b[0]);
   const cx = (ply / N) * 100;
-  box.innerHTML = `<div class="card whgraph"><div class="whgh"><b>${ic("chart")}Who is winning, move by move</b><span class="fine">Stockfish's view from the broadcast. White up when the line is above the dotted middle (the height is zoomed to fit this game). Drag to scrub.</span></div>
+  box.innerHTML = `<div class="card whgraph"><div class="whgh"><b>${ic("chart")}Who is winning, move by move</b><button type="button" class="chip ${PIPV.on ? "on" : ""}" data-whvoice>${PIPV.on ? "🔊" : "🔇"} Pip says each move</button><span class="fine">Stockfish's view from the broadcast. White up when the line is above the dotted middle (the height is zoomed to fit this game). Drag to scrub.</span></div>
     <div class="whgw" data-whg>${whSpark(G, { h: 90 })}<i class="whcur" style="left:${cx}%"></i></div>
     ${swings.length ? `<div class="whsw"><span class="fine">Biggest swings:</span>${swings.map(([p, d]) => `<button type="button" class="chip" data-whjump="${p}">${Math.ceil(p / 2)}${p % 2 ? "." : "..."} ${esc(G.mv[p - 1].san)} <small>${Math.round(d)}%</small></button>`).join("")}</div>` : ""}</div>`;
 }
@@ -131,7 +131,8 @@ function whIcs() {
 }
 function whSans(id, upTo) { const x = whInfo().rounds.find((r) => r.r.id === id); return x && x.G ? { x, sans: x.sans.slice(0, upTo == null ? undefined : upTo) } : null; }
 document.addEventListener("click", (e) => {
-  if (st.game !== "champ" || CH.v !== "wcc") return; const t = e.target.closest && e.target.closest("[data-wht],[data-whround],[data-whrev],[data-whplay],[data-whop],[data-whics],[data-whh2h],[data-whan],[data-whjump]"); if (!t) return;
+  if (st.game !== "champ" || CH.v !== "wcc") return; const t = e.target.closest && e.target.closest("[data-wht],[data-whround],[data-whrev],[data-whplay],[data-whop],[data-whics],[data-whh2h],[data-whan],[data-whjump],[data-whvoice]"); if (!t) return;
+  if (t.dataset.whvoice != null) { e.stopPropagation(); PIPV.on = !PIPV.on; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (x) { /* private */ } if (!PIPV.on) AIVoice.stop(); else WH.said = ""; whGraph(); if (PIPV.on) whSpeak(); return; }
   if (t.dataset.wht) { e.stopPropagation(); return whTab(t.dataset.wht); }
   if (t.dataset.whics != null) { e.stopPropagation(); return whIcs(); }
   if (t.dataset.whh2h != null) { e.stopPropagation(); return h2hPage(CP_ID.gukesh, CP_ID.sindarov); }
@@ -146,12 +147,15 @@ document.addEventListener("click", (e) => {
 /* scrub the evaluation graph */
 (() => { let down = false; const at = (e) => { const w = e.target.closest && e.target.closest("[data-whg]"); if (!w || !WL || !WL.g) return; const r = w.getBoundingClientRect(), N = WL.g.mv.length, p = Math.max(0, Math.min(N, Math.round(((e.clientX - r.left) / r.width) * N))); WL.ply = p === N ? null : p; wccPaint(); };
   document.addEventListener("pointerdown", (e) => { if (e.target.closest && e.target.closest("[data-whg]")) { down = true; at(e); } }); document.addEventListener("pointermove", (e) => { if (down) at(e); }); document.addEventListener("pointerup", () => { down = false; }); })();
+/* the coach says his line aloud for the move on the board (same text as the one shown, so its recorded clip plays) */
+function whCls(g, ply) { const cur = g.mv[ply - 1]; if (!cur) return "start"; const cp = liCp(cur.ev), prev = ply > 1 ? liCp(g.mv[ply - 2].ev) : 20, white = ply % 2 === 1, pov = (x) => (white ? x : 100 - x), loss = cp != null && prev != null ? Math.max(0, pov(wpct(prev)) - pov(wpct(cp))) : 0; return cur.san.endsWith("#") ? "mate" : loss < 2 ? "good" : loss < 6 ? "excellent" : loss < 11 ? "inaccuracy" : loss < 21 ? "mistake" : "blunder"; }
+function whSpeak() { if (!WL || !WL.g) return; const ply = WL.ply == null ? WL.g.mv.length : WL.ply, key = WL.round + ":" + ply; if (!ply || WH.said === key) return; WH.said = key; clearTimeout(WH.say); WH.say = setTimeout(() => { try { if (WL && (WL.ply == null ? WL.g.mv.length : WL.ply) === ply) pipSay(pipPick(whCls(WL.g, ply), ply)); } catch (e) { /* quiet */ } }, 600); }
 /* the live board gets an "Analyse this position" button, the opening's name and the graph */
 setTimeout(() => {
   if (typeof wccPaint !== "function") return; const p0 = wccPaint;
   try { wccPaint = function () { p0.apply(this, arguments); try { const el = WL.el, row = el.querySelector("[data-lvplay]") ? el.querySelector("[data-lvplay]").parentNode : el.querySelector("[data-lvrev]") ? el.querySelector("[data-lvrev]").parentNode : null;
     if (row && !row.querySelector("[data-whan]")) row.insertAdjacentHTML("afterbegin", `<button class="btn" data-whan type="button">${ic("compass")}Analyse this position</button>`);
-    const ply = WL.ply == null ? WL.g.mv.length : WL.ply, o = whOpening(WL.g.mv.slice(0, ply).map((m) => m.san)), ol = document.getElementById("whOpLine"); if (ol) ol.innerHTML = o.name ? `<p class="fine" style="margin:8px 2px">${ic("book")}Opening: <b>${esc(o.name)}</b></p>` : ""; whGraph(); } catch (e) { /* plain board */ } }; } catch (e) { /* skip */ }
+    const ply = WL.ply == null ? WL.g.mv.length : WL.ply, o = whOpening(WL.g.mv.slice(0, ply).map((m) => m.san)), ol = document.getElementById("whOpLine"); if (ol) ol.innerHTML = o.name ? `<p class="fine" style="margin:8px 2px">${ic("book")}Opening: <b>${esc(o.name)}</b></p>` : ""; whGraph(); whSpeak(); } catch (e) { /* plain board */ } }; } catch (e) { /* skip */ }
 }, 0);
 (() => { const s = document.createElement("style"); s.textContent = `
 .whhero{position:relative;overflow:hidden;border-radius:26px;padding:26px 18px 0;color:#f4f1ea;background:radial-gradient(120% 90% at 20% 0%,#2a3a5e 0%,transparent 60%),radial-gradient(100% 80% at 85% 10%,#5a3a1a 0%,transparent 55%),linear-gradient(160deg,#0d1220,#171109 70%);border:1px solid #ffffff22;box-shadow:0 30px 70px -34px #000,inset 0 1px 0 #ffffff22;isolation:isolate}
@@ -167,7 +171,7 @@ setTimeout(() => {
 .whplayer{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px 8px;border-radius:20px;border:1px solid #ffffff26;background:linear-gradient(180deg,#ffffff14,#ffffff05);color:inherit;font:inherit;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;animation:whin .8s cubic-bezier(.2,.8,.2,1) both}
 .whplayer.s{animation-delay:.12s}.whplayer:hover{transform:translateY(-6px) scale(1.02);border-color:#e8c35a99;box-shadow:0 22px 40px -22px #e8c35a}
 @keyframes whin{from{opacity:0;transform:translateY(22px) scale(.96)}}
-.whplayer .whface{display:block;border-radius:50%;padding:4px;background:conic-gradient(from 0deg,#e8c35a,#7aa2ff,#e8c35a);animation:whspin 9s linear infinite}.whplayer .whface .cpf{border:3px solid #0d1220;animation:whspin 9s linear infinite reverse}@keyframes whspin{to{transform:rotate(360deg)}}
+
 .whrole{font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#e8c35a}.whplayer b{font-size:clamp(15px,3.4vw,20px)}
 .whelo{display:flex;flex-direction:column;align-items:center}.whelo b{font-size:30px;color:#e8c35a}.whelo small{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
 .whmid{display:flex;flex-direction:column;align-items:center;gap:4px}.whscore{display:flex;align-items:center;gap:6px;font-size:clamp(34px,8vw,60px);font-weight:800;text-shadow:0 0 30px #e8c35a88}.whscore i{opacity:.5;font-style:normal}.whvs{font:800 clamp(22px,5vw,34px)/1 var(--mono);color:#e8c35a;letter-spacing:.1em}.whfirst{font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.65}
@@ -201,4 +205,36 @@ setTimeout(() => {
 .whodds{display:flex;height:34px;border-radius:99px;overflow:hidden}.whodds i{display:flex;align-items:center;justify-content:center;font-style:normal;animation:whgrow 1.2s cubic-bezier(.2,.8,.2,1) both}.whodds .g{background:#e8c35a;color:#1a1306}.whodds .s{background:#4fc27a;color:#06210f}
 .whkick2{font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}.whop h3,.whgame h3{margin:6px 0}.whop h3{font-size:20px}.whmoves{display:flex;flex-wrap:wrap;gap:4px 8px;font:600 14px var(--mono);margin:8px 0}.whmoves small{opacity:.5;margin-right:2px}.whmoves .bk{color:var(--gold)}.whtheory{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.whtheory i{display:block;height:100%;background:linear-gradient(90deg,#e8c35a,#4fc27a);animation:whgrow 1.2s ease both}
 .whgt{display:flex;justify-content:space-between;align-items:center}.whgame .whspark{height:48px;width:100%;margin:8px 0;border-radius:10px;background:#0d1220;color:#f4f1ea}
+
+.whcity{position:absolute;inset:0;z-index:-2;background:url(img/geneva.jpg) center 60%/cover;opacity:.5;animation:whken 36s ease-in-out infinite alternate}@keyframes whken{to{transform:scale(1.12) translateX(-2%)}}
+.whhero{background:linear-gradient(180deg,#0d1220cc 0%,#0d122080 35%,#0d1220f2 100%),radial-gradient(100% 80% at 85% 10%,#5a3a1a66 0%,transparent 55%),#0d1220!important}
+.whplayer .whpic{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:3/4;max-height:330px;border-radius:16px;overflow:hidden;background:#0d1220}.whplayer .whpic .cpf{opacity:.6}.whplayer .whpic:after{content:"";position:absolute;inset:0;background:var(--img) center 15%/cover;-webkit-mask:linear-gradient(#000 62%,transparent);mask:linear-gradient(#000 62%,transparent);transition:transform .8s cubic-bezier(.2,.8,.2,1)}.whplayer:hover .whpic:after{transform:scale(1.07)}
+.whplayer.g .whpic:after{background-position:center 12%}.whplayer.s .whpic:after{background-position:center 20%}
+.whcred{margin:0 -4px;padding:8px 4px 10px;font-size:10px;opacity:.55;text-align:center}
+@media(prefers-reduced-motion:reduce){.whcity{animation:none}}
 @media(prefers-reduced-motion:reduce){.whhero:before,.whhero:after,.whbg .p,.whtitle,.whplayer,.whplayer .whface,.whplayer .whface .cpf,.whticker>div,.whseg.live,.whseg.next,.whring-p,.whbody,.whpane,.whcard,.whnode,.whcell,.whline,.whbt i,.whodds i,.whtheory i{animation:none!important}.whtitle{color:#e8c35a;background:none}}`; document.head.appendChild(s); })();
+
+/* the championship on the chess home screen: a banner above everything, live score and countdown */
+function whBannerHTML() {
+  const info = whInfo(), gk = cpP(CP_ID.gukesh), sn = cpP(CP_ID.sindarov), live = info.rounds.find((x) => x.live), rs = WH.d ? WH.d.rounds : [], next = rs.find((r) => !r.finished && !r.ongoing && r.startsAt > Date.now());
+  const line = live ? `<span class="lvbadge on">● LIVE</span> Game ${live.i} is on now` : next ? `${esc(next.name)} · ${whWhen(next.startsAt)} · <b class="num" data-cd="${next.startsAt}"></b>` : info.played >= 14 ? "The match is over" : "24 Nov – 11 Dec · Geneva";
+  return `<button type="button" class="whbanner" data-whhome aria-label="Open the World Championship"><i class="whbn-bg" aria-hidden="true"></i><span class="whbn-k">${ic("crown")} World Chess Championship · live</span>
+    <span class="whbn-row"><span class="whbn-p">${cpFace(gk)}<b>Gukesh</b></span><span class="whbn-s num">${info.played || live ? `${info.pts.g}<i>:</i>${info.pts.s}` : "VS"}</span><span class="whbn-p">${cpFace(sn)}<b>Sindarov</b></span></span>
+    <span class="whbn-l">${line}</span><span class="whbn-go">Open the match: live board, analysis, schedule, openings →</span></button>`;
+}
+function whBanner() {
+  const app = document.getElementById("app"); if (!app || document.getElementById("whBannerBox") || !document.querySelector(".hero2")) return;
+  app.insertAdjacentHTML("afterbegin", `<div id="whBannerBox">${whBannerHTML()}</div>`); whTick();
+  whFetch().then(() => { const b = document.getElementById("whBannerBox"); if (b) { b.innerHTML = whBannerHTML(); whTick(); } }).catch(() => {});
+  clearInterval(WH.hb); WH.hb = setInterval(() => { const b = document.getElementById("whBannerBox"); if (!b) return clearInterval(WH.hb); whTick(); }, 1000);
+}
+setTimeout(() => {
+  if (typeof home === "function") { const h0 = home; try { home = function () { h0.apply(this, arguments); whBanner(); }; GO.home = home; } catch (e) { /* skip */ } }
+  if (document.querySelector(".hero2")) whBanner();
+}, 0);
+document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-whhome]"); if (!t) return; e.stopPropagation(); try { Snd.tick(); } catch (x) { /* quiet */ } CH.v = "wcc"; WH.tab = "live"; champPage("wcc"); scrollTo({ top: 0 }); }, true);
+(() => { const s = document.createElement("style"); s.textContent = `
+#whBannerBox{margin-bottom:14px}.whbanner{position:relative;overflow:hidden;display:grid;gap:8px;width:100%;text-align:center;padding:16px 14px;border-radius:22px;border:1px solid #ffffff2a;color:#f4f1ea;font:inherit;cursor:pointer;background:radial-gradient(120% 120% at 15% 0%,#2a3a5e,transparent 60%),radial-gradient(100% 100% at 90% 0%,#5a3a1a,transparent 55%),#0d1220;box-shadow:0 24px 50px -28px #000;transition:transform .3s,box-shadow .3s;isolation:isolate}.whbanner:hover{transform:translateY(-3px);box-shadow:0 30px 56px -26px #e8c35a}
+.whbn-bg{position:absolute;inset:0;z-index:-1;opacity:.14;background:conic-gradient(#fff 25%,transparent 0 50%,#fff 0 75%,transparent 0) 0 0/40px 40px;mask:radial-gradient(80% 80% at 50% 30%,#000,transparent);-webkit-mask:radial-gradient(80% 80% at 50% 30%,#000,transparent);animation:whdrift 40s linear infinite}
+.whbn-k{font:700 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#e8c35a}.whbn-k .ic{width:14px;height:14px;vertical-align:-2px}.whbn-row{display:flex;align-items:center;justify-content:center;gap:14px}.whbn-p{display:flex;flex-direction:column;align-items:center;gap:4px}.whbn-p b{font-size:15px}.whbn-s{font-size:34px;font-weight:800;text-shadow:0 0 24px #e8c35a88}.whbn-s i{opacity:.5;font-style:normal;margin:0 4px}.whbn-l{font-size:14px;opacity:.9}.whbn-go{font:700 12px var(--mono);letter-spacing:.06em;color:#e8c35a}
+@media(prefers-reduced-motion:reduce){.whbn-bg{animation:none}}`; document.head.appendChild(s); })();

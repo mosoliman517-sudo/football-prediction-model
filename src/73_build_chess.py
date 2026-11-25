@@ -58,7 +58,7 @@ _rc = json.load(open("02_processed_data/chess_ratecal.json")) if os.path.exists(
 data["ratecal"] = {k: _rc[k] for k in ("book", "coef", "speeds", "maps", "curve", "spread") if k in _rc} if _rc else None   # src/85: game-rating calibration
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
-html = html.replace("/*__EXTRAS__*/", open("site/chess_extras.js", encoding="utf-8").read() + open("site/chess_home.js", encoding="utf-8").read() + open("site/chess_more.js", encoding="utf-8").read() + open("site/chess_wcc.js", encoding="utf-8").read())   # more lessons, endgame trainer, guess the famous game
+html = html.replace("/*__EXTRAS__*/", open("site/chess_extras.js", encoding="utf-8").read() + open("site/chess_home.js", encoding="utf-8").read() + open("site/chess_more.js", encoding="utf-8").read() + open("site/chess_wcc.js", encoding="utf-8").read() + open("site/chess_bots.js", encoding="utf-8").read())   # more lessons, endgame trainer, guess the famous game
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC:   # installable like the other sports: manifest, icons, and the shared offline service worker
     pwa = '<link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="../apple-touch-icon.png">'

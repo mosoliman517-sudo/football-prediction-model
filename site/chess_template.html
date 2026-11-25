@@ -407,7 +407,7 @@ const CG = [
   { id: "mate", g: "bk", ic: "bolt", name: "Mate puzzles", modes: "Solo streak", tag: "Real puzzles: checkmate in 1, 2 or 3.", best: "mate" },
   { id: "elo", g: "bk", ic: "brain", name: "Estimate my Elo", modes: "Solo · 10 puzzles", tag: "Puzzles that adapt to you, then an estimate of your level.", best: "elo" },
   { id: "review", g: "bk", ic: "chart", name: "Review a game", modes: "Paste a PGN or use a real game", tag: "Every move graded, with an evaluation graph and the engine's preferred move.", best: "none" },
-  { id: "ai", g: "bk", ic: "robot", name: "Play the coaches", modes: "Solo vs Pip, Bea or Vera", tag: "Seven levels, from Pip warming up to all three coaches thinking together. Can you beat them?", best: "ai_rec" },
+  { id: "ai", g: "bk", ic: "robot", name: "Play the characters", modes: "Solo vs Pip, Bea or Vera", tag: "Seven levels, from Pip warming up to all three coaches thinking together. Can you beat them?", best: "ai_rec" },
   { id: "who", g: "bk", ic: "user", name: "Who is this player?", modes: "Solo · 5 rounds", tag: "Clues appear on their own. Buzz when you know the grandmaster.", best: "who", faces: true },
   { id: "online", g: "bk", ic: "user", name: "Play a friend", modes: "2 players · two devices", tag: "Share a room code, pick a clock and play live. Resign, offer a draw, rematch and review the game after.", best: "none" },
   { id: "hbar", g: "bk", ic: "chart", name: "Human bar", modes: "Solo · 5 positions", tag: "Drag the evaluation bar to where Stockfish puts the position. The closest guess scores most.", best: "hbar" },
@@ -792,7 +792,7 @@ function aiPaint(){}
 function aiMenu() {
   clearInterval(st.timer); live = null; st = { game: "ai", level: store.get("ai_level", 2), color: store.get("ai_color", "w"), clock: store.get("ai_clock", 0) };
   const o = [[1, LVL[1], "Pip only just learned how the pieces move. He looks no moves ahead and grabs whatever he can."], [2, LVL[2], "Pip on a good day: he looks two moves ahead."], [3, LVL[3], "Bea takes it easy on you: three moves ahead, no mercy for loose pieces."], [4, LVL[4], "Bea for real. Roughly a 1400 club player."], [5, LVL[5], "Vera at her club. Roughly a strong club player, about 1900."], [6, LVL[6], "Vera does not do friendly games. Roughly a master, about 2400."], [7, LVL[7], "Pip, Bea and Vera thinking together at full strength. Plan for a long defence."]];
-  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play the coaches</h2><p class="sub">Choose your opponent. Pip and gentle Bea think with a small engine written for this site; from Bea upward they think with Stockfish, the free open-source engine, held back to different strengths (the ratings are rough guesses). It downloads once, about 1.5 MB.</p><div class="opps">${o.map(([l, n, d]) => `<button class="opp ${st.level === l ? "on" : ""}" data-lv="${l}"><div class="av oppface">${l === 7 ? `<span class="council">${["pip", "bea", "vera"].map((id) => oppFace(id, "happy")).join("")}</span>` : oppFace(LVC[l], l % 2 ? "happy" : "calm")}</div><b>${n}</b><span class="fine">${d}</span></button>`).join("")}</div><h3>${ic("clock")}Clock</h3><div class="chips">${[[0, "No clock"], [180, "3 min"], [300, "5 min"], [600, "10 min"]].map(([s, n]) => `<button class="chip ${(st.clock || 0) === s ? "on" : ""}" data-clk="${s}" type="button">${n}</button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play the characters</h2><p class="sub">Choose your opponent. Pip and gentle Bea think with a small engine written for this site; from Bea upward they think with Stockfish, the free open-source engine, held back to different strengths (the ratings are rough guesses). It downloads once, about 1.5 MB.</p><div class="opps">${o.map(([l, n, d]) => `<button class="opp ${st.level === l ? "on" : ""}" data-lv="${l}"><div class="av oppface">${l === 7 ? `<span class="council">${["pip", "bea", "vera"].map((id) => oppFace(id, "happy")).join("")}</span>` : oppFace(LVC[l], l % 2 ? "happy" : "calm")}</div><b>${n}</b><span class="fine">${d}</span></button>`).join("")}</div><h3>${ic("clock")}Clock</h3><div class="chips">${[[0, "No clock"], [180, "3 min"], [300, "5 min"], [600, "10 min"]].map(([s, n]) => `<button class="chip ${(st.clock || 0) === s ? "on" : ""}" data-clk="${s}" type="button">${n}</button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
 }
 function aiStart(level, color, fen) {
   const clockSecs = st.clock || 0; clearInterval(st.timer); const c = fen ? new Chess(fen) : new Chess(); /* fen: play on from a position (the live board's "Play from here") */ level = level || store.get("ai_level", 2); color = color || store.get("ai_color", "w"); store.set("ai_level", level); store.set("ai_color", color); const me = color === "r" ? (Math.random() < 0.5 ? "w" : "b") : color;
@@ -817,9 +817,9 @@ function aiEnd() {
 }
 function aiPaint() {
   const rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }), L = live, c = L.c, opp = L.color === "w" ? "b" : "w", o = st.over;
-  const bars = { top: pbar("robot", LVL[st.level], st.level >= 4 ? "Thinks with Stockfish" : "Thinks with a small engine", c, opp, st.clockSecs ? st.ms[opp] : 0), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, st.clockSecs ? st.ms[L.color] : 0) };
+  const bars = { top: pbar("robot", typeof botBarName === "function" ? botBarName(st.level) : LVL[st.level], typeof botBarSub === "function" ? botBarSub(st.level) : "", c, opp, st.clockSecs ? st.ms[opp] : 0), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, st.clockSecs ? st.ms[L.color] : 0) };
   const over = o ? `<div class="endov ${o.won ? "win" : o.lost ? "loss" : "draw"}">${o.won ? Array.from({ length: 26 }, (_, i) => `<i class="conf" style="left:${(i * 37) % 100}%;background:${["#e8c35a", "#5ee6a8", "#ff8a3d", "#fff"][i % 4]};animation-delay:${(i % 9) * 0.18}s"></i>`).join("") : ""}${endTop(o.won ? "win" : o.lost ? "loss" : "draw")}<h3>${o.won ? "You win!" : o.lost ? "You lost" : "A draw"}</h3><p class="fine" style="color:#ddd">${o.why}</p>${endCoach(o.won ? "win" : o.lost ? "loss" : "draw")}<div class="row" style="justify-content:center"><button class="btn" id="aiReview">${ic("chart")}Game review</button><button class="btn ghost" id="aiAgain">Rematch</button><button class="btn ghost" data-go="home">Menu</button></div></div>` : "";
-  liveRender(backRow("Play the coaches", "robot", `Record ${rec.w}-${rec.d}-${rec.l}`), `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? `${esc(LVL[st.level].split(",")[0])} is thinking…` : c.in_check() ? "Check!" : o ? "" : L.color === c.turn() ? "Your move." : ""}</span><button class="btn ghost" id="aiNew">New game</button></div>`, bars, { over });
+  liveRender(backRow("Play the characters", "robot", `Record ${rec.w}-${rec.d}-${rec.l}`), `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? `${esc(LVL[st.level].split(",")[0])} is thinking…` : c.in_check() ? "Check!" : o ? "" : L.color === c.turn() ? "Your move." : ""}</span><button class="btn ghost" id="aiNew">New game</button></div>`, bars, { over });
 }
 /* ---------- Game review: real Stockfish (version 10, loaded from a CDN on first use), move by move ---------- */
 const SF_URL = "https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js";
@@ -850,7 +850,7 @@ const mkSf = () => {
   }
   function next() {
     if (cur || !queue.length || dead) return; cur = queue.shift();
-    w.postMessage("setoption name Skill Level value " + (cur.o.skill == null ? 20 : cur.o.skill)); w.postMessage("setoption name MultiPV value " + cur.o.multipv); w.postMessage("position fen " + cur.fen); w.postMessage("go " + (cur.o.depth ? "depth " + cur.o.depth + " " : "") + "movetime " + (cur.o.ms || 400));
+    w.postMessage("setoption name Skill Level value " + (cur.o.skill == null ? 20 : cur.o.skill)); w.postMessage("setoption name MultiPV value " + cur.o.multipv); w.postMessage("position fen " + cur.fen); w.postMessage("go " + (cur.o.depth ? "depth " + cur.o.depth + " " : "") + "movetime " + (cur.o.ms || 400) + (cur.o.moves && cur.o.moves.length ? " searchmoves " + cur.o.moves.join(" ") : ""));
   }
   return {
     load: () => pend,
@@ -1059,8 +1059,10 @@ function rvRate(list) {
   if (SPR && SPR.length > 2) { const x = Math.max(SPR[0][0], Math.min(SPR[SPR.length - 1][0], r)); let k2 = 0; while (k2 < SPR.length - 2 && SPR[k2 + 1][0] < x) k2++; const [c0, ...a] = SPR[k2], [c1, ...b2] = SPR[k2 + 1], t = (x - c0) / ((c1 - c0) || 1), at = (j) => a[j] + (b2[j] - a[j]) * t, sh = r - x; lo = at(0) + sh; mid = at(1) + sh; hi = at(2) + sh; }   /* where 80% of real players who played like this are rated */
   if (tight < 6) { lo = mid - (mid - lo) * 1.15; hi = mid + (hi - mid) * 1.15; }
   lo = Math.max(lo, mid - 450); hi = Math.min(hi, mid + 450);   /* never wider than about 900 points   /* very few contested moves: wider still */
-  return { elo: Math.round(mid / 25) * 25, acpl: Math.round(acpl), lo: Math.round(lo / 50) * 50, hi: Math.round(hi / 50) * 50, n };
+  return { elo: Math.round(mid * 10) / 10, acpl: Math.round(acpl * 10) / 10, lo: Math.round(lo), hi: Math.round(hi), n };
 }
+/* rough Lichess -> chess.com conversion: about 300 lower at 1200, 200 at 1800, 100 at 2200, level by 2600 (an average of published comparisons, not exact) */
+function rvToCC(r) { const T = [[800, 300], [1200, 300], [1800, 200], [2200, 100], [2600, 0], [3200, 0]]; let k = 1; while (k < T.length - 1 && r > T[k][0]) k++; const [x0, d0] = T[k - 1], [x1, d1] = T[k]; return r - (d0 + (d1 - d0) * Math.max(0, Math.min(1, (r - x0) / (x1 - x0)))); }
 function rvEloCpl(list) { return rvEloCpl0(list); }
 function rvEloCpl0(list) { const L = list.filter((x) => x.cls !== "book" && x.cls !== "forced" && x.cpl != null); if (L.length < 4) return null; const acpl = L.reduce((a, x) => a + x.cpl, 0) / L.length, raw = 3100 * Math.exp(-acpl / 100), w = L.length / (L.length + 10); return { elo: Math.round((w * raw + (1 - w) * 1500) / 50) * 50, acpl: Math.round(acpl) }; }
 function rvElo(acc) { for (let k = 1; k < RV_ELO.length; k++) if (acc <= RV_ELO[k][0]) { const [a0, e0] = RV_ELO[k - 1], [a1, e1] = RV_ELO[k]; return Math.round((e0 + (e1 - e0) * (acc - a0) / (a1 - a0)) / 50) * 50; } return 3000; }
@@ -1090,7 +1092,7 @@ function rvReport() {
   const swing = rv.data.find((x) => x && x.before >= 85 && x.after < 60); if (swing) notes.push(`${esc(rv.names[swing.white ? 0 : 1])} had a winning position and let it slip with ${Math.ceil(swing.i / 2)}${swing.white ? "." : "..."} ${esc(swing.san)}.`);
   const cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
   [true, false].forEach((w) => { const b = cnt(w, "blunder"); if (!b && P[w ? 0 : 1].n >= 10) notes.push(`${esc(rv.names[w ? 0 : 1])} made no blunders.`); });
-  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo}</b>${p.elo == null ? '<span class="fine" style="font-size:11px">decided too early to judge</span>' : ""}<span>game rating${p.lo ? ` · likely ${p.lo}–${p.hi}` : ""}</span></div>`).join("")}</div>
+  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo.toFixed(1)}</b>${p.elo == null ? '<span class="fine" style="font-size:11px">decided too early to judge</span>' : ""}<span>game rating (Lichess scale)${p.lo ? ` · likely ${p.lo}–${p.hi}` : ""}</span>${p.elo == null ? "" : `<span class="fine" title="Lichess ratings run roughly 150 to 350 points above chess.com around club level and meet near 2500; this is a rough conversion, not exact">≈ ${rvToCC(p.elo).toFixed(1)} on chess.com (rough)</span>`}</div>`).join("")}</div>
     <table class="rvph"><tr><th></th>${P.map((p) => `<th>${p.w ? "White" : "Black"}</th>`).join("")}</tr>${RV_PH.map(([k, n], j) => `<tr><td>${n}</td>${P.map((p) => { const g = rvGrade(p.ph[j]); return `<td>${g ? `<i class="cls ${g}" title="${Math.round(p.ph[j])}% accuracy">${RVC[g][1]}</i>` : '<span class="fine">—</span>'}</td>`; }).join("")}</tr>`).join("")}</table>
     ${notes.length ? `<ul class="rvnotes">${notes.slice(0, 4).map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
     ${moments.length || shine.length ? `<div class="rvkm"><span class="label">Key moments</span>${[...shine, ...moments].map((x) => `<button type="button" class="rvkmb" data-ply="${x.i}"><i class="cls ${x.cls}">${RVC[x.cls][1]}</i>${Math.ceil(x.i / 2)}${x.white ? "." : "..."} ${esc(x.san)}</button>`).join("")}</div>` : ""}
@@ -1276,8 +1278,11 @@ function rvSacInfo(i) {
   const c2 = new Chess(rv.fen[i]); let bait = null, ok = true;
   for (const m of c2.moves({ verbose: true })) {
     if (!m.captured || SACV[m.captured] < 3) continue; if (rv.mv[i - 3] && rv.mv[i - 3].to === m.to) continue;   /* the piece offered last move is still hanging: not a new sacrifice */
-    c2.move(m); if (c2.moves({ verbose: true }).some((r) => r.captured && r.to === m.to)) { c2.undo(); continue; }   /* we can simply take back on that square: a defended piece, an exchange, not a sacrifice */
-    const def = m0 - matOf(c2, col);
+    c2.move(m); const def = m0 - matOf(c2, col);
+    /* a plain exchange: we can take back on that very square, that restores the balance, and it is what the engine would play (or the capture is not even in its top lines): not a sacrifice */
+    const L0 = (rv.pos[i] && rv.pos[i].lines) || [], ln0 = L0.find((x) => x.pv[0] === m.from + m.to + (m.promotion || "")); let simple = false;
+    for (const r of c2.moves({ verbose: true })) if (r.captured && r.to === m.to) { c2.move(r); const ok = matOf(c2, col) >= m0 - 1; c2.undo(); if (ok && (!ln0 || ln0.pv[1] === r.from + r.to + (r.promotion || ""))) simple = true; }
+    if (simple) { c2.undo(); continue; }
     if (def >= 2) {
       let top = -99; for (const r of c2.moves({ verbose: true })) { c2.move(r); let v = matOf(c2, col); for (const o of c2.moves({ verbose: true })) if (o.captured) { c2.move(o); v = Math.min(v, matOf(c2, col)); c2.undo(); } top = Math.max(top, v); c2.undo(); }
       const L = (rv.pos[i] && rv.pos[i].lines) || [], ln = L.find((x) => x.pv[0] === m.from + m.to + (m.promotion || "")), mine = ln ? (col === "w" ? ln.w : 100 - ln.w) : null;   /* engine view of their capture */
@@ -1301,7 +1306,7 @@ function rvDerive(i) {
     if (prev && prev.loss >= 10 && (prev.cls === "mistake" || prev.cls === "blunder" || prev.cls === "miss") && (cls === "inaccuracy" || cls === "mistake" || (cls === "blunder" && loss < 30))) cls = "miss";   // they slipped and you let them off
     if (cls === "best" && second != null && pov(L[0].w) - second >= 10 && after >= 30 && after <= 97 && !recapture) cls = "great";   // the only move that holds
     const mates = b.ev.mate != null && pov(b.ev.w) >= 99.9, sac = rvSacInfo(i), good = cls === "best" || cls === "great" || loss <= 2;
-    if ((good || (loss <= 8 && after >= 70)) && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates || (before <= 40 && after >= 38)) && !recapture && (before < 92 || sac.bait)) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
+    if ((good || (loss <= 10 && after >= 70)) && sac.piece && SACV[sac.piece] >= 3 && sac.drop >= 2 && (after >= 45 || mates || (before <= 40 && after >= 38)) && (before < 92 || sac.bait)) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = sac; }   // a sound sacrifice of a knight or more
     if (good && mv.promotion && mv.promotion !== "q" && nLegal > 1) { cls = "brilliant"; rv.sac = rv.sac || {}; rv.sac[i] = { under: mv.promotion }; }   // the right underpromotion
   }
   const acc = cls === "forced" || cls === "book" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
@@ -1385,7 +1390,7 @@ function rvGo(i, o = {}) {
   rv.L.skipAnim = !(i === prev + 1); if (i !== prev) mkClear(document.getElementById("bd")); boardUpdate(rv.c, { play: false, last: i ? [rv.mv[i - 1].from, rv.mv[i - 1].to] : null }, rv.L);
   if (step && typeof Snd !== "undefined") Snd.move(rv.mv[i - 1], rv.c);
   rvPaint();
-  clearTimeout(rv.pipT); if (step && !rv.timer) { const d = rv.data[i - 1]; if (d) rv.pipT = setTimeout(() => { if (rv && rv.i === i) pipSay((d.cls === "book" && rvFact(i)) || pipPick(rvLineKey(d), i * 7 + rv.N)); }, 900); }   // a beat after the move lands
+  clearTimeout(rv.pipT); if (step) { const say = (n) => { if (!rv || rv.i !== i) return; const d = rv.data[i - 1]; if (!d) { if (n < 24) rv.pipT = setTimeout(() => say(n + 1), 500); return; } pipSay((d.cls === "book" && rvFact(i)) || pipPick(rvLineKey(d), i * 7 + rv.N)); }; rv.pipT = setTimeout(() => say(0), rv.timer ? 200 : 700); }   // the coach says the line after every move, also while it plays; if Stockfish has not reached that move yet, he waits for it
 }
 function rvPaint() {
   if (!rv || !rvEl("rvCoach") || rv.retry || rv.ex) return; const i = rv.i, d = i ? rv.data[i - 1] : null, pos = rv.pos[i], c = rv.c, f = rv.flip;

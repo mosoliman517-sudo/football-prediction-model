@@ -438,6 +438,10 @@ Started the Chatterbox job on the Mac for the 1,311 lines that still had only a 
 
 Swept every route of the three sports at phone width, probed the live database read-only, and checked error handling. Fixed: three broken Premier League badges (also broken on the live site; the files were named .svg+xml), a service worker that cached every voice clip and error page, the install banner covering dialogs, a misleading "leaderboards are not switched on" message when offline, low-contrast chips and tags in the chess light theme, outdated text, and missing page descriptions. Details, what was not tested and what is left: AUDIT_2026-11-25.md. A reference for the sister project: MAIN_WEBSITE_REFERENCE.md. Recovery tag: pre-audit-2026-11-25.
 
+### 2026-11-25 - Security fix in online play, and SQL to narrow database rights
+
+Online games showed HTML sent through a public relay without cleaning it, so someone with a room code could have run script in another player's browser. The panel is now sanitised (site/spectate.js, safeFill) and match scores are forced to numbers. online/schema_v16.sql narrows the basketball and chess table rights and fixes the score rate limit, which never counted anything; it still has to be pasted into Supabase.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

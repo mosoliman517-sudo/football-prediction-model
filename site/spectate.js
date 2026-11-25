@@ -5,6 +5,26 @@
    the other person opens it (or types the code under "Watch a match" on the Ranked page). The link looks like  #watch-ABCD.
    Rooms are not private: like every online room here, anyone who knows the 4-letter code can join as a player or a spectator, and
    the chip says so. Spectators never send answers or reactions. */
+/* A game panel that arrives from another browser travels over a public relay, so anyone who knows (or listens for) a room code can
+   send one. It is never trusted: it is parsed without running anything, only ordinary layout, form and drawing elements are kept,
+   and every handler, script address, password box and full-screen overlay is removed before it reaches the page. */
+const ROOM_TAGS = new Set("div span p b i em strong small h1 h2 h3 h4 h5 h6 button input label select option optgroup textarea table caption thead tbody tfoot tr td th ul ol li dl dt dd img br hr a section header footer article figure figcaption nav aside mark sup sub progress meter fieldset legend kbd abbr time svg path g circle ellipse rect line polyline polygon use text tspan defs lineargradient radialgradient stop clippath mask pattern title desc".split(" "));
+const ROOM_URL = /^(#|https:\/\/|data:image\/(png|jpe?g|webp|gif|svg\+xml)[;,]|(\.\.?\/)?[\w-]+(\/[\w.+-]+)*\.(png|jpe?g|webp|gif|svg)$)/i;
+function safeFill(room, html) {
+  const t = document.createElement("template"); t.innerHTML = String(html == null ? "" : html).slice(0, 400000);   /* inside a template nothing loads or runs */
+  for (const el of [...t.content.querySelectorAll("*")]) {
+    const tag = el.localName.toLowerCase();
+    if (!ROOM_TAGS.has(tag) || (tag === "input" && /^(password|file|image|submit)$/i.test(el.getAttribute("type") || ""))) { el.remove(); continue; }
+    for (const a of [...el.attributes]) {
+      const n = a.name.toLowerCase(), v = a.value.trim();
+      if (n.startsWith("on") || /^(srcdoc|action|formaction|autofocus|form|ping|srcset|background|poster|target|is)$/.test(n)) el.removeAttribute(a.name);
+      else if (/(^|:)(href|src)$/.test(n) && !(ROOM_URL.test(v) || (tag === "a" && /^(#|https:\/\/)/i.test(v)))) el.removeAttribute(a.name);
+      else if (tag === "use" && /(^|:)href$/.test(n) && !v.startsWith("#")) el.removeAttribute(a.name);
+      else if (n === "style" && /position\s*:\s*(fixed|sticky)|url\s*\(|expression|\\/i.test(v)) el.removeAttribute(a.name);
+    }
+  }
+  room.replaceChildren(t.content);
+}
 const Spec = {
   watchers: new Map(), seen: new Set(), got: false, code: null, hello: null, keep: null,
   link(code) { return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}#watch-${code}`; },
@@ -24,7 +44,7 @@ const Spec = {
   },
   recv(m) {
     if (!m || m.from === "watch") return; if (m.i) { if (this.seen.has(m.i)) return; this.seen.add(m.i); if (this.seen.size > 400) this.seen = new Set([...this.seen].slice(-100)); }
-    if (m.k === "html") { const room = document.getElementById("room"); if (!room) return; if (!this.got) { this.got = true; this.bar(); } room.innerHTML = m.h; room.classList.add("specro-room"); }
+    if (m.k === "html") { const room = document.getElementById("room"); if (!room) return; if (!this.got) { this.got = true; this.bar(); } safeFill(room, m.h); room.classList.add("specro-room"); }
     else if (m.k === "duo") { try { duoResultShow(m.names, m.scores, m.sub); } catch (e) { /* no result screen */ } }
     else if (m.k === "react") { try { floatReact(m.e); } catch (e) { /* quiet */ } }
     else if (m.k === "end") { toast("The match ended"); this.stop(); }

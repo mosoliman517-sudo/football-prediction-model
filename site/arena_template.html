@@ -4175,7 +4175,7 @@ const Net = {
       if (m.k === "welcome" && m.ranked) this.ranked = true;
       if (m.k === "welcome" && !Vs.matched && !Vs.seen) { Vs.seen = true; Vs.match(Vs.me(), m.card || { nick: "Host" }); }
       if (m.k === "result" && this.ranked && Account.signedIn) { Ranked.report(m.mid, m.hostUid, m.guestRes, m.game); }
-      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); room.innerHTML = m.h; Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
+      if (m.k === "html") { const room = $("#room"); const active = document.activeElement && document.activeElement.id, keep = {}; ["qIn", "tIn", "nmIn", "finRange", "rIn"].forEach((id) => { const x = document.getElementById(id); if (x) keep[id] = x.value; }); safeFill(room, m.h); Object.keys(keep).forEach((id) => { const x = document.getElementById(id); if (x) { x.value = keep[id]; if (id === active) { x.focus(); try { x.setSelectionRange(x.value.length, x.value.length); } catch (e) { /* not a text box */ } } } }); paintGuestBanner(); }
       else if (m.k === "end") { toast("The host left the room"); this.close(); }
     }
   },
@@ -4251,6 +4251,7 @@ const Vs = {
 /* ================= Satisfying extras: match result overlay, answer flashes ================= */
 function duoNames() { if (Net.role === "host") return [prof().nick || "Player 1", (Net.guest && Net.guest.nick) || "Player 2"]; return ["Player 1", "Player 2"]; }
 function duoResultShow(names, scores, sub) {
+  names = [0, 1].map((i) => String((Array.isArray(names) ? names[i] : "") || "Player").slice(0, 16)); scores = [0, 1].map((i) => Math.round(+(Array.isArray(scores) ? scores[i] : 0) || 0)); sub = sub == null ? "" : String(sub).slice(0, 60);   // these can arrive from the other player
   const w = scores[0] === scores[1] ? -1 : scores[0] > scores[1] ? 0 : 1, card = (i) => `<div class="vsc ${i === 0 ? "l" : "r"} ${w === i ? "winner" : w === -1 ? "" : "loser"}"><span>${avatarHTML("", "xl", names[i])}</span><div class="vsname">${esc(String(names[i]).slice(0, 16))}</div><div class="vselo">${scores[i]}</div>${w === i ? '<div class="vsrk"><svg class=ic><use href=#i-crown></use></svg> Winner</div>' : ""}</div>`;
   const e = Vs.mount("versus result", `<div class="vsflash"></div><div class="vsvs"><div class="vsvsl"></div>${card(0)}<div class="vsmid"><div class="vsx" style="font-size:clamp(30px,8vw,56px)">${w === -1 ? "DRAW" : "FT"}</div></div>${card(1)}</div><div class="vsw" style="margin-top:22px"><div class="vsttl">${w === -1 ? "Nothing to separate you" : esc(names[w]) + " takes it"}${sub ? " · " + esc(sub) : ""}</div><button class="btn" id="vsDone" type="button" style="margin-top:12px">Continue</button></div>`);
   e.querySelector("#vsDone").onclick = () => Vs.close(); Snd.win(); if (w >= 0) setTimeout(confetti, 500);

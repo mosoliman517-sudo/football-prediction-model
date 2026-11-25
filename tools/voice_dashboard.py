@@ -76,7 +76,21 @@ def other_queue():
     return q
 
 
+SOURCES = ("src/bot_lines.json", "site/coach_lines.js", "site/mascot_lines.js", "site/chess_template.html", "site/opening_stories.js")
+SEEN = [None]
+
+
+def refresh_lines():   # lines can be added while the page is open: read the list again when a source file changes
+    global J, BYNAME
+    stamp = tuple(os.path.getmtime(f) for f in SOURCES if os.path.exists(f))
+    if stamp != SEEN[0]:
+        SEEN[0] = stamp
+        J = [(c, t, "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3") for v, t, c, k in jobs()]
+        BYNAME = {n: (c, t) for c, t, n in J}
+
+
 def stats():
+    refresh_lines()
     now = time.time()
     have, missing = [], []
     for c, t, n in J:

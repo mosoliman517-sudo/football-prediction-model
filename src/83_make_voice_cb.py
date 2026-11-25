@@ -7,6 +7,7 @@ Run in the background with:  .venv-cb/bin/python src/83_make_voice_cb.py
 Resumable: lines that already have a Chatterbox clip are skipped. index.json is updated every few clips, so the site
 picks up the new takes while it runs. Roughly 15 to 25 seconds a line on an Apple M4 GPU.
 """
+import gc
 import hashlib
 import json
 import os
@@ -50,18 +51,34 @@ todo = [(v, t, c, k) for v, t, c, k in J if not os.path.exists(os.path.join(OUT,
 SKIP = set(sys.argv[sys.argv.index("--skip") + 1].split(",")) if "--skip" in sys.argv else set()
 todo = [x for x in todo if x[3] not in SKIP]
 print(f"{len(J)} lines, {len(todo)} to make on {dev}", flush=True)
-t0, done = time.time(), 0
+t0, done, streak = time.time(), 0, 0
+# graphics memory piles up over hundreds of lines (it reached 13.8 GB and 610 lines failed): hand it back after every line
+def free():
+    gc.collect()
+    if dev == "mps":
+        torch.mps.empty_cache()
 pending = {}
 for v, t, c, k in todo:
     ex = STYLE.get(c, 0.5) + (0.15 if k in HYPE else -0.1 if k in DEEP else 0)
     cfg = 0.3 if k in DEEP else 0.45
     ref = f"01_data_tts/ref/{v}.wav"
-    try:
-        wav = model.generate(t, audio_prompt_path=ref if os.path.exists(ref) else None, exaggeration=max(0.25, min(1.0, ex)), cfg_weight=cfg)
-    except Exception as e:
-        print("  failed:", t[:60], e, flush=True); continue
+    wav = None
+    for attempt in range(3):
+        try:
+            wav = model.generate(t, audio_prompt_path=ref if os.path.exists(ref) else None, exaggeration=max(0.25, min(1.0, ex)), cfg_weight=cfg)
+            break
+        except Exception as e:
+            print("  failed:", t[:60], str(e)[:120], flush=True)
+            free(); time.sleep(20 * (attempt + 1))   # usually graphics memory: let go of it, wait, try again
+    if wav is None:
+        streak += 1
+        if streak >= 5:
+            print("stopping: five lines in a row failed", flush=True); sys.exit(3)
+        continue
+    streak = 0
     name = "cb_" + hashlib.sha1(f"{v}|{t}".encode()).hexdigest()[:12] + ".mp3"
     sf.write(os.path.join(OUT, name), wav.squeeze(0).cpu().numpy(), model.sr, format="MP3")
+    del wav; free()
     pending[t if v == SITE else f"{v}|{t}"] = name; done += 1
     if REST:
         time.sleep(REST)  # cool-down between lines so the Mac does not run flat out

@@ -390,6 +390,14 @@ Bxd5 in the same game was wrongly Brilliant: Qxd5 Qxd5 just wins the queen back 
 
 A real game (8.Bxf7+ Kxf7?? Qxd8, a bishop offered that loses the queen if taken) was graded "great", not Brilliant. The review only counted a sacrifice when the opponent's best capture really cost material; here the capture is a mistake, so nothing was "lost". Now a knight-or-better piece that can be taken, leaves you two points down at that moment, and where the engine says taking it is bad for them (or a plain material check wins it all back) is marked Brilliant, as long as the move itself is best and you are not already winning by a mile. A piece left hanging from the previous move is not counted twice (17.Qxc2 stays Great). The coach says "taking it loses". Checked on that game: 15.Bxf7+ is now Brilliant.
 
+### 2026-11-25 - Brilliant moves: a multi-factor model, plus the Council logo
+
+The Council card showed three loose, stacked faces; it is now one tidy trio logo on the opponent menu, the home strip and the game bar.
+
+Brilliant detection was rebuilt around the brief that brilliance is not only a sacrifice. Objective soundness is a gate (small loss, healthy winning chances, or a rescue from a bad position), and past it a move scores on tactical value, difficulty of discovery, criticality and quiet strategic content. Difficulty is measured: a depth-7 search that does not rank the move in its top three means it is hard to find, a depth-22 search must still confirm it (otherwise the label is dropped), and routine recaptures, free pieces and book moves are discounted. New paths: quiet moves (the only move that keeps the position, with tempting captures or checks that fail), defensive sacrifices, and underpromotions (only when a queen is stalemate or clearly weaker). A piece that was already hanging before a move no longer counts as sacrificed by it (11.Rg1 in the Immortal Game was wrongly Brilliant). The written explanation now states which kind it is and what Stockfish saw.
+
+Checked on the Opera Game, Immortal Game, Evergreen Game, Kasparov-Topalov 1999 and World Championship Game 1: Nxf5+ is Brilliant, Rxe7+ and Re7+ are Brilliant, and no quiet Brilliants appeared in the elite game. Not verified: a real positive quiet-move example, and the Ding Liren 2023 pawn move (I have not confirmed which move it is, so it is not in the tests).
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

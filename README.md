@@ -440,7 +440,7 @@ Swept every route of the three sports at phone width, probed the live database r
 
 ### 2026-11-25 - Security fix in online play, and SQL to narrow database rights
 
-Online games showed HTML sent through a public relay without cleaning it, so someone with a room code could have run script in another player's browser. The panel is now sanitised (site/spectate.js, safeFill) and match scores are forced to numbers. online/schema_v16.sql narrows the basketball and chess table rights and fixes the score rate limit, which never counted anything; it still has to be pasted into Supabase.
+Online games showed HTML sent through a public relay without cleaning it, so someone with a room code could have run script in another player's browser. The panel is now sanitised (site/spectate.js, safeFill) and match scores are forced to numbers. online/schema_v16.sql narrows the basketball and chess table rights and fixes the score rate limit, which never counted anything; it was run on Supabase the same day and anonymous table reads are now refused.
 
 ### What is in the box
 

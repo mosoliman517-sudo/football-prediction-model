@@ -48,3 +48,7 @@ site/logos/
 01_data_tts/
 .venv-cb/
 voice_samples/
+cloud_voice/
+tools/temps
+tools/thermalstate
+tools/thermalstate.swift

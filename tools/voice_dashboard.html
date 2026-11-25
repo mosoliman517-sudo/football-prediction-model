@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice recording</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--line:#e6e6e1;--ink:#1b1b1a;--dim:#6d6d68;--track:#ececE7;--gold:#b7791f;--teal:#0f8f72;--hot:#c9372c;--violet:#0f8f72}
+@media (prefers-color-scheme:dark){:root{--bg:#111213;--card:#191b1c;--line:#2b2e30;--ink:#eeeeec;--dim:#9a9d9f;--track:#2a2d2f;--gold:#e3ac4f;--teal:#3fd0ae;--hot:#ff7368;--violet:#3fd0ae}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;padding:22px 16px 40px}
+main{max-width:920px;margin:0 auto;display:grid;gap:12px;grid-template-columns:repeat(12,1fr)}
+header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0;font-size:22px;letter-spacing:-.01em}h2{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--dim)}
+.pill{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--teal)}.off .dot{background:var(--hot)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.c4{grid-column:span 4}.c8{grid-column:span 8}.c12{grid-column:1/-1}
+@media(max-width:760px){.c4,.c8{grid-column:1/-1}}
+.num{font-variant-numeric:tabular-nums}.big{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.1}.sub{color:var(--dim);font-size:13px}
+.ringwrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap}.ring{width:160px;height:160px;flex:none}.ring text{fill:var(--ink)}
+.bar{height:6px;border-radius:6px;background:var(--track);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px;background:var(--teal);transition:width .8s}
+.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}.chars div div{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.row{display:flex;gap:16px;flex-wrap:wrap}.kv{min-width:80px}.kv b{display:block;font-size:20px}
+svg.spark{width:100%;height:60px;margin-top:10px;display:block}
+ul{list-style:none;margin:0;padding:0}li{display:flex;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}li:first-child{border:0}
+li button{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-size:11px}li button:focus-visible{outline:2px solid var(--teal)}
+li div{min-width:0;flex:1}li b{font-size:12px;color:var(--dim)}li span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style></head><body>
+<main>
+<header><div><h1>Voice recording</h1><div class="sub">updates every 4 seconds</div></div><div class="pill" id="state"><i class="dot"></i><span id="stateT">connecting</span></div></header>
+
+<section class="card c8"><h2>This run</h2><div class="ringwrap">
+<svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Run progress"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--track)" style="stroke:var(--track)" stroke-width="11"/><circle id="arc" cx="60" cy="60" r="50" fill="none" style="stroke:var(--teal);transition:stroke-dasharray .8s" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 315" transform="rotate(-90 60 60)"/><text id="pct" x="60" y="63" text-anchor="middle" font-size="22" font-weight="800">…</text><text x="60" y="79" text-anchor="middle" font-size="8" style="fill:var(--dim)">THIS RUN</text></svg>
+<div><div class="big num" id="runN">…</div><div class="sub">lines recorded this run</div><div class="big num" id="eta" style="margin-top:14px;color:var(--teal)">…</div><div class="sub" id="etaS">time left</div></div></div></section>
+
+<section class="card c4"><h2>Temperature</h2><div class="big num" id="hot">…</div><div class="sub">hottest point on the chip · graph runs 30 to 105°C</div>
+<svg class="spark" id="tspark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-label="Chip temperature over time"></svg>
+<div class="row num"><div class="kv"><span class="sub">Chip avg</span><b id="chip">…</b></div><div class="kv"><span class="sub">Battery</span><b id="batt">…</b></div><div class="kv"><span class="sub">SSD</span><b id="ssd">…</b></div></div>
+<div class="sub" id="thermal" style="margin-top:8px"></div></section>
+
+<section class="card c8"><h2>Speed (seconds per line, lower is faster)</h2><div class="row num" style="align-items:baseline"><div class="big" id="spd">…</div><div class="sub">average of the last 30 lines</div></div><svg class="spark" id="sspark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-label="Seconds per line for recent lines"></svg></section>
+
+<section class="card c4"><h2>The Mac</h2><div class="row num"><div class="kv"><span class="sub">Power</span><b id="pow">…</b></div><div class="kv"><span class="sub">Voice CPU</span><b id="cpu">…</b></div><div class="kv"><span class="sub">Memory</span><b id="mem">…</b></div><div class="kv"><span class="sub">Running for</span><b id="up">…</b></div></div></section>
+
+<section class="card c12"><h2>Every voice line · <span id="allN"></span></h2><div class="bar" style="margin-bottom:16px"><i id="allBar"></i></div><div class="chars num" id="chars"></div></section>
+
+<section class="card c12"><h2>Just recorded · press to listen</h2><ul id="recent"></ul></section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const dur = (s) => (s == null ? "–" : s >= 3600 ? `${Math.floor(s / 3600)}h ${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}m` : s >= 60 ? `${Math.floor(s / 60)}m ${String(Math.floor(s % 60)).padStart(2, "0")}s` : `${Math.round(s)}s`);
+const deg = (v) => (v == null ? "n/a" : `${Math.round(v)}°C`);
+function spark(el, vals, color, min, max) {
+  if (vals.length < 2) { el.innerHTML = `<text x="0" y="40" style="fill:var(--dim)" font-size="11">collecting…</text>`; return; }
+  const lo = min ?? Math.min(...vals), hi = max ?? Math.max(...vals), span = hi - lo || 1, pt = vals.map((v, i) => `${(i / (vals.length - 1)) * 300},${62 - ((v - lo) / span) * 52}`).join(" ");
+  el.innerHTML = `<polygon points="0,70 ${pt} 300,70" style="fill:${color};opacity:.12"/><polyline points="${pt}" fill="none" style="stroke:${color}" stroke-width="2" vector-effect="non-scaling-stroke"/><title>from ${Math.round(lo)} to ${Math.round(hi)}</title>`;
+}
+let recentKey = "", player = null;
+async function tick() {
+  try {
+    const s = await (await fetch("/stats", { cache: "no-store" })).json();
+    const finished = !s.running && s.left === 0;
+    document.body.classList.toggle("off", !s.running); $("stateT").textContent = s.running ? "Recording" : finished ? "Finished" : "Stopped";
+    const f = s.runTotal ? s.runDone / s.runTotal : 0; $("arc").setAttribute("stroke-dasharray", `${f * 314.16} 315`); $("pct").textContent = `${(f * 100).toFixed(1)}%`;
+    $("runN").textContent = `${s.runDone} / ${s.runTotal}`; $("eta").textContent = finished ? "done" : dur(s.eta);
+    $("etaS").textContent = s.eta ? `time left · about ${new Date(Date.now() + s.eta * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "time left";
+    const t = s.temps; $("hot").textContent = deg(t.hot); $("hot").style.color = t.hot >= 95 ? "var(--hot)" : t.hot >= 80 ? "var(--gold)" : "var(--teal)";
+    $("chip").textContent = deg(t.chip); $("batt").textContent = deg(t.battery); $("ssd").textContent = deg(t.ssd);
+    $("thermal").textContent = s.thermal == null ? "" : "macOS thermal state: " + ["normal", "fair (a bit warm)", "serious (slowing down)", "critical"][s.thermal];
+    spark($("tspark"), s.tempHist.map((x) => x[1]), "var(--hot)", 30, 105); spark($("sspark"), s.speeds, "var(--gold)");
+    $("spd").textContent = s.perLine ? `${s.perLine.toFixed(1)} s` : "…";
+    $("pow").textContent = `${s.battery ?? "?"}% ${s.ac ? "⚡" : "on battery"}`; $("cpu").textContent = s.proc ? `${Math.round(s.proc.cpu)}%` : "–"; $("mem").textContent = s.proc ? `${s.proc.mem} GB` : "–"; $("up").textContent = s.proc ? dur(s.proc.up) : "–";
+    $("allN").textContent = `${s.done} of ${s.total} in Chatterbox`; $("allBar").style.width = `${(100 * s.done) / s.total}%`;
+    $("chars").innerHTML = s.chars.map(([n, d, tot]) => `<div><div><span>${esc(n)}</span><span class="sub">${d}/${tot}</span></div><div class="bar"><i style="width:${(100 * d) / tot}%"></i></div></div>`).join("");
+    const key = s.recent.map((r) => r.file).join();
+    if (key !== recentKey) { recentKey = key; $("recent").innerHTML = s.recent.map((r) => `<li><button type="button" data-f="${r.file}" aria-label="Play this line">▶</button><div><b>${esc(r.who)}</b><span title="${esc(r.text)}">${esc(r.text)}</span></div></li>`).join(""); }
+  } catch (e) { document.body.classList.add("off"); $("stateT").textContent = "dashboard server not reachable"; }
+}
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (!b) return; if (player) player.pause(); player = new Audio("/clip/" + b.dataset.f); player.play(); });
+tick(); setInterval(tick, 4000);
+</script>
+</body></html>

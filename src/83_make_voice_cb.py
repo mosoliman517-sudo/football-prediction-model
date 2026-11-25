@@ -21,7 +21,7 @@ sys.path.insert(0, "src")
 from voice_groups import jobs  # noqa: E402
 
 OUT, SITE = "docs/voice", "af_heart"
-STYLE = {"boot": 0.55, "rita": 0.4, "bench": 0.75, "rim": 0.55, "clock": 0.8, "sneak": 0.9, "pip": 0.6, "vera": 0.55, "bea": 0.4, "site": 0.45}
+STYLE = {"boot": 0.55, "rita": 0.4, "bench": 0.75, "rim": 0.55, "clock": 0.8, "sneak": 0.9, "pip": 0.6, "vera": 0.55, "bea": 0.4, "site": 0.45, "arteta": 0.4, "berserker": 0.85, "trader": 0.4, "escaped": 0.9}
 HYPE = {"bighit", "streak", "best", "rankup", "brilliant", "great", "win"}
 DEEP = {"deep", "brilliant_q", "brilliant_r", "brilliant_minor", "underpromo", "over", "rough_game", "loss"}
 idx_path = os.path.join(OUT, "index.json")

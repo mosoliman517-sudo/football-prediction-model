@@ -430,6 +430,10 @@ tests/review_detectors.js holds 16 labelled positions. Fork, pin, skewer, discov
 
 Thirty new opening facts and thirteen general chess facts, voiced for Pip, Bea and Vera (129 new Kokoro clips, made at low priority; all 318 fact-and-coach combinations have a clip). In the game review, once an opening's own story runs out, a general fact follows on later book moves (at most three per game). New: while you play one of the characters and are still in a known opening, your coach drops a fact about it, at most twice a game. The facts come from general chess history and were written from memory, not checked against a source one by one.
 
+### 2026-11-25 - Chatterbox run for every remaining line, with a live stats page
+
+Started the Chatterbox job on the Mac for the 1,311 lines that still had only a Kokoro take, flat out (no cool-down). The four newer characters (the Escaped, Arteta, the Berserker, the Trader) got voice reference samples first. src/cloud_voice_pack.py and src/cloud_voice_merge.py let a free cloud GPU work from the other end of the list (not tried yet). tools/voice_dashboard.py serves a local page (port 8779) that refreshes itself: progress, speed, time left, the Mac's chip, battery and SSD temperatures read from its sensors (tools/temps.c), thermal state, power, per-character progress and the latest clips to play. The new clips are committed when the run is done.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

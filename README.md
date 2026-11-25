@@ -408,6 +408,10 @@ Audit: the three coaches (Pip, Bea, Vera) already had their own lines (153, 184 
 
 Badges redesigned: Desperado is a creeper-style face in green; Zugzwang is a piece boxed in by a stop bar on all four sides.
 
+### 2026-11-25 - Zugzwang badge, take three
+
+The boxed-in crosshair still read badly, so Zugzwang is now a white king with a gold padlock on it: a locked king, a side that cannot move without harm. Seen at badge, large and 90px sizes.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

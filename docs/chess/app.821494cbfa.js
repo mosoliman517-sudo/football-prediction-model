@@ -1410,8 +1410,12 @@ async function rvZug(tok) {
         const ln0 = rv.pos[i] && rv.pos[i].lines[0]; if (ln0 && rvGain(rv.fen[i], ln0.pv, 4, oppCol) <= -2) kind.push("tactical: the forced move loses material");
         (rv.zugd = rv.zugd || {})[i] = { pass: Math.round(passPov), now: Math.round(d.after), kind }; } } catch (e) { rv.zug[i] = false; }
     if (rv.zug[i]) { rv.data[i - 1] = rvDerive(i); rvList(i); changed = true; }
+    if (rv.zug[i] && i >= 3 && rv.data[i - 3] && rv.data[i - 3].loss <= 2 && ["best", "excellent", "good", "great"].includes(rv.data[i - 3].cls)) { (rv.zprep = rv.zprep || {})[i - 2] = true; rv.data[i - 3] = rvDerive(i - 2); rvList(i - 2); changed = true; }
   }
   return changed;
+}
+async function rvTb(fen) {
+  rv.tbc = rv.tbc || {}; if (fen in rv.tbc) return rv.tbc[fen]; try { const r = await fetch("https://tablebase.lichess.ovh/standard?fen=" + encodeURIComponent(fen)); if (!r.ok) return (rv.tbc[fen] = null); const j = await r.json(); return (rv.tbc[fen] = j.category || null); } catch (e) { return (rv.tbc[fen] = null); }
 }
 async function rvDeepen(tok) {
   rv.hard = rv.hard || {}; let changed = false;
@@ -1427,6 +1431,13 @@ async function rvDeepen(tok) {
       rv.hard[i] = { hidden: rank < 0 || rank > 2, rank, gap, shBest: sh[0] ? sh[0].pv[0] : null, stable: best == null ? true : (best - mine <= 5 && mine >= (d.before <= 40 ? 35 : 40)), deepLoss: best == null ? 0 : best - mine, deepAfter: mine };
     } catch (e) { rv.hard[i] = { hidden: false, rank: 0, gap: 0, stable: true }; }
     const nd = rvDerive(i); if (nd.cls !== d.cls) changed = true; rv.data[i - 1] = nd; rvList(i);
+  }
+  /* endgame tablebases (Lichess, 7 pieces or fewer): the exact result decides win/draw/loss swings */
+  rv.tb = rv.tb || {};
+  for (let i = 1; i <= rv.N; i++) {
+    if (!rv || rv.tok !== tok) return; const cnt = (f) => (f.split(" ")[0].match(/[a-zA-Z]/g) || []).length; if (cnt(rv.fen[i]) > 7 || !rv.data[i - 1]) continue;
+    const cat = (c) => (c === "win" ? "W" : c === "loss" ? "L" : c ? "D" : null), inv = (v) => (v === "W" ? "L" : v === "L" ? "W" : v), bt = cat(await rvTb(rv.fen[i - 1])), at = await rvTb(rv.fen[i]), a2 = inv(cat(at));
+    if (!rv || rv.tok !== tok) return; rv.tb[i] = { b: bt, a: a2 }; const old = rv.data[i - 1], nd = rvDerive(i); if (nd.cls !== old.cls) changed = true; rv.data[i - 1] = nd; rvList(i);
   }
   const zc = await rvZug(tok); if (zc) changed = true;
   if (!rv || rv.tok !== tok) return; rv.deepDone = true; rvSummary(); rvGraph(); if (changed) { const co = rvEl("rvCoach"); if (co) co._h = null; rvPaint(); if (rv.done) rvReport(); }
@@ -1483,6 +1494,35 @@ function rvMotifs(i) {
   if (fresh.some((k) => k.startsWith("att:") && !ours(k))) tags.push("discovered attack");
   return tags;
 }
+/* ---------- Ideas behind a move: zwischenzug, deflection, decoy, overload, forced sequences, practically forced ---------- */
+function rvOurTurn(fen, col) { const f = fen.split(" "); f[1] = col; f[3] = "-"; try { const c = new Chess(f.join(" ")); return c.fen() ? c : null; } catch (e) { return null; } }
+function rvIdeas(i, x) {
+  const mv = rv.mv[i - 1], col = mv.color, tags = [], b = x.b, good = x.loss <= 2, pm = rv.mv[i - 2], pv = b && b.lines && b.lines[0] ? b.lines[0].pv : [], nm = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen" };
+  /* zwischenzug: they took, you do not take back but play a check or capture first */
+  if (good && pm && pm.captured && mv.to !== pm.to && !x.recapture && (/[+#]/.test(mv.san) || mv.captured) && new Chess(rv.fen[i - 1]).moves({ verbose: true }).some((m) => m.captured && m.to === pm.to)) tags.push("zwischenzug: an in-between move before recapturing");
+  /* forced sequence: the engine line after the move is a chain of replies with one or two legal moves each */
+  if (good && pv.length >= 3) { const c = new Chess(rv.fen[i]); let chain = 0; for (let k = 0; k < pv.length; k += 2) { const n = c.moves().length; if (n <= 2 || (c.in_check() && n <= 3)) chain++; else break; if (!c.move(uciMv(pv[k])) || (k + 1 < pv.length && !c.move(uciMv(pv[k + 1])))) break; } if (chain >= 2) tags.push(`forced sequence: ${chain} forced replies in a row`); }
+  /* practically forced: a piece of yours was under a winning attack, this parries it, and the alternatives are clearly worse */
+  if (x.isBest && x.second != null && x.pov(x.L[0].w) - x.second >= 8) {
+    const before = new Chess(rv.fen[i - 1]), threatened = []; for (const r of before.board()) for (const q of r) if (q && q.color === col && q.type !== "k" && PV[q.type] >= 3 && rvLostAt(rv.fen[i - 1], q.square, col, q.type)) threatened.push(q);
+    if (threatened.length && !threatened.some((q) => rvLostAt(rv.fen[i], q.square === mv.from ? mv.to : q.square, col, q.type))) tags.push(`practically forced: parries the attack on your ${nm[threatened[0].type]}`);
+  }
+  /* deflection: their reply drags a defender off a square and you take there */
+  if (good && pv.length >= 2) {
+    const r = uciMv(pv[0]), fl = rvOurTurn(rv.fen[i], col), pre = new Chess(rv.fen[i]), rm = pre.move(r);
+    if (fl && rm) { const o = fl.move(uciMv(pv[1])); if (o && o.captured && PV[o.captured] >= 3 && fl.moves({ verbose: true }).some((z) => z.captured && z.to === o.to && z.from === r.from) && rm.to !== o.to) tags.push(`deflection: ${rm.san} pulls a defender away from ${o.to}`); }
+  }
+  /* decoy: a sacrifice that pulls the king onto an exposed square */
+  if (x.sac && x.sac.piece && pv.length) { const m0 = new Chess(rv.fen[i]).move(uciMv(pv[0])); if (m0 && m0.piece === "k" && m0.captured) tags.push("decoy: the king is dragged out to take"); }
+  /* overload: one defender is the only guard of two pieces you attack */
+  if (good) {
+    const fl = rvOurTurn(rv.fen[i], col); if (fl) { const by = {}; for (const m of fl.moves({ verbose: true })) { if (!m.captured || m.piece === "k" && false) continue; fl.move(m); const d = fl.moves({ verbose: true }).filter((z) => z.captured && z.to === m.to).map((z) => z.from); fl.undo(); if (d.length === 1) (by[d[0]] = by[d[0]] || new Set()).add(m.to); }
+      if (Object.values(by).some((t) => t.size >= 2)) tags.push("overload: one defender guards two pieces you attack"); }
+  }
+  /* interesting / speculative: a real sacrifice that is not brilliant */
+  if (x.sac && x.sac.piece && SACV[x.sac.piece] >= 3 && x.sac.drop >= 2 && x.cls !== "brilliant") { if (x.loss <= 6) tags.push("interesting: a real sacrifice that holds, though not the engine's first choice"); else if (x.loss <= 25 && x.after >= 35) tags.push("speculative: unclear compensation, practical chances only"); }
+  return tags;
+}
 function rvDerive(i) {
   const a = rv.pos[i - 1], b = rv.pos[i], white = i % 2 === 1, mv = rv.mv[i - 1], pov = (w) => (white ? w : 100 - w), prev = rv.data[i - 2];
   const played = mv.from + mv.to + (mv.promotion || ""), L = a.lines || [], bestUci = L[0] ? L[0].pv[0] : played, inTop = L.find((x) => x.pv[0] === played);
@@ -1517,6 +1557,9 @@ function rvDerive(i) {
       if (before >= 75 && after < 60) tags.push("throws away a winning position"); else if (before >= 35 && before <= 65 && after < before - 20) tags.push("loses the balance");
       if (!tags.length) tags.push("positional error");
     }
+    tags.push(...rvIdeas(i, { cls, loss, after, before, second, isBest, L, b, sac, recapture, pov }));
+    if (rv.zprep && rv.zprep[i]) tags.push("prepares a zugzwang two moves later");
+    if (rv.tb && rv.tb[i]) { const t = rv.tb[i], ord = { L: 0, D: 1, W: 2 }; if (t.b && t.a) { if (ord[t.a] < ord[t.b]) { tags.push(`tablebase: ${t.b === "W" ? "win" : "draw"} to ${t.a === "L" ? "loss" : "draw"}`); const sev = t.a === "L" ? "blunder" : "mistake"; if (cls !== "blunder" && (sev === "blunder" || cls !== "mistake")) cls = sev; } else if (cls === "mistake" || cls === "blunder") { cls = "inaccuracy"; tags.push("tablebase: the theoretical result is kept"); } } }
     const zg = (rv.zug || {})[i];
     if (zg && (cls === "best" || cls === "excellent" || cls === "good" || cls === "great")) { cls = cls === "great" ? "great" : "zugzwang"; tags.push(...(((rv.zugd || {})[i] || {}).kind || ["zugzwang"])); }
     else if (loss <= 2 && F.quiet && after >= 60 && !b.ev.term && (cls === "best" || cls === "excellent" || cls === "good")) { const nb = new Chess(rv.fen[i]); if (!nb.in_check() && nb.moves().length <= 14 && !(rv.zug && i in rv.zug)) zcand = true; }

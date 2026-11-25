@@ -420,6 +420,12 @@ Now: a piece is doomed when it is attacked, would lose material, and no single m
 
 Unit-tested on built positions (trapped knight takes a rook: desperado; free knight: none; fork, pin, skewer, no motif; a three-ply trapped-piece case flagged multi-move) and on the Opera Game and World Championship Game 1 (no false Desperado or Zugzwang). Not done: tracing forced sequences several moves back, distant zugzwang creation, deflection, overload and zwischenzug detectors, tablebases, and a measured precision and recall.
 
+### 2026-11-25 - Review: the missing detectors
+
+Added tags for zwischenzug, forced sequences (chains of replies with one or two legal moves), practically forced moves (parrying a winning attack on a piece), deflection, decoy, overload, a move that prepares a zugzwang two moves later, and interesting or speculative sacrifices. Positions with seven pieces or fewer are now checked against the Lichess endgame tablebase: a move that turns a won or drawn ending into a worse result is marked a mistake or blunder, and one that keeps the result is not called a mistake.
+
+tests/review_detectors.js holds 16 labelled positions. Fork, pin, skewer, discovered attack, desperado and zwischenzug scored 100% precision and recall on them. That is a small set of easy hand-built positions, not a measure of real games. Not tested with a positive case: deflection, decoy, overload, forced sequence, practically forced, zugzwang preparation, tablebase downgrade and the sacrifice tags. Still not built: clearance, interference and attraction detectors.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

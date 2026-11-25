@@ -51,6 +51,12 @@ todo = [(v, t, c, k) for v, t, c, k in J if not os.path.exists(os.path.join(OUT,
 SKIP = set(sys.argv[sys.argv.index("--skip") + 1].split(",")) if "--skip" in sys.argv else set()
 todo = [x for x in todo if x[3] not in SKIP]
 print(f"{len(J)} lines, {len(todo)} to make on {dev}", flush=True)
+# --max N: make at most N lines, then exit with code 10 if more are left (tools/voice_loop.sh starts a fresh process, which
+# hands all memory back: one long process grew past 20 GB)
+MAX = int(sys.argv[sys.argv.index("--max") + 1]) if "--max" in sys.argv else 0
+more = bool(MAX) and len(todo) > MAX
+if MAX:
+    todo = todo[:MAX]
 t0, done, streak = time.time(), 0, 0
 # graphics memory piles up over hundreds of lines (it reached 13.8 GB and 610 lines failed): hand it back after every line
 def free():
@@ -88,4 +94,6 @@ for v, t, c, k in todo:
         json.dump(index, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
         el = time.time() - t0
         print(f"  {done}/{len(todo)}  {el / done:.1f}s a line, about {el / done * (len(todo) - done) / 60:.0f} min left", flush=True)
-print("done", flush=True)
+print("done" if not more else "batch done", flush=True)
+if more:
+    sys.exit(10)

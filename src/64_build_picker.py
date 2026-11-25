@@ -4,7 +4,7 @@ import sys, os
 PAGE = r'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ballknowledge</title>
-<meta name="description" content="Test your ball knowledge. Football and basketball quizzes, and a model to beat.">
+<meta name="description" content="Test your ball knowledge. Football, basketball and chess quizzes and games, and prediction models to beat.">
 <meta name="theme-color" content="#0b0f14"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap">

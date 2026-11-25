@@ -12,7 +12,7 @@ Beat the Model is machine-learning forecasting of football results (Home, Draw o
 - **What can you do?** The front page splits in two. **Games** (pick one league or all five at random) lists every game once; you pick the game, then Solo or Two players, and the game changes to fit. Seven games play against the model; the ball-knowledge ones (Who am I?, Career path, Name that club, Badge blur, Where did they finish?, Market value) are a solo streak (or higher-or-lower for market value) or a head-to-head duel (a buzzer race, or closest guess wins), on one device or two. Football tic-tac-toe is two-player only. **Our model** holds the title race, a season replay next to the model's table, the review, and a How it works page with credits. On top of that: ranks, achievements, result cards, Challenge a friend and leaderboards.
 - **Play it:** https://moballknowledge.vercel.app (also served from GitHub Pages at https://mosoliman517-sudo.github.io/football-prediction-model/)
 - **How it was built:** Python (pandas, scikit-learn, Poisson goal models, Elo ratings, Monte Carlo simulation) for the models; plain JavaScript for the page. Data from football-data.co.uk. Most of the later engineering was done in pair-programming sessions with Claude Code (credited in the commits); the evaluation rules and what to keep or discard are the owner's.
-- **Honest notes:** the Premier League models use richer inputs than the other four leagues (which use results-only features); many plausible ideas were tested and rejected rather than shipped; accounts and global leaderboards need a free online database that has to be connected first (`online/SETUP.md`).
+- **Honest notes:** the Premier League models use richer inputs than the other four leagues (which use results-only features); many plausible ideas were tested and rejected rather than shipped; accounts and global leaderboards run on a free Supabase database (`online/SETUP.md`).
 
 > **Resuming after a break? Read this box.**
 >
@@ -50,7 +50,7 @@ python3 src/38_fetch_player_photos_tsdb.py # second photo source for the rest (s
 >
 > **Rules that stay:** a new signal is kept only if it helps out-of-fold in both a logistic regression and a random forest, and held-out matches are touched once. Badges, league logos and player photos belong to others: the raw files stay git-ignored, they appear in the built page only as identification with credit and a takedown route, and `--no-artwork` removes them in one command. Never scrape sources that block scripts or work around refusals.
 >
-> **Known limits:** the four newer leagues have no xG, squad-value or manager inputs and no real goalscorers; yellow cards are not forecast better than the league average; title-race odds assume today's form holds; the Champions League has no data source yet; accounts and leaderboards are built and tested against a stand-in for the database but not yet connected to a real one.
+> **Known limits:** the four newer leagues have no xG, squad-value or manager inputs and no real goalscorers; yellow cards are not forecast better than the league average; title-race odds assume today's form holds; the Champions League has no data source yet; accounts and leaderboards are connected to a live Supabase project (set up in online/); their rules were checked with read-only requests on 25 Nov 2026, real sign-up was not re-tested.
 >
 > **Next:** check real sign-up and leaderboards on the live site; finish the second photo lookup (script 38) and rebuild; Champions League; real goalscorers for the four newer leagues; real lineups from the daily Fantasy snapshots.
 
@@ -433,6 +433,10 @@ Thirty new opening facts and thirteen general chess facts, voiced for Pip, Bea a
 ### 2026-11-25 - Chatterbox run for every remaining line, with a live stats page
 
 Started the Chatterbox job on the Mac for the 1,311 lines that still had only a Kokoro take, flat out (no cool-down). The four newer characters (the Escaped, Arteta, the Berserker, the Trader) got voice reference samples first. src/cloud_voice_pack.py and src/cloud_voice_merge.py let a free cloud GPU work from the other end of the list (not tried yet). tools/voice_dashboard.py serves a local page (port 8779) that refreshes itself: progress, speed, time left, the Mac's chip, battery and SSD temperatures read from its sensors (tools/temps.c), thermal state, power, per-character progress and the latest clips to play. The new clips are committed when the run is done.
+
+### 2026-11-25 - Full website audit
+
+Swept every route of the three sports at phone width, probed the live database read-only, and checked error handling. Fixed: three broken Premier League badges (also broken on the live site; the files were named .svg+xml), a service worker that cached every voice clip and error page, the install banner covering dialogs, a misleading "leaderboards are not switched on" message when offline, low-contrast chips and tags in the chess light theme, outdated text, and missing page descriptions. Details, what was not tested and what is left: AUDIT_2026-11-25.md. A reference for the sister project: MAIN_WEBSITE_REFERENCE.md. Recovery tag: pre-audit-2026-11-25.
 
 ### What is in the box
 

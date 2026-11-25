@@ -421,7 +421,7 @@ if PUBLIC:   # a lighter first download (public build only)
     for _lg in leagues.values():
         for _club, _uri in list((_lg.get("crests") or {}).items()):
             if isinstance(_uri, str) and _uri.startswith("data:image/"):
-                _raw = base64.b64decode(_uri.split(",", 1)[1]); _fn = f"crests/{_hl.sha1(_raw).hexdigest()[:10]}.{_uri.split(';')[0].split('/')[1]}"
+                _raw = base64.b64decode(_uri.split(",", 1)[1]); _fn = f"crests/{_hl.sha1(_raw).hexdigest()[:10]}.{_uri.split(';')[0].split('/')[1].split('+')[0]}"   # image/svg+xml -> .svg, or servers send it as octet-stream and it never renders
                 open("docs/football/" + _fn, "wb").write(_raw); _keep.add(_fn); _lg["crests"][_club] = _fn
     for _f in glob.glob("docs/football/crests/*"):
         if "crests/" + os.path.basename(_f) not in _keep: os.remove(_f)

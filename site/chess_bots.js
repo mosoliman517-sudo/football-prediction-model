@@ -96,13 +96,34 @@ async function botCouncil(fen) {
   const pick = pts.sort((a, b) => b.p - a.p || a.x.k - b.x.k)[0].x.m; return { from: pick.from, to: pick.to, promotion: pick.promotion };
 }
 /* ---------- wiring into the game ---------- */
+/* how long an opponent "thinks": a person is quick in the opening, instant-ish on a forced or obvious reply, slower when
+   there is a lot going on, now and then very slow, and hurried when the clock is low. Never an instant answer. */
+function botThinkMs(c, clockMs) {
+  const moves = c.moves({ verbose: true }), plies = c.history().length, last = c.history({ verbose: true }).pop(), rnd = (a, b) => a + Math.random() * (b - a);
+  let ms;
+  if (moves.length <= 1) ms = rnd(600, 1000);
+  else if (last && last.captured && moves.some((m) => m.captured && m.to === last.to)) ms = rnd(800, 1600);   /* take back */
+  else if (plies < 8) ms = rnd(900, 1800);
+  else ms = rnd(1400, 3000) + Math.min(1200, moves.filter((m) => m.captured || /\+/.test(m.san)).length * 220) + (c.in_check() ? 400 : 0);
+  if (plies >= 8 && Math.random() < 0.08) ms += rnd(1200, 2500);   /* a long think */
+  if (clockMs != null) ms = Math.min(ms, Math.max(300, clockMs / 25));
+  return Math.round(ms);
+}
+/* play the chosen move once the thinking time has passed, if the game is still the same one */
+function botPlay(me, L, r, since, ms) {
+  setTimeout(() => {
+    if (st !== me || live !== L || me.over) return;
+    const m = r ? L.c.move({ from: r.from, to: r.to, promotion: r.promotion || "q" }) : null; me.think = false;
+    if (!m) { L.lock = false; return aiPaint(); }
+    if (me.clockSecs) { const now = performance.now(); me.ms[L.c.turn() === "w" ? "b" : "w"] -= now - me.last; me.last = now; }
+    L.last = [m.from, m.to]; Snd.move(m, L.c); L.lock = false; if (!aiEnd()) aiPaint();
+  }, Math.max(0, ms - (performance.now() - since)));
+}
 aiThink = function () {
-  const B = botOf(st.level); if (B.kind === "small") { live.lock = true; st.think = true; aiPaint(); setTimeout(() => { if (!live || st.game !== "ai") return; askEngine({ type: "move", fen: live.c.fen(), level: B.small || 1 }, (r) => { if (!live || st.game !== "ai" || r.type !== "move") return; const m = live.c.move({ from: r.from, to: r.to, promotion: r.promotion || "q" }); live.last = [m.from, m.to]; Snd.move(m, live.c); st.think = false; live.lock = false; if (!aiEnd()) aiPaint(); }); }, 200); return; }
-  const me = st, L = live; L.lock = true; st.think = true; aiPaint();
-  botMove(st.level, L.c.fen()).then((r) => {
-    if (st !== me || live !== L) return; const m = r ? L.c.move({ from: r.from, to: r.to, promotion: r.promotion || "q" }) : null; if (!m) { st.think = false; L.lock = false; return aiPaint(); }
-    L.last = [m.from, m.to]; Snd.move(m, L.c); st.think = false; L.lock = false; if (!aiEnd()) aiPaint();
-  }).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
+  const B = botOf(st.level), me = st, L = live, since = performance.now(); L.lock = true; st.think = true;
+  const ms = botThinkMs(L.c, st.clockSecs ? st.ms[L.c.turn()] : null); aiPaint();
+  if (B.kind === "small") return askEngine({ type: "move", fen: L.c.fen(), level: B.small || 1 }, (r) => { if (r.type === "move") botPlay(me, L, r, since, ms); });
+  botMove(st.level, L.c.fen()).then((r) => botPlay(me, L, r, since, ms)).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
 };
 
 /* ---------- the characters talk: a bubble and a recorded voice (clips for src/bot_lines.json), never the device voice ----------
@@ -134,14 +155,13 @@ function botEnd(res) {
 }
 function botSay(kind, done) {
   if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face, me = st;
-  let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
-  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.dataset.bot = "1"; el.classList.remove("hide"); el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
+  st.saying = `<span class="botbf">${face}</span><p><b>${esc(nm)}</b>${esc(text)}</p>`; const slot = document.getElementById("lvSay"); if (slot) { slot.innerHTML = st.saying; slot._h = st.saying; }
   const wait = Math.min(9000, 1200 + text.length * 60); st.talkUntil = performance.now() + wait;
   let spoke = false; const over = () => { if (spoke) return; spoke = true; if (st === me) { me.talkUntil = performance.now() + 300; if (done) done(); } };
   try { if (!(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: Mix.voice, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
 }
 {
-  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st, dock = document.getElementById("pipc"); if (dock) { delete dock.dataset.bot; dock.classList.add("hide"); } setTimeout(() => { if (st === me) botSay("start"); }, 900); return r; };
+  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st, dock = document.getElementById("pipc"); if (dock) dock.classList.add("hide"); setTimeout(() => { if (st === me) botSay("start"); }, 900); return r; };
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
   /* the game can end by a move or on the clock: both repaint the board, so the last word is said from there */
   const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); } } catch (e) { /* never block the board */ } return r; };

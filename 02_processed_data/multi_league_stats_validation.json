@@ -1,63 +1,63 @@
 {
  "shots_home": {
   "real_mean": 13.975,
-  "model_mean": 13.808,
-  "mae_model": 3.805,
-  "mae_baseline": 4.278
+  "model_mean": 13.948,
+  "mae_model": 3.809,
+  "mae_baseline": 4.282
  },
  "shots_away": {
   "real_mean": 11.354,
-  "model_mean": 11.276,
-  "mae_model": 3.389,
-  "mae_baseline": 3.737
+  "model_mean": 11.246,
+  "mae_model": 3.402,
+  "mae_baseline": 3.735
  },
  "sot_home": {
   "real_mean": 4.859,
-  "model_mean": 4.87,
-  "mae_model": 1.862,
-  "mae_baseline": 2.015
+  "model_mean": 5.082,
+  "mae_model": 1.89,
+  "mae_baseline": 2.09
  },
  "sot_away": {
   "real_mean": 3.97,
-  "model_mean": 3.998,
-  "mae_model": 1.672,
-  "mae_baseline": 1.791
+  "model_mean": 4.055,
+  "mae_model": 1.674,
+  "mae_baseline": 1.838
  },
  "corners_home": {
   "real_mean": 5.384,
-  "model_mean": 5.496,
-  "mae_model": 2.25,
-  "mae_baseline": 2.389
+  "model_mean": 5.671,
+  "mae_model": 2.272,
+  "mae_baseline": 2.421
  },
  "corners_away": {
   "real_mean": 4.293,
-  "model_mean": 4.457,
-  "mae_model": 1.967,
-  "mae_baseline": 2.072
+  "model_mean": 4.481,
+  "mae_model": 1.972,
+  "mae_baseline": 2.079
  },
  "fouls_home": {
   "real_mean": 11.629,
-  "model_mean": 12.485,
-  "mae_model": 3.054,
-  "mae_baseline": 3.167
+  "model_mean": 13.773,
+  "mae_model": 3.583,
+  "mae_baseline": 3.635
  },
  "fouls_away": {
   "real_mean": 12.004,
-  "model_mean": 12.77,
-  "mae_model": 3.181,
-  "mae_baseline": 3.252
+  "model_mean": 14.169,
+  "mae_model": 3.746,
+  "mae_baseline": 3.795
  },
  "yellows_home": {
   "real_mean": 1.894,
-  "model_mean": 1.925,
-  "mae_model": 1.064,
-  "mae_baseline": 1.051
+  "model_mean": 1.882,
+  "mae_model": 1.065,
+  "mae_baseline": 1.064
  },
  "yellows_away": {
   "real_mean": 2.165,
-  "model_mean": 2.163,
+  "model_mean": 2.172,
   "mae_model": 1.123,
-  "mae_baseline": 1.111
+  "mae_baseline": 1.107
  },
- "first_half_goal_share": 0.4415
+ "first_half_goal_share": 0.4407
 }

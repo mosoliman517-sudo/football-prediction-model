@@ -183,7 +183,7 @@ const CW = {
   link(code) { return `${location.origin}${location.pathname}#watch-${code}`; },
   start(code) {
     rvStop(); clearInterval(st.timer); olClose(); this.stop(true); live = null; st = { game: "watch" }; this.over = null; this.c = null; this.got = false;
-    olOpen("watch", code); OL.welcomed = true; this.id = Math.random().toString(36).slice(2, 8); $("#app").className = "fresh";
+    olOpen("watch", code); this.ids = null; OL.welcomed = true; this.id = Math.random().toString(36).slice(2, 8); $("#app").className = "fresh";
     $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="card" style="max-width:640px"><h2>${ic("eye")}Watching room ${esc(code)}</h2><p class="sub" id="cwMsg">Looking for the game…</p><p class="fine">View only. You can't move or message.</p></div>`;
     const say = () => { if (OL && OL.role === "watch") olSend({ k: "watchhello", id: this.id }); }; say(); this.hi = setInterval(() => { if (!OL || OL.role !== "watch") return clearInterval(this.hi); if (!this.got) { say(); const m = document.getElementById("cwMsg"), secs = Math.round((Date.now() - OL.since) / 1000); if (m) m.textContent = !olLinked() ? (secs > 12 ? "Could not reach the room server. Check your connection." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${code}. Check the code, and that the game is still on.` : "Looking for the game…"; } else say(); }, 3000);
   },
@@ -199,7 +199,8 @@ const CW = {
   endCheck() { const c = this.c; if (!c.game_over()) return; if (c.in_checkmate()) this.finish(c.turn() === "w" ? "b" : "w", "Checkmate"); else this.finish(null, c.in_stalemate() ? "Stalemate" : c.insufficient_material() ? "Insufficient material" : c.in_threefold_repetition() ? "Repetition" : "The 50-move rule"); },
   recv(m) {
     if (!m || m.from === "watch") return; if (m.i) { if (this.seen.has(m.i)) return; this.seen.add(m.i); if (this.seen.size > 300) this.seen = new Set([...this.seen].slice(-100)); }
-    if (m.k === "watchsync") return this.sync(m);
+    if (m.k === "watchsync") { this.ids = m.ids || null; return this.sync(m); }
+    if (this.ids && m.pid && m.pid !== this.ids[m.from]) return;   /* not one of the two seated players */
     if (!this.got || !this.c) return;
     if (m.k === "move") { if (m.ply !== this.c.history().length + 1) return; const mv = this.c.move({ from: m.a, to: m.b, promotion: m.promo || "q" }); if (!mv) return; if (m.ms != null) this.ms[mv.color] = m.ms; this.last = performance.now(); live.last = [mv.from, mv.to]; try { Snd.move(mv, this.c); } catch (e) { /* quiet */ } this.paint(); this.endCheck(); }
     else if (m.k === "resign") this.finish(this.who(m.from) === "w" ? "b" : "w", "Resignation");
@@ -218,7 +219,7 @@ const CW = {
     liveRender(`<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="row" style="justify-content:space-between"><h2>${ic("eye")}Watching live</h2><span class="fine">Room ${OL ? OL.code : ""} · ${OL_TC[this.tc][0]} · view only</span></div>`, `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${o ? "" : c.in_check() ? "Check!" : (c.turn() === "w" ? nm("w") : nm("b")) + " to move"}</span></div>`, bars, { over });
   },
   /* host side */
-  syncMsg() { const g = OG; return { k: "watchsync", names: g.names, hostColor: OL.hostColor, tc: g.tc, sans: g.c.history(), ms: g.ms, me: g.me, over: g.over }; },
+  syncMsg() { const g = OG; return { k: "watchsync", ids: { host: olPid(), guest: OL.guestId }, names: g.names, hostColor: OL.hostColor, tc: g.tc, sans: g.c.history(), ms: g.ms, me: g.me, over: g.over }; },
   hostHello(m) { this.w = this.w || new Map(); this.w.set(m.id || "w", Date.now()); if (OG) olSend(this.syncMsg()); else olSend({ k: "waiting" }); this.chip(); },
   count() { const now = Date.now(); (this.w || new Map()).forEach((t, k) => { if (now - t > 70000) this.w.delete(k); }); return this.w ? this.w.size : 0; },
   chip() {

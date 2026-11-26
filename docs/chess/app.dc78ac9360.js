@@ -1622,6 +1622,17 @@ function rvExplain(d) {
   return (d.why = t);
 }
 const rvEl = (id) => document.getElementById(id);
+/* "this badge is wrong": copies what is needed to turn it into a test. Nothing is sent anywhere, and no player names go in. */
+function rvReportText(i) {
+  const d = rv.data[i - 1], moves = rv.sans.slice(0, i).map((s, k) => (k % 2 ? "" : k / 2 + 1 + ". ") + s).join(" ");
+  return ["ballknowledge badge report", `Move: ${Math.ceil(i / 2)}${d.white ? "." : "..."} ${d.san}`, `Badge shown: ${d.cls}`, `Tags: ${d.tags.join("; ") || "none"}`, `Position before: ${rv.fen[i - 1]}`, `Engine's choice: ${d.bestSan}. Winning chances ${Math.round(d.before)}% -> ${Math.round(d.after)}%`, `Game so far: ${moves}`, "What I think it should be: "].join("\n");
+}
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest && e.target.closest("[data-rvreport]"); if (!t || !rv) return;
+  const text = rvReportText(+t.dataset.rvreport), out = rvEl("rvReportOut");
+  try { await navigator.clipboard.writeText(text); t.textContent = "Copied. Paste it wherever you report it."; }
+  catch (err) { if (!out) return; out.innerHTML = `<textarea class="rvreporttext" rows="8" readonly aria-label="Badge report"></textarea>`; const box = out.firstChild; box.value = text; box.select(); t.textContent = "Select and copy the text below"; }
+});
 const rvSq = (sq, flip) => { const f = "abcdefgh".indexOf(sq[0]), r = 8 - +sq[1]; return [flip ? 7 - f : f, flip ? 7 - r : r]; };
 function rvShell() {
   const f = rv.flip, bar = (side) => `<div class="pbar rvp" id="rvP${side}"></div>`;
@@ -1686,7 +1697,7 @@ function rvPaint() {
   else if (!d) coach = `<div class="coachhd"><b>${Math.ceil(i / 2)}${i % 2 ? "." : "..."} ${esc(rv.sans[i - 1])}</b></div><p class="fine"><span class="spin"></span> Stockfish is still looking at this move…</p>`;
   else {
     const r = RVC[d.cls], bad = ["inaccuracy", "mistake", "miss", "blunder"].includes(d.cls), a = rv.pos[i - 1], b = pos;
-    coach = `<div class="coachhd"><i class="cls big ${d.cls}">${r[1]}</i><div><b>${Math.ceil(i / 2)}${d.white ? "." : "..."} ${esc(d.san)}</b> <span class="cname ${d.cls}">is ${r[2]}</span></div><span class="evtxt">${fmtEv(a.ev)} → ${fmtEv(b.ev)}</span></div><p>${esc(rvExplain(d))}</p>${d.cls === "book" && rv.mN && rv.mN[i] ? `<p class="fine">${ic("book")}Played in ${rv.mN[i].toLocaleString()} master games from this position.</p>` : ""}${bad && !d.isBest ? `<button class="btn rvretry" data-rv="retry1" type="button">${ic("target")}Retry: find a better move</button>` : ""}${bad && !d.isBest ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>${a.lines[0] ? `: <span class="pvl">${esc(pvLine(rv.fen[i - 1], a.lines[0].pv, 6))}</span>` : ""}</p>` : ""}${d.cls !== "book" && d.cls !== "forced" ? `<div class="wc"><span>Winning chance</span><b>${Math.round(d.before)}% → ${Math.round(d.after)}%</b></div><div class="wc"><span>Cost of this move</span><b>${d.isBest ? "nothing" : `${d.pawns.toFixed(1)} pawns · ${Math.round(d.loss)}%`}</b></div>${!d.isBest && !bad ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>.</p>` : ""}` : ""}`;
+    coach = `<div class="coachhd"><i class="cls big ${d.cls}">${r[1]}</i><div><b>${Math.ceil(i / 2)}${d.white ? "." : "..."} ${esc(d.san)}</b> <span class="cname ${d.cls}">is ${r[2]}</span></div><span class="evtxt">${fmtEv(a.ev)} → ${fmtEv(b.ev)}</span></div><p>${esc(rvExplain(d))}</p>${d.cls !== "book" && d.cls !== "forced" ? `<button class="rvreport" data-rvreport="${i}" type="button">Badge look wrong? Copy this position</button><div id="rvReportOut"></div>` : ""}${d.cls === "book" && rv.mN && rv.mN[i] ? `<p class="fine">${ic("book")}Played in ${rv.mN[i].toLocaleString()} master games from this position.</p>` : ""}${bad && !d.isBest ? `<button class="btn rvretry" data-rv="retry1" type="button">${ic("target")}Retry: find a better move</button>` : ""}${bad && !d.isBest ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>${a.lines[0] ? `: <span class="pvl">${esc(pvLine(rv.fen[i - 1], a.lines[0].pv, 6))}</span>` : ""}</p>` : ""}${d.cls !== "book" && d.cls !== "forced" ? `<div class="wc"><span>Winning chance</span><b>${Math.round(d.before)}% → ${Math.round(d.after)}%</b></div><div class="wc"><span>Cost of this move</span><b>${d.isBest ? "nothing" : `${d.pawns.toFixed(1)} pawns · ${Math.round(d.loss)}%`}</b></div>${!d.isBest && !bad ? `<p class="fine">Best was <b>${esc(d.bestSan)}</b>.</p>` : ""}` : ""}`;
     const [tc, tr] = rvSq(rv.mv[i - 1].to, f);
     ov += `<span class="sqb cls ${d.cls}" style="left:${(tc + 1) * 12.5}%;top:${tr * 12.5}%">${r[1]}</span>`;
     if (bad && !d.isBest && rv.showBest) {
@@ -2140,7 +2151,9 @@ const OL_BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8
 const OL_TC = [["1+0", 60, 0], ["3+2", 180, 2], ["5+0", 300, 0], ["10+0", 600, 0]];
 let OL = null, OG = null;
 const olNick = () => (Cloud.nick || store.get("ol_nick", "") || "Guest");
-function olSend(m) { if (!OL) return; m.from = OL.role; m.i = Math.random().toString(36).slice(2); try { OL.bc && OL.bc.postMessage(m); } catch (e) { /* closed */ } OL.mq.forEach((q) => q.send(m)); }
+/* a name for this tab, so a room can tell its two players from a third person who has the code */
+const olPid = () => { let v = null; try { v = sessionStorage.getItem("ol_pid"); if (!v) sessionStorage.setItem("ol_pid", (v = Math.random().toString(36).slice(2, 12))); } catch (e) { /* private mode */ } return v || (olPid.mem = olPid.mem || Math.random().toString(36).slice(2, 12)); };
+function olSend(m) { if (!OL) return; m.from = OL.role; m.pid = olPid(); m.i = Math.random().toString(36).slice(2); try { OL.bc && OL.bc.postMessage(m); } catch (e) { /* closed */ } OL.mq.forEach((q) => q.send(m)); }
 function olOpen(role, code) {
   olClose(); OL = { role, code, seen: new Set(), mq: [], bc: null, since: Date.now(), welcomed: false };
   try { OL.bc = new BroadcastChannel("bkc-" + code); OL.bc.onmessage = (e) => olRecv(e.data); } catch (e) { OL.bc = null; }
@@ -2155,7 +2168,7 @@ const olLinked = () => (OL ? OL.mq.filter((q) => q.open).length : 0);
 function olStatus() {
   const el = document.getElementById("olStatus"); if (!el || !OL) return; const secs = Math.round((Date.now() - OL.since) / 1000);
   if (OL.role === "host") el.innerHTML = olLinked() ? `Room <b class="num" style="font-size:24px">${OL.code}</b> is open. Waiting for your friend…` : secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…";
-  else el.textContent = !olLinked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${OL.code}. Check the code with your friend.` : "Connected. Waiting for the host…";
+  else el.textContent = OL.full ? `Room ${OL.code} already has its two players. Ask your friend for a new room, or for the watch link.` : !olLinked() ? (secs > 12 ? "Could not reach the room server. Check your connection and try again." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${OL.code}. Check the code with your friend.` : "Connected. Waiting for the host…";
 }
 function olMenu(joinCode) {
   rvStop(); clearInterval(st.timer); live = null; olClose(); st = { game: "online", tc: store.get("ol_tc", 1), col: store.get("ol_col", "r") };
@@ -2178,7 +2191,15 @@ function olJoin(code) {
 }
 function olRecv(m) {
   if (!OL || !m || m.from === OL.role) return; if (m.i) { if (OL.seen.has(m.i)) return; OL.seen.add(m.i); if (OL.seen.size > 300) OL.seen = new Set([...OL.seen].slice(-100)); }
-  if (OL.role === "host" && m.k === "hello") { OL.welcomed = true; OL.guestNick = m.nick || "Guest"; const g = OG, sans = g ? g.c.history() : [], ms = g ? g.ms : null; olSend({ k: "welcome", tc: OL.tc, hostColor: OL.hostColor, nick: olNick(), sans, ms }); if (!OG) olBegin(OL.hostColor, OL.tc, [olNick(), OL.guestNick]); return; }
+  /* two seats only: the first friend to say hello keeps the other one */
+  if (OL.role === "host" && m.from === "guest") { const who = String(m.pid || "old"); if (m.k === "hello" && OL.guestId == null) OL.guestId = who; if (who !== OL.guestId) { if (m.k === "hello") olSend({ k: "full", to: who }); return; } }
+  if (OL.role === "guest") {
+    if (m.from !== "host" || (m.to && m.to !== olPid())) return;   /* the other guest-side traffic is not for us */
+    if (OL.hostId && m.pid && m.pid !== OL.hostId) return;
+    if (m.k === "full") { if (!OL.welcomed) { clearInterval(OL.hi); OL.full = true; olStatus(); } return; }
+    if (m.k === "welcome") OL.hostId = m.pid || null; else if (!OL.welcomed) return;
+  }
+  if (OL.role === "host" && m.k === "hello") { OL.welcomed = true; OL.guestNick = m.nick || "Guest"; const g = OG, sans = g ? g.c.history() : [], ms = g ? g.ms : null; olSend({ k: "welcome", to: m.pid, tc: OL.tc, hostColor: OL.hostColor, nick: olNick(), sans, ms }); if (!OG) olBegin(OL.hostColor, OL.tc, [olNick(), OL.guestNick]); return; }
   if (OL.role === "guest" && m.k === "welcome") { if (OL.welcomed && OG) return; OL.welcomed = true; clearInterval(OL.hi); OL.hostNick = m.nick || "Host"; if (!OG) olBegin(m.hostColor === "w" ? "b" : "w", m.tc, [m.hostColor === "w" ? OL.hostNick : olNick(), m.hostColor === "w" ? olNick() : OL.hostNick]); if (m.sans && m.sans.length && OG && OG.c.history().length < m.sans.length) { OG.c.reset(); m.sans.forEach((s) => OG.c.move(s)); if (m.ms) OG.ms = m.ms; OG.last = performance.now(); olPaint(); } return; }
   if (!OG) return;
   if (m.k === "move") { const c = OG.c; if (m.ply !== c.history().length + 1) return; const mv = c.move({ from: m.a, to: m.b, promotion: m.promo || "q" }); if (!mv) return; if (m.ms != null) OG.ms[mv.color] = m.ms; OG.last = performance.now(); live.last = [mv.from, mv.to]; live.sel = null; live.targets = []; Snd.move(mv, c); OG.offerIn = false; olCheckEnd(); olPaint(); }
@@ -3398,7 +3419,7 @@ const CW = {
   link(code) { return `${location.origin}${location.pathname}#watch-${code}`; },
   start(code) {
     rvStop(); clearInterval(st.timer); olClose(); this.stop(true); live = null; st = { game: "watch" }; this.over = null; this.c = null; this.got = false;
-    olOpen("watch", code); OL.welcomed = true; this.id = Math.random().toString(36).slice(2, 8); $("#app").className = "fresh";
+    olOpen("watch", code); this.ids = null; OL.welcomed = true; this.id = Math.random().toString(36).slice(2, 8); $("#app").className = "fresh";
     $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="card" style="max-width:640px"><h2>${ic("eye")}Watching room ${esc(code)}</h2><p class="sub" id="cwMsg">Looking for the game…</p><p class="fine">View only. You can't move or message.</p></div>`;
     const say = () => { if (OL && OL.role === "watch") olSend({ k: "watchhello", id: this.id }); }; say(); this.hi = setInterval(() => { if (!OL || OL.role !== "watch") return clearInterval(this.hi); if (!this.got) { say(); const m = document.getElementById("cwMsg"), secs = Math.round((Date.now() - OL.since) / 1000); if (m) m.textContent = !olLinked() ? (secs > 12 ? "Could not reach the room server. Check your connection." : "Connecting to the room server…") : secs > 20 ? `Connected, but nobody is hosting ${code}. Check the code, and that the game is still on.` : "Looking for the game…"; } else say(); }, 3000);
   },
@@ -3414,7 +3435,8 @@ const CW = {
   endCheck() { const c = this.c; if (!c.game_over()) return; if (c.in_checkmate()) this.finish(c.turn() === "w" ? "b" : "w", "Checkmate"); else this.finish(null, c.in_stalemate() ? "Stalemate" : c.insufficient_material() ? "Insufficient material" : c.in_threefold_repetition() ? "Repetition" : "The 50-move rule"); },
   recv(m) {
     if (!m || m.from === "watch") return; if (m.i) { if (this.seen.has(m.i)) return; this.seen.add(m.i); if (this.seen.size > 300) this.seen = new Set([...this.seen].slice(-100)); }
-    if (m.k === "watchsync") return this.sync(m);
+    if (m.k === "watchsync") { this.ids = m.ids || null; return this.sync(m); }
+    if (this.ids && m.pid && m.pid !== this.ids[m.from]) return;   /* not one of the two seated players */
     if (!this.got || !this.c) return;
     if (m.k === "move") { if (m.ply !== this.c.history().length + 1) return; const mv = this.c.move({ from: m.a, to: m.b, promotion: m.promo || "q" }); if (!mv) return; if (m.ms != null) this.ms[mv.color] = m.ms; this.last = performance.now(); live.last = [mv.from, mv.to]; try { Snd.move(mv, this.c); } catch (e) { /* quiet */ } this.paint(); this.endCheck(); }
     else if (m.k === "resign") this.finish(this.who(m.from) === "w" ? "b" : "w", "Resignation");
@@ -3433,7 +3455,7 @@ const CW = {
     liveRender(`<div class="crumbs"><button class="btn ghost" data-go="online">← Leave</button></div><div class="row" style="justify-content:space-between"><h2>${ic("eye")}Watching live</h2><span class="fine">Room ${OL ? OL.code : ""} · ${OL_TC[this.tc][0]} · view only</span></div>`, `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${o ? "" : c.in_check() ? "Check!" : (c.turn() === "w" ? nm("w") : nm("b")) + " to move"}</span></div>`, bars, { over });
   },
   /* host side */
-  syncMsg() { const g = OG; return { k: "watchsync", names: g.names, hostColor: OL.hostColor, tc: g.tc, sans: g.c.history(), ms: g.ms, me: g.me, over: g.over }; },
+  syncMsg() { const g = OG; return { k: "watchsync", ids: { host: olPid(), guest: OL.guestId }, names: g.names, hostColor: OL.hostColor, tc: g.tc, sans: g.c.history(), ms: g.ms, me: g.me, over: g.over }; },
   hostHello(m) { this.w = this.w || new Map(); this.w.set(m.id || "w", Date.now()); if (OG) olSend(this.syncMsg()); else olSend({ k: "waiting" }); this.chip(); },
   count() { const now = Date.now(); (this.w || new Map()).forEach((t, k) => { if (now - t > 70000) this.w.delete(k); }); return this.w ? this.w.size : 0; },
   chip() {

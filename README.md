@@ -450,6 +450,10 @@ Online games showed HTML sent through a public relay without cleaning it, so som
 
 Ran the game review over 13 real games (5 famous, 8 recent grandmaster games; tests/review_real_games.js). One of them froze at move 10: after some checks the review handed chess.js an impossible position and stopped for good. Fixed. Also fixed: queen sacrifices that force mate (Opera, Evergreen, Lasker-Thomas) now earn Brilliant; ordinary trades are no longer called sacrifices; the in-between move, deflection and overload tags are stricter. This is a spot check, not a measured accuracy. Chess now downloads the 2026 tournaments after the page opens (first download about 1.7 MB to 1.3 MB). The app saves a page for offline use on the first visit, not the second. Fixed contrast on the Play tag, LIVE badge and Beta tag. Checked: two-tab online chess, chess tournament pages at phone width. Not checked: a real phone, Safari, sign-up, two real devices.
 
+### 2026-11-26 - Two-seat chess rooms, and a "badge look wrong?" button
+
+Online chess rooms now keep two seats: a third person with the code is told the room is full, and anything they send is ignored (they can still watch). This stops casual gate-crashing; it is not proof against someone deliberately copying a player's identity off the public relay. Football and basketball rooms are unchanged. Game review has a link under each graded move that copies the position, the badge and the moves so far (no player names, nothing sent anywhere), so a wrong badge can be turned into a test.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

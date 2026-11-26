@@ -458,6 +458,8 @@ Online chess rooms now keep two seats: a third person with the code is told the 
 
 **2026-11-26 (evening).** In a game against a character the corner coach now leaves, and only the opponent's bubble appears there (the coach's opening comment on the opponent is switched off with it). Character voices follow the Sound switch and the Voice slider instead of the "Pip says each move" switch, which could silently mute them, and all lines now use one audio player opened on the first tap, which Safari and phones need. Tested in the Chromium preview, not in Safari or on a phone.
 
+**2026-11-26 (night): chess gets Settings and a profile.** Football and basketball already had a gear and a profile; chess had only Sound, Look and Sign in. Chess now has a gear (look, coach with a voice preview, talk, bubbles or hidden, text size, high contrast, less motion, sound and volumes, account) and a profile (nickname and account, record against the characters, daily streak, best score per game), built only from what chess stores (site/chess_settings.js). The Look button moved into Settings. Not copied: language, sticker album, ranks and achievements, which chess does not have. Signing in was not tried with a real account.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

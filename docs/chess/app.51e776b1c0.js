@@ -436,7 +436,7 @@ const pct = (v, d = 1) => (Math.round(v * 10 ** (d + 2)) / 10 ** d).toFixed(d) +
 const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 const nice = (n) => { const m = /^(.+?),\s*(.+)$/.exec(n || ""); return m ? m[2] + " " + m[1] : n; };
 /* ---------- icons: small line drawings so the page reads as a game, not a data sheet ---------- */
-const P_ = { trophy: "M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0V2Z", target: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z", bolt: "M13 2 3 14h9l-1 8 10-12h-9l1-8Z", book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z", chart: "M3 3v18h18M7 15v3M12 9v9M17 5v13", clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 6v6l4 2", crown: "M2 18 4 7l5 5 3-8 3 8 5-5 2 11ZM4 21h16", bulb: "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z", puzzle: "M19.4 13a2 2 0 0 0-2.4-2.2V8a1 1 0 0 0-1-1h-2.8A2 2 0 1 0 9.4 5.2V4H4v5.2h1.2A2 2 0 1 1 5.2 13H4v7h7v-1.2a2 2 0 1 1 4 0V20h5v-5.2a2 2 0 0 0-.6-1.8Z", robot: "M12 8V4M8 2h8M5 8h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2ZM9 14h.01M15 14h.01M2 14h1M21 14h1", eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", warn: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01", arrow: "M5 12h14M12 5l7 7-7 7", compass: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM16 8l-2 6-6 2 2-6 6-2Z", brain: "M9.5 2A2.5 2.5 0 0 0 7 4.5 3 3 0 0 0 4 7.5c0 1 .5 1.800 1.200 2.400A3 3 0 0 0 4 12.500a3 3 0 0 0 1.500 2.600A3 3 0 0 0 8 19a3 3 0 0 0 4 1V4.500A2.500 2.500 0 0 0 9.500 2ZM14.500 2A2.500 2.500 0 0 1 17 4.500a3 3 0 0 1 3 3c0 1-.500 1.800-1.200 2.400A3 3 0 0 1 20 12.500a3 3 0 0 1-1.500 2.600A3 3 0 0 1 16 19a3 3 0 0 1-4 1", user: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", flag: "M4 22V4M4 4h12l-2 4 2 4H4", swords: "M14.500 17.500 3 6V3h3l11.500 11.500M13 19l6-6M16 16l4 4M19 21l2-2M14.500 6.500 18 3h3v3l-3.500 3.500M5 14l4 4M7 17l-3 3M3 19l2 2" };
+const P_ = { gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.400-1-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z", trophy: "M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0V2Z", target: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z", bolt: "M13 2 3 14h9l-1 8 10-12h-9l1-8Z", book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z", chart: "M3 3v18h18M7 15v3M12 9v9M17 5v13", clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 6v6l4 2", crown: "M2 18 4 7l5 5 3-8 3 8 5-5 2 11ZM4 21h16", bulb: "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z", puzzle: "M19.4 13a2 2 0 0 0-2.4-2.2V8a1 1 0 0 0-1-1h-2.8A2 2 0 1 0 9.4 5.2V4H4v5.2h1.2A2 2 0 1 1 5.2 13H4v7h7v-1.2a2 2 0 1 1 4 0V20h5v-5.2a2 2 0 0 0-.6-1.8Z", robot: "M12 8V4M8 2h8M5 8h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2ZM9 14h.01M15 14h.01M2 14h1M21 14h1", eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", warn: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01", arrow: "M5 12h14M12 5l7 7-7 7", compass: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM16 8l-2 6-6 2 2-6 6-2Z", brain: "M9.5 2A2.5 2.5 0 0 0 7 4.5 3 3 0 0 0 4 7.5c0 1 .5 1.800 1.200 2.400A3 3 0 0 0 4 12.500a3 3 0 0 0 1.500 2.600A3 3 0 0 0 8 19a3 3 0 0 0 4 1V4.500A2.500 2.500 0 0 0 9.500 2ZM14.500 2A2.500 2.500 0 0 1 17 4.500a3 3 0 0 1 3 3c0 1-.500 1.800-1.200 2.400A3 3 0 0 1 20 12.500a3 3 0 0 1-1.500 2.600A3 3 0 0 1 16 19a3 3 0 0 1-4 1", user: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", flag: "M4 22V4M4 4h12l-2 4 2 4H4", swords: "M14.500 17.500 3 6V3h3l11.500 11.500M13 19l6-6M16 16l4 4M19 21l2-2M14.500 6.500 18 3h3v3l-3.500 3.500M5 14l4 4M7 17l-3 3M3 19l2 2" };
 const ic = (n) => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${P_[n] || P_.target}"/></svg>`;
 const paintSnd = () => { $("#sndBtn").innerHTML = `<svg class="ic" viewBox="0 0 24 24"><path d="${Snd.on ? "M11 5 6 9H2v6h4l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" : "M11 5 6 9H2v6h4l5 4V5ZM22 9l-6 6M16 9l6 6"}"/></svg>${Snd.on ? "Sound" : "Muted"}`; };
 $("#logo").innerHTML = ic("crown"); $("#compass").innerHTML = ic("compass");
@@ -950,7 +950,7 @@ const CTP = [["cyber", "Cyber", "Neon glow on a dark board", ["#0a0f1f", "#3ef2f
 function chessThemePick() {
   let picked = "1"; try { picked = localStorage.getItem("bkc_picked"); } catch (e) { /* blocked */ } if (picked) return;
   const m = Object.assign(document.body.appendChild(document.createElement("div")), { id: "ctp", className: "cmodal" });
-  m.innerHTML = `<div class="sheet" style="max-width:560px"><h2>${ic("crown")}Pick your look</h2><div class="ctpip">${pipSVG("happy")}<div class="pipsay"><b>${esc(coachName())}</b>${esc(pipPick("start", 0))}</div></div><p class="fine">Tap a look to preview it. The Look button at the top changes it any time.</p><div class="tpgrid">${CTP.map(([k, n, d, c]) => `<button type="button" class="tpopt" data-ctp="${k}" aria-pressed="${lookNow() === k}"><span class="tpprev" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div><h3 style="margin:16px 0 0">Pick your coach</h3><div class="tpgrid">${Object.entries(COACHES).map(([k, c]) => `<button type="button" class="tpopt" data-coach="${k}" aria-pressed="${coachId() === k}"><span class="tpprev" style="display:grid;place-items:center;background:var(--panel)">${k === "pip" ? pipSVGRaw("happy") : COACH_SVG[k]("happy")}</span><b>${c.name}</b><small>${c.blurb}</small></button>`).join("")}</div><label class="tpauto"><input type="checkbox" id="ctpAuto"> Follow my device's light and dark mode</label><div class="row" style="margin-top:12px"><button class="btn" id="ctpGo" type="button">Let's go</button></div></div>`;
+  m.innerHTML = `<div class="sheet" style="max-width:560px"><h2>${ic("crown")}Pick your look</h2><div class="ctpip">${pipSVG("happy")}<div class="pipsay"><b>${esc(coachName())}</b>${esc(pipPick("start", 0))}</div></div><p class="fine">Tap a look to preview it. Settings, the gear at the top, changes it any time.</p><div class="tpgrid">${CTP.map(([k, n, d, c]) => `<button type="button" class="tpopt" data-ctp="${k}" aria-pressed="${lookNow() === k}"><span class="tpprev" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${d}</small></button>`).join("")}</div><h3 style="margin:16px 0 0">Pick your coach</h3><div class="tpgrid">${Object.entries(COACHES).map(([k, c]) => `<button type="button" class="tpopt" data-coach="${k}" aria-pressed="${coachId() === k}"><span class="tpprev" style="display:grid;place-items:center;background:var(--panel)">${k === "pip" ? pipSVGRaw("happy") : COACH_SVG[k]("happy")}</span><b>${c.name}</b><small>${c.blurb}</small></button>`).join("")}</div><label class="tpauto"><input type="checkbox" id="ctpAuto"> Follow my device's light and dark mode</label><div class="row" style="margin-top:12px"><button class="btn" id="ctpGo" type="button">Let's go</button></div></div>`;
 }
 document.addEventListener("click", (e) => {
   const o = e.target.closest && e.target.closest("[data-ctp]");
@@ -1067,7 +1067,7 @@ function pipSVG(mood = "calm") {
 const PIP_POP = { "You win": ["wow", "You won! I'm going to tell every pawn I know."], "You lost": ["sad", "A loss. I've lost more games than I can count, and I still get up every morning and step forward."], "Draw": ["calm", "A draw. Nobody won, nobody lost. Sometimes that's exactly right."], "Checkmate": ["wow", "Checkmate. Somewhere a king is lying down very quietly."], "All three dailies done": ["happy", "All three dailies done! Same time tomorrow? I'll save you a square."] };
 let pipT = null;
 function pipPop(text, mood = "happy") {
-  if (inMatch()) return;   /* the opponent has the corner */
+  if (inMatch() || coachHidden()) return;   /* the opponent has the corner, or the coach was sent away */
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
   el.innerHTML = `${pipSVG(mood)}<div class="pipsay"><b>${esc(coachName())}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.innerHTML = pipSVG("calm"); }, Math.min(10000, 3200 + text.length * 50));
 }
@@ -1092,11 +1092,12 @@ const CFX = (() => {
   return api;
 })();
 /* in a game against a character the coach leaves the corner: only the opponent's bubble appears there */
+const coachHidden = () => { try { return localStorage.getItem("bkc_coach_hide") === "1"; } catch (e) { return false; } };
 const inMatch = () => { try { return st.game === "ai" && !!live; } catch (e) { return false; } };
 /* the coach waits in the corner from the start, like the sidekicks in the other sports; the review shows it in its panel instead */
 setInterval(() => { let el = document.getElementById("pipc"); if (!el) { if (!document.getElementById("app") || document.getElementById("splash") || document.getElementById("ctp")) return; el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("talk")); el.innerHTML = pipSVG("calm"); el.classList.add("on"); }
   const match = inMatch(); if (!match && el.dataset.bot) { delete el.dataset.bot; el.dataset.coach = ""; el.classList.remove("talk"); el.classList.add("on"); }
-  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim" || (match && !el.dataset.bot))); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
+  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim" || (match && !el.dataset.bot) || (!match && coachHidden()))); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
 const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { voice: COACHES[coachId()].voice, volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */
@@ -4135,6 +4136,107 @@ function botWatch() {
     }
   }).catch(() => { /* talk never breaks a game */ });
 }
+/* ---------- Settings and your profile, as in football and basketball: a gear and a face in the top bar ----------
+   Every choice is a row of cards to swipe or tap. The profile shows only what chess really keeps: your nickname and account,
+   your best score in each game, your record against the characters and your daily streak. */
+const CS = {
+  get: (k, d) => { try { return localStorage.getItem("bkc_" + k) || d; } catch (e) { return d; } },
+  set: (k, v) => { try { localStorage.setItem("bkc_" + k, v); } catch (e) { /* blocked */ } },
+  apply() {
+    const d = document.documentElement;
+    if (CS.get("contrast", "0") === "1") d.setAttribute("data-contrast", "high"); else d.removeAttribute("data-contrast");
+    if (CS.get("motion", "") === "reduced") d.setAttribute("data-motion", "reduced"); else d.removeAttribute("data-motion");
+    d.style.setProperty("--zoom", { s: 0.92, m: 1, l: 1.1, xl: 1.2 }[CS.get("text", "m")] || 1);
+  },
+};
+CS.apply();
+const uxRow = (id, cards) => `<div class="uxrow" data-uxrow="${id}"><button type="button" class="uxarrow" data-uxgo="-1" aria-label="Previous">‹</button><div class="uxtrack">${cards.join("")}</div><button type="button" class="uxarrow" data-uxgo="1" aria-label="Next">›</button></div>`;
+const uxCard = (key, val, on, body) => `<div class="uxcard ${on ? "on" : ""}" role="button" tabindex="0" aria-pressed="${on}" data-ux="${key}|${val}">${body}</div>`;
+const uxChips = (key, items, cur) => `<div class="chips">${items.map(([v, n]) => `<button type="button" class="chip ${cur === v ? "on" : ""}" aria-pressed="${cur === v}" data-ux="${key}|${v}">${n}</button>`).join("")}</div>`;
+function uxPage(kind) { clearInterval(st.timer); live = null; rvStop(); st = { game: kind }; fresh(); window.scrollTo(0, 0); }
+
+function settingsPage() {
+  uxPage("settings");
+  const look = lookNow(), coach = coachId(), text = CS.get("text", "m"), mode = CS.get("coach_hide", "0") === "1" ? "off" : PIPV.on ? "on" : "quiet";
+  const lookArt = { auto: ["#0a0f1f", "#fffdf8", "#e8c35a"], cyber: ["#0a0f1f", "#3ef2ff", "#141b33"], classic: ["#0e1411", "#e8c35a", "#16201b"], light: ["#f2efe7", "#9a6200", "#fffdf8"] };
+  const lookNote = { auto: "Switches with your device", cyber: "Neon glow on a dark board", classic: "Gold and deep green", light: "Warm paper and ink" };
+  const looks = LOOKS.map(([k, n]) => uxCard("look", k, look === k, `<span class="uxlook" style="--a:${lookArt[k][0]};--b:${lookArt[k][1]};--c:${lookArt[k][2]}"><i></i><i></i><i></i></span><b>${n}</b><small>${lookNote[k]}</small>`));
+  const coaches = Object.entries(COACHES).map(([k, c]) => uxCard("coach", k, coach === k, `<span class="uxface">${oppFace(k, "happy")}</span><b>${esc(c.name)}</b><small>${esc(c.blurb)}</small><button type="button" class="btn ghost uxhear" data-uxhear="${k}">▶ Hear</button>`));
+  const texts = [["s", "Small", 13], ["m", "Normal", 16], ["l", "Large", 19], ["xl", "Extra large", 23]].map(([k, n, px]) => uxCard("text", k, text === k, `<span class="uxtext" style="font-size:${px}px">Mate in two?</span><b>${n}</b>`));
+  const slider = (id, l, v) => `<label class="uxslide">${l}<input type="range" id="${id}" min="0" max="100" value="${Math.round(v * 100)}"><span id="${id}V">${Math.round(v * 100)}%</span></label>`;
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><div class="card uxpage"><h2>${ic("bolt")}Settings</h2>
+    <h3>Your look</h3>${uxRow("look", looks)}
+    <h3>Your coach</h3><p class="fine">They sit in the corner, narrate and review your games. In a game against a character they step away.</p>${uxRow("coach", coaches)}<p class="fine">Coach</p>${uxChips("mode", [["on", "Talks"], ["quiet", "Bubbles only"], ["off", "Hidden"]], mode)}
+    <h3>Text size</h3>${uxRow("text", texts)}
+    <h3>Display</h3><div class="chips"><button type="button" class="chip ${CS.get("contrast", "0") === "1" ? "on" : ""}" data-ux="contrast|flip" aria-pressed="${CS.get("contrast", "0") === "1"}">High contrast</button><button type="button" class="chip ${CS.get("motion", "") === "reduced" ? "on" : ""}" data-ux="motion|flip" aria-pressed="${CS.get("motion", "") === "reduced"}">Less motion</button></div>
+    <h3>Sound</h3><div class="row"><button class="chip ${Snd.on ? "on" : ""}" data-snd="1" type="button">Sound ${Snd.on ? "on" : "off"}</button><button class="chip ${Snd.mus ? "on" : ""}" data-mus="1" type="button">Music ${Snd.mus ? "on" : "off"}</button><button class="chip ${Mix.say ? "on" : ""}" data-say="1" type="button">Voice ${Mix.say ? "on" : "off"}</button></div>${slider("mxFx", "Effects", Mix.fx)}${slider("mxMus", "Music", Mix.music)}${slider("mxVoice", "Voice", Mix.voice)}
+    <h3>Account</h3>${uxAccount()}</div>`;
+  $("#app").querySelectorAll(".uxcard.on").forEach((c) => { const t = c.parentElement; t.scrollLeft = c.offsetLeft - (t.clientWidth - c.clientWidth) / 2; });
+}
+
+function uxAccount() {
+  if (!Cloud.on) return `<p class="fine">Accounts are not switched on for this copy of the site, so your progress stays in this browser.</p>`;
+  if (Cloud.signedIn) return `<p>Signed in as <b>${esc(Cloud.session.user.email)}</b>${Cloud.nick ? `, playing as <b>${esc(Cloud.nick)}</b>` : ""}.</p><div class="row"><button type="button" class="btn" data-uxacct="in">Change nickname</button><button type="button" class="btn ghost" data-cm="out">Sign out</button></div>`;
+  return `<p class="fine">You are playing as a guest, so your progress stays in this browser. One free account works for football, basketball and chess, keeps your bests and puts you on the leaderboards.</p><div class="row"><button type="button" class="btn" data-uxacct="in">Sign in</button><button type="button" class="btn ghost" data-uxacct="up">Create account</button></div>`;
+}
+
+function myPage() {
+  uxPage("me");
+  const rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }), streak = dStreak(), played = rec.w + rec.d + rec.l;
+  const bests = BOARDS.map(([k, n, unit]) => [n, bestOf(k), unit]).filter((x) => x[1] > 0);
+  $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-go="home">← Menu</button></div><div class="card uxpage">
+    <div class="uxhead"><span class="uxface">${oppFace(coachId(), "happy")}</span><div><h2>${esc(Cloud.signedIn ? Cloud.nick || "Your account" : "Guest")}</h2><p class="fine">Your chess profile. Football and basketball keep their own.</p></div><button type="button" class="btn ghost" data-uxopen="settings">Settings</button></div>
+    <div class="tiles"><div class="tile"><small>Against the characters</small><b>${rec.w}-${rec.d}-${rec.l}</b><span class="fine">${played ? "won, drawn, lost" : "no games finished yet"}</span></div><div class="tile"><small>Daily streak</small><b>${streak}</b><span class="fine">${streak === 1 ? "day" : "days"}</span></div><div class="tile"><small>Games with a best score</small><b>${bests.length}</b><span class="fine">of ${BOARDS.length}</span></div></div>
+    <h3>Your best scores</h3>${bests.length ? `<table class="tb"><tbody>${bests.map(([n, v, u]) => `<tr><td>${esc(n)}</td><td><b>${v}</b> <span class="fine">${esc(u)}</span></td></tr>`).join("")}</tbody></table>` : `<p class="fine">Nothing yet. Finish a game and your best score shows here.</p>`}
+    <div class="row"><button type="button" class="btn ghost" data-go="board">${ic("trophy")}Leaderboards</button></div>
+    <h3>Account</h3>${uxAccount()}</div>`;
+}
+
+function uxPick(key, v) {
+  if (key === "look") { try { localStorage.setItem("bkc_look", v); } catch (e) { /* blocked */ } document.documentElement.setAttribute("data-theme", lookResolve(v)); thPaint(); if (Cloud.signedIn) Cloud.push(); }
+  if (key === "coach") { CS.set("coach", v); if (PIPV.on) pipSay(pipPick("start", 0)); }
+  if (key === "mode") { CS.set("coach_hide", v === "off" ? "1" : "0"); PIPV.on = v === "on"; try { localStorage.setItem("bk_pip_voice", PIPV.on ? "1" : "0"); } catch (e) { /* blocked */ } if (v !== "on") AIVoice.stop(); }
+  if (key === "text") CS.set("text", v);
+  if (key === "contrast") CS.set("contrast", CS.get("contrast", "0") === "1" ? "0" : "1");
+  if (key === "motion") CS.set("motion", CS.get("motion", "") === "reduced" ? "full" : "reduced");
+  CS.apply();
+}
+document.addEventListener("click", (e) => {
+  const q = (s) => e.target.closest && e.target.closest(s);
+  if (q("#setBtn")) return settingsPage();
+  if (q("#meBtn")) return myPage();
+  if (q("[data-uxopen]")) return settingsPage();
+  const a = q("[data-uxacct]"); if (a) return acctModal(a.dataset.uxacct);
+  const h = q("[data-uxhear]"); if (h) { e.stopPropagation(); const k = h.dataset.uxhear, line = (COACH_LINES[k] && COACH_LINES[k].start && COACH_LINES[k].start[0]) || PIP.start[0]; AIVoice.play(line, { voice: COACHES[k].voice, volume: Mix.voice }); return; }
+  const go = q("[data-uxgo]"); if (go) { const t = go.parentElement.querySelector(".uxtrack"), card = t.firstElementChild; t.scrollBy({ left: +go.dataset.uxgo * (card.offsetWidth + 12), behavior: "smooth" }); return; }
+  const c = q("[data-ux]"); if (!c) return;
+  const [key, v] = c.dataset.ux.split("|"), top = window.scrollY; uxPick(key, v); settingsPage(); window.scrollTo(0, top); try { Snd.tick(); } catch (er) { /* quiet */ }
+});
+document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("uxcard")) { e.preventDefault(); e.target.click(); } });
+/* after signing in or out from one of these pages, show the new state */
+{ const _acct = acctPaint; acctPaint = function () { _acct.apply(this, arguments); setTimeout(() => { if (typeof st !== "undefined" && st.game === "me") myPage(); else if (typeof st !== "undefined" && st.game === "settings") settingsPage(); }, 0); }; }
+(() => {
+  const bar = document.getElementById("acctBtn"), th = document.getElementById("thBtn");
+  if (bar) bar.insertAdjacentHTML("beforebegin", `<button class="pill" id="setBtn" type="button" title="Settings: look, coach, text size, sound" aria-label="Settings">${ic("gear") }<span class="uxlab">Settings</span></button>`);
+  if (bar) bar.insertAdjacentHTML("afterend", `<button class="pill" id="meBtn" type="button" title="Your profile and best scores" aria-label="Your profile">${ic("user")}<span class="uxlab">Profile</span></button>`);
+  if (th) th.hidden = true;   /* the looks now live in Settings */
+  const s = document.createElement("style"); s.textContent = `
+#app{zoom:var(--zoom,1)}
+:root[data-contrast="high"]{--muted:color-mix(in srgb,var(--ink) 85%,var(--bg))!important;--line:color-mix(in srgb,var(--ink) 55%,transparent)!important}:root[data-contrast="high"] .card,:root[data-contrast="high"] .chip,:root[data-contrast="high"] .btn.ghost{border-width:2px}
+:root[data-motion="reduced"] *,:root[data-motion="reduced"] *::before,:root[data-motion="reduced"] *::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important;scroll-behavior:auto!important}
+#thBtn[hidden]{display:none}#setBtn,#meBtn{display:inline-flex;align-items:center;gap:6px}@media (max-width:1000px){.uxlab{display:none}}
+.uxpage{min-width:0}.uxpage h3{margin:18px 0 4px}
+.uxrow{display:flex;align-items:center;gap:6px;min-width:0}.uxtrack{flex:1;min-width:0;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:8px 2px 12px;scrollbar-width:none;position:relative}.uxtrack::-webkit-scrollbar{display:none}
+.uxarrow{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:700 20px/1 inherit;cursor:pointer}
+.uxcard{flex:0 0 clamp(170px,56vw,220px);scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px 12px;border-radius:18px;border:2px solid var(--line);background:var(--panel2);cursor:pointer;opacity:.75;transition:opacity .2s,border-color .2s,transform .2s}.uxcard:hover{opacity:1;transform:translateY(-2px)}.uxcard.on{opacity:1;border-color:var(--gold);box-shadow:0 10px 30px -14px var(--gold)}.uxcard small{color:var(--muted);line-height:1.35}
+.uxlook{display:block;position:relative;width:100%;height:96px;border-radius:12px;background:var(--a);overflow:hidden}.uxlook i{position:absolute;border-radius:6px}.uxlook i:nth-child(1){left:10%;top:18%;width:34%;height:64%;background:var(--c)}.uxlook i:nth-child(2){left:52%;top:30%;width:36%;height:10px;background:var(--b)}.uxlook i:nth-child(3){left:52%;top:54%;width:24%;height:10px;background:var(--b);opacity:.6}
+.uxface{display:flex;align-items:center;justify-content:center;width:96px;height:96px;flex:none}.uxface svg{width:100%!important;height:100%!important}
+.uxtext{display:flex;align-items:center;justify-content:center;min-height:70px;font-weight:700}
+.uxslide{display:grid;grid-template-columns:70px minmax(0,1fr) 44px;gap:8px;align-items:center;margin:6px 0;max-width:420px}
+.uxhead{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.uxhead div{flex:1;min-width:150px}.uxhead h2{margin:0}`; document.head.appendChild(s);
+  if (location.hash === "#settings") setTimeout(settingsPage, 400);
+  if (location.hash === "#profile") setTimeout(myPage, 400);
+})();
 
 document.addEventListener("click", (e) => {
   const mvp = e.target.closest && e.target.closest("[data-ply]"); if (mvp && rvActive()) { rvGo(+mvp.dataset.ply, { sound: false }); return; }

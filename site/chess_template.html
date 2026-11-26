@@ -835,7 +835,7 @@ function aiEnd() {
 }
 function aiPaint() {
   const rec = store.get("ai_rec", { w: 0, d: 0, l: 0 }), L = live, c = L.c, opp = L.color === "w" ? "b" : "w", o = st.over;
-  const bars = { top: pbar("robot", typeof botBarName === "function" ? botBarName(st.level) : LVL[st.level], typeof botBarSub === "function" ? botBarSub(st.level) : "", c, opp, st.clockSecs ? st.ms[opp] : 0), bottom: pbar("user", "You", L.color === "w" ? "White" : "Black", c, L.color, st.clockSecs ? st.ms[L.color] : 0) };
+  const bars = { top: pbar("robot", typeof botBarName === "function" ? botBarName(st.level) : LVL[st.level], typeof botBarSub === "function" ? botBarSub(st.level) : "", c, opp, st.clockSecs ? st.ms[opp] : 0), bottom: pbar("user", typeof PROG !== "undefined" ? PROG.youName() : "You", L.color === "w" ? "White" : "Black", c, L.color, st.clockSecs ? st.ms[L.color] : 0) };
   const over = o ? ENDC.card(o) : "";
   liveRender(backRow("Play the characters", "robot", `Record ${rec.w}-${rec.d}-${rec.l}`), `<div class="row" style="justify-content:center;margin-top:8px"><span class="fine">${st.think ? `${esc(LVL[st.level].split(",")[0])} is thinking…` : c.in_check() ? "Check!" : o ? "" : L.color === c.turn() ? "Your move." : ""}</span>${ENDC.controls()}${o && !st.hideEnd ? "" : `<button class="btn ghost" id="aiNew">New game</button>`}</div>`, bars, { over, say: st.saying || "" });
   if (o) ENDC.start();

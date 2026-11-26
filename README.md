@@ -446,6 +446,10 @@ Online games showed HTML sent through a public relay without cleaning it, so som
 
 161 new lines (251 for the playable characters now), each voiced with Kokoro: trash talk, their own stories and chess facts, and reactions when you check them or take a piece. Arteta talks about the 2026 title (checked: Arsenal were 2025-26 champions, first since 2004, then lost the Champions League final to Paris on penalties), the Escaped about the ward and his sacrifices. During a game a character speaks at most twelve times, at least four half-moves apart, without repeating itself while unused lines remain. The new lines get Chatterbox takes on the next run of src/83_make_voice_cb.py.
 
+### 2026-11-26 - Move badges tried on real games; a freeze fixed; lighter chess start
+
+Ran the game review over 13 real games (5 famous, 8 recent grandmaster games; tests/review_real_games.js). One of them froze at move 10: after some checks the review handed chess.js an impossible position and stopped for good. Fixed. Also fixed: queen sacrifices that force mate (Opera, Evergreen, Lasker-Thomas) now earn Brilliant; ordinary trades are no longer called sacrifices; the in-between move, deflection and overload tags are stricter. This is a spot check, not a measured accuracy. Chess now downloads the 2026 tournaments after the page opens (first download about 1.7 MB to 1.3 MB). The app saves a page for offline use on the first visit, not the second. Fixed contrast on the Play tag, LIVE badge and Beta tag. Checked: two-tab online chess, chess tournament pages at phone width. Not checked: a real phone, Safari, sign-up, two real devices.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

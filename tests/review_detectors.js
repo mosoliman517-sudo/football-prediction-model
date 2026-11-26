@@ -17,7 +17,9 @@ await (async () => {
     ["desperado", "k6N/5r2/8/8/8/8/8/4K3 w - - 0 1", ["Nxf7"], false],
     ["desperado", "4k3/8/3p4/4N3/2p5/8/8/4K3 w - - 0 1", ["Nxc4"], false],
     ["zwischenzug", "4k3/8/8/8/8/2N5/1Pr5/4K2R b - - 0 1", ["Rxc3", "Rh8+"], true],
-    ["zwischenzug", "4k3/8/8/8/8/2N5/1Pr5/4K2R b - - 0 1", ["Rxc3", "bxc3"], false]
+    ["zwischenzug", "4k3/8/8/8/8/2N5/1Pr5/4K2R b - - 0 1", ["Rxc3", "bxc3"], false],
+    /* a check that once made the review throw and freeze: no motif expected, it only has to survive */
+    ["no crash", "r2qk1nr/p1p3pp/2pb1p2/3p3b/3Q3P/1PN1PP2/PBP3P1/R3K1NR b KQkq - 2 10", ["Bg3+"], false]
   ];
   const keep = rv, res = {}, wrong = [];
   for (const [name, fen, sans, want] of CASES) {
@@ -25,7 +27,8 @@ await (async () => {
     rv = { fen: fens, mv, pos: [], data: [] }; const i = mv.length;
     let got;
     if (name === "desperado") got = !!rvDesperado(i);
-    else if (name === "zwischenzug") got = rvIdeas(i, { cls: "best", loss: 0, after: 60, isBest: false, L: [], b: { lines: [] }, sac: {}, recapture: mv[i - 2].captured && mv[i - 1].to === mv[i - 2].to, pov: (w) => w }).some((t) => t.startsWith("zwischenzug"));
+    else if (name === "zwischenzug") got = rvIdeas(i, { cls: "best", loss: 0, after: 60, isBest: false, L: [], b: { lines: [{ pv: ["e8e7", "b2c3"] }] }, sac: {}, recapture: mv[i - 2].captured && mv[i - 1].to === mv[i - 2].to, pov: (w) => w }).some((t) => t.startsWith("zwischenzug"));
+    else if (name === "no crash") { rvIdeas(i, { cls: "best", loss: 0, after: 60, isBest: false, L: [], b: { lines: [] }, sac: {}, recapture: false, pov: (w) => w }); got = false; }
     else got = rvMotifs(i).includes(name);
     const R = res[name] = res[name] || { tp: 0, fp: 0, fn: 0, tn: 0 }; R[got ? (want ? "tp" : "fp") : want ? "fn" : "tn"]++; if (got !== want) wrong.push(`${name}: ${fen} ${sans.join(" ")} expected ${want}`);
   }

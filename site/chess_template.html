@@ -190,7 +190,7 @@ input.t{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--l
 @media(max-width:600px){.kocols{grid-auto-flow:row;grid-auto-columns:auto}}
 .h2hbtn{margin-top:10px}.h2hrec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:420px;margin:6px auto 8px}.h2hrec span{display:flex;flex-direction:column;align-items:center}.h2hrec b{font:900 34px/1 Fraunces,serif}.h2hrec .sW b{color:var(--gold)}.h2hrec .sL b{color:var(--ok)}.h2hrec small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .h2hbar{display:flex;height:10px;border-radius:99px;overflow:hidden;max-width:420px;margin:0 auto}.h2ht td.better{color:var(--gold);font-weight:800}.h2hleg{display:flex;gap:16px;justify-content:center;font-size:13px}.h2hleg i{display:inline-block;width:12px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
-.lvcard{padding:14px}.lvhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.lvbadge{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;padding:4px 8px;border-radius:99px;border:1px solid var(--line)}.lvbadge.on{color:#fff;background:#e5484d;border-color:#e5484d;animation:lvPulse 1.6s ease-in-out infinite}@keyframes lvPulse{50%{opacity:.6}}
+.lvcard{padding:14px}.lvhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.lvbadge{font:800 11px Inter,system-ui,sans-serif;letter-spacing:.08em;padding:4px 8px;border-radius:99px;border:1px solid var(--line)}.lvbadge.on{color:#fff;background:#c9353b;border-color:#c9353b;animation:lvPulse 1.6s ease-in-out infinite}@keyframes lvPulse{50%{opacity:.6}}
 .lvgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}.lvp{display:flex;align-items:center;gap:8px;padding:6px 2px}.lvp .cpf{width:28px;height:28px}.lvclk{margin-left:auto;font:800 15px ui-monospace,Menlo,monospace;padding:3px 8px;border-radius:6px;background:var(--panel2)}.lvmoves{max-height:280px;overflow:auto}
 .lvsoon{display:flex;align-items:center;gap:14px}.lvsoon .pip{width:70px;height:84px;flex:none}.lvcount{font:900 34px/1.1 Fraunces,serif;color:var(--gold)}
 @media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
@@ -1269,8 +1269,8 @@ const SACV = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 function rvSacInfo(i) {
   const col = i % 2 === 1 ? "w" : "b", m0 = matOf(new Chess(rv.fen[i - 1]), col), c = new Chess(rv.fen[i]), mvI = rv.mv[i - 1];
   /* a piece that was already hanging before this move is not sacrificed by it: the same capture, already netting them two or more, in the position before with them to move */
-  const fl = rv.fen[i - 1].split(" "); fl[1] = col === "w" ? "b" : "w"; fl[3] = "-"; const flipped = new Chess(fl.join(" ")), already = new Set();
-  if (flipped.fen()) for (const m of flipped.moves({ verbose: true })) { if (!m.captured || SACV[m.captured] < 3) continue; flipped.move(m); let back = matOf(flipped, col); for (const r of flipped.moves({ verbose: true })) if (r.captured) { flipped.move(r); back = Math.max(back, matOf(flipped, col)); flipped.undo(); } flipped.undo(); if (m0 - back >= 2) already.add(m.from + m.to); }
+  const flipped = rvTurn(rv.fen[i - 1], col === "w" ? "b" : "w"), already = new Set();
+  if (flipped) for (const m of flipped.moves({ verbose: true })) { if (!m.captured || SACV[m.captured] < 3) continue; flipped.move(m); let back = matOf(flipped, col); for (const r of flipped.moves({ verbose: true })) if (r.captured) { flipped.move(r); back = Math.max(back, matOf(flipped, col)); flipped.undo(); } flipped.undo(); if (m0 - back >= 2) already.add(m.from + m.to); }
   const old = (m) => m.to !== mvI.to && already.has(m.from + m.to);
   let worst = matOf(c, col), piece = null, take = null, mate = null;
   for (const m of c.moves({ verbose: true })) {
@@ -1285,12 +1285,13 @@ function rvSacInfo(i) {
   /* a poisoned offer: a piece of ours (a knight or more) that can be taken and leaves us two or more points down at that moment, but
      where every such capture runs into a reply that wins it all back and more (Bxf7+ Kxf7?? Qxd8). Declining it is just a win. */
   const c2 = new Chess(rv.fen[i]); let bait = null, ok = true;
+  const existed = new Set(flipped ? flipped.moves({ verbose: true }).filter((m) => m.captured).map((m) => m.from + m.to) : []);
   for (const m of c2.moves({ verbose: true })) {
     if (!m.captured || SACV[m.captured] < 3 || old(m)) continue; if (rv.mv[i - 3] && rv.mv[i - 3].to === m.to) continue;   /* the piece offered last move is still hanging: not a new sacrifice */
     c2.move(m); const def = m0 - matOf(c2, col);
     /* a plain exchange: we can take back on that very square, that restores the balance, and it is what the engine would play (or the capture is not even in its top lines): not a sacrifice */
     const L0 = (rv.pos[i] && rv.pos[i].lines) || [], ln0 = L0.find((x) => x.pv[0] === m.from + m.to + (m.promotion || "")); let simple = false;
-    for (const r of c2.moves({ verbose: true })) if (r.captured && r.to === m.to) { c2.move(r); const ok = matOf(c2, col) >= m0 - 1; c2.undo(); if (ok && (!ln0 || ln0.pv[1] === r.from + r.to + (r.promotion || ""))) simple = true; }
+    for (const r of c2.moves({ verbose: true })) if (r.captured && r.to === m.to) { c2.move(r); const ok = matOf(c2, col) >= m0 - 1; c2.undo(); if (ok && (existed.has(m.from + m.to) || !ln0 || ln0.pv[1] === r.from + r.to + (r.promotion || ""))) simple = true; }   /* a trade that was already on the board before this move is not a new offer */
     if (simple) { c2.undo(); continue; }
     if (def >= 2) {
       let top = -99; for (const r of c2.moves({ verbose: true })) { c2.move(r); let v = matOf(c2, col); for (const o of c2.moves({ verbose: true })) if (o.captured) { c2.move(o); v = Math.min(v, matOf(c2, col)); c2.undo(); } top = Math.max(top, v); c2.undo(); }
@@ -1313,12 +1314,12 @@ function rvFeat(i, x) {
   const free = !!mv.captured && !bk.some((m) => m.captured && m.to === mv.to), check = /[+#]/.test(mv.san);
   const retreat = mv.piece !== "p" && mv.piece !== "k" && !mv.captured && !/^O/.test(mv.san) && (rank(mv.to) - rank(mv.from)) * fwd < 0;
   const intoAttack = !mv.captured && mv.piece !== "p" && bk.some((m) => m.captured && m.to === mv.to);
-  const others = x.L.filter((l) => l.pv[0] !== x.played), gap = others.length ? x.after - Math.max(...others.map((l) => x.pov(l.w))) : 0;
+  const others = x.L.filter((l) => l.pv[0] !== x.played), otherMates = others.some((l) => l.mate != null && x.pov(l.w) >= 99.9), gap = others.length ? x.after - Math.max(...others.map((l) => x.pov(l.w))) : 0;
   let traps = 0; const trapSans = [];
   for (const l of others) { const m = new Chess(fenA).move(uciMv(l.pv[0])); if (m && (m.captured || /[+#]/.test(m.san)) && x.pov(l.w) <= x.after - 12) { traps++; trapSans.push(m.san); } }
   let pieces = 0; for (const r of pre.board()) for (const p of r) if (p && "nbrq".includes(p.type)) pieces += PV[p.type];
   const endgame = pieces <= 20, kingWalk = mv.piece === "k" && endgame && !mv.captured && !/^O/.test(mv.san);
-  return { mv, free, check, retreat, intoAttack, uniq: gap, traps, trapSans, endgame, kingWalk, recap: !!x.recapture, nLegal: x.nLegal, sac: x.sac, quiet: !mv.captured && !check && !x.sac.piece };
+  return { mv, free, check, retreat, intoAttack, otherMates, uniq: gap, traps, trapSans, endgame, kingWalk, recap: !!x.recapture, nLegal: x.nLegal, sac: x.sac, quiet: !mv.captured && !check && !x.sac.piece };
 }
 function rvBrilliance(i, F, H, x) {
   const out = { ok: false, cand: false, score: 0 }, sac = F.sac, mv = F.mv, defensive = x.before <= 40 && x.after >= 38;
@@ -1344,7 +1345,8 @@ function rvBrilliance(i, F, H, x) {
   out.cand = isSac || quietCand;
   if (H && H.stable === false) return out;   /* collapses under a deeper search: not brilliant */
   const kind = []; if (isSac) kind.push(SACV[sac.piece] >= 9 ? "queen sacrifice" : sac.drop <= 2 && SACV[sac.piece] === 5 ? "exchange sacrifice" : "sacrifice"); if (defensive) kind.push("defensive"); if (F.quiet && !isSac) kind.push(F.kingWalk ? "endgame king move" : F.retreat ? "counterintuitive retreat" : mv.piece === "p" ? "quiet pawn move" : "quiet positional");
-  if (isSac && T >= 0.35 && (x.before < 92 || sac.bait)) { out.ok = true; out.info = { ...sac, kind, D, C }; return out; }
+  const mateSac = x.mates && SACV[sac.piece] >= 5 && !F.otherMates;
+  if (isSac && T >= 0.35 && (x.before < 92 || sac.bait || mateSac)) { out.ok = true; out.info = { ...sac, kind, D, C }; return out; }
   if (quietCand && H && H.hidden && D >= 0.65) { out.ok = true; out.info = { quiet: true, kind, D, C, H, traps: F.trapSans, uniq: Math.round(F.uniq) }; }
   return out;
 }
@@ -1354,8 +1356,8 @@ async function rvZug(tok) {
   rv.zug = rv.zug || {}; let changed = false;
   for (let i = 1; i <= rv.N; i++) {
     if (!rv || rv.tok !== tok) return false; const d = rv.data[i - 1]; if (!d || !d.zcand || i in rv.zug) continue;
-    const f = rv.fen[i].split(" "); f[1] = i % 2 === 1 ? "w" : "b"; f[3] = "-"; let nf; try { nf = new Chess(f.join(" ")); if (!nf.fen()) { rv.zug[i] = false; continue; } } catch (e) { rv.zug[i] = false; continue; }
-    try { const ln = await Sf.analyse(f.join(" "), { multipv: 1, depth: 18, ms: 2500 }); if (!rv || rv.tok !== tok) return false; const w = lineW(ln[0], nf.turn()).w, passPov = i % 2 === 1 ? w : 100 - w;
+    const nf = rvTurn(rv.fen[i], i % 2 === 1 ? "w" : "b"); if (!nf) { rv.zug[i] = false; continue; }
+    try { const ln = await Sf.analyse(nf.fen(), { multipv: 1, depth: 18, ms: 2500 }); if (!rv || rv.tok !== tok) return false; const w = lineW(ln[0], nf.turn()).w, passPov = i % 2 === 1 ? w : 100 - w;
       rv.zug[i] = d.after >= 60 && passPov <= d.after - 20 && !nf.in_check();
       if (rv.zug[i]) { const kind = ["zugzwang"], oppCol = i % 2 === 1 ? "b" : "w", pc = new Chess(rv.fen[i]); let pcs = 0; for (const r of pc.board()) for (const q of r) if (q && "nbrq".includes(q.type)) pcs += PV[q.type];
         if (passPov <= 55) kind.push("reciprocal: they would also like you to move"); kind.push(pcs <= 20 ? "endgame zugzwang" : "positional zugzwang");
@@ -1395,13 +1397,14 @@ async function rvDeepen(tok) {
   if (!rv || rv.tok !== tok) return; rv.deepDone = true; rvSummary(); rvGraph(); if (changed) { const co = rvEl("rvCoach"); if (co) co._h = null; rvPaint(); if (rv.done) rvReport(); }
 }
 /* the position before move i with the opponent to move: what they could already take */
-function rvPassFen(i) { const col = i % 2 === 1 ? "w" : "b", f = rv.fen[i - 1].split(" "); f[1] = col === "w" ? "b" : "w"; f[3] = "-"; return new Chess(f.join(" ")); }
+/* the same position with `col` to move, or null when that is impossible (the other king would be capturable: chess.js throws on it) */
+function rvTurn(fen, col) { const f = fen.split(" "); try { if (f[1] !== col) { if (new Chess(fen).in_check()) return null; f[1] = col; f[3] = "-"; } const c = new Chess(f.join(" ")); return c.fen() ? c : null; } catch (e) { return null; } }
 /* ---------- Doomed pieces and desperados ----------
    A piece is doomed when it is attacked, would lose material if taken (undefended, or taken by something cheaper), and NO single move
    of ours saves it (step away, defend, take the attacker, block). That is checked on the position itself, so it also finds pieces
    that were trapped two or more moves ago. A desperado is a doomed piece that takes something or gives check before it goes. */
 function rvLostAt(fen, sq, col, type) {   /* with the opponent to move: what would take the piece on sq for a gain? returns the SAN or null */
-  const f = fen.split(" "); f[1] = col === "w" ? "b" : "w"; f[3] = "-"; let ch; try { ch = new Chess(f.join(" ")); } catch (e) { return null; } if (!ch || !ch.fen()) return null;
+  const ch = rvTurn(fen, col === "w" ? "b" : "w"); if (!ch) return null;
   for (const m of ch.moves({ verbose: true })) { if (m.to !== sq || !m.captured) continue; const av = m.piece === "k" ? 99 : PV[m.piece]; ch.move(m); const defended = ch.moves({ verbose: true }).some((r) => r.captured && r.to === sq); ch.undo(); if (!defended || av < PV[type]) return m.san; }
   return null;
 }
@@ -1447,11 +1450,15 @@ function rvMotifs(i) {
   return tags;
 }
 /* ---------- Ideas behind a move: zwischenzug, deflection, decoy, overload, forced sequences, practically forced ---------- */
-function rvOurTurn(fen, col) { const f = fen.split(" "); f[1] = col; f[3] = "-"; try { const c = new Chess(f.join(" ")); return c.fen() ? c : null; } catch (e) { return null; } }
+function rvGuards(fen, col) {   /* their sole defender -> the pieces of theirs we attack that only it guards */
+  const fl = rvTurn(fen, col), by = {}; if (!fl) return by;
+  for (const m of fl.moves({ verbose: true })) { if (!m.captured || PV[m.captured] < 3) continue; fl.move(m); const d = fl.moves({ verbose: true }).filter((z) => z.captured && z.to === m.to).map((z) => z.from); fl.undo(); if (d.length === 1) (by[d[0]] = by[d[0]] || new Set()).add(m.to); }
+  return by;
+}
 function rvIdeas(i, x) {
   const mv = rv.mv[i - 1], col = mv.color, tags = [], b = x.b, good = x.loss <= 2, pm = rv.mv[i - 2], pv = b && b.lines && b.lines[0] ? b.lines[0].pv : [], nm = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen" };
   /* zwischenzug: they took, you do not take back but play a check or capture first */
-  if (good && pm && pm.captured && mv.to !== pm.to && !x.recapture && (/[+#]/.test(mv.san) || mv.captured) && new Chess(rv.fen[i - 1]).moves({ verbose: true }).some((m) => m.captured && m.to === pm.to)) tags.push("zwischenzug: an in-between move before recapturing");
+  if (good && pm && pm.captured && mv.to !== pm.to && !x.recapture && !/#/.test(mv.san) && (/\+/.test(mv.san) || mv.captured) && pv.some((u, k) => k % 2 === 1 && u.slice(2, 4) === pm.to) && new Chess(rv.fen[i - 1]).moves({ verbose: true }).some((m) => m.captured && m.to === pm.to)) tags.push("zwischenzug: an in-between move before recapturing");
   /* forced sequence: the engine line after the move is a chain of replies with one or two legal moves each */
   if (good && pv.length >= 3) { const c = new Chess(rv.fen[i]); let chain = 0; for (let k = 0; k < pv.length; k += 2) { const n = c.moves().length; if (n <= 2 || (c.in_check() && n <= 3)) chain++; else break; if (!c.move(uciMv(pv[k])) || (k + 1 < pv.length && !c.move(uciMv(pv[k + 1])))) break; } if (chain >= 2) tags.push(`forced sequence: ${chain} forced replies in a row`); }
   /* practically forced: a piece of yours was under a winning attack, this parries it, and the alternatives are clearly worse */
@@ -1461,16 +1468,13 @@ function rvIdeas(i, x) {
   }
   /* deflection: their reply drags a defender off a square and you take there */
   if (good && pv.length >= 2) {
-    const r = uciMv(pv[0]), fl = rvOurTurn(rv.fen[i], col), pre = new Chess(rv.fen[i]), rm = pre.move(r);
-    if (fl && rm) { const o = fl.move(uciMv(pv[1])); if (o && o.captured && PV[o.captured] >= 3 && fl.moves({ verbose: true }).some((z) => z.captured && z.to === o.to && z.from === r.from) && rm.to !== o.to) tags.push(`deflection: ${rm.san} pulls a defender away from ${o.to}`); }
+    const r = uciMv(pv[0]), fl = rvTurn(rv.fen[i], col), pre = new Chess(rv.fen[i]), rm = pre.move(r);
+    if (fl && rm) { const o = fl.move(uciMv(pv[1])); const pulled = /\+/.test(mv.san) || r.to === mv.to || (rm.captured && PV[rm.captured] >= 3) || rvRel(rv.fen[i], col).has(`att:${mv.to}:${r.from}`); if (pulled && o && o.captured && PV[o.captured] >= 3 && fl.moves({ verbose: true }).some((z) => z.captured && z.to === o.to && z.from === r.from) && rm.to !== o.to) tags.push(`deflection: ${rm.san} pulls a defender away from ${o.to}`); }
   }
   /* decoy: a sacrifice that pulls the king onto an exposed square */
   if (x.sac && x.sac.piece && pv.length) { const m0 = new Chess(rv.fen[i]).move(uciMv(pv[0])); if (m0 && m0.piece === "k" && m0.captured) tags.push("decoy: the king is dragged out to take"); }
-  /* overload: one defender is the only guard of two pieces you attack */
-  if (good) {
-    const fl = rvOurTurn(rv.fen[i], col); if (fl) { const by = {}; for (const m of fl.moves({ verbose: true })) { if (!m.captured || m.piece === "k" && false) continue; fl.move(m); const d = fl.moves({ verbose: true }).filter((z) => z.captured && z.to === m.to).map((z) => z.from); fl.undo(); if (d.length === 1) (by[d[0]] = by[d[0]] || new Set()).add(m.to); }
-      if (Object.values(by).some((t) => t.size >= 2)) tags.push("overload: one defender guards two pieces you attack"); }
-  }
+  /* overload: one defender is the only guard of two pieces (not pawns) that you attack, and this move is what brought that about */
+  if (good) { const now = rvGuards(rv.fen[i], col), was = rvGuards(rv.fen[i - 1], col); if (Object.entries(now).some(([d, t]) => t.size >= 2 && [...t].some((sq) => !(was[d] && was[d].has(sq))))) tags.push("overload: one defender guards two pieces you attack"); }
   /* interesting / speculative: a real sacrifice that is not brilliant */
   if (x.sac && x.sac.piece && SACV[x.sac.piece] >= 3 && x.sac.drop >= 2 && x.cls !== "brilliant") { if (x.loss <= 6) tags.push("interesting: a real sacrifice that holds, though not the engine's first choice"); else if (x.loss <= 25 && x.after >= 35) tags.push("speculative: unclear compensation, practical chances only"); }
   return tags;
@@ -1509,7 +1513,7 @@ function rvDerive(i) {
       if (before >= 75 && after < 60) tags.push("throws away a winning position"); else if (before >= 35 && before <= 65 && after < before - 20) tags.push("loses the balance");
       if (!tags.length) tags.push("positional error");
     }
-    tags.push(...rvIdeas(i, { cls, loss, after, before, second, isBest, L, b, sac, recapture, pov }));
+    try { tags.push(...rvIdeas(i, { cls, loss, after, before, second, isBest, L, b, sac, recapture, pov })); } catch (e) { console.error("review ideas", i, e); }
     if (rv.zprep && rv.zprep[i]) tags.push("prepares a zugzwang two moves later");
     if (rv.tb && rv.tb[i]) { const t = rv.tb[i], ord = { L: 0, D: 1, W: 2 }; if (t.b && t.a) { if (ord[t.a] < ord[t.b]) { tags.push(`tablebase: ${t.b === "W" ? "win" : "draw"} to ${t.a === "L" ? "loss" : "draw"}`); const sev = t.a === "L" ? "blunder" : "mistake"; if (cls !== "blunder" && (sev === "blunder" || cls !== "mistake")) cls = sev; } else if (cls === "mistake" || cls === "blunder") { cls = "inaccuracy"; tags.push("tablebase: the theoretical result is kept"); } } }
     const zg = (rv.zug || {})[i];
@@ -2433,8 +2437,21 @@ document.addEventListener("input", (e) => { if (e.target.id === "rkQ") { RKS.q =
 
 /* ---------- 2026 tournaments (src/81_chess_events.py): standings, rounds, every game with its rating change ---------- */
 const EVD = DATA.events || { events: [], players: {} };
-Object.entries(EVD.players || {}).forEach(([k, p]) => { p.id = k; if (!CP.players[k]) CP.players[k] = p; });
-const EVS = EVD.events || [];
+const EVS = [];
+/* Public build: the tournaments come in their own file (DATA.eventsFile), fetched just after the page opens, so the first
+   screen does not wait for them. Until then the screens that list them say so. */
+const EVL = { ok: !DATA.eventsFile, failed: false };
+function evAdd(d) { Object.entries(d.players || {}).forEach(([k, p]) => { p.id = k; if (!CP.players[k]) CP.players[k] = p; }); EVS.push(...(d.events || [])); }
+function evRepaint() { if (st && st.game === "champ" && (CH.v === "home" || String(CH.v).startsWith("ev:"))) champPage(); }
+function evLoad() {
+  EVL.failed = false; const sc = document.createElement("script"); sc.src = DATA.eventsFile; sc.async = true;
+  sc.onload = () => { evAdd(window.__BK_EV || {}); window.__BK_EV = null; EVL.ok = true; evRepaint(); };
+  sc.onerror = () => { sc.remove(); EVL.failed = true; evRepaint(); };
+  document.head.appendChild(sc);
+}
+const evWait = () => (EVL.failed ? `<div class="card"><p>The 2026 tournaments could not be loaded. Check your connection.</p><button class="btn" type="button" data-evretry="1">Try again</button></div>` : `<div class="card"><p class="fine">Loading the 2026 tournaments…</p></div>`);
+document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-evretry]")) { evLoad(); evRepaint(); } });
+if (DATA.eventsFile) setTimeout(evLoad, 0); else evAdd(EVD);
 const evById = (id) => EVS.find((e) => e.id === id);
 /* FIDE rating change for one game: K 10 at 2400+ in classical (20 below), 20 in rapid and blitz; Armageddon is not rated */
 function eloDelta(g, me) {
@@ -2449,9 +2466,9 @@ function evPlayoffWinner(e) { const po = e.games.filter((g) => g.st === "Playoff
 const evTop = (e) => { if (e.scoring === "ko") { const st = evKO(e), f = st[st.length - 1], fm = f && f.list.find((m) => m.label === "Final"); if (e.koWin && fm) { const tp = f.list.find((m) => m.label === "Third place"); return [fm.win, fm.ids.find((p) => p !== fm.win), ...(tp ? [tp.win] : [])]; } return [...new Set((f ? f.list : []).flatMap((m) => m.ids))]; } const ids = e.table.map((r) => r[0]), pw = evPlayoffWinner(e); return pw && ids.includes(pw) ? [pw, ...ids.filter((x) => x !== pw)] : ids; };
 function evWinner(e) { if (!e.done) return null; if (e.scoring === "ko") { if (!e.koWin) return null; const id = evTop(e)[0]; return id ? cpName(cpP(id)) : null; } const t = e.table; if (!t.length) return null; const pw = evPlayoffWinner(e); if (pw) return cpName(cpP(pw)) + " (playoff)"; const top = t.filter((r) => r[1] === t[0][1]); return top.length === 1 ? cpName(cpP(top[0][0])) : "Shared: " + top.map((r) => cpName(cpP(r[0])).split(" ").pop()).join(", "); }
 const evCard = (e) => `<button class="cpcard" type="button" data-cpv="ev:${e.id}"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><span class="cpfaces">${evTop(e).slice(0, 3).map((id) => cpFace(cpP(id), "md")).join("")}</span><b class="cpcname">${esc(e.name)}</b><span class="cpmeta">${ic("flag")}${esc((e.site || "").replace(/,\s*\w\w$/, ""))}</span><span class="cpmeta">${ic("clock")}${evDates(e)}</span>${evWinner(e) ? `<span class="cpwinner">${ic("trophy")}${esc(evWinner(e))}</span>` : ""}</button>`;
-const evCards = (sec) => EVS.filter((e) => e.sec === sec).sort((a, b) => (a.to < b.to ? 1 : -1)).map(evCard).join("");
+const evCards = (sec) => !EVL.ok ? evWait() : EVS.filter((e) => e.sec === sec).sort((a, b) => (a.to < b.to ? 1 : -1)).map(evCard).join("");
 function evPage(id) {
-  const e = evById(id); if (!e) return champPage("home"); CH.ev = id; CH.evTab = CH.evTab || "table";
+  const e = evById(id); if (!e && !EVL.ok) return evWait(); if (!e) return champPage("home"); CH.ev = id; CH.evTab = CH.evTab || "table";
   const ko = e.scoring === "ko", top = evTop(e).slice(0, 3), pod = ko && !e.koWin ? [] : [[top[1], "2"], [top[0], "1"], [top[2], "3"]].filter((x) => x[0]);
   return `<div class="card cphero"><span class="cpbadge ${e.done ? "done" : "soon"}">${e.done ? "Finished" : "In progress"}</span><h2>${esc(e.name)}</h2><div class="cpfacts"><span>${ic("flag")}${esc(e.site || "")}</span><span>${ic("clock")}${evDates(e)}</span><span>${ic("user")}${new Set(e.games.flatMap((g) => [g.w, g.b])).size} players</span><span>${ic("swords")}${e.games.length} games</span></div>
     ${pod.length && e.done ? `<div class="cppodium">${pod.map(([pid, n]) => `<button class="cppod p${n}" type="button" data-evp="${pid}">${cpFace(cpP(pid), "big")}<span class="cpmedal">${n}</span><b>${esc(cpName(cpP(pid)))}</b><span class="fine">${ko ? ["", "Champion", "Runner-up", "Third"][+n] : (e.table.find((r) => r[0] === pid) || [])[1] + " pts"}</span><span class="cpstep"></span></button>`).join("")}</div>` : ""}

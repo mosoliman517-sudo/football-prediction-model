@@ -70,7 +70,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .pill { background: color-mix(in srgb, var(--surface) 80%, transparent); border: 1px solid var(--line); border-radius: 99px; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 13px; backdrop-filter: blur(6px); transition: transform .15s ease, border-color .15s ease; }
 .pill:hover { border-color: var(--accent); transform: translateY(-1px); }
 .pill:active { transform: translateY(1px) scale(.98); }
-.vtag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--muted); font: 600 11px var(--mono); letter-spacing: .04em; cursor: pointer; white-space: nowrap; } .vtag b { color: var(--accent); text-transform: uppercase; letter-spacing: .1em; font-weight: 800; } .vtag:hover { border-color: var(--accent); }
+.vtag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--muted); font: 600 11px var(--mono); letter-spacing: .04em; cursor: pointer; white-space: nowrap; } .vtag b { color: color-mix(in srgb, var(--accent) 75%, var(--ink)); text-transform: uppercase; letter-spacing: .1em; font-weight: 800; } .vtag:hover { border-color: var(--accent); }
 .byline { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 
 /* lobby */
@@ -949,7 +949,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button><span class="rbsep"></span><button type="button" class="rbsk" data-sk="cheer" aria-label="Your sidekick cheers">📣 Cheer</button><button type="button" class="rbsk" data-sk="tease" aria-label="Your sidekick teases">😏 Tease</button><button type="button" class="rbsk" data-sk="gg" aria-label="Your sidekick says good game">🤝 GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 25 Nov 2026 14:59 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 26 Nov 2026 07:44 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>

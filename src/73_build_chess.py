@@ -59,6 +59,13 @@ data["ratecal"] = {k: _rc[k] for k in ("book", "coef", "speeds", "maps", "curve"
 _a = open("site/arena_template.html").read(); _i = _a.index("function mqttConnect("); _j = _a.index("const BROKERS", _i)
 html = html.replace("/*__MQTT__*/", _a[_i:_j])
 html = html.replace("/*__EXTRAS__*/", open("site/chess_extras.js", encoding="utf-8").read() + open("site/chess_home.js", encoding="utf-8").read() + open("site/chess_more.js", encoding="utf-8").read() + open("site/chess_wcc.js", encoding="utf-8").read() + open("site/bot_lines.js", encoding="utf-8").read() + open("site/chess_bots.js", encoding="utf-8").read())   # more lessons, endgame trainer, guess the famous game
+if PUBLIC and data["events"]:   # the tournaments (the largest part) in their own file, loaded after the page opens
+    import hashlib
+    _blob = ("window.__BK_EV=" + json.dumps(data["events"], separators=(",", ":"), ensure_ascii=False) + ";").encode("utf-8"); _ev = f"events.{hashlib.sha1(_blob).hexdigest()[:10]}.js"
+    os.makedirs("docs/chess", exist_ok=True)
+    for _f in glob.glob("docs/chess/events.*.js"):
+        if os.path.basename(_f) != _ev: os.remove(_f)
+    open("docs/chess/" + _ev, "wb").write(_blob); data["events"] = None; data["eventsFile"] = _ev
 html = html.replace("/*__DATA__*/null", json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 if PUBLIC:   # installable like the other sports: manifest, icons, and the shared offline service worker
     pwa = '<link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#0b1033"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="../apple-touch-icon.png">'

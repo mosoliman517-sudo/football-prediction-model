@@ -210,7 +210,6 @@ function botWatch() {
     const ev = TALK.judge(a, b, F.m, myColor, F.mine);
     const list = TALK.events(F, ev, T, B.id);
     if (T.lines >= TALK.MAX_LINES) return;
-    if (st.openAt != null && n - st.openAt < 2) return;   /* the coach has just told an opening fact */
     for (const ev1 of list) {
       const pri = TALK.PRI[ev1], kind = [ev1, ...(TALK_ALSO[ev1] || [])].find((k) => L[k] && L[k].length);
       if (!kind || n - T.last < TALK.GAP[pri]) continue;

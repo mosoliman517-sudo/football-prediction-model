@@ -135,16 +135,16 @@ function botEnd(res) {
 function botSay(kind, done) {
   if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face, me = st;
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
-  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
+  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.dataset.bot = "1"; el.classList.remove("hide"); el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
   const wait = Math.min(9000, 1200 + text.length * 60); st.talkUntil = performance.now() + wait;
   let spoke = false; const over = () => { if (spoke) return; spoke = true; if (st === me) { me.talkUntil = performance.now() + 300; if (done) done(); } };
-  try { if (PIPV.on && !(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
+  try { if (!(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: Mix.voice, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
 }
 {
-  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st; setTimeout(() => { if (st !== me) return; botSay("start", () => { if (!me.over && live && live.c.history().length < 6) botSay("rival"); }); }, 900); return r; };
+  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st, dock = document.getElementById("pipc"); if (dock) { delete dock.dataset.bot; dock.classList.add("hide"); } setTimeout(() => { if (st === me) botSay("start"); }, 900); return r; };
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
   /* the game can end by a move or on the clock: both repaint the board, so the last word is said from there */
-  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); openTalk(); } } catch (e) { /* never block the board */ } return r; };
+  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); } } catch (e) { /* never block the board */ } return r; };
 }
 const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {

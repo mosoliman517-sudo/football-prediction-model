@@ -1009,6 +1009,7 @@ function pipSVG(mood = "calm") {
 const PIP_POP = { "You win": ["wow", "You won! I'm going to tell every pawn I know."], "You lost": ["sad", "A loss. I've lost more games than I can count, and I still get up every morning and step forward."], "Draw": ["calm", "A draw. Nobody won, nobody lost. Sometimes that's exactly right."], "Checkmate": ["wow", "Checkmate. Somewhere a king is lying down very quietly."], "All three dailies done": ["happy", "All three dailies done! Same time tomorrow? I'll save you a square."] };
 let pipT = null;
 function pipPop(text, mood = "happy") {
+  if (inMatch()) return;   /* the opponent has the corner */
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
   el.innerHTML = `${pipSVG(mood)}<div class="pipsay"><b>${esc(coachName())}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.innerHTML = pipSVG("calm"); }, Math.min(10000, 3200 + text.length * 50));
 }
@@ -1032,9 +1033,12 @@ const CFX = (() => {
   Snd.ok = function () { api.right(); return ok0(); }; Snd.bad = function () { api.wrong(); return bad0(); }; Snd.end = function (w) { api.end(w); return end0(w); };
   return api;
 })();
+/* in a game against a character the coach leaves the corner: only the opponent's bubble appears there */
+const inMatch = () => { try { return st.game === "ai" && !!live; } catch (e) { return false; } };
 /* the coach waits in the corner from the start, like the sidekicks in the other sports; the review shows it in its panel instead */
 setInterval(() => { let el = document.getElementById("pipc"); if (!el) { if (!document.getElementById("app") || document.getElementById("splash") || document.getElementById("ctp")) return; el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("talk")); el.innerHTML = pipSVG("calm"); el.classList.add("on"); }
-  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim")); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
+  const match = inMatch(); if (!match && el.dataset.bot) { delete el.dataset.bot; el.dataset.coach = ""; el.classList.remove("talk"); el.classList.add("on"); }
+  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim" || (match && !el.dataset.bot))); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
 const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { voice: COACHES[coachId()].voice, volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */

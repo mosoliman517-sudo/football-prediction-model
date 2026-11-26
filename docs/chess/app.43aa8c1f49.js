@@ -32,16 +32,21 @@ const Usage = (() => {
    falls back to the device's own voice. */
 const AIVoice = (() => {
   const BASE = "../voice/";
-  let map = null, cur = null;
+  let map = null, cur = null, seq = 0, el = null, opened = false;
+  /* one player for every line. Safari and phones only let a page start sound from a tap, so the player is opened on the first
+     tap or key press and can then speak whenever a character has something to say */
+  const player = () => el || (el = new Audio());
+  const open = () => { if (opened || cur) return; opened = true; const a = player(); a.src = "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA=="; a.play().catch(() => { opened = false; }); };
+  ["pointerdown", "keydown", "touchend"].forEach((k) => addEventListener(k, open, true));
   const load = () => map || (map = fetch(BASE + "index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
   const norm = (t) => String(t).replace(/\s+/g, " ").trim();
   const generic = (t) => norm(t).replace(/^Welcome[^.]*\./, "Welcome.");   // the tour greets you by name; the clip does not
-  function stop() { if (cur) { try { cur.pause(); } catch (e) { /* gone */ } cur = null; } }
+  function stop() { seq++; if (cur) { try { cur.pause(); } catch (e) { /* gone */ } cur = null; } }
   /* resolves to the Audio element, or null when there is no clip for this text */
   async function play(text, o = {}) {
     const m = await load(), v = o.voice ? o.voice + "|" : "", f = (v && (m[v + norm(text)] || m[v + generic(text)])) || (!o.voice || o.voice === "af_heart" ? m[norm(text)] || m[generic(text)] : null); if (!f) return null;   // each character has its own voice
-    stop(); const a = new Audio(BASE + f); a.volume = o.volume == null ? 1 : o.volume; cur = a;
-    const end = () => { if (cur === a) cur = null; if (o.onend) o.onend(); };
+    stop(); const my = seq, a = player(); a.onended = a.onerror = null; a.src = BASE + f; a.volume = o.volume == null ? 1 : o.volume; cur = a;
+    const end = () => { if (my !== seq) return; cur = null; if (o.onend) o.onend(); };   /* a line cut off by the next one says nothing */
     a.onended = end; a.onerror = end;
     if (!o.paused) a.play().catch(end);
     return a;
@@ -1062,6 +1067,7 @@ function pipSVG(mood = "calm") {
 const PIP_POP = { "You win": ["wow", "You won! I'm going to tell every pawn I know."], "You lost": ["sad", "A loss. I've lost more games than I can count, and I still get up every morning and step forward."], "Draw": ["calm", "A draw. Nobody won, nobody lost. Sometimes that's exactly right."], "Checkmate": ["wow", "Checkmate. Somewhere a king is lying down very quietly."], "All three dailies done": ["happy", "All three dailies done! Same time tomorrow? I'll save you a square."] };
 let pipT = null;
 function pipPop(text, mood = "happy") {
+  if (inMatch()) return;   /* the opponent has the corner */
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
   el.innerHTML = `${pipSVG(mood)}<div class="pipsay"><b>${esc(coachName())}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.innerHTML = pipSVG("calm"); }, Math.min(10000, 3200 + text.length * 50));
 }
@@ -1085,9 +1091,12 @@ const CFX = (() => {
   Snd.ok = function () { api.right(); return ok0(); }; Snd.bad = function () { api.wrong(); return bad0(); }; Snd.end = function (w) { api.end(w); return end0(w); };
   return api;
 })();
+/* in a game against a character the coach leaves the corner: only the opponent's bubble appears there */
+const inMatch = () => { try { return st.game === "ai" && !!live; } catch (e) { return false; } };
 /* the coach waits in the corner from the start, like the sidekicks in the other sports; the review shows it in its panel instead */
 setInterval(() => { let el = document.getElementById("pipc"); if (!el) { if (!document.getElementById("app") || document.getElementById("splash") || document.getElementById("ctp")) return; el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("talk")); el.innerHTML = pipSVG("calm"); el.classList.add("on"); }
-  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim")); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
+  const match = inMatch(); if (!match && el.dataset.bot) { delete el.dataset.bot; el.dataset.coach = ""; el.classList.remove("talk"); el.classList.add("on"); }
+  el.classList.toggle("hide", typeof st !== "undefined" && (st.game === "review" || st.game === "sim" || (match && !el.dataset.bot))); if (!el.classList.contains("talk") && el.dataset.coach !== coachId()) { el.dataset.coach = coachId(); el.innerHTML = pipSVG("calm"); } }, 1000);
 const PIPV = { on: (() => { try { return localStorage.getItem("bk_pip_voice") !== "0"; } catch (e) { return true; } })() };
 function pipSay(text) { if (!PIPV.on) return; try { if (Snd && Snd.on === false) return; } catch (e) { /* no sound object */ } AIVoice.play(text, { voice: COACHES[coachId()].voice, volume: 0.95 }); }
 /* ---------- the game report: estimated rating, phases, key moments ---------- */
@@ -3860,16 +3869,16 @@ function botEnd(res) {
 function botSay(kind, done) {
   if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face, me = st;
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
-  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
+  el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.dataset.bot = "1"; el.classList.remove("hide"); el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
   const wait = Math.min(9000, 1200 + text.length * 60); st.talkUntil = performance.now() + wait;
   let spoke = false; const over = () => { if (spoke) return; spoke = true; if (st === me) { me.talkUntil = performance.now() + 300; if (done) done(); } };
-  try { if (PIPV.on && !(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
+  try { if (!(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: Mix.voice, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
 }
 {
-  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st; setTimeout(() => { if (st !== me) return; botSay("start", () => { if (!me.over && live && live.c.history().length < 6) botSay("rival"); }); }, 900); return r; };
+  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st, dock = document.getElementById("pipc"); if (dock) { delete dock.dataset.bot; dock.classList.add("hide"); } setTimeout(() => { if (st === me) botSay("start"); }, 900); return r; };
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
   /* the game can end by a move or on the clock: both repaint the board, so the last word is said from there */
-  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); openTalk(); } } catch (e) { /* never block the board */ } return r; };
+  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); } } catch (e) { /* never block the board */ } return r; };
 }
 const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {
@@ -4114,7 +4123,6 @@ function botWatch() {
     const ev = TALK.judge(a, b, F.m, myColor, F.mine);
     const list = TALK.events(F, ev, T, B.id);
     if (T.lines >= TALK.MAX_LINES) return;
-    if (st.openAt != null && n - st.openAt < 2) return;   /* the coach has just told an opening fact */
     for (const ev1 of list) {
       const pri = TALK.PRI[ev1], kind = [ev1, ...(TALK_ALSO[ev1] || [])].find((k) => L[k] && L[k].length);
       if (!kind || n - T.last < TALK.GAP[pri]) continue;

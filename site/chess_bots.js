@@ -17,14 +17,14 @@
    numbers below were produced by botCalib() in this file. */
 const councilLogo = () => `<span class="council">${["bea", "vera", "pip"].map((id, k) => `<span class="cf cf${k}">${oppFace(id, "happy")}</span>`).join("")}</span>`;
 COACH_SVG.council = () => councilLogo();
-const BOT_ELO = { pip: 1080, arteta: 1735, berserker: 1750, bea: 1835, trader: 1980, escaped: 1990, vera: 2110, council: 2065 };   /* measured with botCalib(id, 150) on 2026-11-25; Lichess scale */
+const BOT_ELO = { pip: 1080, arteta: 2515, berserker: 1750, bea: 1835, trader: 1980, escaped: 2070, vera: 2110, council: 2065 };   /* arteta and escaped: 40 games each against Stockfish limited to a rating, performance rounded to 5 (tests/bot_arena.js, 2026-11-26); the rest: botCalib(id, 150), 2026-11-25, Lichess scale */
 const BOTS = [
   { id: "pip", name: "Pip", tag: "The Beginner", kind: "small", small: 1, style: ["Grabs loose pieces", "Looks no moves ahead"], desc: "A pawn who only just learned how the pieces move. He looks no moves ahead and grabs whatever is free." },
-  { id: "arteta", name: "Mikel Arteta", tag: "The Wall", kind: "sf", cap: 14, depth: 7, ms: 300, multipv: 8, style: ["Extremely passive", "Never initiates"], desc: "Plays the quietest move that is still safe. No captures unless forced, no checks, pawns stay home, trades refused. He is waiting for you to overreach." },
+  { id: "arteta", name: "Mikel Arteta", tag: "The Wall", kind: "sf", style: ["Defends, swaps pieces off", "Squeezes the endgame"], desc: "Solid openings, king tucked away, everyone close to home. He swaps your attackers off, refuses to give you anything and waits to win a small edge in the ending." },
   { id: "berserker", name: "The Berserker", tag: "The Attacker", kind: "sf", cap: 12, depth: 8, ms: 300, multipv: 8, style: ["Checks and captures", "Pawn storms at your king"], desc: "Throws everything at your king: checks first, then captures, then pawns. His own king can wait." },
   { id: "bea", name: "Bishop Bea", tag: "The Positional Player", kind: "sf", cap: 16, depth: 7, ms: 300, multipv: 6, style: ["Long diagonals", "Fianchettos, castles early"], desc: "Develops calmly, loves her bishops on the long diagonals, castles early and rarely hurries." },
   { id: "trader", name: "The Trader", tag: "The Simplifier", kind: "sf", cap: 14, depth: 8, ms: 300, multipv: 8, style: ["Trades everything", "Queens off first"], desc: "Offers and accepts a trade at every chance, queens first, and marches into the endgame." },
-  { id: "escaped", name: "The Escaped", tag: "The Sacrificer", kind: "sf", cap: 10, depth: 9, ms: 400, multipv: 6, style: ["Sacrifices whenever he can", "Never on the spot losing"], desc: "Slipped out of the clinic with one idea: give things away. Any sacrifice that does not simply lose, he plays. No sacrifice available? Then he plays like a strong club player." },
+  { id: "escaped", name: "The Escaped", tag: "The Sacrificer", kind: "sf", style: ["Attacks your king", "Sacrifices to get there"], desc: "Plays like a madman who studied Tal: gambit openings, pawns and pieces hurled at your king, lines ripped open. Most of the sacrifices are sound; some you have to prove wrong over the board." },
   { id: "council", name: "The Council", tag: "Pip, Bea and Vera together", kind: "council", style: ["Three coaches vote", "Thinks the longest"], desc: "Pip, Bea and Vera each rank the engine's three best moves their own way and the points are added up. Never a bad move, and he thinks the longest." },
   { id: "vera", name: "Queen Vera", tag: "The Ruthless", kind: "sf", cap: 2, depth: 14, ms: 1000, multipv: 2, style: ["Accurate and cold", "No tricks"], desc: "A retired queen who does not do friendly games. No style, just accurate chess." },
 ];
@@ -48,11 +48,9 @@ function botSac(c, m) {
 const botAdv = (m) => { const f = +m.from[1], t = +m.to[1]; return m.color === "w" ? t - f : f - t; };   /* ranks moved forward */
 function botScore(id, c, m, ctx) {
   const adv = botAdv(m), cap = !!m.captured, chk = /\+|#/.test(m.san), q = m.piece, ownMat = ctx.mat;
-  if (id === "arteta") return -(cap ? 4 + (BV[m.captured] >= BV[q] ? 2 : 0) : 0) - (chk ? 3 : 0) - (q === "p" ? Math.max(0, +(m.color === "w" ? m.to[1] - 2 : 7 - m.to[1]) - 1) * 1.2 : 0) - Math.max(0, adv) * 0.6 + Math.max(0, -adv) * 1.4 + (m.flags.includes("k") || m.flags.includes("q") ? 3 : 0) + (q === "k" ? -2.5 : 0) - ctx.sac * 5 - (cap && ctx.exch ? 2 : 0) + ((m.color === "w" ? +m.from[1] === 1 : +m.from[1] === 8) && q !== "p" && q !== "k" ? 0.8 : 0);
   if (id === "bea") { const longDiag = q === "b" && /^[a-h][1-8]$/.test(m.to) && ((m.to.charCodeAt(0) - 97) === (+m.to[1] - 1) || (m.to.charCodeAt(0) - 97) + (+m.to[1] - 1) === 7); const fian = q === "b" && /^(b2|g2|b7|g7)$/.test(m.to); const dev = q === "n" || q === "b" ? 1 : 0; return (longDiag ? 3 : 0) + (fian ? 3 : 0) + (m.flags.includes("k") || m.flags.includes("q") ? 3.5 : 0) + (q === "b" ? 1.2 : 0) + dev * (ctx.ply < 24 ? 1.5 : 0) + (q === "p" && /^[bg][23]$|^[bg][67]$/.test(m.to) ? 1.5 : 0) - (q === "q" && ctx.ply < 20 ? 3 : 0) - ctx.sac * 2; }
   if (id === "trader") return (cap && BV[m.captured] >= BV[q] - 0.1 ? 4 + BV[m.captured] * 0.5 : 0) + (cap && m.captured === "q" ? 4 : 0) + (q === "q" && ctx.qTrade.has(m.to) ? 6 : 0) + ctx.trade.has(m.san) * 6 - (q === "p" && !cap ? 0.4 : 0) - ctx.sac * 5;
   if (id === "berserker") { const k = ctx.oppK; const near = k ? Math.max(0, 7 - Math.max(Math.abs(m.to.charCodeAt(0) - k.charCodeAt(0)), Math.abs(+m.to[1] - +k[1]))) : 0; return (chk ? 6 : 0) + (cap ? 3 + BV[m.captured] * 0.4 : 0) + (q === "p" && near >= 3 ? 2.5 : 0) + near * 0.5 + Math.max(0, adv) * 0.8 - (q === "k" ? 3 : 0) - (m.flags.includes("k") || m.flags.includes("q") ? 0 : 0); }
-  if (id === "escaped") return ctx.sac * 10 + (cap ? 0 : 0);
   return 0;
 }
 function botKingSq(c, color) { const b = c.board(); for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) { const p = b[r][f]; if (p && p.type === "k" && p.color === color) return "abcdefgh"[f] + (8 - r); } return null; }
@@ -68,18 +66,7 @@ async function botMove(level, fen) {
   /* the character's candidates: moves the engine still rates within the character's own tolerance of the best move */
   let cands = lines.map((l, k) => ({ uci: l.pv[0], loss: best - win[k] })).filter((x) => x.loss <= B.cap);
   const ctx = { sac: 0, mat: 0, ply, oppK: botKingSq(c, me === "w" ? "b" : "w"), exch: false, trade: new Set(), qTrade: new Set() };
-  if (B.id === "escaped") {
-    /* every legal move that gives material away, whether or not the engine ranks it: the engine is asked only about those */
-    const sacs = legal.map((m) => ({ m, s: botSac(c, m) })).filter((x) => x.s >= 1);
-    if (sacs.length) {
-      const sl = await Sf.analyse(fen, { skill: 20, depth: 9, ms: 450, multipv: Math.min(6, sacs.length), moves: sacs.map((x) => x.m.from + x.m.to + (x.m.promotion || "")) }).catch(() => []);
-      const ok = sl.map((l) => { const m = sacs.find((x) => x.m.from + x.m.to + (x.m.promotion || "") === l.pv[0]); return m ? { m: m.m, s: m.s, loss: best - winOf(l) } : null; }).filter((x) => x && x.loss <= B.cap);
-      if (ok.length) { ok.sort((a, b) => b.s - a.s || a.loss - b.loss); const pick = ok[0].m; return { from: pick.from, to: pick.to, promotion: pick.promotion }; }
-    }
-  }
-  if (B.id === "escaped") cands = cands.filter((x) => x.loss <= 3);   /* no sacrifice to play: an ordinary strong move */
   if (B.id === "trader") { const t = botTradeSet(c); ctx.trade = t.out; }
-  if (B.id === "arteta") ctx.exch = true;
   const scored = cands.map((x) => { const m = legal.find((l) => l.from + l.to + (l.promotion || "") === x.uci); if (!m) return null; ctx.sac = botSac(c, m) > 0 ? botSac(c, m) : 0; return { m, sc: botScore(B.id, c, m, ctx) - x.loss * 0.15 + Math.random() * 0.4 }; }).filter(Boolean);
   const pick = scored.length ? scored.sort((a, b) => b.sc - a.sc)[0].m : legal.find((l) => l.from + l.to + (l.promotion || "") === lines[0].pv[0]) || legal[0];
   return { from: pick.from, to: pick.to, promotion: pick.promotion };
@@ -123,7 +110,7 @@ aiThink = function () {
   const B = botOf(st.level), me = st, L = live, since = performance.now(); L.lock = true; st.think = true;
   const ms = botThinkMs(L.c, st.clockSecs ? st.ms[L.c.turn()] : null); aiPaint();
   if (B.kind === "small") return askEngine({ type: "move", fen: L.c.fen(), level: B.small || 1 }, (r) => { if (r.type === "move") botPlay(me, L, r, since, ms); });
-  botMove(st.level, L.c.fen()).then((r) => botPlay(me, L, r, since, ms)).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
+  botMove(st.level, L.c.fen(), L.c.header().FEN ? null : L.c.history()).then((r) => botPlay(me, L, r, since, ms)).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
 };
 
 /* ---------- the characters talk: a bubble and a recorded voice (clips for src/bot_lines.json), never the device voice ----------
@@ -170,11 +157,11 @@ const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {
   clearInterval(st.timer); live = null; st = { game: "ai", level: Math.min(8, store.get("ai_level", 2)), color: store.get("ai_color", "w"), clock: store.get("ai_clock", 0) };
   const card = (b, i) => `<button class="opp botcard ${st.level === i + 1 ? "on" : ""}" data-lv="${i + 1}" type="button"><div class="av oppface">${b.id === "council" ? councilLogo() : oppFace(b.id, i % 2 ? "happy" : "calm")}</div><b>${esc(b.name)}</b><span class="botelo num">${botElo(b) ? botElo(b) : "…"}<small>Elo</small></span><span class="bottag">${esc(b.tag)}</span><span class="botst">${b.style.map((s) => `<i>${esc(s)}</i>`).join("")}</span><span class="fine">${esc(b.desc)}</span></button>`;
-  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play the characters</h2><p class="sub">Eight opponents, each with one strength and one way of playing. The number is their rating, measured: every character's moves were graded against Stockfish in real master-game positions and turned into a rating with the same model the game review uses (Lichess scale; chess.com runs a little lower at club level). Pip thinks with a tiny engine written for this site; everyone else uses Stockfish, which downloads once (about 1.5 MB).</p><div class="opps botgrid">${BOTS.map(card).join("")}</div><h3>${ic("clock")}Clock</h3><div class="chips">${[[0, "No clock"], [180, "3 min"], [300, "5 min"], [600, "10 min"]].map(([s, n]) => `<button class="chip ${(st.clock || 0) === s ? "on" : ""}" data-clk="${s}" type="button">${n}</button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
+  $("#app").className = "fresh"; $("#app").innerHTML = `<div class="crumbs"><button class="btn ghost" data-hub="bk">← Back</button></div><div class="card"><h2>${ic("robot")}Play the characters</h2><p class="sub">Eight opponents, each with one strength and one way of playing. The number is their rating, measured: every character's moves were graded against Stockfish in real master-game positions and turned into a rating with the same model the game review uses (Lichess scale; chess.com runs a little lower at club level). Pip thinks with a tiny engine written for this site; everyone else uses Stockfish, which downloads once. The Escaped and Arteta have their own way of choosing moves, and their ratings come from 40 games each against rating-limited Stockfish. That is the engine\u2019s own scale, so do not compare those two numbers with the others.</p><div class="opps botgrid">${BOTS.map(card).join("")}</div><h3>${ic("clock")}Clock</h3><div class="chips">${[[0, "No clock"], [180, "3 min"], [300, "5 min"], [600, "10 min"]].map(([s, n]) => `<button class="chip ${(st.clock || 0) === s ? "on" : ""}" data-clk="${s}" type="button">${n}</button>`).join("")}</div><h3>${ic("flag")}You play</h3><div class="chips">${[["w", "White"], ["b", "Black"], ["r", "Random"]].map(([k, n]) => `<button class="chip ${st.color === k ? "on" : ""}" data-col="${k}" type="button">${n}</button>`).join("")}</div><div class="row"><button class="btn" id="aiGo">Start the game</button></div></div>`;
 }
 GO.ai = aiMenu;
 /* the player bar shows who and their rating */
-const botBarName = (level) => { const b = botOf(level), e = botElo(b); return `${b.name}${e ? ` · ${e}` : ""}`; };
+const botBarName = (level) => { const b = botOf(level), e = botElo(b); return `${b.name}${e ? ` <span class="elotag num">Elo ${e}</span>` : ""}`; };
 const botBarSub = (level) => botOf(level).tag;
 /* calibration: how good is each character really? Run botCalib("escaped", 60) in the console; it prints the rating. */
 async function botCalib(id, n = 60) {
@@ -195,5 +182,5 @@ async function botCalib(id, n = 60) {
 .botgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important}.botcard{display:flex!important;flex-direction:column;align-items:center;gap:6px;text-align:center}.botcard .oppface{width:84px!important;height:84px!important}.botcard .oppface svg{width:100%;height:100%}
 .council{position:relative;display:block;width:100%;height:100%}.council .cf{position:absolute;width:62%;height:62%;border-radius:50%;background:var(--panel);box-shadow:0 0 0 2px var(--gold),0 3px 8px #0006;overflow:hidden}.council .cf svg{width:100%!important;height:100%!important;display:block}.council .cf0{left:0;bottom:2%;z-index:1}.council .cf2{right:0;bottom:2%;z-index:1}.council .cf1{left:19%;top:0;z-index:2}
 .botbf.sm{width:48px;height:48px;flex:none;display:inline-block}.botbf.sm svg{width:100%;height:100%}#pipc .botbf{width:96px;height:96px;flex:none;filter:drop-shadow(0 10px 18px #0007)}#pipc .botbf svg{width:100%;height:100%}#pipc .botbf .council{width:96px;height:96px}
-.botelo{font:800 30px/1 var(--mono);color:var(--gold)}.botelo small{display:block;font:700 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-top:2px}.bottag{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.elotag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;border:2px solid var(--gold);color:var(--gold);font:800 13px/1.5 var(--mono);white-space:nowrap;vertical-align:middle}.botelo{font:800 30px/1 var(--mono);color:var(--gold)}.botelo small{display:block;font:700 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-top:2px}.bottag{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.85}
 .botst{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.botst i{font-style:normal;font:700 10px var(--mono);padding:3px 8px;border-radius:99px;background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line))}`; document.head.appendChild(s); })();

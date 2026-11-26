@@ -32,7 +32,7 @@ const Mascot = (() => {
   let last = 0, hideT = null, n = 0, ctx = "";
   const id = () => (mine.includes(g("mascot", "")) ? g("mascot", "") : mine[sport === "bb" ? 0 : 2]);
   const mode = () => g("mascot_mode", "on");   // on, quiet (no voice), off
-  const said = []; const pick = (arr) => { const fresh = arr.filter((x) => !said.includes(x)); const pool = fresh.length ? fresh : arr, x = pool[Math.floor(Math.random() * pool.length)]; said.push(x); if (said.length > 40) said.shift(); n++; return x; };   /* no repeats until the pool runs dry */
+  const said = (() => { try { return JSON.parse(localStorage.getItem("bk_said_side")) || []; } catch (e) { return []; } })(); const keep = () => { try { localStorage.setItem("bk_said_side", JSON.stringify(said)); } catch (e) { /* rotation resets next visit */ } }; const pick = (arr) => { const fresh = arr.filter((x) => !said.includes(x)); const pool = fresh.length ? fresh : arr, x = pool[Math.floor(Math.random() * pool.length)]; said.push(x); while (said.length > 250) said.shift(); keep(); n++; return x; };   /* no repeats until the pool runs dry, remembered between visits */
   function dock() {
     if (mode() === "off") { const d = document.getElementById("mascot"); if (d) d.remove(); return null; }
     let el = document.getElementById("mascot");

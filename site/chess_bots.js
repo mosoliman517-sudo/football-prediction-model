@@ -105,50 +105,46 @@ aiThink = function () {
   }).catch(() => { if (st !== me) return; me.msg = "Stockfish could not load, so Pip took over."; me.level = 1; aiThink(); });
 };
 
-/* ---------- the characters talk: a bubble and a recorded voice (Kokoro clips from src/bot_lines.json), never the device voice ---------- */
+/* ---------- the characters talk: a bubble and a recorded voice (clips for src/bot_lines.json), never the device voice ----------
+   What they notice is decided in site/chess_talk.js. */
+const BOT_ENDS = /^(start|rival|win|lose|draw|stalemate)/;   /* said once a game: the end card shows the very line that is spoken */
+const BOT_MERGE = { escaped: { my_sac: ["trait"] } };   /* his older sacrifice lines join the new ones */
+function botPool(id, kind) {
+  const L = BOT_LINES[id]; if (!L) return [];
+  let pool = [...(L[kind] || []), ...(((BOT_MERGE[id] || {})[kind] || []).flatMap((k) => L[k] || []))];
+  if (/_mate$/.test(kind)) pool = [...pool, ...(L[kind.split("_")[0]] || [])];
+  if (kind === "rival") pool = pool.filter((x) => x[0] === coachId());
+  return pool;
+}
 function botPick(kind) {
-  const B = botOf(st.level), L = BOT_LINES[B.id]; if (!L || !L[kind] || !L[kind].length) return null; st.botPk = st.botPk || {};
-  const mid = ["trait", "taunt", "story", "ouch", "check"].includes(kind);
-  if (mid || !st.botPk[kind]) { const used = (st.botUsed = st.botUsed || new Set()), key = (x) => (Array.isArray(x) ? x[1] : x), fresh = L[kind].filter((x) => !used.has(key(x))), pool = fresh.length ? fresh : L[kind], pick = pool[Math.floor(Math.random() * pool.length)]; used.add(key(pick)); const who = Array.isArray(pick) ? pick[0] : B.id; st.botPk[kind] = { who, text: Array.isArray(pick) ? pick[1] : pick, name: B.id === "council" ? `${COACHES[who].name} of the Council` : B.name, face: oppFace(who, "calm") }; }
+  const B = botOf(st.level), pool = botPool(B.id, kind); if (!pool.length) return null; st.botPk = st.botPk || {};
+  if (!BOT_ENDS.test(kind) || !st.botPk[kind]) { const pick = botFresh(B.id, kind, pool), who = Array.isArray(pick) ? pick[0] : B.id; st.botPk[kind] = { who, text: Array.isArray(pick) ? pick[1] : pick, name: kind === "rival" ? COACHES[who].name : B.id === "council" ? `${COACHES[who].name} of the Council` : B.name, face: oppFace(who, "calm") }; }
   return st.botPk[kind];
+}
+/* the end of a game, from the character's side, as exactly as the lines allow: mate, time or stalemate */
+function botEndKind(over) {
+  const base = over.won ? "lose" : over.lost ? "win" : "draw", L = BOT_LINES[botOf(st.level).id] || {};
+  const k = base === "draw" ? (over.why === "by stalemate" ? "stalemate" : "draw") : over.why === "by checkmate" ? base + "_mate" : over.why === "on time" ? base + "_time" : base;
+  return L[k] ? k : base;
 }
 /* the end-of-game card in a game against a character shows what that character says, not the coach */
 function botEnd(res) {
-  if (!st || st.game !== "ai" || !BOT_LINES[botOf(st.level).id]) return null; const p = botPick(res === "win" ? "lose" : res === "loss" ? "win" : "draw"); if (!p) return null;
+  if (!st || st.game !== "ai" || !st.over || !BOT_LINES[botOf(st.level).id]) return null; const p = botPick(botEndKind(st.over)); if (!p) return null;
   return `<div class="endcoach"><span class="botbf sm">${p.face}</span><span><b>${esc(p.name)}</b>${esc(p.text)}</span></div>`;
 }
-function botSay(kind) {
-  if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face;
+function botSay(kind, done) {
+  if (!st || st.game !== "ai") return; const p = botPick(kind); if (!p) return; const who = p.who, text = p.text, nm = p.name, face = p.face, me = st;
   let el = document.getElementById("pipc"); if (!el) { el = Object.assign(document.body.appendChild(document.createElement("div")), { id: "pipc" }); el.setAttribute("role", "status"); el.addEventListener("click", () => el.classList.remove("on")); }
   el.innerHTML = `<span class="botbf">${face}</span><div class="pipsay"><b>${esc(nm)}</b>${esc(text)}</div>`; el.classList.add("on", "talk"); clearTimeout(pipT); pipT = setTimeout(() => { el.classList.remove("talk"); el.classList.remove("on"); }, Math.min(14000, 3600 + text.length * 65));
-  try { if (PIPV.on && !(Snd && Snd.on === false)) AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95 }); } catch (e) { /* silent */ }
+  const wait = Math.min(9000, 1200 + text.length * 60); st.talkUntil = performance.now() + wait;
+  let spoke = false; const over = () => { if (spoke) return; spoke = true; if (st === me) { me.talkUntil = performance.now() + 300; if (done) done(); } };
+  try { if (PIPV.on && !(Snd && Snd.on === false)) { AIVoice.play(text, { voice: BOT_VOICE[who], volume: 0.95, onend: over }).then((a) => { if (!a) setTimeout(over, wait); }).catch(() => setTimeout(over, wait)); } else setTimeout(over, wait); } catch (e) { setTimeout(over, wait); }
 }
 {
-  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); setTimeout(() => botSay("start"), 900); return r; };
-  const _aiEnd = aiEnd; aiEnd = function () { const r = _aiEnd.apply(this, arguments); if (r && st && st.over && !st.botEnd) { st.botEnd = true; setTimeout(() => botSay(st.over.won ? "lose" : st.over.lost ? "win" : "draw"), 800); } return r; };
+  const _aiStart = aiStart; aiStart = function () { const r = _aiStart.apply(this, arguments); const me = st; setTimeout(() => { if (st !== me) return; botSay("start", () => { if (!me.over && live && live.c.history().length < 6) botSay("rival"); }); }, 900); return r; };
   const _vs = Voice.say; Voice.say = function (t) { if (st && st.game === "ai" && BOT_LINES[botOf(st.level).id] && /^(You win|You lost|Draw|Checkmate)$/.test(t)) return; return _vs.apply(this, arguments); };
-  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { botWatch(); openTalk(); } catch (e) { /* never block the board */ } return r; };
-}
-/* Mid-game talk. In order of interest: you check them, you take one of their pieces, they do the thing they are known for
-   (the Escaped gives a piece away, the Berserker checks, the Trader trades, Arteta declines a capture), and otherwise every few
-   moves a bit of trash talk or one of their stories, turn and turn about. At least four half-moves apart, twelve lines a game. */
-function botWatch() {
-  if (!st || st.game !== "ai" || !live || st.over) return; const h = live.c.history({ verbose: true }), n = h.length; if (st.botN === n) return; st.botN = n;
-  const m = h[n - 1]; if (!m) return; const id = botOf(st.level).id, L = BOT_LINES[id]; if (!L) return;
-  const T = st.botT = st.botT || { n: 0, last: -9, chat: 0 }; if (n < T.last) { T.last = -9; } if (T.n >= 12 || n - T.last < 4) return;
-  if (st.openAt != null && n - st.openAt < 3) return;   /* the coach has just told an opening fact */
-  const mine = m.color !== live.color; let kind = null;
-  if (!mine) { if (/[+#]/.test(m.san) && Math.random() < 0.8) kind = "check"; else if (m.captured && m.captured !== "p" && Math.random() < 0.75) kind = "ouch"; }
-  else {
-    const pre = new Chess(); h.slice(0, -1).forEach((x) => pre.move({ from: x.from, to: x.to, promotion: x.promotion })); let hit = false;
-    if (id === "escaped") { const mv = pre.moves({ verbose: true }).find((z) => z.from === m.from && z.to === m.to && z.promotion === m.promotion); hit = !!mv && botSac(pre, mv) >= 2; }
-    else if (id === "berserker") hit = /[+#]/.test(m.san);
-    else if (id === "trader") hit = m.captured === "q" || (!!m.captured && m.captured !== "p" && n > 8);
-    else if (id === "arteta") hit = n >= 8 && !m.captured && !/[+#]/.test(m.san) && pre.moves({ verbose: true }).some((z) => z.captured && BV[z.captured] >= 3);
-    if (hit && (id === "escaped" || Math.random() < 0.6)) kind = "trait";
-    else if (n >= 6 && n - T.last >= 7) { kind = T.chat % 2 ? "story" : "taunt"; T.chat++; }
-  }
-  if (kind && L[kind] && L[kind].length) { T.n++; T.last = n; const me = st; setTimeout(() => { if (st === me && !st.over) botSay(kind); }, mine ? 500 : 250); }
+  /* the game can end by a move or on the clock: both repaint the board, so the last word is said from there */
+  const _aiPaint = aiPaint; aiPaint = function () { const r = _aiPaint.apply(this, arguments); try { if (st && st.game === "ai" && st.over) { if (!st.botEnd) { st.botEnd = true; const me = st; setTimeout(() => { if (st === me) botSay(botEndKind(me.over)); }, 800); } } else { botWatch(); openTalk(); } } catch (e) { /* never block the board */ } return r; };
 }
 const botElo = (b) => BOT_ELO[b.id] || null;
 function aiMenu() {

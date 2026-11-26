@@ -1,0 +1,58 @@
+"""Funnier, deeper-in-character lines for the football and basketball sidekicks. Added by src/add_lines.py."""
+
+NEW = {
+    "boot": {
+        "welcome": ["Hold on, I've got a pebble in me from 1974. Right. Carry on.", "Evening. Somebody's had me on the radiator again. I've gone all stiff."],
+        "hit": ["Correct. I'd applaud, but I'm footwear.", "Lovely. I haven't felt that proud since someone finally washed me.", "That's right. They don't teach that at academies. They teach hair."],
+        "bighit": ["Blimey! My laces came undone.", "First clue! Even my left one's impressed, and he's impressed by nothing."],
+        "miss": ["Wrong. I've seen better efforts from a shin pad.", "No, son. That's the sort of answer that gets you dropped to the reserves.", "Not him. Close your eyes and hoof it next time, it worked for us."],
+        "streak": ["You're on a run! Nobody touch anything. Don't change your socks.", "Another! We had a lucky pie for less than this."],
+        "over": ["That's full time. Bang the mud off me and put me by the door.", "Done. I'm off for a lie down in a carrier bag."],
+        "deep": ["My left boot went missing in 1998. I still talk to him. Habit."],
+    },
+    "rita": {
+        "welcome": ["Names, please. Shin pads, please. No jewellery. Right, we may enjoy ourselves.", "I've brought two cards, three pens and no sense of humour. Almost none."],
+        "hit": ["Correct. I checked it twice, mostly because I enjoy checking.", "Right. No complaints from either bench, which is a first.", "Allowed. Stands. Don't celebrate near the corner flag."],
+        "bighit": ["That was so fast I haven't finished writing the date.", "I'm adding time on, just so I can admire it."],
+        "miss": ["Wrong. And don't you dare surround me.", "No. You can draw a screen in the air all you like.", "Incorrect. I'm booking you for optimism."],
+        "streak": ["I've reviewed this streak from nine angles. Annoyingly, it's all legal.", "Another. I may have to inspect your boots."],
+        "over": ["Match over. Whistle blown. Three times, because I like it.", "Full time. Nobody touch the ball, it's coming home with me."],
+        "deep": ["My own family asks to see the replay before they'll agree with me at dinner."],
+    },
+    "bench": {
+        "welcome": ["Quick, sit down, act natural. If coach thinks we're friends he might play us both.", "I brought two bottles of water! One's for you. Both are warm."],
+        "hit": ["Yes! I'm going to tell people we did that together.", "Correct! I did a knee slide. On the bench. I have splinters.", "You got it! I'd lift you up but I skipped that session. By accident. There was no session."],
+        "bighit": ["WHAT! I was still taking my bib off!", "That fast? Do you want to be my agent?"],
+        "miss": ["That's okay! Coach didn't see. Coach never sees. Trust me.", "Wrong! Welcome to the club. We meet on the side, next to the cones.", "No worries! I once warmed up for the wrong team for a whole half."],
+        "streak": ["Stop it, you're making the starters nervous!", "Another! I'm drumming on the roof of the dugout!"],
+        "over": ["Game over! Can you help me carry the cones? Please? They're all I've got.", "That's it! I'm going to ice my legs. From the sitting."],
+        "deep": ["Coach said my name last week. He was reading a list of things to remove from the bus."],
+    },
+    "rim": {
+        "welcome": ["Careful, I've got a loose bolt. Emotionally also.", "Morning. My net's freshly washed and I'm feeling myself."],
+        "hit": ["Straight through me. Tickles every single time.", "Correct. The backboard says hi. He can't talk, so I'm saying it.", "In! You didn't even touch the sides. Rude, actually. I like contact."],
+        "bighit": ["I haven't felt a swish like that since the new net.", "Whoa! I'm still vibrating."],
+        "miss": ["Clang. I felt that in my teeth. I don't have teeth. Still felt it.", "You hit me right in the front bit. The front bit is sensitive.", "Airball. I've been stood up before, but never that badly."],
+        "streak": ["The net's smoking. Is anyone else smelling net?", "Keep going! I'm spinning on my own bolts!"],
+        "over": ["That's game. Someone get the ladder, I want to feel tall and cut down.", "Done. Please don't hang on me on the way out."],
+        "deep": ["Every kid who ever dunked on me yelled. Nobody has ever asked how I was after."],
+    },
+    "clock": {
+        "welcome": ["Hi hi hi! I've been counting since you left! I'm at a very big number!", "Okay! Stretch! Breathe! Faster! Breathe faster!"],
+        "hit": ["YES! I was holding my beep in!", "Correct! You can have four extra seconds! Don't tell the league!", "Right! My digits are doing a little dance!"],
+        "bighit": ["I hadn't even said twenty three!", "Too fast! I need a moment! I don't have moments, I have seconds!"],
+        "miss": ["Wrong! Beeeeep! Sorry! That one slipped out!", "No no no! Okay! Fine! We pretend that second never happened!", "Missed! My battery just dropped two percent!"],
+        "streak": ["I can't take this! My segments are overheating!", "Again?! Somebody hold my numbers!"],
+        "over": ["Zero! Zero zero zero! I love saying it and I hate saying it!", "Done! I'm going to stare at a sundial and calm down."],
+        "deep": ["The wall clock in the gym is so relaxed. He's been stopped since March. I envy him."],
+    },
+    "sneak": {
+        "welcome": ["Don't step on me. I'm serious. We can be friends, but do not step on me.", "Yo! I got new laces and I need you to say something about it."],
+        "hit": ["Ayy! Squeak squeak, that's applause where I'm from!", "Right! Put that one in a glass case, no creases!", "You ate that! Not me though, I'm leather and mesh!"],
+        "bighit": ["That was so fresh I put the tissue paper back in!", "First clue! Resell value on you just tripled!"],
+        "miss": ["Oof. That answer had a crease in it.", "Nah. That was some discount bin knowledge, but we love you.", "Wrong! I'm not mad. I'm just standing here. Pigeon toed. With disappointment."],
+        "streak": ["Somebody wipe the floor, I'm leaving skid marks of pure joy!", "You're so hot my soles are melting!"],
+        "over": ["That's game! Take me off gently. Use the hands, not the other foot.", "Done! Back in the box. Box on the shelf. Shelf in the shade."],
+        "deep": ["Somebody queued all night for me once. I still think about whether I was worth it. I was. But I think about it."],
+    },
+}

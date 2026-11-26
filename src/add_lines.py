@@ -23,7 +23,7 @@ def add(path, start, end, data, flat=False):
 
 
 PIP_COACH = ("win", "loss", "draw", "forced")
-for suffix in ("", "2"):
+for suffix in ("", "2", "3", "4"):
     SP = importlib.import_module("new_lines_sports" + suffix).NEW; CH = importlib.import_module("new_lines_chess" + suffix).NEW
     add("site/mascot_lines.js", "const MASCOT_LINES", None, SP)
     add("site/coach_lines.js", "const COACH_LINES", "const OPEN_FACTS", {c: CH[c] for c in ("vera", "bea")} | {"pip": {k: v for k, v in CH["pip"].items() if k in PIP_COACH}})

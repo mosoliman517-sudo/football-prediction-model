@@ -11,6 +11,8 @@ CHAR_VOICE = {"boot": "bm_george", "rita": "bf_emma", "bench": "am_puck", "rim":
               "pip": "am_liam", "vera": "bf_isabella", "bea": "bf_alice"}
 SPORT_CHARS = {"fb": ["boot", "rita", "bench"], "bb": ["rim", "clock", "sneak"], "ch": ["pip", "vera", "bea"]}
 STR = re.compile(r'"((?:[^"\\]|\\.)*)"')
+TAGGED = {}   # (voice, shown text) -> the performance text with [laugh] and friends, for engines that can act it
+TAG = re.compile(r"\[[a-z ]+\]")
 
 
 def _blocks(path, top_names):
@@ -96,6 +98,9 @@ def jobs():
     seen, out = set(), []
     for v, t, c, k in J:
         t = " ".join(t.replace('\\"', '"').split())
+        if TAG.search(t):
+            raw, t = t, " ".join(TAG.sub(" ", t).split())
+            TAGGED[(v, t)] = raw
         if (v, t) not in seen:
             seen.add((v, t)); out.append((v, t, c, k))
     return out

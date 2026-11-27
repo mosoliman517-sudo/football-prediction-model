@@ -1303,7 +1303,8 @@ function rvSacInfo(i) {
   let worst = matOf(c, col), piece = null, take = null, mate = null;
   for (const m of c.moves({ verbose: true })) {
     if (!m.captured || old(m)) continue; c.move(m); let best = matOf(c, col), mt = null;
-    for (const r of c.moves({ verbose: true })) { c.move(r); if (c.in_checkmate()) mt = r.san; if (r.captured) best = Math.max(best, matOf(c, col)); c.undo(); if (mt) break; }
+    for (const r of c.moves({ verbose: true })) { c.move(r); if (c.in_checkmate()) mt = r.san; if (r.captured) { let v = matOf(c, col); if (r.to !== m.to) for (const z of c.moves({ verbose: true })) if (z.captured && z.to === r.to) { c.move(z); v = Math.min(v, matOf(c, col)); c.undo(); } best = Math.max(best, v); }   /* a grab elsewhere only counts for what is left once they take back (10.Nxb5!! in the Opera game: Bxf6 is just a trade) */
+      c.undo(); if (mt) break; }
     if (mt) best = Math.max(best, m0 + 99);   // taking it walks into mate: the offer is free
     if (best < worst || (mt && !take && SACV[m.captured] >= 3)) { if (best < worst) worst = best; piece = m.captured; take = m.san; mate = mt; }
     c.undo();
@@ -1360,7 +1361,10 @@ function rvBrilliance(i, F, H, x) {
     if (!why) return out;
     return { ok: true, cand: true, score: 0.9, info: { under: mv.promotion, kind: ["promotion"], why, qWin: ql ? Math.round(x.pov(ql.w)) : null } };
   }
-  const sound = (x.good || (x.loss <= (sac.bait ? 12 : 10) && x.after >= 70 && isSac)) && (x.after >= 45 || x.mates || defensive);
+  /* a brilliancy need not be the best move: a nasty sacrifice or trap counts while you stay at least level. A trap (taking it is
+     punished) may cost up to 20 points of winning chance, short of a blunder; any other real sacrifice up to 10. */
+  const sound = (x.good || (isSac && x.loss <= 20 && x.after >= 50))   /* the deeper check below holds a sacrifice that is not a trap to 10 */
+     && (x.after >= 45 || x.mates || defensive);
   /* scores 0..1 */
   const T = isSac ? Math.min(1, 0.35 + 0.1 * Math.min(5, sac.drop) + (SACV[sac.piece] >= 9 ? 0.2 : SACV[sac.piece] >= 5 ? 0.1 : 0) + (sac.mate || sac.bait ? 0.1 : 0)) : 0;
   const C = Math.min(1, F.uniq / 30) * 0.7 + (defensive ? 0.4 : 0);
@@ -1410,12 +1414,11 @@ async function rvDeepen(tok) {
       const pl = (await Sf.analyse(fen, { multipv: 1, depth: 22, ms: 5000, moves: [played] })).map((x) => lineW(x, c.turn())); if (!rv || rv.tok !== tok) return;
       const rank = sh.findIndex((l) => l.pv[0] === played), best = dp[0] && pl[0] ? pov(dp[0].w) : null, mine = pl[0] ? pov(pl[0].w) : null;
       const gap = rank >= 0 && sh[0] ? pov(sh[0].w) - pov(sh[rank].w) : 99;
-      /* a trap offer (16.Nd5!! exd5 17.Bg5+): when taking the piece is punished and you stay clearly winning, the offer is allowed
-         to be a little behind the engine's first choice */
-      let punish = null; const sc = rvSacInfo(i), after = new Chess(rv.fen[i]), tm = sc.bait && sc.take ? new Chess(rv.fen[i]).move(sc.take) : null;
+      /* a nasty sacrifice or trap (16.Nd5!! exd5 17.Bg5+) need not be the engine's first choice: see rvBrilliance for the limits */
+      let punish = null; const sc = rvSacInfo(i), after = new Chess(rv.fen[i]), tm = sc.take ? new Chess(rv.fen[i]).move(sc.take) : null;
       if (tm) { const tk = (await Sf.analyse(rv.fen[i], { multipv: 1, depth: 20, ms: 4000, moves: [tm.from + tm.to + (tm.promotion || "")] })).map((x) => lineW(x, after.turn())); if (!rv || rv.tok !== tok) return; if (tk[0]) punish = { win: pov(tk[0].w), pv: tk[0].pv }; }
-      const trap = !!(punish && mine != null && mine >= 70 && punish.win >= mine + 10);
-      rv.hard[i] = { hidden: rank < 0 || rank > 2, rank, gap, shBest: sh[0] ? sh[0].pv[0] : null, stable: best == null ? true : (best - mine <= (trap ? 12 : 5) && mine >= (d.before <= 40 ? 35 : 40)), deepLoss: best == null ? 0 : best - mine, deepAfter: mine, trap: trap ? punish : null };
+      const trap = !!(punish && mine != null && mine >= 50 && punish.win >= mine + 10), offer = !!(sc.piece && SACV[sc.piece] >= 3 && sc.drop >= 2);
+      rv.hard[i] = { hidden: rank < 0 || rank > 2, rank, gap, shBest: sh[0] ? sh[0].pv[0] : null, stable: best == null ? true : (best - mine <= (trap ? 20 : offer ? 10 : 5) && mine >= (offer && best - mine > 5 ? 50 : d.before <= 40 ? 35 : 40)), deepLoss: best == null ? 0 : best - mine, deepAfter: mine, trap: trap ? punish : null };
     } catch (e) { rv.hard[i] = { hidden: false, rank: 0, gap: 0, stable: true }; }
     const nd = rvDerive(i); if (nd.cls !== d.cls) changed = true; rv.data[i - 1] = nd; rvList(i);
   }
@@ -1572,7 +1575,7 @@ function rvExplain(d) {
     const sh = (H && H.trap ? ` The point: ${pvLine(fenB, H.trap.pv, 4)}.` : "") + (behind ? ` ${bs} keeps a little more on paper (${pct(d.before)} against ${pct(d.after)}), ${H && H.trap ? `but ${san} is the move that sets the trap` : `but ${san} still holds up`}.` : H && H.shBest && H.hidden ? ` At a quick glance Stockfish prefers ${uciSan(fenA, H.shBest)}; it takes a deeper look to see why ${san} is better.` : "");
     const brill = sc.under ? (sc.why === "stale" ? `Promoting to a ${nm[sc.under]} because a queen would be stalemate. ` : `Promoting to a ${nm[sc.under]}${sc.qWin != null ? ` instead of a queen: the queen leaves you at ${sc.qWin}% winning chances, this keeps ${pct(d.after)}` : " instead of a queen: the queen is clearly weaker here"}. `) + "Underpromotions like this are rare."
       : sc.quiet ? `${san} is a quiet move: no capture, no sacrifice${/[+#]/.test(san) ? "" : ", no check"}, yet it is the only one that keeps ${pct(d.after)} winning chances; the best alternative drops that by about ${sc.uniq} points.${sc.traps && sc.traps.length ? ` The tempting ${sc.traps.join(" and ")} ${sc.traps.length > 1 ? "do" : "does"} not work.` : ""}${sh}`
-      : sc.piece ? `${san} offers your ${nm[sc.piece]}${sc.take ? ` (${sc.take} takes it)` : ""}, ${sc.bait ? `but taking it loses: they get punished and you win back more than you gave` : sc.mate ? `but then ${sc.mate} is checkmate` : d.after < 45 ? `but it rescues the game: you were in trouble and now it is about level (${pct(d.after)} winning chances)` : `yet Stockfish says you are still ${pct(d.after)} to win`}. A real sacrifice, and it still holds up at depth 22.${sh}`
+      : sc.piece ? `${san} offers your ${nm[sc.piece]}${sc.take ? ` (${sc.take} takes it)` : ""}, ${sc.bait ? `but taking it loses: they get punished and you win back more than you gave` : H && H.trap ? `and taking it backfires on them` : sc.mate ? `but then ${sc.mate} is checkmate` : d.after < 45 ? `but it rescues the game: you were in trouble and now it is about level (${pct(d.after)} winning chances)` : `yet Stockfish says you are still ${pct(d.after)} to win`}. A real sacrifice, and it still holds up at depth 22.${sh}`
       : `${san} gives up material, yet the position stays sound (${pct(d.after)} winning chances).`;
     t = brill + (kinds ? ` (${kinds})` : "");
   }

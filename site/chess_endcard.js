@@ -19,7 +19,7 @@ const ENDC = (() => {
       const win = winOf(a[0]), second = a[1] ? winOf(a[1]) : win, uci = m.from + m.to + (m.promotion || "");
       let after; if (c.game_over()) after = c.in_checkmate() ? 100 : 50; else { const b = await look(c.fen()); after = b.length ? 100 - winOf(b[0]) : win; }
       const best = a[0].pv[0] === uci, loss = best ? 0 : Math.max(0, win - after), off = TALK.offered(before, c.fen(), m);
-      const k = off && (VAL_(m.captured) < VAL_(off.piece)) && loss <= 2 && after >= 45 && win < 95 ? "brilliant"
+      const k = off && (VAL_(m.captured) < VAL_(off.piece)) && (loss <= 2 ? after >= 45 : loss <= 10 && after >= 55) && win < 95 ? "brilliant"
         : best && win - second >= 25 && !m.captured ? "great" : best ? "best" : loss < 2 ? "excellent" : loss < 5 ? "good" : loss < 10 ? "inaccuracy" : loss < 20 ? "mistake" : "blunder";
       n[k]++;
     }

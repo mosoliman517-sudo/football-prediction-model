@@ -977,7 +977,7 @@ function reviewStart(sans, color, o = {}) {
   clearInterval(st.timer); live = null; rvStop(); st = { game: "review" };
   const c = new Chess(), mv = [], fen = [c.fen()]; for (const s of sans) { const m = c.move(s); if (!m) break; mv.push(m); fen.push(c.fen()); }
   const bm = bookMap(), book = [false], openName = [""]; { let name = ""; for (let i = 1; i <= mv.length; i++) { const nm = i <= 24 ? bm.get(mv.slice(0, i).map((m) => m.san).join(" ")) : null; if (nm) name = nm; book[i] = !!nm; openName[i] = name; } }
-  rv = { speed: o.speed || "", sans: mv.map((m) => m.san), mv, fen, N: mv.length, color: color || "w", flip: color === "b", names: o.names || ["White", "Black"], from: o.from || "pgn", result: o.result || "", i: 0, pos: [], data: [], book, openName, tok: ++RVTOK, showBest: store.get("rv_best", true), c: new Chess(), L: { lastKey: "", skipAnim: true, flipped: false }, done: false, failed: false, timer: null };
+  rv = { speed: o.speed || "", cc: !!o.cc, ratings: o.ratings || null, ccAcc: o.ccAcc || null, sans: mv.map((m) => m.san), mv, fen, N: mv.length, color: color || "w", flip: color === "b", names: o.names || ["White", "Black"], from: o.from || "pgn", result: o.result || "", i: 0, pos: [], data: [], book, openName, tok: ++RVTOK, showBest: store.get("rv_best", true), c: new Chess(), L: { lastKey: "", skipAnim: true, flipped: false }, done: false, failed: false, timer: null };
   $("#app").className = "fresh"; rvShell(); rvGo(0, { sound: false }); rvAnalyse(rv.tok); rvTheory(rv.tok);
 }
 /* theory from the masters database: a move counts as book while at least 5 master games played it from that position */
@@ -1162,7 +1162,7 @@ document.addEventListener("click", (e) => {
 function rvReport() {
   const el = rvEl("rvRep"); if (!el) return; if (!rv.done) { el.innerHTML = ""; return; }
   const side = (w) => rv.data.filter((x) => x && x.white === w && x.cls !== "book"), accOf = (l) => (l.length ? l.reduce((s, x) => s + x.acc, 0) / l.length : null);
-  const P = [true, false].map((w) => { const l = side(w), a = rvAccuracy(w); return { w, n: l.length, acc: a, elo: (rvRate(l) || {}).elo || null, acpl: (rvRate(l) || {}).acpl, lo: (rvRate(l) || {}).lo, hi: (rvRate(l) || {}).hi, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
+  const P = [true, false].map((w) => { const l = side(w), a = rvShownAcc(w), cc = rvCcRating(w); return { cc, w, n: l.length, acc: a, elo: (rvRate(l) || {}).elo || null, acpl: (rvRate(l) || {}).acpl, lo: (rvRate(l) || {}).lo, hi: (rvRate(l) || {}).hi, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
   const moments = rv.data.filter((x) => x && x.cls !== "book").sort((a, b) => b.loss - a.loss).slice(0, 3).filter((x) => x.loss >= 8);
   const shine = rv.data.filter((x) => x && (x.cls === "brilliant" || x.cls === "great")).slice(0, 3);
   const notes = [];
@@ -1170,12 +1170,12 @@ function rvReport() {
   const swing = rv.data.find((x) => x && x.before >= 85 && x.after < 60); if (swing) notes.push(`${esc(rv.names[swing.white ? 0 : 1])} had a winning position and let it slip with ${Math.ceil(swing.i / 2)}${swing.white ? "." : "..."} ${esc(swing.san)}.`);
   const cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
   [true, false].forEach((w) => { const b = cnt(w, "blunder"); if (!b && P[w ? 0 : 1].n >= 10) notes.push(`${esc(rv.names[w ? 0 : 1])} made no blunders.`); });
-  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small><b class="num">${p.elo == null ? "—" : p.elo.toFixed(1)}</b>${p.elo == null ? '<span class="fine" style="font-size:11px">decided too early to judge</span>' : ""}<span>game rating (Lichess scale)${p.lo ? ` · likely ${p.lo}–${p.hi}` : ""}</span>${p.elo == null ? "" : `<span class="fine" title="Lichess ratings run roughly 150 to 350 points above chess.com around club level and meet near 2500; this is a rough conversion, not exact">≈ ${rvToCC(p.elo).toFixed(1)} on chess.com (rough)</span>`}</div>`).join("")}</div>
+  el.innerHTML = `<div class="rvrep"><div class="rvelo">${P.map((p) => `<div class="rvel ${p.w ? "" : "dk"}"><small>${esc(rv.names[p.w ? 0 : 1])}</small>${p.cc ? `<b class="num">${p.cc}</b><span>game rating, chess.com style</span><span class="fine" title="chess.com does not publish its formula; this compares the accuracy with what is usual at your rating">our estimate, from chess.com's accuracy</span>` : `<b class="num">${p.elo == null ? "—" : p.elo.toFixed(1)}</b>${p.elo == null ? '<span class="fine" style="font-size:11px">decided too early to judge</span>' : ""}<span>game rating (Lichess scale)${p.lo ? ` · likely ${p.lo}–${p.hi}` : ""}</span>${p.elo == null ? "" : `<span class="fine" title="Lichess ratings run roughly 150 to 350 points above chess.com around club level and meet near 2500; this is a rough conversion, not exact">≈ ${rvToCC(p.elo).toFixed(1)} on chess.com (rough)</span>`}`}</div>`).join("")}</div>
     <table class="rvph"><tr><th></th>${P.map((p) => `<th>${p.w ? "White" : "Black"}</th>`).join("")}</tr>${RV_PH.map(([k, n], j) => `<tr><td>${n}</td>${P.map((p) => { const g = rvGrade(p.ph[j]); return `<td>${g ? `<i class="cls ${g}" title="${Math.round(p.ph[j])}% accuracy">${RVC[g][1]}</i>` : '<span class="fine">—</span>'}</td>`; }).join("")}</tr>`).join("")}</table>
     ${notes.length ? `<ul class="rvnotes">${notes.slice(0, 4).map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
     ${moments.length || shine.length ? `<div class="rvkm"><span class="label">Key moments</span>${[...shine, ...moments].map((x) => `<button type="button" class="rvkmb" data-ply="${x.i}"><i class="cls ${x.cls}">${RVC[x.cls][1]}</i>${Math.ceil(x.i / 2)}${x.white ? "." : "..."} ${esc(x.san)}</button>`).join("")}</div>` : ""}
     ${rvOpeningHTML()}
-    ${(() => { const me = P[rv.color === "b" ? 1 : 0]; pipRemember(me.acc, me.elo); return pipMemoryHTML(me.acc); })()}
+    ${(() => { const me = P[rv.color === "b" ? 1 : 0]; pipRemember(me.acc, me.cc || me.elo); return pipMemoryHTML(me.acc); })()}
     <p class="fine">Game rating (Lichess scale, ${rvSpeed().toLowerCase()}) is calibrated on 63,815 real rated games: how much each move gives away while the game is still in the balance and how often you blunder, matched to the ratings of players who play like that. One game is a weak signal: the range is where 80% of real players who played a game like this are rated, so it is wide on purpose, and it pulls strong and weak players toward the middle. Your average over several reviews is the number to trust. Phases: opening while in theory or the first moves, endgame once most pieces are off.</p></div>`;
 }
 /* ---------- review, part two: engine lines, retry a mistake, your own games, and Pip's memory ---------- */
@@ -1319,7 +1319,7 @@ async function impLoad(site, user) {
     } else {
       const a = await fetch(`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`); if (!a.ok) throw new Error(a.status); const arch = (await a.json()).archives || [];
       let games = []; for (const u of arch.slice(-2).reverse()) { const r = await fetch(u); if (r.ok) games = games.concat(((await r.json()).games || []).reverse()); if (games.length >= 20) break; }
-      IMP = games.filter((g) => g.rules === "chess" && g.pgn).slice(0, 20).map((g) => { const wr = g.white.result, res = wr === "win" ? "1-0" : g.black.result === "win" ? "0-1" : "1/2-1/2"; return { pgn: g.pgn, w: g.white.username, b: g.black.username, wr: g.white.rating, br: g.black.rating, res, at: g.end_time * 1000, tc: g.time_class, op: ((g.pgn.match(/\[ECOUrl "[^"]*\/([^"]*)"/) || [])[1] || "").replace(/-/g, " "), me: g.white.username.toLowerCase() === user.toLowerCase() ? "w" : "b" }; });
+      IMP = games.filter((g) => g.rules === "chess" && g.pgn).slice(0, 20).map((g) => { const wr = g.white.result, res = wr === "win" ? "1-0" : g.black.result === "win" ? "0-1" : "1/2-1/2"; return { pgn: g.pgn, cc: true, ccAcc: g.accuracies ? [g.accuracies.white, g.accuracies.black] : null, w: g.white.username, b: g.black.username, wr: g.white.rating, br: g.black.rating, res, at: g.end_time * 1000, tc: g.time_class, op: ((g.pgn.match(/\[ECOUrl "[^"]*\/([^"]*)"/) || [])[1] || "").replace(/-/g, " "), me: g.white.username.toLowerCase() === user.toLowerCase() ? "w" : "b" }; });
     }
     if (!IMP.length) { el.innerHTML = `<p class="fine">No standard games found for ${esc(user)}.</p>`; return; }
     el.innerHTML = `<div class="cpgames">${IMP.map((g, k) => { const mine = g.me === "w", r = g.res === "1/2-1/2" ? "D" : (g.res === "1-0") === mine ? "W" : "L"; return `<button class="cpgame" type="button" data-imp="${k}"><span class="cpres r${r}">${r === "W" ? "Win" : r === "D" ? "Draw" : "Loss"}</span><span class="cpcol2"><b>vs ${esc(mine ? g.b : g.w)} ${(mine ? g.br : g.wr) ? `<small class="fine">(${mine ? g.br : g.wr})</small>` : ""}</b><span class="fine">${new Date(g.at).toLocaleDateString()} · ${esc(g.tc || "")} · ${mine ? "White" : "Black"}${g.op ? " · " + esc(g.op.slice(0, 40)) : ""}</span></span>${ic("arrow")}</button>`; }).join("")}</div>`;
@@ -1329,7 +1329,7 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest && e.target.closest("[data-impsite],[data-imp]"); if (!t) return;
   if (t.dataset.impsite) { document.querySelectorAll("[data-impsite]").forEach((x) => x.classList.toggle("on", x === t)); return impLoad(t.dataset.impsite, ($("#impUser") || {}).value || ""); }
   const g = IMP[+t.dataset.imp]; if (!g) return; const c = new Chess(); c.load_pgn(g.pgn, { sloppy: true }); const sans = c.history(); if (sans.length < 2) return;
-  reviewStart(sans, g.me, { from: "import", names: [g.w, g.b], result: g.res, speed: g.tc });
+  reviewStart(sans, g.me, { from: "import", names: [g.w, g.b], result: g.res, speed: g.tc, cc: g.cc, ccAcc: g.ccAcc, ratings: [g.wr, g.br] });
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "impUser") { const s = (document.querySelector("[data-impsite].on") || {}).dataset; impLoad((s && s.impsite) || "li", e.target.value); } });
 
@@ -1447,7 +1447,7 @@ async function rvZug(tok) {
   return changed;
 }
 async function rvTb(fen) {
-  rv.tbc = rv.tbc || {}; if (fen in rv.tbc) return rv.tbc[fen]; try { const r = await fetch("https://tablebase.lichess.ovh/standard?fen=" + encodeURIComponent(fen)); if (!r.ok) return (rv.tbc[fen] = null); const j = await r.json(); return (rv.tbc[fen] = j.category || null); } catch (e) { return (rv.tbc[fen] = null); }
+  rv.tbc = rv.tbc || {}; if (fen in rv.tbc) return rv.tbc[fen]; try { const r = await fetch("https://tablebase.lichess.ovh/standard?fen=" + encodeURIComponent(fen)); if (!r.ok) return ((rv.tbc = rv.tbc || {})[fen] = null); const j = await r.json(); return ((rv.tbc = rv.tbc || {})[fen] = j.category || null); } catch (e) { return ((rv.tbc = rv.tbc || {})[fen] = null); }
 }
 async function rvDeepen(tok) {
   rv.hard = rv.hard || {}; let changed = false;
@@ -1681,19 +1681,35 @@ function rvList(i) {
   const d = rv.data[i - 1], el = d && rvEl("rvM" + i); if (!el) return; const r = RVC[d.cls];
   el.innerHTML = `${esc(d.san)}<i class="cls ${d.cls}">${r[1]}</i>`;
 }
-/* Accuracy, fitted to chess.com's published numbers. Their formula is private, so this was fitted on 36 real rapid and blitz games
-   (72 players) that carry chess.com accuracies: from the plain average of the per-move scores, with a little weight on a harmonic
-   mean floored at 10, so one game-losing move cannot halve an otherwise good game. Typical miss on those games: about 5 points. */
+/* Accuracy, fitted to chess.com's published numbers. Their formula is private, so this was fitted on 402 results from 201 reviewed
+   games: a flatter winning-chance curve than the move grades use, then the average of the per-move scores and a harmonic mean
+   floored at 60, so one game-losing move cannot halve an otherwise good game. Typical miss on those games: about 4 points. */
 function rvAccuracy(w) {
-  const mv = rv.data.filter((x) => x && x.white === w); if (!mv.length) return null;
-  const mean = mv.reduce((a, x) => a + x.acc, 0) / mv.length, harm = mv.length / mv.reduce((a, x) => a + 1 / Math.max(10, x.acc), 0);
-  return Math.round(Math.max(10, Math.min(100, 2.065 * mean + 0.069 * harm - 116.46)));
+  const wp = (cp) => 50 + 50 * (2 / (1 + Math.exp(-0.00184104 * Math.max(-1000, Math.min(1000, cp)))) - 1);
+  const a = []; for (const x of rv.data) { if (!x || x.white !== w) continue; const p = rv.pos[x.i - 1], q = rv.pos[x.i]; if (!p || !q) continue;
+    const loss = x.isBest ? 0 : Math.max(0, (w ? 1 : -1) * (wp(p.ev.cp) - wp(q.ev.cp)));
+    a.push(x.cls === "book" || x.cls === "forced" ? 100 : Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669))); }
+  if (!a.length) return null;
+  const mean = a.reduce((s, v) => s + v, 0) / a.length, harm = a.length / a.reduce((s, v) => s + 1 / Math.max(60, v), 0);
+  return Math.round(Math.max(10, Math.min(100, 1.69967 * mean + 1.39272 * harm - 210)));
 }
+/* chess.com-style game rating, only for chess.com games that carry chess.com's own accuracy (our accuracy is too far off to feed it). chess.com says it compares your moves with what is
+   expected at your own rating, and publishes no formula. Expected accuracy per rating is from GM Larry Kaufman's study of chess.com
+   games; the 81 points per accuracy point comes from ONE real game rating (1549 player, 88.2 accuracy, shown 2200) and is close to
+   the study's 93. Treat it as an estimate. */
+const CC_EXPECT = { rapid: [[400, 68.8], [1000, 75.7], [1600, 80.6], [1700, 81.2], [1800, 81.9], [1900, 82.6], [2000, 83.9], [2200, 85.6], [2400, 89.2]], blitz: [[400, 69.8], [1000, 76.5], [1600, 78.8], [2000, 81.7], [2400, 85.9], [2800, 87.4]] };
+function rvCcRating(w) {
+  const R = rv.cc && rv.ratings && rv.ratings[w ? 0 : 1]; if (!R || !rv.ccAcc) return null; const acc = rv.ccAcc[w ? 0 : 1]; if (acc == null || rv.data.filter((x) => x && x.white === w).length < 8) return null;
+  const T = CC_EXPECT[/blitz|bullet/i.test(rv.speed) ? "blitz" : "rapid"]; let k = 1; while (k < T.length - 1 && R > T[k][0]) k++;
+  const [x0, y0] = T[k - 1], [x1, y1] = T[k], expect = y0 + (y1 - y0) * Math.max(0, Math.min(1, (R - x0) / (x1 - x0)));
+  return Math.round(Math.max(100, Math.min(3200, R + 81 * (acc - expect))) / 50) * 50;
+}
+const rvShownAcc = (w) => (rv.ccAcc ? Math.round(rv.ccAcc[w ? 0 : 1] * 10) / 10 : rvAccuracy(w));
 function rvSummary() {
-  const acc = (w) => rvAccuracy(w), cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
+  const acc = (w) => rvShownAcc(w), cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
   const a = rvEl("rvAcc"), c = rvEl("rvCounts"); if (!a) return;
   const A = acc(true), B = acc(false), nm = (s) => esc(rv.names[s]);
-  a.innerHTML = `<div class="accb"><small>${nm(0)}</small><b>${A == null ? "…" : A}</b><span>accuracy</span></div><div class="accb dk"><small>${nm(1)}</small><b>${B == null ? "…" : B}</b><span>accuracy</span></div>`;
+  a.innerHTML = `<div class="accb"><small>${nm(0)}</small><b>${A == null ? "…" : A}</b><span>${rv.ccAcc ? "chess.com accuracy" : "accuracy"}</span></div><div class="accb dk"><small>${nm(1)}</small><b>${B == null ? "…" : B}</b><span>${rv.ccAcc ? "chess.com accuracy" : "accuracy"}</span></div>`;
   c.innerHTML = `<table class="rvtab">${RVORDER.filter((k) => cnt(true, k) + cnt(false, k) > 0 || ["best", "inaccuracy", "mistake", "blunder"].includes(k)).map((k) => `<tr><td><i class="cls ${k}">${RVC[k][1]}</i> ${RVC[k][0]}</td><td>${cnt(true, k)}</td><td>${cnt(false, k)}</td></tr>`).join("")}</table>`;
   rvReport();
 }
@@ -4686,7 +4702,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.lv) { st.level = +t.dataset.lv; store.set("ai_level", st.level); document.querySelectorAll("[data-lv]").forEach((x) => x.classList.toggle("on", x.dataset.lv === t.dataset.lv)); return; }
   if (t.dataset.clk != null) { st.clock = +t.dataset.clk; store.set("ai_clock", st.clock); document.querySelectorAll("[data-clk]").forEach((x) => x.classList.toggle("on", x.dataset.clk === t.dataset.clk)); return; }
   if (t.dataset.col) { st.color = t.dataset.col; store.set("ai_color", st.color); document.querySelectorAll("[data-col]").forEach((x) => x.classList.toggle("on", x.dataset.col === t.dataset.col)); return; }
-  if (t.id === "pgnGo") { const c = new Chess(), txt = $("#pgnIn").value.trim(); if (!txt || !(c.load_pgn(txt, { sloppy: true }) || c.load_pgn("1. " + txt.replace(/^1\.\s*/, ""), { sloppy: true }))) { $("#pgnMsg").textContent = "I could not read that game. Paste a PGN or a list of moves."; return; } const sans = c.history(), h = c.header(); if (sans.length < 4) { $("#pgnMsg").textContent = "The game is too short to review."; return; } const tcm = /^(\d+)(?:\+(\d+))?/.exec(h.TimeControl || ""), est = tcm ? +tcm[1] + 40 * (+tcm[2] || 0) : 0, speed = !tcm ? "" : est < 180 ? "bullet" : est < 480 ? "blitz" : est < 1500 ? "rapid" : "classical"; const me = String(store.get("rv_me", "") || impUser().user || "").toLowerCase(), meCol = me && String(h.Black || "").toLowerCase() === me ? "b" : "w"; return reviewStart(sans.slice(0, 200), meCol, { from: "pgn", names: [h.White || "White", h.Black || "Black"], result: h.Result || "", speed }); }
+  if (t.id === "pgnGo") { const c = new Chess(), txt = $("#pgnIn").value.trim(); if (!txt || !(c.load_pgn(txt, { sloppy: true }) || c.load_pgn("1. " + txt.replace(/^1\.\s*/, ""), { sloppy: true }))) { $("#pgnMsg").textContent = "I could not read that game. Paste a PGN or a list of moves."; return; } const sans = c.history(), h = c.header(); if (sans.length < 4) { $("#pgnMsg").textContent = "The game is too short to review."; return; } const tcm = /^(\d+)(?:\+(\d+))?/.exec(h.TimeControl || ""), est = tcm ? +tcm[1] + 40 * (+tcm[2] || 0) : 0, speed = !tcm ? "" : est < 180 ? "bullet" : est < 480 ? "blitz" : est < 1500 ? "rapid" : "classical"; const me = String(store.get("rv_me", "") || impUser().user || "").toLowerCase(), meCol = me && String(h.Black || "").toLowerCase() === me ? "b" : "w"; return reviewStart(sans.slice(0, 200), meCol, { from: "pgn", cc: /chess\.com/i.test(h.Site || ""), ratings: [+h.WhiteElo || 0, +h.BlackElo || 0], names: [h.White || "White", h.Black || "Black"], result: h.Result || "", speed }); }
   if (t.id === "pgnElite") { const g = rnd(EM); return reviewStart(g.moves.slice(0, 90), "w", { from: "elite", names: [g.white, g.black], result: g.result }); }
   if (t.id === "aiGo") return aiStart(st.level, st.color);
   if (t.id === "aiNew") return aiMenu();

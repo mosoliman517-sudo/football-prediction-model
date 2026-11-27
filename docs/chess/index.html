@@ -379,7 +379,7 @@ table.tb{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit
 </div>
 <script>
 (function () {
-  var files = ["data.9dde7c6303.js", "app.ffe9b926d2.js"], size = 5364724, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false, got = 0;
+  var files = ["data.9dde7c6303.js", "app.e76cbfd081.js"], size = 5364540, bar = document.querySelector("#splash .sp-bar i, #csBar"), done = false, got = 0;
   if (bar) { bar.style.animation = "none"; bar.style.width = "3%"; bar.style.transition = "width .3s ease"; }
   function show() { if (bar) bar.style.width = (3 + 94 * Math.min(1, got / size)).toFixed(1) + "%"; }
   function run(codes) { if (done) return; done = true; codes.forEach(function (code) { var s = document.createElement("script"); s.text = code; document.body.appendChild(s); }); if (bar) bar.style.width = "100%"; }

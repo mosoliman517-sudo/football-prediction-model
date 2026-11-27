@@ -1116,7 +1116,7 @@ document.addEventListener("click", (e) => {
 function rvReport() {
   const el = rvEl("rvRep"); if (!el) return; if (!rv.done) { el.innerHTML = ""; return; }
   const side = (w) => rv.data.filter((x) => x && x.white === w && x.cls !== "book"), accOf = (l) => (l.length ? l.reduce((s, x) => s + x.acc, 0) / l.length : null);
-  const P = [true, false].map((w) => { const l = side(w), a = rvAccuracy(w, true); return { w, n: l.length, acc: a, elo: (rvRate(l) || {}).elo || null, acpl: (rvRate(l) || {}).acpl, lo: (rvRate(l) || {}).lo, hi: (rvRate(l) || {}).hi, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
+  const P = [true, false].map((w) => { const l = side(w), a = rvAccuracy(w); return { w, n: l.length, acc: a, elo: (rvRate(l) || {}).elo || null, acpl: (rvRate(l) || {}).acpl, lo: (rvRate(l) || {}).lo, hi: (rvRate(l) || {}).hi, ph: RV_PH.map(([k]) => accOf(l.filter((x) => rvPhaseOf(x.i) === k))) }; });
   const moments = rv.data.filter((x) => x && x.cls !== "book").sort((a, b) => b.loss - a.loss).slice(0, 3).filter((x) => x.loss >= 8);
   const shine = rv.data.filter((x) => x && (x.cls === "brilliant" || x.cls === "great")).slice(0, 3);
   const notes = [];
@@ -1635,16 +1635,16 @@ function rvList(i) {
   const d = rv.data[i - 1], el = d && rvEl("rvM" + i); if (!el) return; const r = RVC[d.cls];
   el.innerHTML = `${esc(d.san)}<i class="cls ${d.cls}">${r[1]}</i>`;
 }
-/* Accuracy like Lichess's: the average of a volatility-weighted mean and a harmonic mean of the per-move scores, so a few big
-   mistakes pull it down harder than a plain average would (moves in sharp, swingy positions count for more). */
-function rvAccuracy(w, noBook) {
-  const mv = rv.data.filter((x) => x && x.white === w && !(noBook && x.cls === "book")); if (!mv.length) return null;
-  const wv = rv.pos.map((p) => (p && p.ev ? p.ev.w : 50)), ws = Math.max(2, Math.min(8, Math.floor(rv.N / 10)));
-  let sw = 0, sa = 0, inv = 0; for (const x of mv) { const seg = wv.slice(Math.max(0, x.i - 1), x.i - 1 + ws + 1), m = seg.reduce((a, b) => a + b, 0) / seg.length, sd = Math.sqrt(seg.reduce((a, b) => a + (b - m) * (b - m), 0) / seg.length), wt = Math.max(0.5, Math.min(12, sd)); sw += wt; sa += wt * x.acc; inv += 1 / Math.max(1, x.acc); }
-  return Math.round((sa / sw + mv.length / inv) / 2);
+/* Accuracy, fitted to chess.com's published numbers. Their formula is private, so this was fitted on 36 real rapid and blitz games
+   (72 players) that carry chess.com accuracies: from the plain average of the per-move scores, with a little weight on a harmonic
+   mean floored at 10, so one game-losing move cannot halve an otherwise good game. Typical miss on those games: about 5 points. */
+function rvAccuracy(w) {
+  const mv = rv.data.filter((x) => x && x.white === w); if (!mv.length) return null;
+  const mean = mv.reduce((a, x) => a + x.acc, 0) / mv.length, harm = mv.length / mv.reduce((a, x) => a + 1 / Math.max(10, x.acc), 0);
+  return Math.round(Math.max(10, Math.min(100, 2.065 * mean + 0.069 * harm - 116.46)));
 }
 function rvSummary() {
-  const acc = (w) => rvAccuracy(w, false), cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
+  const acc = (w) => rvAccuracy(w), cnt = (w, k) => rv.data.filter((x) => x && x.white === w && x.cls === k).length;
   const a = rvEl("rvAcc"), c = rvEl("rvCounts"); if (!a) return;
   const A = acc(true), B = acc(false), nm = (s) => esc(rv.names[s]);
   a.innerHTML = `<div class="accb"><small>${nm(0)}</small><b>${A == null ? "…" : A}</b><span>accuracy</span></div><div class="accb dk"><small>${nm(1)}</small><b>${B == null ? "…" : B}</b><span>accuracy</span></div>`;

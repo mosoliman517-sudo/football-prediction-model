@@ -344,7 +344,7 @@ table.race td, table.race th { padding: 6px 7px; }
 .toast.out { opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease; }
 @keyframes toastin { from { opacity: 0; transform: translateY(16px) scale(.9); } to { opacity: 1; transform: none; } }
 .modal { position: fixed; inset: 0; z-index: 70; background: color-mix(in srgb, var(--bg) 78%, #000); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; overflow-y: auto; animation: toastin .25s ease both; }
-.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 22px; width: min(100%, 640px); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 30px 80px -30px #000; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 22px; width: min(100%, 640px); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; box-shadow: 0 30px 80px -30px #000; }
 .xpbar { height: 12px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); margin: 8px 0 12px; overflow: hidden; }
 .xpbar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .8s cubic-bezier(.2, .8, .2, 1); }
 .calgrid { display: grid; grid-template-rows: repeat(7, 14px); grid-auto-flow: column; grid-auto-columns: 14px; gap: 4px; }
@@ -949,7 +949,7 @@ function paintSplashArt() {
     <div id="reactBar" class="reactbar" hidden aria-label="Send a reaction"><button type="button" data-react="👏" aria-label="Clap">👏</button><button type="button" data-react="😂" aria-label="Laugh">😂</button><button type="button" data-react="😬" aria-label="Oops">😬</button><button type="button" data-react="🔥" aria-label="Fire">🔥</button><button type="button" data-react="GG" aria-label="Good game">GG</button><span class="rbsep"></span><button type="button" class="rbsk" data-sk="cheer" aria-label="Your sidekick cheers">📣 Cheer</button><button type="button" class="rbsk" data-sk="tease" aria-label="Your sidekick teases">😏 Tease</button><button type="button" class="rbsk" data-sk="gg" aria-label="Your sidekick says good game">🤝 GG</button></div>
   </section>
 
-  <div class="foot"><span class="num" id="buildStamp">Build 26 Nov 2026 11:48 UTC · public · box scores through 2026-27</span>
+  <div class="foot"><span class="num" id="buildStamp">Build 27 Nov 2026 10:56 UTC · public · box scores through 2026-27</span>
     <span>Player stats, teams and titles come from real NBA box scores (ESPN, via the sportsdataverse project), 2001-02 on. Birth dates, heights and birthplaces come from Wikidata. Where a fact is missing it is left out, never guessed.</span>
     <span>Team logos and player photos are the property of their owners and appear here only to identify them. This is an independent student project, not affiliated with or endorsed by the NBA, any team or any player.</span>
   </div>

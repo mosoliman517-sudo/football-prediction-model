@@ -466,6 +466,8 @@ Online chess rooms now keep two seats: a third person with the code is told the 
 
 **2026-11-26 (night, profile).** Chess has ranks, badges and achievements like the other sports (site/chess_progress.js): experience and seven ranks from Pawn to Grandmaster, 33 achievements in five tiers earned from real games, puzzles, dailies, streaks and reviews, up to three worn badges (on the profile and under the board), a choice of picture and a streak calendar. It syncs inside the account's saved progress when signed in (not tested with a real account). Badges are not shown to other players on leaderboards yet; that needs a database change.
 
+**2026-11-27.** Owner's screenshot from an iPhone: the first-visit "Pick your look" window on chess could not be scrolled and its Let's go button sat off screen (1356px tall on an 812px screen). It now fits a phone (three small cards a row), scrolls inside itself on short screens and keeps Let's go pinned. Every other chess pop-up gets the same height limit, and football and basketball pop-ups now use the visible screen height. Checked at emulated phone sizes, not on a real iPhone.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).

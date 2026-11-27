@@ -468,6 +468,8 @@ Online chess rooms now keep two seats: a third person with the code is told the 
 
 **2026-11-27.** Owner's screenshot from an iPhone: the first-visit "Pick your look" window on chess could not be scrolled and its Let's go button sat off screen (1356px tall on an 812px screen). It now fits a phone (three small cards a row), scrolls inside itself on short screens and keeps Let's go pinned. Every other chess pop-up gets the same height limit, and football and basketball pop-ups now use the visible screen height. Checked at emulated phone sizes, not on a real iPhone.
 
+**2026-11-27 (later) — trap sacrifices count as brilliant.** In a pasted game, 16.Nd5!! was graded "inaccuracy": taking the knight (16...exd5) runs into 17.Bg5+, a discovered check that wins the queen, but the quieter engine move scores a bit higher, and the deep check allowed only 5 points of difference. The review now looks at what happens if the offer is taken. If taking it is clearly punished and you are still clearly winning, it may be up to 12 points behind the top move, and the explanation shows the trap line and says which move was stronger on paper. Re-ran that game: Nd5 is now brilliant (as are 14.Nxe6, 24.Bxh6 and 27.Nf6+, which pass under the old rule). Only this one game was checked.
+
 ### What is in the box
 
 - **Models:** a Premier League blend (random forest plus Poisson goal model) with Elo, form, expected goals, squad value and managers (50.8% on 760 held-out matches, 52.6% with the market's odds added), and a five-league pooled model on results-only features (52.6% over 16,111 walk-forward matches).
